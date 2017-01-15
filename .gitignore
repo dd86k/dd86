@@ -2,6 +2,19 @@
 Thumbs.db
 ehthumbs.db
 
+# VS2015 VC++ files
+*.db
+*.opendb
+*.ipch
+*.exe
+*.obj
+*.tlog
+*.pdb
+*.idb
+*.ilk
+*.log
+*.suo
+
 # Folder config file
 Desktop.ini
 
