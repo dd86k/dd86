@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 		if (arg == "-v" || arg == "--version") {
 			DisplayVersion();
 		} else if (arg == "-h" || arg == "--help") {
-			DisplayHelp();
+			DisplayHelp(argv[0]);
         }
     }
 
