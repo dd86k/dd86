@@ -21,10 +21,10 @@ void DisplayVersion()
 	exit(0);
 }
 
-void DisplayHelp(const char *progname)
+void DisplayHelp(const char *program_name)
 {
 	std::cout << "Usage: " << std::endl;
-	std::cout << "  " << progname << " [<Options>]" << std::endl;
+	std::cout << "  " << program_name << " [<Options>]" << std::endl;
 	std::cout << std::endl;
 	std::cout << "  -h | --help\tDisplay help." << std::endl;
 	std::cout << "  -v | --version\tDisplay version." << std::endl;

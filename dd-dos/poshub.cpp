@@ -24,6 +24,10 @@ struct poshub {
 #endif
     }
 
+    /*
+     * Window dimensions.
+     */
+
     short GetWindowWidth() {
 #if _WIN32
         CONSOLE_SCREEN_BUFFER_INFO i;
@@ -73,25 +77,45 @@ struct poshub {
 #endif
     }
 
+    /*
+     * ASCII Titles
+     */
+
     std::string GetTitle() {
 #if _WIN32
-        /*char buf[MAX_PATH];
-        DWORD l = GetConsoleTitleA(buf, MAX_PATH);
-        char* sp = (char*)calloc(l + 1, 1);
-        strcpy(sp, buf);
-        sp[l] = '\0';
-        return sp;*/
-        std::string str (MAX_PATH, 0);
-        GetConsoleTitleA((LPSTR)&str, MAX_PATH);
+        std::string str(MAX_PATH, 0);
+        GetConsoleTitleA(&str[0], MAX_PATH);
         return str;
 #elif __GNUC__
 #error: GetTitle needs implementation.
 #endif
     }
 
-    void SetTitle(char *strp) {
+    void SetTitle(std::string str) {
 #if _WIN32
-        SetConsoleTitleA(strp);
+        SetConsoleTitleA(&str[0]);
+#elif __GNUC__
+#error: SetTitle needs implementation.
+#endif
+    }
+
+    /*
+     * Wide Titles
+     */
+
+    std::wstring GetTitleWide() {
+#if _WIN32
+        std::wstring str(MAX_PATH, 0);
+        GetConsoleTitleW(&str[0], MAX_PATH);
+        return str;
+#elif __GNUC__
+#error: GetTitle needs implementation.
+#endif
+    }
+
+    void SetTitleWide(std::wstring str) {
+#if _WIN32
+        SetConsoleTitleW(&str[0]);
 #elif __GNUC__
 #error: SetTitle needs implementation.
 #endif
