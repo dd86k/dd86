@@ -23,5 +23,8 @@
     <ClCompile Include="dd-dos.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="poshub.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
