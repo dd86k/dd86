@@ -1,5 +1,11 @@
 /*
  * Interpreter.cpp: Legacy machine code interpreter. Mimics an Intel 8086.
+ * 
+ * Architecture: (Page 2-3)
+ * 1. Fetch the next instruction from memory.
+ * 2. Read an operand (if instruction demands).
+ * 3. Execute.
+ * 4. Write results (if instruction demands).
  */
 
 #include <cstdlib>
