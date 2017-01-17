@@ -22,7 +22,7 @@ enum Op : byte {
 
 Intel8086::Intel8086()
 {
-	memoryBank = (byte *)std::calloc(1, MAX_MEMORY);
+    memoryBank = new byte[MAX_MEMORY]();
 }
 
 Intel8086::~Intel8086()
