@@ -3,6 +3,7 @@
  */
 
 #include <cstdlib>
+#include <cstring>
 
 #include "Interpreter.hpp"
 
@@ -10,21 +11,25 @@
 
 // Page 4-36 of the Intel 8086 User Manual contains opcode map.
 enum Op : byte {
-
-
     MovToAX = 0xB8,
-
-
 };
 
-void Boot() {
-    MemoryBank = (byte*)std::malloc(MAX_MEMORY);
+Intel8086::Intel8086()
+{
+	memoryBank = (byte *)std::calloc(1, MAX_MEMORY);
+}
 
-    // Intel 8086 code
+Intel8086::~Intel8086()
+{
+	delete memoryBank;
+}
+
+void Intel8086::Load(const std::string &file)
+{
+	// Intel 8086 code
 
 
     // DD-DOS Init code
-
 }
 
 // Should return something for error checking.
@@ -35,7 +40,8 @@ void Boot() {
 
 // void PushStack ?
 
-void Execute(ushort op) {
+void Intel8086::ExecuteInstruction(ushort op)
+{
     byte *por = (byte*)&op;
 
     switch ((Op)(por[0])) {
