@@ -21,4 +21,4 @@ static byte *MemoryBank;
 
 const uint MAX_MEMORY = 0x100000; // 1 MB
 
-static void Boot();
+void Boot();

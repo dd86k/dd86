@@ -13,6 +13,11 @@
 #include <termios.h>
 #endif
 
+poshub::poshub() {
+	hOut = nullptr;
+	hIn = nullptr;
+}
+
 void poshub::Init() {
 #if _WIN32
     hOut = GetStdHandle(STD_OUTPUT_HANDLE);

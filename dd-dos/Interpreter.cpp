@@ -17,7 +17,7 @@ enum Op : byte {
 
 };
 
-static void Boot() {
+void Boot() {
     MemoryBank = (byte*)std::malloc(MAX_MEMORY);
 
     // Intel 8086 code

@@ -4,8 +4,16 @@
 
 #pragma once
 #include <string>
+#include <Windows.h>
 
-struct poshub {
+class poshub {
+private:
+#ifdef _WIN32
+	HANDLE hIn, hOut;
+#endif
+public:
+	poshub();
+
     void Init();
     unsigned short GetWindowWidth();
     unsigned short GetWindowHeight();
