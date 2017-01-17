@@ -4,6 +4,7 @@
 
 
 #include "stdio.h"
+#include "poshub.hpp"
 #include <iostream>
 
 #if _WIN32
@@ -12,112 +13,106 @@
 #include <termios.h>
 #endif
 
- struct poshub {
+void poshub::Init() {
 #if _WIN32
-    HANDLE hIn, hOut;
+    hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    hIn = GetStdHandle(STD_INPUT_HANDLE);
 #endif
+}
 
-    void Init() {
+/*
+ * Window dimensions.
+ */
+
+unsigned short poshub::GetWindowWidth() {
 #if _WIN32
-        hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        hIn = GetStdHandle(STD_INPUT_HANDLE);
-#endif
-    }
-
-    /*
-     * Window dimensions.
-     */
-
-    unsigned short GetWindowWidth() {
-#if _WIN32
-        CONSOLE_SCREEN_BUFFER_INFO i;
-        GetConsoleScreenBufferInfo(hOut, &i);
-        return i.srWindow.Right - i.srWindow.Left + 1;
+    CONSOLE_SCREEN_BUFFER_INFO i;
+    GetConsoleScreenBufferInfo(hOut, &i);
+    return i.srWindow.Right - i.srWindow.Left + 1;
 #elif __GNUC__
-        winsize ws;
-        ioctl(0, TIOCGWINSZ, &ws);
-        return ws.ws_col;
+    winsize ws;
+    ioctl(0, TIOCGWINSZ, &ws);
+    return ws.ws_col;
 #endif
-    }
+}
 
-    void SetWindowWidth(unsigned short w) {
-        // Note: A COORD uses SHORT (short) and Linux uses unsigned shorts.
+void poshub::SetWindowWidth(unsigned short w) {
+    // Note: A COORD uses SHORT (short) and Linux uses unsigned shorts.
 #if _WIN32
-        SetConsoleScreenBufferSize(
-            hOut,
-            { (SHORT)w, (SHORT)GetWindowWidth() }
-        );
+    SetConsoleScreenBufferSize(
+        hOut,
+        { (SHORT)w, (SHORT)GetWindowWidth() }
+    );
 #elif __GNUC__
-        winsize ws = { w, GetWindowWidth() };
-        ioctl(0, TIOCSWINSZ, &ws);
+    winsize ws = { w, GetWindowWidth() };
+    ioctl(0, TIOCSWINSZ, &ws);
 #endif
-    }
+}
 
-    unsigned short GetWindowHeight() {
+unsigned short poshub::GetWindowHeight() {
 #if _WIN32
-        CONSOLE_SCREEN_BUFFER_INFO i;
-        GetConsoleScreenBufferInfo(hOut, &i);
-        return i.srWindow.Bottom - i.srWindow.Top + 1;
+    CONSOLE_SCREEN_BUFFER_INFO i;
+    GetConsoleScreenBufferInfo(hOut, &i);
+    return i.srWindow.Bottom - i.srWindow.Top + 1;
 #elif __GNUC__
-        winsize ws;
-        ioctl(0, TIOCGWINSZ, &ws);
-        return ws.ws_row;
+    winsize ws;
+    ioctl(0, TIOCGWINSZ, &ws);
+    return ws.ws_row;
 #endif
-    }
-    
-    void SetWindowHeight(unsigned short h) {
+}
+
+void poshub::SetWindowHeight(unsigned short h) {
 #if _WIN32
-        SetConsoleScreenBufferSize(
-            hOut,
-            { (SHORT)GetWindowWidth(), (SHORT)h }
-        );
+    SetConsoleScreenBufferSize(
+        hOut,
+        { (SHORT)GetWindowWidth(), (SHORT)h }
+    );
 #elif __GNUC__
-        winsize ws = { GetWindowWidth(), h, 0, 0 };
-        ioctl(0, TIOCSWINSZ, &ws);
+    winsize ws = { GetWindowWidth(), h, 0, 0 };
+    ioctl(0, TIOCSWINSZ, &ws);
 #endif
-    }
+}
 
-    /*
-     * ASCII Titles
-     */
+/*
+ * ASCII Titles
+ */
 
-    std::string GetTitle() {
+std::string poshub::GetTitle() {
 #if _WIN32
-        std::string str(MAX_PATH, 0);
-        GetConsoleTitleA(&str[0], MAX_PATH);
-        return str;
+    std::string str(MAX_PATH, 0);
+    GetConsoleTitleA(&str[0], MAX_PATH);
+    return str;
 #elif __GNUC__
 #error: GetTitle needs implementation.
 #endif
-    }
+}
 
-    void SetTitle(std::string str) {
+void poshub::SetTitle(std::string str) {
 #if _WIN32
-        SetConsoleTitleA(&str[0]);
+    SetConsoleTitleA(&str[0]);
 #elif __GNUC__
 #error: SetTitle needs implementation.
 #endif
-    }
+}
 
-    /*
-     * Wide Titles
-     */
+/*
+ * Wide Titles
+ */
 
-    std::wstring GetTitleWide() {
+std::wstring poshub::GetTitleWide() {
 #if _WIN32
-        std::wstring str(MAX_PATH, 0);
-        GetConsoleTitleW(&str[0], MAX_PATH);
-        return str;
+    std::wstring str(MAX_PATH, 0);
+    GetConsoleTitleW(&str[0], MAX_PATH);
+    return str;
 #elif __GNUC__
 #error: GetTitle needs implementation.
 #endif
-    }
+}
 
-    void SetTitleWide(std::wstring str) {
+void poshub::SetTitleWide(std::wstring str) {
 #if _WIN32
-        SetConsoleTitleW(&str[0]);
+    SetConsoleTitleW(&str[0]);
 #elif __GNUC__
 #error: SetTitle needs implementation.
 #endif
-    }
-};
+}
