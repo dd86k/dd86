@@ -41,7 +41,8 @@ int main(int argc, char **argv)
     Con = poshub();
     //Con.Init();
 
-	Intel8086 cpu;
+	Intel8086 machine;
+    machine.Load();
 
     return 0;
 }
