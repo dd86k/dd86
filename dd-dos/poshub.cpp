@@ -12,7 +12,7 @@
 #include <termios.h>
 #endif
 
-struct poshub {
+ struct poshub {
 #if _WIN32
     HANDLE hIn, hOut;
 #endif
@@ -28,7 +28,7 @@ struct poshub {
      * Window dimensions.
      */
 
-    short GetWindowWidth() {
+    unsigned short GetWindowWidth() {
 #if _WIN32
         CONSOLE_SCREEN_BUFFER_INFO i;
         GetConsoleScreenBufferInfo(hOut, &i);
@@ -45,7 +45,7 @@ struct poshub {
 #if _WIN32
         SetConsoleScreenBufferSize(
             hOut,
-            { (short)w, GetWindowWidth() }
+            { (SHORT)w, (SHORT)GetWindowWidth() }
         );
 #elif __GNUC__
         winsize ws = { w, GetWindowWidth() };
@@ -53,7 +53,7 @@ struct poshub {
 #endif
     }
 
-    short GetWindowHeight() {
+    unsigned short GetWindowHeight() {
 #if _WIN32
         CONSOLE_SCREEN_BUFFER_INFO i;
         GetConsoleScreenBufferInfo(hOut, &i);
@@ -69,7 +69,7 @@ struct poshub {
 #if _WIN32
         SetConsoleScreenBufferSize(
             hOut,
-            { GetWindowWidth(), (short)h }
+            { (SHORT)GetWindowWidth(), (SHORT)h }
         );
 #elif __GNUC__
         winsize ws = { GetWindowWidth(), h, 0, 0 };

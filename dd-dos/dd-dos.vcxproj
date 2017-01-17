@@ -143,6 +143,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="dd-dos.hpp" />
+    <ClInclude Include="Interpreter.hpp" />
+    <ClInclude Include="poshub.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dd-dos.cpp" />

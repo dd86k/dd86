@@ -18,6 +18,12 @@
     <ClInclude Include="dd-dos.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Interpreter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="poshub.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dd-dos.cpp">

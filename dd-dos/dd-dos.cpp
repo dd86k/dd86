@@ -3,23 +3,16 @@
  */
 
 #include "dd-dos.hpp"
-#include "stdio.h"
-#include "poshub.cpp"
-#include "Interpreter.cpp"
+#include "Interpreter.hpp"
 
 #include <iostream>
 #include <string>
 #include <vector>
 
-static const char *version = "0.0.0";
-
-static poshub Con;
-
 void DisplayVersion()
 {
 	std::cout << "DD-DOS - " << version << std::endl;;
 	std::cout << "Project page: <https://github.com/dd86k/dd-dos>" << std::endl;
-	exit(0);
 }
 
 void DisplayHelp(const char *program_name)
@@ -29,7 +22,6 @@ void DisplayHelp(const char *program_name)
 	std::cout << std::endl;
 	std::cout << "  -h | --help       Display help and quit." << std::endl;
 	std::cout << "  -v | --version    Display version and quit." << std::endl;
-	exit(0);
 }
 
 int main(int argc, char **argv)
@@ -39,13 +31,15 @@ int main(int argc, char **argv)
 	for (const std::string &arg : args) {
 		if (arg == "-v" || arg == "--version") {
 			DisplayVersion();
+            return 0;
 		} else if (arg == "-h" || arg == "--help") {
 			DisplayHelp(argv[0]);
+            return 0;
         }
     }
 
     Con = poshub();
-    Con.Init();
+    //Con.Init();
 
     Boot();
 

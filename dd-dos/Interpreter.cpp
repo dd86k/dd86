@@ -4,7 +4,9 @@
 
 #include <cstdlib>
 
-#include "dd-dos.hpp"
+#include "Interpreter.hpp"
+
+//NOTE: Opened files should go in JFT
 
 // Page 4-36 of the Intel 8086 User Manual contains opcode map.
 enum Op : byte {
@@ -15,28 +17,21 @@ enum Op : byte {
 
 };
 
-const uint MAX_MEMORY = 0x100000; // 1 MB
-
 static void Boot() {
     MemoryBank = (byte*)std::malloc(MAX_MEMORY);
+
+    // Intel 8086 code
+
+
+    // DD-DOS Init code
+
 }
 
-// Should be returning something for error checking.
+// Should return something for error checking.
 // Should be for accessing executables outside of VM
 /*void Start(wchar_t *filename) {
 
 }*/
-
-/*
- * Intel 8086 Registers
- */
-static ushort
-    AX, BX, CX, DX,
-    SI, DI, BP, SP,
-    IP,
-    CS, DS, ES, SS;
-
-static byte *MemoryBank;
 
 // void PushStack ?
 
@@ -52,7 +47,7 @@ void Execute(ushort op) {
 
 
     default: // Illegal instruction
-        
+        // Raise vector
         break;
     }
 
