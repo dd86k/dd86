@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     //Con.Init();
 
 	Intel8086 machine;
-    machine.Load();
+    machine.Init(NULL);
 
     return 0;
 }

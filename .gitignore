@@ -15,6 +15,9 @@ ehthumbs.db
 *.log
 *.suo
 
+Debug
+$RANDOM_SEED$
+
 # Folder config file
 Desktop.ini
 

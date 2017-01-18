@@ -18,9 +18,10 @@ public:
 	Intel8086();
 	~Intel8086();
 
-    void Load(const std::string &file);
-    void Open(const std::string &file);
-	void ExecuteInstruction(ushort op);
+    void Init(const std::string &file);
+    //void Open(const std::string &file);
+    void Reset();
+	void ExecuteInstruction(byte op);
 
 private:
 	byte *memoryBank;
@@ -33,8 +34,9 @@ private:
         // - BP: Base Pointer
         // - SP: Stack Pointer
         SI, DI, BP, SP,
-        // Segment registers, points to a 64KB segment.
+        // Segment registers, points to a segment (Max 64KB).
         CS, DS, ES, SS,
         // Program Counter (PC)
         IP;
+    //TODO: Flags as booleans
 };
