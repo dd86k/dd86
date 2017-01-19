@@ -77,7 +77,6 @@ void Intel8086::ExecuteInstruction(byte op)
      * Legend:
      * R/M: ModRegister/Memory Byte
      * IMM: Immediate value
-     * IMMD: ?
      * REG: Register
      * MEM: Memory location
      * SEGREG: Segment register
@@ -479,7 +478,7 @@ void Intel8086::ExecuteInstruction(byte op)
         default: break;
         }*/
         break;
-    case 0x82: // GRP1 R/M8, IMMD8
+    case 0x82: // GRP1 R/M8, IMM8
         /*byte rm; // Get ModR/M byte
         switch (rm & 0b00111000) { // ModRM REG
         case 0b00000000: // 000 - ADD
@@ -509,7 +508,7 @@ void Intel8086::ExecuteInstruction(byte op)
         default: break;
         }*/
         break;
-    case 0x83: // GRP1 R/M16, IMMD8
+    case 0x83: // GRP1 R/M16, IMM8
         /*byte rm; // Get ModR/M byte
         switch (rm & 0b00111000) { // ModRM REG
         case 0b00000000: // 000 - ADD
@@ -641,20 +640,442 @@ void Intel8086::ExecuteInstruction(byte op)
     case 0xA4: // MOVS DEST-STR8, SRC-STR8
 
         break;
+    case 0xA5: // MOVS DEST-STR16, SRC-STR16
 
+        break;
+    case 0xA6: // CMPS DEST-STR8, SRC-STR8
 
+        break;
+    case 0xA7: // CMPS DEST-STR16, SRC-STR16
 
+        break;
+    case 0xA8: // TEST AL, IMM8
 
+        break;
+    case 0xA9: // TEST AX, IMM16
 
+        break;
+    case 0xAA: // STOS DEST-STR8
 
-    
-    case 0xB8:
-        AX = memoryBank[IP + 1];
+        break;
+    case 0xAB: // STOS DEST-STR16
 
-        IP += 2; //TODO: Needs to investigate PC usage
+        break;
+    case 0xAC: // LODS SRC-STR8
+
+        break;
+    case 0xAD: // LODS SRC-STR16
+
+        break;
+    case 0xAE: // SCAS DEST-STR8
+
+        break;
+    case 0xAF: // SCAS DEST-STR16
+
+        break;
+    case 0xB0: // MOV AL, IMM8
+
+        break;
+    case 0xB1: // MOV CL, IMM8
+
+        break;
+    case 0xB2: // MOV DL, IMM8
+
+        break;
+    case 0xB3: // MOV BL, IMM8
+
+        break;
+    case 0xB4: // MOV AH, IMM8
+
+        break;
+    case 0xB5: // MOV CH, IMM8
+
+        break;
+    case 0xB6: // MOV DH, IMM8
+
+        break;
+    case 0xB7: // MOV BH, IMM8
+
+        break;
+    case 0xB8: // MOV AX, IMM16
+        AX = memoryBank[IP + 1] | (memoryBank[IP + 2] << 8);
+        IP += 3; //TODO: Needs to investigate PC usage
+        break;
+    case 0xB9: // MOV CX, IMM16
+
+        break;
+    case 0xBA: // MOV DX, IMM16
+
+        break;
+    case 0xBB: // MOV BX, IMM16
+
+        break;
+    case 0xBC: // MOV SP, IMM16
+
+        break;
+    case 0xBD: // MOV BP, IMM16
+
+        break;
+    case 0xBE: // MOV SI, IMM16
+
+        break;
+    case 0xBF: // MOV DI, IMM16
+
+        break;
+    case 0xC2: // RET IMM16 (intrasegment)
+
+        break;
+    case 0xC3: // RET (intrasegment)
+
+        break;
+    case 0xC4: // LES REG16, MEM16
+
+        break;
+    case 0xC5: // LDS REG16, MEM16
+
+        break;
+    case 0xC6: // MOV MEM8, IMM8
+        // MOD 000 R/M only
+        break;
+    case 0xC7: // MOV MEM16, IMM16
+        // MOD 000 R/M only
+        break;
+    case 0xCA: // RET IMM16 (intersegment)
+
+        break;
+    case 0xCB: // RET (intersegment)
+
+        break;
+    case 0xCC: // INT 3
+
+        break;
+    case 0xCD: // INT IMM8
+
+        break;
+    case 0xCE: // INTO
+
+        break;
+    case 0xCF: // IRET
+
+        break;
+    case 0xD0: // GRP2 R/M8, 1
+        /*byte rm; // Get ModR/M byte
+        switch (rm & 0b00111000) {
+        case 0b00000000: // 000 - ROL
+
+        break;
+        case 0b00001000: // 001 - ROR
+
+        break;
+        case 0b00010000: // 010 - RCL
+
+        break;
+        case 0b00011000: // 011 - RCR
+
+        break;
+        case 0b00100000: // 100 - SAL/SHL
+
+        break;
+        case 0b00101000: // 101 - SHR
+
+        break;
+        case 0b00111000: // 111 - SAR
+
+        break;
+        default:
+            
+            break;
+        }*/
+        break;
+    case 0xD1: // GRP2 R/M16, 1
+        /*byte rm; // Get ModR/M byte
+        switch (rm & 0b00111000) {
+        case 0b00000000: // 000 - ROL
+
+        break;
+        case 0b00001000: // 001 - ROR
+
+        break;
+        case 0b00010000: // 010 - RCL
+
+        break;
+        case 0b00011000: // 011 - RCR
+
+        break;
+        case 0b00100000: // 100 - SAL/SHL
+
+        break;
+        case 0b00101000: // 101 - SHR
+
+        break;
+        case 0b00111000: // 111 - SAR
+
+        break;
+        default:
+
+        break;
+        }*/
+        break;
+    case 0xD2: // GRP2 R/M8, CL
+        /*byte rm; // Get ModR/M byte
+        switch (rm & 0b00111000) {
+        case 0b00000000: // 000 - ROL
+
+        break;
+        case 0b00001000: // 001 - ROR
+
+        break;
+        case 0b00010000: // 010 - RCL
+
+        break;
+        case 0b00011000: // 011 - RCR
+
+        break;
+        case 0b00100000: // 100 - SAL/SHL
+
+        break;
+        case 0b00101000: // 101 - SHR
+
+        break;
+        case 0b00111000: // 111 - SAR
+
+        break;
+        default:
+
+        break;
+        }*/
+        break;
+    case 0xD3: // GRP2 R/M16, CL
+        /*byte rm; // Get ModR/M byte
+        switch (rm & 0b00111000) {
+        case 0b00000000: // 000 - ROL
+
+        break;
+        case 0b00001000: // 001 - ROR
+
+        break;
+        case 0b00010000: // 010 - RCL
+
+        break;
+        case 0b00011000: // 011 - RCR
+
+        break;
+        case 0b00100000: // 100 - SAL/SHL
+
+        break;
+        case 0b00101000: // 101 - SHR
+
+        break;
+        case 0b00111000: // 111 - SAR
+
+        break;
+        default:
+
+        break;
+        }*/
+        break;
+    case 0xD4: // AAM
+
+        break;
+    case 0xD5: // AAD
+
+        break;
+    case 0xD7: // XLAT SOURCE-TABLE
+
+        break;
+    case 0xD8: // ESC OPCODE, SOURCE
+    case 0xD9: // 1101 1XXX - MOD YYY R/M
+    case 0xDA: 
+    case 0xDB: 
+    case 0xDC: 
+    case 0xDD:
+    case 0xDE:
+    case 0xDF:
+
         break;
 
+    case 0xE0: // LOOPNE/LOOPNZ SHORT-LABEL
 
+        break;
+    case 0xE1: // LOOPE/LOOPZ   SHORT-LABEL
+
+        break;
+    case 0xE2: // LOOP          SHORT-LABEL
+
+        break;
+    case 0xE3: // JCXZ  SHORT-LABEL
+
+        break;
+    case 0xE4: // IN AL, IMM8
+
+        break;
+    case 0xE5: // IN AX, IMM8
+
+        break;
+    case 0xE6: // OUT AL, IMM8
+
+        break;
+    case 0xE7: // OUT AX, IMM8
+
+        break;
+    case 0xE8: // CALL NEAR-PROC
+
+        break;
+    case 0xE9: // JMP  NEAR-LABEL
+
+        break;
+    case 0xEA: // JMP  FAR-LABEL
+
+        break;
+    case 0xEB: // JMP  SHORT-LABEL
+
+        break;
+    case 0xEC: // IN AL, DX
+
+        break;
+    case 0xED: // IN AX, DX
+
+        break;
+    case 0xEE: // OUT AL, DX
+
+        break;
+    case 0xEF: // OUT AX, DX
+
+        break;
+    case 0xF0: // LOCK (prefix)
+
+        break;
+    case 0xF2: // REPNE/REPNZ
+
+        break;
+    case 0xF3: // REP/REPE/REPNZ
+
+        break;
+    case 0xF4: // HLT
+
+        break;
+    case 0xF5: // CMC
+
+        break;
+    case 0xF6: // GRP3a R/M8, IMM8
+        /*byte rm; // Get ModR/M byte
+        switch (rm & 0b00111000) {
+        case 0b00000000: // 000 - TEST
+
+        break;
+        case 0b00010000: // 010 - NOT
+
+        break;
+        case 0b00011000: // 011 - NEG
+
+        break;
+        case 0b00100000: // 100 - MUL
+
+        break;
+        case 0b00101000: // 101 - IMUL
+
+        break;
+        case 0b00110000: // 110 - DIV
+
+        break;
+        case 0b00111000: // 111 - IDIV
+
+        break;
+        default:
+
+        break;
+        }*/
+        break;
+    case 0xF7: // GRP3b R/M16, IMM16
+        /*byte rm; // Get ModR/M byte
+        switch (rm & 0b00111000) {
+        case 0b00000000: // 000 - TEST
+
+        break;
+        case 0b00010000: // 010 - NOT
+
+        break;
+        case 0b00011000: // 011 - NEG
+
+        break;
+        case 0b00100000: // 100 - MUL
+
+        break;
+        case 0b00101000: // 101 - IMUL
+
+        break;
+        case 0b00110000: // 110 - DIV
+
+        break;
+        case 0b00111000: // 111 - IDIV
+
+        break;
+        default:
+
+        break;
+        }*/
+        break;
+    case 0xF8: // CLC
+
+        break;
+    case 0xF9: // STC
+
+        break;
+    case 0xFA: // CLI
+
+        break;
+    case 0xFB: // STI
+
+        break;
+    case 0xFC: // CLD
+
+        break;
+    case 0xFD: // STD
+
+        break;
+    case 0xFE: // GRP4 R/M8
+        /*byte rm; // Get ModR/M byte
+        switch (rm & 0b00111000) {
+        case 0b00000000: // 000 - INC
+
+        break;
+        case 0b00001000: // 001 - DEC
+
+        break;
+        default:
+
+        break;
+        }*/
+        break;
+    case 0xFF: // GRP5 R/M16
+        /*byte rm; // Get ModR/M byte
+        switch (rm & 0b00111000) {
+        case 0b00000000: // 000 - INC
+
+        break;
+        case 0b00001000: // 001 - DEC
+
+        break;
+        case 0b00010000: // 010 - CALL R/M16 (intra)
+
+        break;
+        case 0b00011000: // 011 - CALL MEM16 (inter)
+
+        break;
+        case 0b00100000: // 100 - JMP R/M16 (intra)
+
+        break;
+        case 0b00101000: // 101 - JMP MEM16 (inter)
+
+        break;
+        case 0b00110000: // 110 - PUSH MEM16
+
+        break;
+        default:
+
+        break;
+        }*/
+        break;
     default: // Illegal instruction
         // Raise vector
         break;

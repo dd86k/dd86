@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     }
 
     Con = poshub();
-    //Con.Init();
+    Con.Init();
 
 	Intel8086 machine;
     machine.Init(NULL);
