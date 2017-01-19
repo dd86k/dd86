@@ -39,6 +39,10 @@ Intel8086::~Intel8086()
 void Intel8086::Init(const std::string &filename)
 {
 
+
+    Reset();
+
+
 }
 
 /// <summary>
@@ -50,9 +54,20 @@ void Intel8086::Init(const std::string &filename)
 
 }*/
 
-//TODO: Need to find RESET again.
 void Intel8086::Reset() {
+    Undefined =
+        Overflow = 
+        Direction =
+        Interrupt =
+        Trap =
+        Sign =
+        Zero =
+        Auxiliary =
+        Parity =
+        Carry = false;
     CS = 0xFFFF;
+    IP = DS = SS = ES = 0;
+    //TODO: Empty Queue Bus
 }
 
 // Should return something for error checking.
@@ -83,7 +98,6 @@ void Intel8086::ExecuteInstruction(byte op)
      *
      * The number represents bitness.
      */
-    //TODO: Will probably need to group instructions.
     switch (op) {
     case 0x00: // ADD R/M8, REG8
 
