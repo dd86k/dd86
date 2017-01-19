@@ -21,7 +21,7 @@ public:
     void Init(const std::string &file);
     //void Open(const std::string &file);
     void Reset();
-	void ExecuteInstruction(byte op);
+	void ExecuteInstruction(ushort op);
 
 private:
 	byte *memoryBank;

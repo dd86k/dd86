@@ -42,7 +42,10 @@ void Intel8086::Init(const std::string &filename)
 
     Reset();
 
-
+    while (true) {
+        //TODO: Check because I'm very unsure.
+        ExecuteInstruction(memoryBank[SP]);
+    }
 }
 
 /// <summary>
@@ -95,9 +98,10 @@ void Intel8086::Reset() {
 /// 
 /// The number represents bitness.
 /// </remark>
-void Intel8086::ExecuteInstruction(byte op)
+void Intel8086::ExecuteInstruction(ushort op)
 {
-    switch (op) {
+    byte *p = (byte*)&op;
+    switch (p[0]) {
     case 0x00: // ADD R/M8, REG8
 
         break;
