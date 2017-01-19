@@ -1,7 +1,7 @@
 /*
  * Interpreter.cpp: Legacy machine code interpreter. Mimics an Intel 8086.
  * 
- * Architecture: (Page 2-3)
+ * Architecture: Page 2-3 (P18)
  * 1. Fetch the next instruction from memory.
  * 2. Read an operand (if instruction demands).
  * 3. Execute.
@@ -85,19 +85,18 @@ void Intel8086::Reset() {
 /// Queue-Bus (Q-BUS) is one byte large.
 /// Page 4-27 (P169) of the Intel 8086 User Manual
 /// contains decoding guide.
+///
+/// Legend:
+/// R/M : Mod{Register/Memory} byte
+/// IMM : Immediate value
+/// REG : Register
+/// MEM : Memory location
+/// SEGREG : Segment register
+/// 
+/// The number represents bitness.
 /// </remark>
 void Intel8086::ExecuteInstruction(byte op)
 {
-    /*
-     * Legend:
-     * R/M: ModRegister/Memory Byte
-     * IMM: Immediate value
-     * REG: Register
-     * MEM: Memory location
-     * SEGREG: Segment register
-     *
-     * The number represents bitness.
-     */
     switch (op) {
     case 0x00: // ADD R/M8, REG8
 
@@ -914,7 +913,7 @@ void Intel8086::ExecuteInstruction(byte op)
     case 0xE1: // LOOPE/LOOPZ   SHORT-LABEL
 
         break;
-    case 0xE2: // LOOP          SHORT-LABEL
+    case 0xE2: // LOOP  SHORT-LABEL
 
         break;
     case 0xE3: // JCXZ  SHORT-LABEL
