@@ -27,6 +27,7 @@ void DisplayHelp(const char *program_name)
 int main(int argc, char **argv)
 {
 	std::vector<std::string> args(argv, argv + argc);
+	std::string file;
 
 	for (const std::string &arg : args) {
 		if (arg == "-v" || arg == "--version") {
@@ -35,14 +36,16 @@ int main(int argc, char **argv)
 		} else if (arg == "-h" || arg == "--help") {
 			DisplayHelp(argv[0]);
             return 0;
-        }
+		} else {
+			file = arg;
+		}
     }
 
     Con = poshub();
     Con.Init();
 
 	Intel8086 machine;
-    machine.Init(NULL);
+    machine.Init(file);
 
     return 0;
 }
