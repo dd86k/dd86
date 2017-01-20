@@ -24,6 +24,29 @@
 //NOTE: Opened files should go in JFT
 
 Intel8086::Intel8086()
+	: AX(0)
+	, BX(0)
+	, CX(0)
+	, DX(0)
+	, SI(0)
+	, DI(0)
+	, BP(0)
+	, SP(0)
+	, CS(0)
+	, DS(0)
+	, ES(0)
+	, SS(0)
+	, IP(0)
+	, Undefined(false)
+	, Overflow(false)
+	, Direction(false)
+	, Interrupt(false)
+	, Trap(false)
+	, Sign(false)
+	, Zero(false)
+	, Auxiliary(false)
+	, Parity(false)
+	, Carry(false)
 {
     memoryBank = new byte[MAX_MEMORY]();
 }
