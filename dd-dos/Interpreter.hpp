@@ -23,6 +23,11 @@ public:
     void Reset();
 	void ExecuteInstruction(ushort op);
 
+	void PushStack(ushort value);
+	ushort PopStack();
+
+	uint GetPhysicalAddress(ushort segment, ushort offset);
+
 private:
 	byte *memoryBank;
     ushort

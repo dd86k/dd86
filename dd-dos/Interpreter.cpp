@@ -1123,3 +1123,23 @@ void Intel8086::ExecuteInstruction(ushort op)
 }
 
 // Page 2-99 contains the interrupt message processor
+
+void Intel8086::PushStack(ushort value)
+{
+	SP -= 2;
+	uint addr = GetPhysicalAddress(SS, SP);
+	*((ushort *)&memoryBank[addr]) = value;
+}
+
+ushort Intel8086::PopStack()
+{
+	uint addr = GetPhysicalAddress(SS, SP);
+	ushort value = *((ushort *)&memoryBank[addr]);
+	SP += 2;
+	return value;
+}
+
+uint Intel8086::GetPhysicalAddress(ushort segment, ushort offset)
+{
+	return (segment << 4) + offset;
+}
