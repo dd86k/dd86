@@ -21,14 +21,15 @@ public:
     void Init(const std::string &file);
     //void Open(const std::string &file);
     void Reset();
-	void ExecuteInstruction(ushort op);
+	void ExecuteInstruction(byte);
 
 	void PushStack(ushort value);
 	ushort PopStack();
 
-	uint GetPhysicalAddress(ushort segment, ushort offset);
+	uint GetPhysicalAddress(ushort, ushort);
 
 private:
+    void Raise(byte);
 	byte *memoryBank;
     ushort
         // Generic registers

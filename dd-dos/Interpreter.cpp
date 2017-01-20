@@ -66,8 +66,7 @@ void Intel8086::Init(const std::string &filename)
     Reset();
 
     while (true) {
-        //TODO: Check because I'm very unsure.
-        ExecuteInstruction(memoryBank[SP]);
+        ExecuteInstruction(memoryBank[IP]);
     }
 }
 
@@ -96,14 +95,6 @@ void Intel8086::Reset() {
     //TODO: Empty Queue Bus
 }
 
-// Should return something for error checking.
-// Should be for accessing executables outside of VM
-/*void Start(wchar_t *filename) {
-
-}*/
-
-// void PushStack ?
-
 /// <summary>
 /// Execute the operation code. (ALU)
 /// </summary>
@@ -121,10 +112,9 @@ void Intel8086::Reset() {
 /// 
 /// The number represents bitness.
 /// </remark>
-void Intel8086::ExecuteInstruction(ushort op)
+void Intel8086::ExecuteInstruction(byte op)
 {
-    byte *p = (byte*)&op;
-    switch (p[0]) {
+    switch (op) {
     case 0x00: // ADD R/M8, REG8
 
         break;
@@ -237,7 +227,7 @@ void Intel8086::ExecuteInstruction(ushort op)
 
         break;
     case 0x26: // ES: (Segment override prefix)
-
+        ES = IP;
         break;
     case 0x27: // DAA
 
@@ -739,7 +729,8 @@ void Intel8086::ExecuteInstruction(ushort op)
         break;
     case 0xB8: // MOV AX, IMM16
         AX = memoryBank[IP + 1] | (memoryBank[IP + 2] << 8);
-        IP += 3; //TODO: Needs to investigate PC usage
+        SP += 3;
+        IP += 3;
         break;
     case 0xB9: // MOV CX, IMM16
 
@@ -1142,4 +1133,11 @@ ushort Intel8086::PopStack()
 uint Intel8086::GetPhysicalAddress(ushort segment, ushort offset)
 {
 	return (segment << 4) + offset;
+}
+
+/// <summary>
+/// Raise hardware interrupt.
+/// <summary>
+void Intel8086::Raise(byte interrupt) {
+
 }
