@@ -92,7 +92,7 @@ void Intel8086::Reset() {
         Carry = false;
     CS = 0xFFFF;
     IP = DS = SS = ES = 0;
-    //TODO: Empty Queue Bus
+    // Empty Queue Bus
 }
 
 /// <summary>
@@ -114,6 +114,7 @@ void Intel8086::Reset() {
 /// </remark>
 void Intel8086::ExecuteInstruction(byte op)
 {
+    //TODO: Group instructions. -dd
     switch (op) {
     case 0x00: // ADD R/M8, REG8
 
@@ -227,7 +228,7 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x26: // ES: (Segment override prefix)
-        ES = IP;
+        ES = IP++;
         break;
     case 0x27: // DAA
 
@@ -305,58 +306,76 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x40: // INC AX
-
+        ++AX;
+        ++IP;
         break;
     case 0x41: // INC CX
-
+        ++CX;
+        ++IP;
         break;
     case 0x42: // INC DX
-
+        ++DX;
+        ++IP;
         break;
     case 0x43: // INC BX
-
+        ++BX;
+        ++IP;
         break;
     case 0x44: // INC SP
-
+        ++SP;
+        ++IP;
         break;
     case 0x45: // INC BP
-
+        ++BP;
+        ++IP;
         break;
     case 0x46: // INC SI
-
+        ++SI;
+        ++IP;
         break;
     case 0x47: // INC DI
-
+        ++DI;
+        ++SP;
+        ++IP;
         break;
     case 0x48: // DEC AX
-
+        --AX;
+        ++IP;
         break;
     case 0x49: // DEC CX
-
+        --CX;
+        ++IP;
         break;
     case 0x4A: // DEC DX
-
+        --DX;
+        ++IP;
         break;
     case 0x4B: // DEC BX
-
+        --BX;
+        ++IP;
         break;
     case 0x4C: // DEC SP
-
+        --SP;
+        ++IP;
         break;
     case 0x4D: // DEC BP
-
+        --BP;
+        ++IP;
         break;
     case 0x4E: // DEC SI
-
+        --SI;
+        ++IP;
         break;
     case 0x4F: // DEC DI
-
+        --DI;
+        ++IP;
         break;
     case 0x50: // PUSH AX
-
+        Push(AX);
+        ++IP;
         break;
     case 0x51: // PUSH CX
-
+        Push(CX);
         break;
     case 0x52: // PUSH DX
 
@@ -608,7 +627,7 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x90: // NOP
-
+        ++IP;
         break;
     case 0x91: // XCHG AX, CX
 
@@ -728,8 +747,7 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0xB8: // MOV AX, IMM16
-        AX = memoryBank[IP + 1] | (memoryBank[IP + 2] << 8);
-        SP += 3;
+        AX = FetchWord(IP + 1);
         IP += 3;
         break;
     case 0xB9: // MOV CX, IMM16
@@ -1115,14 +1133,16 @@ void Intel8086::ExecuteInstruction(byte op)
 
 // Page 2-99 contains the interrupt message processor
 
-void Intel8086::PushStack(ushort value)
+
+
+void Intel8086::Push(ushort value)
 {
 	SP -= 2;
 	uint addr = GetPhysicalAddress(SS, SP);
 	*((ushort *)&memoryBank[addr]) = value;
 }
 
-ushort Intel8086::PopStack()
+ushort Intel8086::Pop()
 {
 	uint addr = GetPhysicalAddress(SS, SP);
 	ushort value = *((ushort *)&memoryBank[addr]);
@@ -1130,7 +1150,7 @@ ushort Intel8086::PopStack()
 	return value;
 }
 
-uint Intel8086::GetPhysicalAddress(ushort segment, ushort offset)
+uint inline Intel8086::GetPhysicalAddress(ushort segment, ushort offset)
 {
 	return (segment << 4) + offset;
 }
@@ -1138,6 +1158,11 @@ uint Intel8086::GetPhysicalAddress(ushort segment, ushort offset)
 /// <summary>
 /// Raise hardware interrupt.
 /// <summary>
-void Intel8086::Raise(byte interrupt) {
+void Intel8086::Raise(byte interrupt)
+{
 
+}
+
+ushort inline Intel8086::FetchWord(uint location) {
+    return memoryBank[location] | memoryBank[location + 1] << 8;
 }

@@ -6,6 +6,7 @@
 
 #include <string>
 
+// Ala C#
 using byte = unsigned char;
 using ushort = unsigned short;
 using uint = unsigned int;
@@ -23,13 +24,14 @@ public:
     void Reset();
 	void ExecuteInstruction(byte);
 
-	void PushStack(ushort value);
-	ushort PopStack();
+	void Push(ushort value);
+	ushort Pop();
 
-	uint GetPhysicalAddress(ushort, ushort);
+	uint GetPhysicalAddress(ushort segment, ushort offset);
 
 private:
     void Raise(byte);
+    ushort FetchWord(uint location);
 	byte *memoryBank;
     ushort
         // Generic registers

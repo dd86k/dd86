@@ -1,5 +1,5 @@
 # DD-DOS, A Small MS-DOS Interpreter Machine
 
-Status: Non-operational.
+Status: In development and non-operational.
 
-Email the repo's author for a copy of the DD-DOS reference manual.
+Email [dd86k](mailto:devddstuff@gmail.com) for a copy of the latest DD-DOS Reference Manual.
