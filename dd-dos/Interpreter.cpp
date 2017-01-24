@@ -743,6 +743,7 @@ void Intel8086::ExecuteInstruction(byte op)
     case 0x8A: { // MOV REG8, R/M8
         byte rm = memoryBank[IP + 1];
         byte ra = memoryBank[IP + 2];
+        //TODO: Group by MOD->REG->R/M instead
         switch (rm & 0b00000111) // R/M
         {
         case 0b00000000: // BX + SI
