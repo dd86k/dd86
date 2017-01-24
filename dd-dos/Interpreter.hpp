@@ -32,12 +32,44 @@ public:
 private:
     void Raise(byte);
     ushort FetchWord(uint location);
-    ushort GetFlag();
 
+    ushort GetFlag();
+    void SetFlag(ushort);
+
+    /*
+     * AL/AH
+     */
     byte GetAL();
     void SetAL(byte);
+    byte GetAH();
+    void SetAH(byte);
+
+    /*
+     * CL/CH
+     */
+    byte GetCL();
+    void SetCL(byte);
+    byte GetCH();
+    void SetCH(byte);
+
+    /*
+     * DL/DH
+     */
+    byte GetDL();
+    void SetDL(byte);
+    byte GetDH();
+    void SetDH(byte);
+
+    /*
+     * CL/CH
+     */
+    byte GetBL();
+    void SetBL(byte);
+    byte GetBH();
+    void SetBH(byte);
 
 	byte *memoryBank;
+
     ushort
         // Generic registers
         AX, BX, CX, DX,
@@ -47,9 +79,9 @@ private:
         // - BP: Base Pointer
         // - SP: Stack Pointer
         SI, DI, BP, SP,
-        // Segment registers, points to a segment (Max 64KB).
+        // Segment registers
         CS, DS, ES, SS,
-        // Program Counter (PC)
+        // Program Counter
         IP;
 	bool // From bit 15 to 0:
 		Overflow,  // 11 - OF

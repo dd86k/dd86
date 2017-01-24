@@ -93,14 +93,85 @@ void Intel8086::Reset() {
     // Empty Queue Bus
 }
 
+/*
+ * AL/AH
+ */
 byte inline Intel8086::GetAL() {
     byte *p = (byte *)&AX;
     return p[1];
 }
-
 void inline Intel8086::SetAL(byte v){
     byte *p = (byte *)&AX;
     p[1] = v;
+}
+byte inline Intel8086::GetAH() {
+    byte *p = (byte *)&AX;
+    return p[0];
+}
+void inline Intel8086::SetAH(byte v){
+    byte *p = (byte *)&AX;
+    p[0] = v;
+}
+
+/*
+ * CL/CH
+ */
+byte inline Intel8086::GetCL() {
+    byte *p = (byte *)&CX;
+    return p[1];
+}
+void inline Intel8086::SetCL(byte v){
+    byte *p = (byte *)&CX;
+    p[1] = v;
+}
+byte inline Intel8086::GetCH() {
+    byte *p = (byte *)&CX;
+    return p[0];
+}
+void inline Intel8086::SetCH(byte v){
+    byte *p = (byte *)&CX;
+    p[0] = v;
+}
+
+
+/*
+ * DL/DH
+ */
+byte inline Intel8086::GetDL() {
+    byte *p = (byte *)&DX;
+    return p[1];
+}
+void inline Intel8086::SetDL(byte v){
+    byte *p = (byte *)&DX;
+    p[1] = v;
+}
+byte inline Intel8086::GetDH() {
+    byte *p = (byte *)&DX;
+    return p[0];
+}
+void inline Intel8086::SetDH(byte v){
+    byte *p = (byte *)&DX;
+    p[0] = v;
+}
+
+/*
+ * BL/BH
+ */
+byte inline Intel8086::GetBL() {
+    byte *p = (byte *)&BX;
+    return p[1];
+}
+void inline Intel8086::SetBL(byte v){
+    byte *p = (byte *)&BX;
+    p[1] = v;
+}
+byte inline Intel8086::GetBH() {
+    byte *p = (byte *)&BX;
+    return p[0];
+}
+void inline Intel8086::SetBH(byte v){
+    byte *p = (byte *)&BX;
+    p[0] = v;
 }
 
 /// <summary>
@@ -122,22 +193,27 @@ void inline Intel8086::SetAL(byte v){
 /// </remark>
 void Intel8086::ExecuteInstruction(byte op)
 {
-    // Instruction descriptions are available in Page 2-35 (P50).
+    // Instruction descriptions are available at Page 2-35 (P50).
+    // Note: ModR/M explanation is location at Page 4-20 (P162).
     //TODO: Group instructions. -dd
     switch (op) {
-    case 0x00: // ADD R/M8, REG8
+    case 0x00: { // ADD R/M8, REG8
 
         break;
-    case 0x01: // ADD R/M16, REG16
+    }
+    case 0x01: { // ADD R/M16, REG16
 
         break;
-    case 0x02: // ADD REG8, R/M8
+    }
+    case 0x02: { // ADD REG8, R/M8
 
         break;
-    case 0x03: // ADD REG16, R/M16
+    }
+    case 0x03: { // ADD REG16, R/M16
 
         break;
-    case 0x04: // ADD AL, IMM8
+    }
+    case 0x04: { // ADD AL, IMM8
         //TODO: Investigate every detail
         byte b = memoryBank[IP + 1];
         if (AX + b > 0xFF)
@@ -145,57 +221,74 @@ void Intel8086::ExecuteInstruction(byte op)
         AX += b;
         IP += 2;
         break;
-    case 0x05: // ADD AX, IMM16
+    }
+    case 0x05: { // ADD AX, IMM16
 
         break;
-    case 0x06: // PUSH ES
+    }
+    case 0x06: { // PUSH ES
         Push(ES);
         ++IP;
         break;
-    case 0x07: // POP ES
+    }
+    case 0x07: { // POP ES
         ES = Pop();
         ++IP;
         break;
-    case 0x08: // OR R/M8, REG8
+    }
+    case 0x08: { // OR R/M8, REG8
 
         break;
-    case 0x09: // OR R/M16, REG16
+    }
+    case 0x09: { // OR R/M16, REG16
 
         break;
-    case 0x0A: // OR REG8, R/M8
+    }
+    case 0x0A: { // OR REG8, R/M8
 
         break;
-    case 0x0B: // OR REG16, R/M16
+    }
+    case 0x0B: { // OR REG16, R/M16
 
         break;
-    case 0x0C: // OR AL, IMM8
+    }
+    case 0x0C: { // OR AL, IMM8
 
         break;
-    case 0x0D: // OR AX, IMM16
+    }
+    case 0x0D: { // OR AX, IMM16
 
         break;
-    case 0x0E: // PUSH CS
+    }
+    case 0x0E: { // PUSH CS
         Push(CS);
         ++IP;
         break;
-    case 0x10: // ADC R/M8, REG8
+    }
+    case 0x10: { // ADC R/M8, REG8
 
         break;
-    case 0x11: // ADC R/M16, REG16
+    }
+    case 0x11: { // ADC R/M16, REG16
 
         break;
-    case 0x12: // ADC REG8, R/M8
+    }
+    case 0x12: { // ADC REG8, R/M8
 
         break;
-    case 0x13: // ADC REG16, R/M16
+    }
+    case 0x13: { // ADC REG16, R/M16
 
         break;
-    case 0x14: // ADC AL, IMM8
+    }
+    case 0x14: { // ADC AL, IMM8
 
         break;
-    case 0x15: // ADC AX, IMM16
+    }
+    case 0x15: { // ADC AX, IMM16
 
         break;
+    }
     case 0x16: // PUSH SS
         Push(SS);
         ++IP;
@@ -408,40 +501,52 @@ void Intel8086::ExecuteInstruction(byte op)
         ++IP;
         break;
     case 0x54: // PUSH SP
-
+        Push(SP);
+        ++IP;
         break;
     case 0x55: // PUSH BP
-
+        Push(BP);
+        ++IP;
         break;
     case 0x56: // PUSH SI
-
+        Push(SI);
+        ++IP;
         break;
     case 0x57: // PUSH DI
-
+        Push(DI);
+        ++IP;
         break;
     case 0x58: // POP AX
-
+        AX = Pop();
+        ++IP;
         break;
     case 0x59: // POP CX
-
+        CX = Pop();
+        ++IP;
         break;
     case 0x5A: // POP DX
-
+        DX = Pop();
+        ++IP;
         break;
     case 0x5B: // POP BX
-
+        BX = Pop();
+        ++IP;
         break;
     case 0x5C: // POP SP
-
+        SP = Pop();
+        ++IP;
         break;
     case 0x5D: // POP BP
-
+        BP = Pop();
+        ++IP;
         break;
     case 0x5E: // POP SI
-
+        SI = Pop();
+        ++IP;
         break;
     case 0x5F: // POP DI
-
+        DI = Pop();
+        ++IP;
         break;
     case 0x70: // JO    SHORT-LABEL
 
@@ -491,39 +596,43 @@ void Intel8086::ExecuteInstruction(byte op)
     case 0x7F: // JNLE/JG   SHORT-LABEL
 
         break;
-    case 0x80: // GRP1 R/M8, IMM8
-        /*byte rm; // Get ModR/M byte
-        switch (rm & 0b00111000) { // ModRM REG (I think)
-        case 0x00: // 000 - ADD
+    case 0x80: { // GRP1 R/M8, IMM8
+        byte rm = memoryBank[IP + 1]; // Get ModR/M byte
+        byte ra = memoryBank[IP + 2]; // 8-bit Immediate
+        switch (rm & 0b00111000) { // REG
+        case 0b00000000: // 000 - ADD
 
             break;
-        case 0x08: // 001 - OR
+        case 0b00001000: // 001 - OR
 
             break;
-        case 0x10: // 010 - ADC
+        case 0b00010000: // 010 - ADC
 
             break;
-        case 0x18: // 011 - SBB
+        case 0b00011000: // 011 - SBB
 
             break;
-        case 0x20: // 100 - AND
+        case 0b00100000: // 100 - AND
 
             break;
-        case 0x28: // 101 - SUB
+        case 0b00101000: // 101 - SUB
 
             break;
-        case 0x30: // 110 - XOR
+        case 0b00110000: // 110 - XOR
 
             break;
-        case 0x38: // 111 - CMP
+        case 0b00111000: // 111 - CMP
 
             break;
         default: break;
-        }*/
+        }
+        IP += 3;
         break;
-    case 0x81: // GRP1 R/M16, IMM16
-        /*byte rm; // Get ModR/M byte
-        switch (rm & 0b00111000) { // ModRM REG
+    }
+    case 0x81: { // GRP1 R/M16, IMM16
+        byte rm = memoryBank[IP + 1];  // Get ModR/M byte
+        ushort ra = FetchWord(IP + 2); // 16-bit Immediate
+        switch (rm & 0b00111000) { // ModR/M's REG
         case 0b00000000: // 000 - ADD
 
         break;
@@ -549,8 +658,9 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
         default: break;
-        }*/
+        }
         break;
+    }
     case 0x82: // GRP1 R/M8, IMM8
         /*byte rm; // Get ModR/M byte
         switch (rm & 0b00111000) { // ModRM REG
@@ -623,15 +733,1222 @@ void Intel8086::ExecuteInstruction(byte op)
     case 0x87: // XCHG REG16, R/M16
 
         break;
-    case 0x88: // MOV R/M8, REG8
+    case 0x88: { // MOV R/M8, REG8
 
         break;
+    }
     case 0x89: // MOV R/M16, REG16
 
         break;
-    case 0x8A: // MOV REG8, R/M8
-
+    case 0x8A: { // MOV REG8, R/M8
+        byte rm = memoryBank[IP + 1];
+        byte ra = memoryBank[IP + 2];
+        switch (rm & 0b00000111) // R/M
+        {
+        case 0b00000000: // BX + SI
+            switch (rm & 0b00111000) // REG
+            {
+            case 0b00000000: // AL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAL(memoryBank[BX + SI]);
+                    break;
+                case 0b01000000:
+                    SetAL(memoryBank[BX + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetAL(memoryBank[BX + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00001000: // CL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCL(memoryBank[BX + SI]);
+                    break;
+                case 0b01000000:
+                    SetCL(memoryBank[BX + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetCL(memoryBank[BX + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00010000: // DL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDL(memoryBank[BX + SI]);
+                    break;
+                case 0b01000000:
+                    SetDL(memoryBank[BX + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetDL(memoryBank[BX + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00011000: // BL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBL(memoryBank[BX + SI]);
+                    break;
+                case 0b01000000:
+                    SetBL(memoryBank[BX + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetBL(memoryBank[BX + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00100000: // AH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAH(memoryBank[BX + SI]);
+                    break;
+                case 0b01000000:
+                    SetAH(memoryBank[BX + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetAH(memoryBank[BX + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00101000: // CH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCH(memoryBank[BX + SI]);
+                    break;
+                case 0b01000000:
+                    SetCH(memoryBank[BX + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetCH(memoryBank[BX + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00110000: // DH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDH(memoryBank[BX + SI]);
+                    break;
+                case 0b01000000:
+                    SetDH(memoryBank[BX + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetDH(memoryBank[BX + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00111000: // BH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBH(memoryBank[BX + SI]);
+                    break;
+                case 0b01000000:
+                    SetBH(memoryBank[BX + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetBH(memoryBank[BX + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            default: break;
+            }
+            break; // 000
+        case 0b00001000: // BX + DI
+            switch (rm & 0b00111000) // REG
+            {
+            case 0b00000000: // AL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAL(memoryBank[BX + DI]);
+                    break;
+                case 0b01000000:
+                    SetAL(memoryBank[BX + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetAL(memoryBank[BX + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00001000: // CL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCL(memoryBank[BX + DI]);
+                    break;
+                case 0b01000000:
+                    SetCL(memoryBank[BX + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetCL(memoryBank[BX + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00010000: // DL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDL(memoryBank[BX + DI]);
+                    break;
+                case 0b01000000:
+                    SetDL(memoryBank[BX + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetDL(memoryBank[BX + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00011000: // BL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBL(memoryBank[BX + DI]);
+                    break;
+                case 0b01000000:
+                    SetBL(memoryBank[BX + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetBL(memoryBank[BX + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00100000: // AH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAH(memoryBank[BX + DI]);
+                    break;
+                case 0b01000000:
+                    SetAH(memoryBank[BX + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetAH(memoryBank[BX + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00101000: // CH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCH(memoryBank[BX + DI]);
+                    break;
+                case 0b01000000:
+                    SetCH(memoryBank[BX + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetCH(memoryBank[BX + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00110000: // DH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDH(memoryBank[BX + DI]);
+                    break;
+                case 0b01000000:
+                    SetDH(memoryBank[BX + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetDH(memoryBank[BX + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00111000: // BH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBH(memoryBank[BX + DI]);
+                    break;
+                case 0b01000000:
+                    SetBH(memoryBank[BX + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetBH(memoryBank[BX + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            default: break;
+            }
+            break; // 001
+        case 0b00000010: // BP + SI
+            switch (rm & 0b00111000) // REG
+            {
+            case 0b00000000: // AL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAL(memoryBank[BP + SI]);
+                    break;
+                case 0b01000000:
+                    SetAL(memoryBank[BP + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetAL(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00001000: // CL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCL(memoryBank[BP + SI]);
+                    break;
+                case 0b01000000:
+                    SetCL(memoryBank[BP + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetCL(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00010000: // DL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDL(memoryBank[BP + SI]);
+                    break;
+                case 0b01000000:
+                    SetDL(memoryBank[BP + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetDL(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00011000: // BL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBL(memoryBank[BP + SI]);
+                    break;
+                case 0b01000000:
+                    SetBL(memoryBank[BP + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetBL(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00100000: // AH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAH(memoryBank[BP + SI]);
+                    break;
+                case 0b01000000:
+                    SetAH(memoryBank[BP + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetAH(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00101000: // CH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCH(memoryBank[BP + SI]);
+                    break;
+                case 0b01000000:
+                    SetCH(memoryBank[BP + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetCH(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00110000: // DH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDH(memoryBank[BP + SI]);
+                    break;
+                case 0b01000000:
+                    SetDH(memoryBank[BP + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetDH(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00111000: // BH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBH(memoryBank[BP + SI]);
+                    break;
+                case 0b01000000:
+                    SetBH(memoryBank[BP + SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetBH(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            default: break;
+            }
+            break; // 010
+        case 0b00000011: // BP + DI
+            switch (rm & 0b00111000) // REG
+            {
+            case 0b00000000: // AL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAL(memoryBank[BP + DI]);
+                    break;
+                case 0b01000000:
+                    SetAL(memoryBank[BP + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetAL(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00001000: // CL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCL(memoryBank[BP + DI]);
+                    break;
+                case 0b01000000:
+                    SetCL(memoryBank[BP + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetCL(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00010000: // DL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDL(memoryBank[BP + DI]);
+                    break;
+                case 0b01000000:
+                    SetDL(memoryBank[BP + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetDL(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00011000: // BL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBL(memoryBank[BP + DI]);
+                    break;
+                case 0b01000000:
+                    SetBL(memoryBank[BP + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetBL(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00100000: // AH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAH(memoryBank[BP + DI]);
+                    break;
+                case 0b01000000:
+                    SetAH(memoryBank[BP + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetAH(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00101000: // CH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCH(memoryBank[BP + DI]);
+                    break;
+                case 0b01000000:
+                    SetCH(memoryBank[BP + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetCH(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00110000: // DH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDH(memoryBank[BP + DI]);
+                    break;
+                case 0b01000000:
+                    SetDH(memoryBank[BP + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetDH(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00111000: // BH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBH(memoryBank[BP + DI]);
+                    break;
+                case 0b01000000:
+                    SetBH(memoryBank[BP + DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetBH(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            default: break;
+            }
+            break; // 011
+        case 0b00000100: // SI
+            switch (rm & 0b00111000) // REG
+            {
+            case 0b00000000: // AL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAL(memoryBank[SI]);
+                    break;
+                case 0b01000000:
+                    SetAL(memoryBank[SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetAL(memoryBank[SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00001000: // CL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCL(memoryBank[SI]);
+                    break;
+                case 0b01000000:
+                    SetCL(memoryBank[SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetCL(memoryBank[SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00010000: // DL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDL(memoryBank[SI]);
+                    break;
+                case 0b01000000:
+                    SetDL(memoryBank[SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetDL(memoryBank[SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00011000: // BL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBL(memoryBank[SI]);
+                    break;
+                case 0b01000000:
+                    SetBL(memoryBank[SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetBL(memoryBank[SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00100000: // AH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAH(memoryBank[SI]);
+                    break;
+                case 0b01000000:
+                    SetAH(memoryBank[SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetAH(memoryBank[SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00101000: // CH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCH(memoryBank[SI]);
+                    break;
+                case 0b01000000:
+                    SetCH(memoryBank[SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetCH(memoryBank[SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00110000: // DH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDH(memoryBank[SI]);
+                    break;
+                case 0b01000000:
+                    SetDH(memoryBank[SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetDH(memoryBank[SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00111000: // BH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBH(memoryBank[SI]);
+                    break;
+                case 0b01000000:
+                    SetBH(memoryBank[SI + ra]);
+                    break;
+                case 0b10000000:
+                    SetBH(memoryBank[SI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            default: break;
+            }
+            break; // 100
+        case 0b00000101: // DI
+            switch (rm & 0b00111000) // REG
+            {
+            case 0b00000000: // AL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAL(memoryBank[DI]);
+                    break;
+                case 0b01000000:
+                    SetAL(memoryBank[DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetAL(memoryBank[DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00001000: // CL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCL(memoryBank[DI]);
+                    break;
+                case 0b01000000:
+                    SetCL(memoryBank[DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetCL(memoryBank[DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00010000: // DL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDL(memoryBank[DI]);
+                    break;
+                case 0b01000000:
+                    SetDL(memoryBank[DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetDL(memoryBank[DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00011000: // BL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBL(memoryBank[DI]);
+                    break;
+                case 0b01000000:
+                    SetBL(memoryBank[DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetBL(memoryBank[DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00100000: // AH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAH(memoryBank[DI]);
+                    break;
+                case 0b01000000:
+                    SetAH(memoryBank[DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetAH(memoryBank[DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00101000: // CH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCH(memoryBank[DI]);
+                    break;
+                case 0b01000000:
+                    SetCH(memoryBank[DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetCH(memoryBank[DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00110000: // DH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDH(memoryBank[DI]);
+                    break;
+                case 0b01000000:
+                    SetDH(memoryBank[DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetDH(memoryBank[DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00111000: // BH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBH(memoryBank[DI]);
+                    break;
+                case 0b01000000:
+                    SetBH(memoryBank[DI + ra]);
+                    break;
+                case 0b10000000:
+                    SetBH(memoryBank[DI + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            default: break;
+            }
+            break; // 101
+        case 0b00000110: // BP*
+            switch (rm & 0b00111000) // REG
+            {
+            case 0b00000000: // AL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAL(memoryBank[BP]); // DIRECT ADDRESS
+                    break;
+                case 0b01000000:
+                    SetAL(memoryBank[BP + ra]);
+                    break;
+                case 0b10000000:
+                    SetAL(memoryBank[BP + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00001000: // CL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCL(memoryBank[BP]); // DIRECT ADDRESS
+                    break;
+                case 0b01000000:
+                    SetCL(memoryBank[BP + ra]);
+                    break;
+                case 0b10000000:
+                    SetCL(memoryBank[BP + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00010000: // DL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDL(memoryBank[BP]); // DIRECT ADDRESS
+                    break;
+                case 0b01000000:
+                    SetDL(memoryBank[BP + ra]);
+                    break;
+                case 0b10000000:
+                    SetDL(memoryBank[BP + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00011000: // BL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBL(memoryBank[BP]); // DIRECT ADDRESS
+                    break;
+                case 0b01000000:
+                    SetBL(memoryBank[BP + ra]);
+                    break;
+                case 0b10000000:
+                    SetBL(memoryBank[BP + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00100000: // AH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAH(memoryBank[BP]); // DIRECT ADDRESS
+                    break;
+                case 0b01000000:
+                    SetAH(memoryBank[BP + ra]);
+                    break;
+                case 0b10000000:
+                    SetAH(memoryBank[BP + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00101000: // CH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCH(memoryBank[BP]); // DIRECT ADDRESS
+                    break;
+                case 0b01000000:
+                    SetCH(memoryBank[BP + ra]);
+                    break;
+                case 0b10000000:
+                    SetCH(memoryBank[BP + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00110000: // DH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDH(memoryBank[BP]); // DIRECT ADDRESS
+                    break;
+                case 0b01000000:
+                    SetDH(memoryBank[BP + ra]);
+                    break;
+                case 0b10000000:
+                    SetDH(memoryBank[BP + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00111000: // BH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBH(memoryBank[BP]); // DIRECT ADDRESS
+                    break;
+                case 0b01000000:
+                    SetBH(memoryBank[BP + ra]);
+                    break;
+                case 0b10000000:
+                    SetBH(memoryBank[BP + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            default: break;
+            }
+            break; // 110
+        case 0b111: // BX
+            switch (rm & 0b00111000) // REG
+            {
+            case 0b00000000: // AL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAL(memoryBank[BX]);
+                    break;
+                case 0b01000000:
+                    SetAL(memoryBank[BX + ra]);
+                    break;
+                case 0b10000000:
+                    SetAL(memoryBank[BX + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00001000: // CL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCL(memoryBank[BX]);
+                    break;
+                case 0b01000000:
+                    SetCL(memoryBank[BX + ra]);
+                    break;
+                case 0b10000000:
+                    SetCL(memoryBank[BX + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00010000: // DL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDL(memoryBank[BX]);
+                    break;
+                case 0b01000000:
+                    SetDL(memoryBank[BX + ra]);
+                    break;
+                case 0b10000000:
+                    SetDL(memoryBank[BX + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00011000: // BL
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBL(memoryBank[BX]);
+                    break;
+                case 0b01000000:
+                    SetBL(memoryBank[BX + ra]);
+                    break;
+                case 0b10000000:
+                    SetBL(memoryBank[BX + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBL(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00100000: // AH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetAH(memoryBank[BX]);
+                    break;
+                case 0b01000000:
+                    SetAH(memoryBank[BX + ra]);
+                    break;
+                case 0b10000000:
+                    SetAH(memoryBank[BX + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetAH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00101000: // CH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetCH(memoryBank[BX]); // DIRECT ADDRESS
+                    break;
+                case 0b01000000:
+                    SetCH(memoryBank[BX + ra]);
+                    break;
+                case 0b10000000:
+                    SetCH(memoryBank[BX + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetCH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00110000: // DH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetDH(memoryBank[BX]);
+                    break;
+                case 0b01000000:
+                    SetDH(memoryBank[BX + ra]);
+                    break;
+                case 0b10000000:
+                    SetDH(memoryBank[BX + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetDH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            case 0b00111000: // BH
+                switch (rm & 0b11000000) // MOD
+                {
+                case 0b00000000:
+                    SetBH(memoryBank[BX]); // DIRECT ADDRESS
+                    break;
+                case 0b01000000:
+                    SetBH(memoryBank[BX + ra]);
+                    break;
+                case 0b10000000:
+                    SetBH(memoryBank[BX + FetchWord(IP + 2)]);
+                    break;
+                case 0b11000000:
+                    SetBH(ra);
+                    break;
+                default: break;
+                }
+                break;
+            default: break;
+            }
+            break; // 111
+        default: break;
+        }
         break;
+    }
     case 0x8B: // MOV REG16, R/M16
 
         break;
@@ -687,15 +2004,17 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x9C: // PUSHF
-
+        Push(GetFlag());
+        ++IP;
         break;
     case 0x9D: // POPF
+        SetFlag(Pop());
+        ++IP;
+        break;
+    case 0x9E: // SAHF (Save AH Flag)
 
         break;
-    case 0x9E: // SAHF
-
-        break;
-    case 0x9F: // LAHF
+    case 0x9F: // LAHF (Load AH Flag)
 
         break;
     case 0xA0: // MOV AL, MEM8
@@ -1169,9 +2488,8 @@ void Intel8086::Push(ushort value)
 ushort Intel8086::Pop()
 {
 	uint addr = GetPhysicalAddress(SS, SP);
-	ushort value = *((ushort *)&memoryBank[addr]);
 	SP += 2;
-	return value;
+	return *((ushort *)&memoryBank[addr]);
 }
 
 uint inline Intel8086::GetPhysicalAddress(ushort segment, ushort offset)
@@ -1191,15 +2509,29 @@ ushort inline Intel8086::FetchWord(uint location) {
     return memoryBank[location] | memoryBank[location + 1] << 8;
 }
 
-ushort inline Intel8086::GetFlag(){
+ushort inline Intel8086::GetFlag()
+{
     return
-        Overflow ? 0x800 : 0 |
+        Overflow  ? 0x800 : 0 |
         Direction ? 0x400 : 0 |
         Interrupt ? 0x200 : 0 |
-        Trap ? 0x100 : 0 |
-        Sign ? 0x80 : 0 |
-        Zero ? 0x40 : 0 |
-        Auxiliary ? 0x10 : 0 |
-        Parity ? 0x4 : 0 |
-        Carry ? 1 : 0;
+        Trap      ? 0x100 : 0 |
+        Sign      ? 0x80  : 0 |
+        Zero      ? 0x40  : 0 |
+        Auxiliary ? 0x10  : 0 |
+        Parity    ? 0x4   : 0 |
+        Carry     ? 1     : 0;
+}
+
+void inline Intel8086::SetFlag(ushort flag)
+{
+    Overflow  = (flag & 0x800) != 0;
+    Direction = (flag & 0x400) != 0;
+    Interrupt = (flag & 0x200) != 0;
+    Trap      = (flag & 0x100) != 0;
+    Sign      = (flag & 0x80 ) != 0;
+    Zero      = (flag & 0x40 ) != 0;
+    Auxiliary = (flag & 0x10 ) != 0;
+    Parity    = (flag & 0x4  ) != 0;
+    Carry     = (flag & 1    ) != 0;
 }
