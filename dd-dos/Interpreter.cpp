@@ -93,6 +93,16 @@ void Intel8086::Reset() {
     // Empty Queue Bus
 }
 
+byte inline Intel8086::GetAL() {
+    byte *p = (byte *)&AX;
+    return p[1];
+}
+
+void inline Intel8086::SetAL(byte v){
+    byte *p = (byte *)&AX;
+    p[1] = v;
+}
+
 /// <summary>
 /// Execute the operation code. (ALU)
 /// </summary>
@@ -112,6 +122,7 @@ void Intel8086::Reset() {
 /// </remark>
 void Intel8086::ExecuteInstruction(byte op)
 {
+    // Instruction descriptions are available in Page 2-35 (P50).
     //TODO: Group instructions. -dd
     switch (op) {
     case 0x00: // ADD R/M8, REG8
@@ -127,7 +138,12 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x04: // ADD AL, IMM8
-
+        //TODO: Investigate every detail
+        byte b = memoryBank[IP + 1];
+        if (AX + b > 0xFF)
+            Overflow = true;
+        AX += b;
+        IP += 2;
         break;
     case 0x05: // ADD AX, IMM16
 
@@ -159,7 +175,8 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x0E: // PUSH CS
-
+        Push(CS);
+        ++IP;
         break;
     case 0x10: // ADC R/M8, REG8
 
@@ -180,10 +197,12 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x16: // PUSH SS
-
+        Push(SS);
+        ++IP;
         break;
     case 0x17: // POP SS
-
+        SS = Pop();
+        ++IP;
         break;
     case 0x18: // SBB R/M8, REG8
 
@@ -204,10 +223,12 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x1E: // PUSH DS
-
+        Push(DS);
+        ++IP;
         break;
     case 0x1F: // POP DS
-
+        DS = Pop();
+        ++IP;
         break;
     case 0x20: // AND R/M8, REG8
 
@@ -228,7 +249,7 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x26: // ES: (Segment override prefix)
-        ES = IP++;
+
         break;
     case 0x27: // DAA
 
@@ -379,10 +400,12 @@ void Intel8086::ExecuteInstruction(byte op)
         ++IP;
         break;
     case 0x52: // PUSH DX
-
+        Push(DX);
+        ++IP;
         break;
     case 0x53: // PUSH BX
-
+        Push(BX);
+        ++IP;
         break;
     case 0x54: // PUSH SP
 

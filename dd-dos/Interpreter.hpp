@@ -33,6 +33,10 @@ private:
     void Raise(byte);
     ushort FetchWord(uint location);
     ushort GetFlag();
+
+    byte GetAL();
+    void SetAL(byte);
+
 	byte *memoryBank;
     ushort
         // Generic registers
@@ -48,13 +52,13 @@ private:
         // Program Counter (PC)
         IP;
 	bool // From bit 15 to 0:
-		Overflow,  // 11
-		Direction, // 10
-		Interrupt, // 9
-		Trap,      // 8
-		Sign,      // 7
-		Zero,      // 6
-		Auxiliary, // 4
-		Parity,    // 2
-		Carry;     // 0
+		Overflow,  // 11 - OF
+		Direction, // 10 - DF
+		Interrupt, //  9 - IF
+		Trap,      //  8 - TF
+		Sign,      //  7 - SF
+		Zero,      //  6 - ZF
+		Auxiliary, //  4 - AF
+		Parity,    //  2 - PF
+		Carry;     //  0 - CF
 };
