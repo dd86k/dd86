@@ -37,7 +37,6 @@ Intel8086::Intel8086()
 	, ES(0)
 	, SS(0)
 	, IP(0)
-	, Undefined(false)
 	, Overflow(false)
 	, Direction(false)
 	, Interrupt(false)
@@ -80,8 +79,7 @@ void Intel8086::Init(const std::string &filename)
 }*/
 
 void Intel8086::Reset() {
-    Undefined =
-        Overflow = 
+    Overflow = 
         Direction =
         Interrupt =
         Trap =
@@ -135,10 +133,12 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x06: // PUSH ES
-
+        Push(ES);
+        ++IP;
         break;
     case 0x07: // POP ES
-
+        Pop(ES);
+        ++IP;
         break;
     case 0x08: // OR R/M8, REG8
 
@@ -376,6 +376,7 @@ void Intel8086::ExecuteInstruction(byte op)
         break;
     case 0x51: // PUSH CX
         Push(CX);
+        ++IP;
         break;
     case 0x52: // PUSH DX
 
@@ -1165,4 +1166,17 @@ void Intel8086::Raise(byte interrupt)
 
 ushort inline Intel8086::FetchWord(uint location) {
     return memoryBank[location] | memoryBank[location + 1] << 8;
+}
+
+ushort inline Intel8086::GetFlag(){
+    return
+        Overflow ? 0x800 : 0 |
+        Direction ? 0x400 : 0 |
+        Interrupt ? 0x200 : 0 |
+        Trap ? 0x100 : 0 |
+        Sign ? 0x80 : 0 |
+        Zero ? 0x40 : 0 |
+        Auxiliary ? 0x10 : 0 |
+        Parity ? 0x4 : 0 |
+        Carry ? 1 : 0;
 }
