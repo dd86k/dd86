@@ -137,7 +137,7 @@ void Intel8086::ExecuteInstruction(byte op)
         ++IP;
         break;
     case 0x07: // POP ES
-        Pop(ES);
+        ES = Pop();
         ++IP;
         break;
     case 0x08: // OR R/M8, REG8
