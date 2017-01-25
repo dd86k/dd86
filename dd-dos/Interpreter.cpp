@@ -20,6 +20,7 @@
 
 #include "Interpreter.hpp"
 #include "dd-dos.hpp" // For Con
+#include "Utils.hpp"
 
 //NOTE: Opened files should go in JFT
 
@@ -96,41 +97,33 @@ void Intel8086::Reset() {
 /*
  * AL/AH
  */
-byte inline Intel8086::GetAL() {
-    byte *p = (byte *)&AX;
-    return p[1];
+inline byte Intel8086::GetAL() {
+    return GetLower(AX);
 }
-void inline Intel8086::SetAL(byte v){
-    byte *p = (byte *)&AX;
-    p[1] = v;
+inline void Intel8086::SetAL(byte v) {
+    SetLower(AX, v);
 }
-byte inline Intel8086::GetAH() {
-    byte *p = (byte *)&AX;
-    return p[0];
+inline byte Intel8086::GetAH() {
+    return GetUpper(AX);
 }
-void inline Intel8086::SetAH(byte v){
-    byte *p = (byte *)&AX;
-    p[0] = v;
+inline void Intel8086::SetAH(byte v) {
+    SetUpper(AX, v);
 }
 
 /*
  * CL/CH
  */
 byte inline Intel8086::GetCL() {
-    byte *p = (byte *)&CX;
-    return p[1];
+    return GetLower(CX);
 }
 void inline Intel8086::SetCL(byte v){
-    byte *p = (byte *)&CX;
-    p[1] = v;
+    SetLower(CX, v);
 }
 byte inline Intel8086::GetCH() {
-    byte *p = (byte *)&CX;
-    return p[0];
+    return GetUpper(CX);
 }
 void inline Intel8086::SetCH(byte v){
-    byte *p = (byte *)&CX;
-    p[0] = v;
+    SetUpper(CX, v);
 }
 
 
@@ -138,40 +131,32 @@ void inline Intel8086::SetCH(byte v){
  * DL/DH
  */
 byte inline Intel8086::GetDL() {
-    byte *p = (byte *)&DX;
-    return p[1];
+    return GetLower(DX);
 }
 void inline Intel8086::SetDL(byte v){
-    byte *p = (byte *)&DX;
-    p[1] = v;
+    SetLower(DX, v);
 }
 byte inline Intel8086::GetDH() {
-    byte *p = (byte *)&DX;
-    return p[0];
+    return GetUpper(DX);
 }
 void inline Intel8086::SetDH(byte v){
-    byte *p = (byte *)&DX;
-    p[0] = v;
+    SetUpper(DX, v);
 }
 
 /*
  * BL/BH
  */
 byte inline Intel8086::GetBL() {
-    byte *p = (byte *)&BX;
-    return p[1];
+    return GetLower(BX);
 }
 void inline Intel8086::SetBL(byte v){
-    byte *p = (byte *)&BX;
-    p[1] = v;
+    SetLower(BX, v);
 }
 byte inline Intel8086::GetBH() {
-    byte *p = (byte *)&BX;
-    return p[0];
+    return GetUpper(BX);
 }
 void inline Intel8086::SetBH(byte v){
-    byte *p = (byte *)&BX;
-    p[0] = v;
+    SetUpper(BX, v);
 }
 
 /// <summary>

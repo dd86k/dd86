@@ -145,11 +145,13 @@
     <ClInclude Include="dd-dos.hpp" />
     <ClInclude Include="Interpreter.hpp" />
     <ClInclude Include="poshub.hpp" />
+    <ClInclude Include="Utils.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dd-dos.cpp" />
     <ClCompile Include="Interpreter.cpp" />
     <ClCompile Include="poshub.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

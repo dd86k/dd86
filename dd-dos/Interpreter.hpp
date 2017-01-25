@@ -5,11 +5,7 @@
 #pragma once
 
 #include <string>
-
-// Ala C#
-using byte = unsigned char;
-using ushort = unsigned short;
-using uint = unsigned int;
+#include "Utils.hpp"
 
 static const uint MAX_MEMORY = 0x100000; // 1 MB
 
