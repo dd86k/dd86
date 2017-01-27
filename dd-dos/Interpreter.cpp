@@ -113,16 +113,16 @@ inline void Intel8086::SetAH(byte v) {
 /*
  * CL/CH
  */
-byte inline Intel8086::GetCL() {
+inline byte Intel8086::GetCL() {
     return GetLower(CX);
 }
-void inline Intel8086::SetCL(byte v){
+inline void Intel8086::SetCL(byte v){
     SetLower(CX, v);
 }
-byte inline Intel8086::GetCH() {
+inline byte Intel8086::GetCH() {
     return GetUpper(CX);
 }
-void inline Intel8086::SetCH(byte v){
+inline void Intel8086::SetCH(byte v){
     SetUpper(CX, v);
 }
 
@@ -130,32 +130,32 @@ void inline Intel8086::SetCH(byte v){
 /*
  * DL/DH
  */
-byte inline Intel8086::GetDL() {
+inline byte Intel8086::GetDL() {
     return GetLower(DX);
 }
-void inline Intel8086::SetDL(byte v){
+inline void Intel8086::SetDL(byte v){
     SetLower(DX, v);
 }
-byte inline Intel8086::GetDH() {
+inline byte Intel8086::GetDH() {
     return GetUpper(DX);
 }
-void inline Intel8086::SetDH(byte v){
+inline void Intel8086::SetDH(byte v){
     SetUpper(DX, v);
 }
 
 /*
  * BL/BH
  */
-byte inline Intel8086::GetBL() {
+inline byte Intel8086::GetBL() {
     return GetLower(BX);
 }
-void inline Intel8086::SetBL(byte v){
+inline void Intel8086::SetBL(byte v){
     SetLower(BX, v);
 }
-byte inline Intel8086::GetBH() {
+inline byte Intel8086::GetBH() {
     return GetUpper(BX);
 }
-void inline Intel8086::SetBH(byte v){
+inline void Intel8086::SetBH(byte v){
     SetUpper(BX, v);
 }
 
@@ -1990,18 +1990,20 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x9C: // PUSHF
-        Push(GetFlag());
+        Push(GetFlagWord());
         ++IP;
         break;
     case 0x9D: // POPF
-        SetFlag(Pop());
+        SetFlagWord(Pop());
         ++IP;
         break;
-    case 0x9E: // SAHF (Save AH Flag)
-
+    case 0x9E: // SAHF (AH to Flags)
+        SetFlag(GetUpper(AX));
+        ++IP;
         break;
-    case 0x9F: // LAHF (Load AH Flag)
-
+    case 0x9F: // LAHF (Flags to AH)
+        SetUpper(AX, GetFlag());
+        ++IP;
         break;
     case 0xA0: // MOV AL, MEM8
 
@@ -2491,11 +2493,30 @@ void Intel8086::Raise(byte interrupt)
 
 }
 
-ushort inline Intel8086::FetchWord(uint location) {
+ushort Intel8086::FetchWord(uint location) {
     return memoryBank[location] | memoryBank[location + 1] << 8;
 }
 
-ushort inline Intel8086::GetFlag()
+byte Intel8086::GetFlag()
+{
+    return
+        Sign      ? 0x80  : 0 |
+        Zero      ? 0x40  : 0 |
+        Auxiliary ? 0x10  : 0 |
+        Parity    ? 0x4   : 0 |
+        Carry     ? 1     : 0;
+}
+
+void Intel8086::SetFlag(byte flag)
+{
+    Sign      = (flag & 0x80) != 0;
+    Zero      = (flag & 0x40) != 0;
+    Auxiliary = (flag & 0x10) != 0;
+    Parity    = (flag & 0x4 ) != 0;
+    Carry     = (flag & 1   ) != 0;
+}
+
+ushort Intel8086::GetFlagWord()
 {
     return
         Overflow  ? 0x800 : 0 |
@@ -2509,7 +2530,7 @@ ushort inline Intel8086::GetFlag()
         Carry     ? 1     : 0;
 }
 
-void inline Intel8086::SetFlag(ushort flag)
+void Intel8086::SetFlagWord(ushort flag)
 {
     Overflow  = (flag & 0x800) != 0;
     Direction = (flag & 0x400) != 0;

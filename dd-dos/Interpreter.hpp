@@ -29,8 +29,10 @@ private:
     void Raise(byte);
     ushort FetchWord(uint location);
 
-    ushort GetFlag();
-    void SetFlag(ushort);
+    byte GetFlag();
+    void SetFlag(byte);
+    ushort GetFlagWord();
+    void SetFlagWord(ushort);
 
     /*
      * AL/AH
