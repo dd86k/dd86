@@ -81,14 +81,14 @@ private:
         CS, DS, ES, SS,
         // Program Counter
         IP;
-	bool // From bit 15 to 0:
-		Overflow,  // 11 - OF
-		Direction, // 10 - DF
-		Interrupt, //  9 - IF
-		Trap,      //  8 - TF
-		Sign,      //  7 - SF
-		Zero,      //  6 - ZF
-		Auxiliary, //  4 - AF
-		Parity,    //  2 - PF
-		Carry;     //  0 - CF
+    bool // From bit 15 to 0:
+        OF, // 11, Overflow
+        DF, // 10, Direction
+        IF, //  9, Interrupt
+        TF, //  8, Trap
+        SF, //  7, Sign
+        ZF, //  6, Zero
+        AF, //  4, Auxiliary
+        PF, //  2, Parity
+        CF; //  0, Carry
 };

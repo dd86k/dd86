@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Interpreter.cpp: Legacy machine code interpreter. Mimics an Intel 8086.
  * 
  * Architecture: Page 2-3 (P18)
@@ -38,15 +38,15 @@ Intel8086::Intel8086()
 	, ES(0)
 	, SS(0)
 	, IP(0)
-	, Overflow(false)
-	, Direction(false)
-	, Interrupt(false)
-	, Trap(false)
-	, Sign(false)
-	, Zero(false)
-	, Auxiliary(false)
-	, Parity(false)
-	, Carry(false)
+	, OF(false)
+	, DF(false)
+	, IF(false)
+	, TF(false)
+	, SF(false)
+	, ZF(false)
+	, AF(false)
+	, PF(false)
+	, CF(false)
 {
     memoryBank = new byte[MAX_MEMORY]();
 }
@@ -80,15 +80,8 @@ void Intel8086::Init(const std::string &filename)
 }*/
 
 void Intel8086::Reset() {
-    Overflow = 
-        Direction =
-        Interrupt =
-        Trap =
-        Sign =
-        Zero =
-        Auxiliary =
-        Parity =
-        Carry = false;
+    OF = DF = IF = TF = SF =
+        ZF = AF = PF = CF = false;
     CS = 0xFFFF;
     IP = DS = SS = ES = 0;
     // Empty Queue Bus
@@ -202,7 +195,7 @@ void Intel8086::ExecuteInstruction(byte op)
         //TODO: Investigate every detail
         byte b = memoryBank[IP + 1];
         if (AX + b > 0xFF)
-            Overflow = true;
+            OF = true;
         AX += b;
         IP += 2;
         break;
@@ -327,10 +320,29 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x26: // ES: (Segment override prefix)
+        // e.g. mov	ax, [es:100h] ; Use ES as the segment
 
         break;
-    case 0x27: // DAA
+    case 0x27: { // DAA
+        byte oldAL = GetAL();
+        bool oldCF = CF;
+        CF = false;
 
+        if (((oldAL & 0xF) > 9) || AF)
+        {
+            SetAL(GetAL() + 6);
+            CF = oldCF || (GetAL() & 0b10000000);
+            AF = true;
+        }
+        else AF = false;
+
+        if ((oldAL > 0x99) || oldCF)
+        {
+            SetAL(GetAL() + 0x60);
+            CF = true;
+        }
+        else CF = false;
+    }
         break;
     case 0x28: // SUB R/M8, REG8
 
@@ -353,8 +365,26 @@ void Intel8086::ExecuteInstruction(byte op)
     case 0x2E: // CS:
 
         break;
-    case 0x2F: // DAS
+    case 0x2F: { // DAS
+        byte oldAL = GetAL();
+        bool oldCF = CF;
+        CF = false;
 
+        if (((oldAL & 0xF) > 9) || AF)
+        {
+            SetAL(GetAL() - 6);
+            CF = oldCF || (GetAL() & 0b10000000);
+            AF = true;
+        }
+        else AF = false;
+
+        if ((oldAL > 0x99) || oldCF)
+        {
+            SetAL(GetAL() - 0x60);
+            CF = true;
+        }
+        else CF = false;
+    }
         break;
     case 0x30: // XOR R/M8, REG8
 
@@ -2462,7 +2492,7 @@ void Intel8086::ExecuteInstruction(byte op)
     }
 }
 
-// Page 2-99 contains the interrupt message processor
+// Page 2-99 contains the IF message processor
 
 
 
@@ -2486,9 +2516,9 @@ uint inline Intel8086::GetPhysicalAddress(ushort segment, ushort offset)
 }
 
 /// <summary>
-/// Raise hardware interrupt.
+/// Raise hardware IF.
 /// <summary>
-void Intel8086::Raise(byte interrupt)
+void Intel8086::Raise(byte IF)
 {
 
 }
@@ -2500,45 +2530,45 @@ ushort Intel8086::FetchWord(uint location) {
 byte Intel8086::GetFlag()
 {
     return
-        Sign      ? 0x80  : 0 |
-        Zero      ? 0x40  : 0 |
-        Auxiliary ? 0x10  : 0 |
-        Parity    ? 0x4   : 0 |
-        Carry     ? 1     : 0;
+        SF      ? 0x80  : 0 |
+        ZF      ? 0x40  : 0 |
+        AF ? 0x10  : 0 |
+        PF    ? 0x4   : 0 |
+        CF     ? 1     : 0;
 }
 
 void Intel8086::SetFlag(byte flag)
 {
-    Sign      = (flag & 0x80) != 0;
-    Zero      = (flag & 0x40) != 0;
-    Auxiliary = (flag & 0x10) != 0;
-    Parity    = (flag & 0x4 ) != 0;
-    Carry     = (flag & 1   ) != 0;
+    SF      = (flag & 0x80) != 0;
+    ZF      = (flag & 0x40) != 0;
+    AF = (flag & 0x10) != 0;
+    PF    = (flag & 0x4 ) != 0;
+    CF     = (flag & 1   ) != 0;
 }
 
 ushort Intel8086::GetFlagWord()
 {
     return
-        Overflow  ? 0x800 : 0 |
-        Direction ? 0x400 : 0 |
-        Interrupt ? 0x200 : 0 |
-        Trap      ? 0x100 : 0 |
-        Sign      ? 0x80  : 0 |
-        Zero      ? 0x40  : 0 |
-        Auxiliary ? 0x10  : 0 |
-        Parity    ? 0x4   : 0 |
-        Carry     ? 1     : 0;
+        OF  ? 0x800 : 0 |
+        DF ? 0x400 : 0 |
+        IF ? 0x200 : 0 |
+        TF      ? 0x100 : 0 |
+        SF      ? 0x80  : 0 |
+        ZF      ? 0x40  : 0 |
+        AF ? 0x10  : 0 |
+        PF    ? 0x4   : 0 |
+        CF     ? 1     : 0;
 }
 
 void Intel8086::SetFlagWord(ushort flag)
 {
-    Overflow  = (flag & 0x800) != 0;
-    Direction = (flag & 0x400) != 0;
-    Interrupt = (flag & 0x200) != 0;
-    Trap      = (flag & 0x100) != 0;
-    Sign      = (flag & 0x80 ) != 0;
-    Zero      = (flag & 0x40 ) != 0;
-    Auxiliary = (flag & 0x10 ) != 0;
-    Parity    = (flag & 0x4  ) != 0;
-    Carry     = (flag & 1    ) != 0;
+    OF  = (flag & 0x800) != 0;
+    DF = (flag & 0x400) != 0;
+    IF = (flag & 0x200) != 0;
+    TF      = (flag & 0x100) != 0;
+    SF      = (flag & 0x80 ) != 0;
+    ZF      = (flag & 0x40 ) != 0;
+    AF = (flag & 0x10 ) != 0;
+    PF    = (flag & 0x4  ) != 0;
+    CF     = (flag & 1    ) != 0;
 }
