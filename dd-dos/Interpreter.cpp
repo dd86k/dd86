@@ -196,7 +196,7 @@ void Intel8086::ExecuteInstruction(byte op)
         byte al = GetAL();
         byte alr = al + b;
         OF = al + b > 0xFF;
-        SF = alr & 0b10000000 != 0;
+        SF = (alr & 0b10000000) != 0;
         ZF = alr == 0;
         //AF
         //CF
@@ -592,52 +592,84 @@ void Intel8086::ExecuteInstruction(byte op)
         ++IP;
         break;
     case 0x70: // JO    SHORT-LABEL
-
+        if (OF)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x71: // JNO   SHORT-LABEL
-
+        if (OF == false)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x72: // JB/JNAE/JC    SHORT-LABEL
-
+        if (CF)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x73: // JNB/JAE/JNC   SHORT-LABEL
-
+        if (CF == false)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x74: // JE/JZ     SHORT-LABEL
-
+        if (ZF)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x75: // JNE/JNZ   SHORT-LABEL
-
+        if (ZF == false)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x76: // JBE/JNA   SHORT-LABEL
-
+        if (CF || ZF)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x77: // JNBE/JA   SHORT-LABEL
-
+        if (CF == false && ZF == false)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x78: // JS        SHORT-LABEL
-
+        if (SF)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x79: // JNS       SHORT-LABEL
-
+        if (SF == false)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x7A: // JP/JPE    SHORT-LABEL
-
+        if (PF)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x7B: // JNP/JPO   SHORT-LABEL
-
+        if (PF == false)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x7C: // JL/JNGE   SHORT-LABEL
-
+        if (SF != OF)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x7D: // JNL/JGE   SHORT-LABEL
-
+        if (SF == OF)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x7E: // JLE/JNG   SHORT-LABEL
-
+        if (SF != OF || ZF)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x7F: // JNLE/JG   SHORT-LABEL
-
+        if (SF == OF && ZF == false)
+            IP += memoryBank[IP + 1];
+        else IP += 2;
         break;
     case 0x80: { // GRP1 R/M8, IMM8
         byte rm = memoryBank[IP + 1]; // Get ModR/M byte

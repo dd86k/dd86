@@ -77,7 +77,7 @@ private:
         CS, DS, ES, SS,
         // Program Counter
         IP;
-    bool // From bit 15 to 0:
+    bool // FLAG
         OF, // 11, Overflow
         DF, // 10, Direction
         IF, //  9, Interrupt
