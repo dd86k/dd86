@@ -71,11 +71,7 @@ private:
     ushort
         // Generic registers
         AX, BX, CX, DX,
-        // Index registers :
-        // - SI: Source Index
-        // - DI: Destination Index
-        // - BP: Base Pointer
-        // - SP: Stack Pointer
+        // Index registers
         SI, DI, BP, SP,
         // Segment registers
         CS, DS, ES, SS,

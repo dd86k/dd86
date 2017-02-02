@@ -192,11 +192,16 @@ void Intel8086::ExecuteInstruction(byte op)
         break;
     }
     case 0x04: { // ADD AL, IMM8
-        //TODO: Investigate every detail
         byte b = memoryBank[IP + 1];
-        if (AX + b > 0xFF)
-            OF = true;
-        AX += b;
+        byte al = GetAL();
+        byte alr = al + b;
+        OF = al + b > 0xFF;
+        SF = alr & 0b10000000 != 0;
+        ZF = alr == 0;
+        //AF
+        //CF
+        //PF
+        SetAL(alr);
         IP += 2;
         break;
     }
@@ -342,6 +347,7 @@ void Intel8086::ExecuteInstruction(byte op)
             CF = true;
         }
         else CF = false;
+        ++IP;
     }
         break;
     case 0x28: // SUB R/M8, REG8
@@ -384,6 +390,7 @@ void Intel8086::ExecuteInstruction(byte op)
             CF = true;
         }
         else CF = false;
+        ++IP;
     }
         break;
     case 0x30: // XOR R/M8, REG8
@@ -407,8 +414,16 @@ void Intel8086::ExecuteInstruction(byte op)
     case 0x36: // SS:
 
         break;
-    case 0x37: // AAA
-
+    case 0x37: { // AAA
+        if (((GetAL() & 0xF) > 9) || AF)
+        {
+            AX += 0x106;
+            AF = CF = true;
+        }
+        else AF = CF = false;
+        SetAL(GetAL() & 0xF);
+        ++IP;
+    }
         break;
     case 0x38: // CMP R/M8, REG8
 
@@ -431,8 +446,21 @@ void Intel8086::ExecuteInstruction(byte op)
     case 0x3E: // DS:
 
         break;
-    case 0x3F: // AAS
-
+    case 0x3F: { // AAS
+        if (((GetAL() & 0xF) > 9) || AF)
+        {
+            AX -= 6;
+            SetAH(GetAH() - 1);
+            AF = CF = true;
+            SetAL(GetAL() & 0xF);
+        }
+        else
+        {
+            AF = CF = false;
+            SetAL(GetAL() & 0xF);
+        }
+        ++IP;
+    }
         break;
     case 0x40: // INC AX
         ++AX;
@@ -2284,25 +2312,34 @@ void Intel8086::ExecuteInstruction(byte op)
         break;
         }*/
         break;
-    case 0xD4: // AAM
-
+    case 0xD4: { // AAM
+        byte tempAL = GetAL();
+        SetAH(tempAL / 0xA);
+        SetAL(tempAL % 0xA);
+        IP += 2;
+    }
         break;
-    case 0xD5: // AAD
-
+    case 0xD5: { // AAD
+        byte tempAL = GetAL();
+        byte tempAH = GetAH();
+        SetAL((tempAL + (tempAH * 0xA)) & 0xFF);
+        SetAH(0);
+        IP += 2;
+    }
         break;
     case 0xD7: // XLAT SOURCE-TABLE
 
         break;
-    case 0xD8: // ESC OPCODE, SOURCE
+    /*case 0xD8: // ESC OPCODE, SOURCE
     case 0xD9: // 1101 1XXX - MOD YYY R/M
-    case 0xDA: 
+    case 0xDA: // Used to ESCape to another co-processor.
     case 0xDB: 
     case 0xDC: 
     case 0xDD:
     case 0xDE:
     case 0xDF:
 
-        break;
+        break;*/
 
     case 0xE0: // LOOPNE/LOOPNZ SHORT-LABEL
 
@@ -2353,6 +2390,7 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0xF0: // LOCK (prefix)
+// http://qcd.phys.cmu.edu/QCDcluster/intel/vtune/reference/vc160.htm
 
         break;
     case 0xF2: // REPNE/REPNZ
@@ -2365,7 +2403,8 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0xF5: // CMC
-
+        CF = !CF;
+        ++IP;
         break;
     case 0xF6: // GRP3a R/M8, IMM8
         /*byte rm; // Get ModR/M byte
@@ -2426,10 +2465,12 @@ void Intel8086::ExecuteInstruction(byte op)
         }*/
         break;
     case 0xF8: // CLC
-
+        CF = false;
+        ++IP;
         break;
     case 0xF9: // STC
-
+        CF = true;
+        ++IP;
         break;
     case 0xFA: // CLI
 
@@ -2438,10 +2479,12 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0xFC: // CLD
-
+        DF = false;
+        ++IP;
         break;
     case 0xFD: // STD
-
+        DF = true;
+        ++IP;
         break;
     case 0xFE: // GRP4 R/M8
         /*byte rm; // Get ModR/M byte
@@ -2530,45 +2573,45 @@ ushort Intel8086::FetchWord(uint location) {
 byte Intel8086::GetFlag()
 {
     return
-        SF      ? 0x80  : 0 |
-        ZF      ? 0x40  : 0 |
-        AF ? 0x10  : 0 |
-        PF    ? 0x4   : 0 |
-        CF     ? 1     : 0;
+        SF ? 0x80 : 0 |
+        ZF ? 0x40 : 0 |
+        AF ? 0x10 : 0 |
+        PF ? 0x4  : 0 |
+        CF ? 1    : 0;
 }
 
 void Intel8086::SetFlag(byte flag)
 {
-    SF      = (flag & 0x80) != 0;
-    ZF      = (flag & 0x40) != 0;
+    SF = (flag & 0x80) != 0;
+    ZF = (flag & 0x40) != 0;
     AF = (flag & 0x10) != 0;
-    PF    = (flag & 0x4 ) != 0;
-    CF     = (flag & 1   ) != 0;
+    PF = (flag & 0x4 ) != 0;
+    CF = (flag & 1   ) != 0;
 }
 
 ushort Intel8086::GetFlagWord()
 {
     return
-        OF  ? 0x800 : 0 |
+        OF ? 0x800 : 0 |
         DF ? 0x400 : 0 |
         IF ? 0x200 : 0 |
-        TF      ? 0x100 : 0 |
-        SF      ? 0x80  : 0 |
-        ZF      ? 0x40  : 0 |
+        TF ? 0x100 : 0 |
+        SF ? 0x80  : 0 |
+        ZF ? 0x40  : 0 |
         AF ? 0x10  : 0 |
-        PF    ? 0x4   : 0 |
-        CF     ? 1     : 0;
+        PF ? 0x4   : 0 |
+        CF ? 1     : 0;
 }
 
 void Intel8086::SetFlagWord(ushort flag)
 {
-    OF  = (flag & 0x800) != 0;
+    OF = (flag & 0x800) != 0;
     DF = (flag & 0x400) != 0;
     IF = (flag & 0x200) != 0;
-    TF      = (flag & 0x100) != 0;
-    SF      = (flag & 0x80 ) != 0;
-    ZF      = (flag & 0x40 ) != 0;
+    TF = (flag & 0x100) != 0;
+    SF = (flag & 0x80 ) != 0;
+    ZF = (flag & 0x40 ) != 0;
     AF = (flag & 0x10 ) != 0;
-    PF    = (flag & 0x4  ) != 0;
-    CF     = (flag & 1    ) != 0;
+    PF = (flag & 0x4  ) != 0;
+    CF = (flag & 1    ) != 0;
 }
