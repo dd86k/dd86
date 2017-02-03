@@ -27,7 +27,8 @@ public:
 
 private:
     void Raise(byte);
-    ushort FetchWord(uint location);
+    ushort FetchWord(uint addr);
+    void SetWord(uint addr, ushort value);
 
     byte GetFlag();
     void SetFlag(byte);
@@ -78,13 +79,13 @@ private:
         // Program Counter
         IP;
     bool // FLAG
-        OF, // 11, Overflow
-        DF, // 10, Direction
-        IF, //  9, Interrupt
-        TF, //  8, Trap
-        SF, //  7, Sign
-        ZF, //  6, Zero
-        AF, //  4, Auxiliary
-        PF, //  2, Parity
-        CF; //  0, Carry
+        OF, // 11, Overflow Flag
+        DF, // 10, Direction Flag
+        IF, //  9, Interrupt Enable Flag
+        TF, //  8, Trap Flag
+        SF, //  7, Sign Flag
+        ZF, //  6, Zero Flag
+        AF, //  4, Auxiliary Carry Flag (aka Adjust Flag)
+        PF, //  2, Parity Flag
+        CF; //  0, Carry Flag
 };

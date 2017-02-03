@@ -814,7 +814,7 @@ void Intel8086::ExecuteInstruction(byte op)
     case 0x8A: { // MOV REG8, R/M8
         byte rm = memoryBank[IP + 1];
         byte ra = memoryBank[IP + 2];
-        //TODO: Group by MOD->REG->R/M instead
+        //TODO: Group by MOD->REG->R/M instead (MOV REG8, R/M8)
         switch (rm & 0b00000111) // R/M
         {
         case 0b00000000: // BX + SI
@@ -2035,9 +2035,159 @@ void Intel8086::ExecuteInstruction(byte op)
         // MOD 0SR R/M
 
         break;
-    case 0x8F: // POP R/M16
-        // MOD 000 R/M only
-
+    case 0x8F: { // POP R/M16
+        byte rm = memoryBank[IP + 1];
+        ushort add = FetchWord(IP + 2);
+        if (rm & 0b00111000) // MOD 000 R/M only
+        {
+            // Raise illegal instruction
+        }
+        else
+        {
+            //TODO: Check if POP R/M16 was done correctly.
+            switch (rm & 0b00000111)
+            {
+            case 0b000: // BX + SI
+                switch (rm & 0b11000000)
+                {
+                case 0:
+                    SetWord(BX + SI, Pop());
+                    break;
+                case 0b01000000:
+                    SetWord(BX + SI + add >> 8, Pop());
+                    break;
+                case 0b10000000:
+                    SetWord(BX + SI + add, Pop());
+                    break;
+                case 0b11000000:
+                    SetWord(AX, Pop());
+                    break;
+                }
+                break;
+            case 0b001: // BX + DI
+                switch (rm & 0b11000000)
+                {
+                case 0:
+                    SetWord(BX + DI, Pop());
+                    break;
+                case 0b01000000:
+                    SetWord(BX + DI + add >> 8, Pop());
+                    break;
+                case 0b10000000:
+                    SetWord(BX + DI + add, Pop());
+                    break;
+                case 0b11000000:
+                    SetWord(CX, Pop());
+                    break;
+                }
+                break;
+            case 0b010: // BP + SI
+                switch (rm & 0b11000000)
+                {
+                case 0:
+                    SetWord(BP + SI, Pop());
+                    break;
+                case 0b01000000:
+                    SetWord(BP + SI + add >> 8, Pop());
+                    break;
+                case 0b10000000:
+                    SetWord(BP + SI + add, Pop());
+                    break;
+                case 0b11000000:
+                    SetWord(DX, Pop());
+                    break;
+                }
+                break;
+            case 0b011: // BP + DI
+                switch (rm & 0b11000000)
+                {
+                case 0:
+                    SetWord(BP + DI, Pop());
+                    break;
+                case 0b01000000:
+                    SetWord(BP + DI + add >> 8, Pop());
+                    break;
+                case 0b10000000:
+                    SetWord(BP + DI + add, Pop());
+                    break;
+                case 0b11000000:
+                    SetWord(BX, Pop());
+                    break;
+                }
+                break;
+            case 0b100: // SI
+                switch (rm & 0b11000000)
+                {
+                case 0:
+                    SetWord(SI, Pop());
+                    break;
+                case 0b01000000:
+                    SetWord(SI + add >> 8, Pop());
+                    break;
+                case 0b10000000:
+                    SetWord(SI + add, Pop());
+                    break;
+                case 0b11000000:
+                    SetWord(SP, Pop());
+                    break;
+                }
+                break;
+            case 0b101: // DI
+                switch (rm & 0b11000000)
+                {
+                case 0:
+                    SetWord(DI, Pop());
+                    break;
+                case 0b01000000:
+                    SetWord(DI + add >> 8, Pop());
+                    break;
+                case 0b10000000:
+                    SetWord(DI + add, Pop());
+                    break;
+                case 0b11000000:
+                    SetWord(BP, Pop());
+                    break;
+                }
+                break;
+            case 0b110: // BP
+                switch (rm & 0b11000000)
+                {
+                case 0:
+                    //SetWord(BP, Pop()); - DIRECT ACCESS
+                    break;
+                case 0b01000000:
+                    SetWord(BP + add >> 8, Pop());
+                    break;
+                case 0b10000000:
+                    SetWord(BP + add, Pop());
+                    break;
+                case 0b11000000:
+                    SetWord(SI, Pop());
+                    break;
+                }
+                break;
+            case 0b111: // BX
+                switch (rm & 0b11000000)
+                {
+                case 0:
+                    SetWord(BX, Pop());
+                    break;
+                case 0b01000000:
+                    SetWord(BX + add >> 8, Pop());
+                    break;
+                case 0b10000000:
+                    SetWord(BX + add, Pop());
+                    break;
+                case 0b11000000:
+                    SetWord(DI, Pop());
+                    break;
+                }
+                break;
+            default: break;
+            }
+        }
+        IP += 4;
+    }
         break;
     case 0x90: // NOP
         ++IP;
@@ -2615,8 +2765,12 @@ void Intel8086::Raise(byte IF)
 
 }
 
-ushort Intel8086::FetchWord(uint location) {
-    return memoryBank[location] | memoryBank[location + 1] << 8;
+ushort Intel8086::FetchWord(uint addr) {
+    return *((ushort *)&memoryBank[addr]);
+}
+
+void Intel8086::SetWord(uint addr, ushort value) {
+    *((ushort *)&memoryBank[addr]) = value;
 }
 
 byte Intel8086::GetFlag()
