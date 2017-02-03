@@ -209,16 +209,14 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     }
-    case 0x06: { // PUSH ES
+    case 0x06: // PUSH ES
         Push(ES);
         ++IP;
         break;
-    }
-    case 0x07: { // POP ES
+    case 0x07: // POP ES
         ES = Pop();
         ++IP;
         break;
-    }
     case 0x08: { // OR R/M8, REG8
 
         break;
@@ -243,11 +241,10 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     }
-    case 0x0E: { // PUSH CS
+    case 0x0E: // PUSH CS
         Push(CS);
         ++IP;
         break;
-    }
     case 0x10: { // ADC R/M8, REG8
 
         break;
@@ -414,7 +411,7 @@ void Intel8086::ExecuteInstruction(byte op)
     case 0x36: // SS:
 
         break;
-    case 0x37: { // AAA
+    case 0x37: // AAA
         if (((GetAL() & 0xF) > 9) || AF)
         {
             AX += 0x106;
@@ -423,7 +420,6 @@ void Intel8086::ExecuteInstruction(byte op)
         else AF = CF = false;
         SetAL(GetAL() & 0xF);
         ++IP;
-    }
         break;
     case 0x38: // CMP R/M8, REG8
 
@@ -827,16 +823,16 @@ void Intel8086::ExecuteInstruction(byte op)
             case 0b00000000: // AL
                 switch (rm & 0b11000000) // MOD
                 {
-                case 0b00000000:
+                case 0b00000000: // 00
                     SetAL(memoryBank[BX + SI]);
                     break;
-                case 0b01000000:
+                case 0b01000000: // 01
                     SetAL(memoryBank[BX + SI + ra]);
                     break;
-                case 0b10000000:
+                case 0b10000000: // 10
                     SetAL(memoryBank[BX + SI + FetchWord(IP + 2)]);
                     break;
-                case 0b11000000:
+                case 0b11000000: // 11
                     SetAL(ra);
                     break;
                 default: break;
@@ -2068,10 +2064,18 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0x98: // CBW
-
+        if (GetAL() & 0b10000000)
+            SetAH(0xFF);
+        else
+            SetAH(0);
+        ++IP;
         break;
     case 0x99: // CWD
-
+        if (AX & 0x8000)
+            DX = 0xFFFF;
+        else
+            DX = 0;
+        ++IP;
         break;
     case 0x9A: // CALL FAR_PROC
 
@@ -2144,28 +2148,36 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0xB0: // MOV AL, IMM8
-
+        SetAL(memoryBank[IP + 1]);
+        IP += 2;
         break;
     case 0xB1: // MOV CL, IMM8
-
+        SetCL(memoryBank[IP + 1]);
+        IP += 2;
         break;
     case 0xB2: // MOV DL, IMM8
-
+        SetDL(memoryBank[IP + 1]);
+        IP += 2;
         break;
     case 0xB3: // MOV BL, IMM8
-
+        SetBL(memoryBank[IP + 1]);
+        IP += 2;
         break;
     case 0xB4: // MOV AH, IMM8
-
+        SetAH(memoryBank[IP + 1]);
+        IP += 2;
         break;
     case 0xB5: // MOV CH, IMM8
-
+        SetCH(memoryBank[IP + 1]);
+        IP += 2;
         break;
     case 0xB6: // MOV DH, IMM8
-
+        SetDH(memoryBank[IP + 1]);
+        IP += 2;
         break;
     case 0xB7: // MOV BH, IMM8
-
+        SetBH(memoryBank[IP + 1]);
+        IP += 2;
         break;
     case 0xB8: // MOV AX, IMM16
         AX = FetchWord(IP + 1);
@@ -2223,10 +2235,13 @@ void Intel8086::ExecuteInstruction(byte op)
 
         break;
     case 0xCE: // INTO
-
+        
         break;
     case 0xCF: // IRET
-
+        IP = Pop();
+        CS = Pop();
+        SetFlagWord(Pop());
+        ++IP;
         break;
     case 0xD0: // GRP2 R/M8, 1
         /*byte rm; // Get ModR/M byte
@@ -2505,10 +2520,12 @@ void Intel8086::ExecuteInstruction(byte op)
         ++IP;
         break;
     case 0xFA: // CLI
-
+        IF = false;
+        ++IP;
         break;
     case 0xFB: // STI
-
+        IF = true;
+        ++IP;
         break;
     case 0xFC: // CLD
         DF = false;
