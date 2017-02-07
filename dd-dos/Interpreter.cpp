@@ -2054,7 +2054,7 @@ void Intel8086::ExecuteInstruction(byte op)
                     SetWord(BX + SI, Pop());
                     break;
                 case 0b01000000:
-                    SetWord(BX + SI + add >> 8, Pop());
+                    SetWord(BX + SI + (add >> 8), Pop());
                     break;
                 case 0b10000000:
                     SetWord(BX + SI + add, Pop());
@@ -2071,7 +2071,7 @@ void Intel8086::ExecuteInstruction(byte op)
                     SetWord(BX + DI, Pop());
                     break;
                 case 0b01000000:
-                    SetWord(BX + DI + add >> 8, Pop());
+                    SetWord(BX + DI + (add >> 8), Pop());
                     break;
                 case 0b10000000:
                     SetWord(BX + DI + add, Pop());
@@ -2088,7 +2088,7 @@ void Intel8086::ExecuteInstruction(byte op)
                     SetWord(BP + SI, Pop());
                     break;
                 case 0b01000000:
-                    SetWord(BP + SI + add >> 8, Pop());
+                    SetWord(BP + SI + (add >> 8), Pop());
                     break;
                 case 0b10000000:
                     SetWord(BP + SI + add, Pop());
@@ -2105,7 +2105,7 @@ void Intel8086::ExecuteInstruction(byte op)
                     SetWord(BP + DI, Pop());
                     break;
                 case 0b01000000:
-                    SetWord(BP + DI + add >> 8, Pop());
+                    SetWord(BP + DI + (add >> 8), Pop());
                     break;
                 case 0b10000000:
                     SetWord(BP + DI + add, Pop());
@@ -2122,7 +2122,7 @@ void Intel8086::ExecuteInstruction(byte op)
                     SetWord(SI, Pop());
                     break;
                 case 0b01000000:
-                    SetWord(SI + add >> 8, Pop());
+                    SetWord(SI + (add >> 8), Pop());
                     break;
                 case 0b10000000:
                     SetWord(SI + add, Pop());
@@ -2139,7 +2139,7 @@ void Intel8086::ExecuteInstruction(byte op)
                     SetWord(DI, Pop());
                     break;
                 case 0b01000000:
-                    SetWord(DI + add >> 8, Pop());
+                    SetWord(DI + (add >> 8), Pop());
                     break;
                 case 0b10000000:
                     SetWord(DI + add, Pop());
@@ -2156,7 +2156,7 @@ void Intel8086::ExecuteInstruction(byte op)
                     //SetWord(BP, Pop()); - DIRECT ACCESS
                     break;
                 case 0b01000000:
-                    SetWord(BP + add >> 8, Pop());
+                    SetWord(BP + (add >> 8), Pop());
                     break;
                 case 0b10000000:
                     SetWord(BP + add, Pop());
@@ -2173,7 +2173,7 @@ void Intel8086::ExecuteInstruction(byte op)
                     SetWord(BX, Pop());
                     break;
                 case 0b01000000:
-                    SetWord(BX + add >> 8, Pop());
+                    SetWord(BX + (add >> 8), Pop());
                     break;
                 case 0b10000000:
                     SetWord(BX + add, Pop());
@@ -2762,7 +2762,615 @@ uint inline Intel8086::GetPhysicalAddress(ushort segment, ushort offset)
 /// <summary>
 void Intel8086::Raise(byte IF)
 {
+    switch (IF)
+    {
+    case 0x21: // MS-DOS Services
+        switch (GetAH())
+        {
+        /*
+         * 01h - Read character from stdin with echo.
+         * Input: None
+         * Return: AL (Character)
+         * 
+         * Notes:
+         * - ^C and ^Break are checked.
+         * - ^P toggles the DOS-internal echo-to-printer flag.
+         * - ^Z is not interpreted.
+         */
+        case 1:
 
+            break;
+        /*
+         * 02h - Write character to stdout.
+         * Input: DL (Character)
+         * Return: AL (Last character)
+         * 
+         * Notes:
+         * - ^C and ^Break are checked.
+         * - If DL=09h on entry, in which case AL=20h is expended as blanks.
+         * - If stdout is redirected to a file, no error-checks are performed.
+         */
+        case 2:
+
+            break;
+        /*
+         * 05h - Write character to printer.
+         * Input: DL (Character)
+         * Return: None
+         *
+         * Notes:
+         * - ^C and ^Break are checked. (Keyboard)
+         * - Usually STDPRN, may be redirected under DOS 2.0+.
+         * - If the printer is busy, this function will wait.
+         *
+         * Dev notes:
+         * - Virtually print to a PRN (text) file.
+         */
+        case 5:
+
+            break;
+        /*
+         * 06h - Direct console input/output.
+         * Input:
+         *   Output: DL (Character, DL != FFh)
+         *   Input: DL (Character, DL == FFh)
+         * Return:
+         *   Ouput: AL (Character)
+         *   Input:
+         *     ZF set if no characters are available and AL == 00h
+         *     ZF clear if a character is available and AL != 00h
+         *
+         * Notes:
+         * - ^C and ^Break are checked. (Keyboard)
+         *
+         * Input notes:
+         * - If the returned character is 00h, the user pressed a key with an
+         *     extended keycode, which will be returned by the next call of
+         *     this function
+         */
+        case 6:
+
+            break;
+        /*
+         * 07h - Read character directly from stdin without echo.
+         * Input: None
+         * Return: AL (Character)
+         *
+         * Notes:
+         * - ^C/^Break are not checked.
+         */
+        case 7:
+
+            break;
+        /*
+         * 08h - Read character from stdin without echo.
+         * Input: None
+         * Return: AL (Character)
+         *
+         * Notes:
+         * - ^C/^Break are checked.
+         */
+        case 8:
+
+            break;
+        /*
+         * 09h - Write string to stdout.
+         * Input: DS:DX ('$' terminated)
+         * Return: AL = 24h
+         *
+         * Notes:
+         * - ^C and ^Break are not checked.
+         */
+        case 9:
+
+            break;
+        /*
+         * 0Ah - Buffered input.
+         * Input: DS:DX (See Buffer)
+         * Return: Buffer filled with used input.
+         *
+         * Notes:
+         * - ^C and ^Break are checked.
+         * - Reads from stdin.
+         *
+         * Buffer:
+         * | Offset | Size | Description
+         * +--------+------+-----------------
+         * | 0      | 1    | Maximum characters buffer can hold
+         * | 1      | 1    | Chars actually read (except CR) (or from last input)
+         * | 2      | N    | Characters, including the final CR.
+         */
+        case 0xA:
+
+            break;
+        /*
+         * 0Bh - Get stdin status.
+         * Input: None.
+         * Return:
+         *   AL = 00h if no characters are available.
+         *   AL = FFh if a character are available.
+         *
+         * Notes:
+         * - ^C and ^Break are checked.
+         */
+        case 0xB:
+
+            break;
+        /*
+         * 0Ch - Flush stdin buffer and read character.
+         * Input:
+         *   AL (STDIN input function to execute after flushing)
+         *   Other registers as appropriate for the input function.
+         * Return: As appropriate for the input function.
+         *
+         * Notes:
+         * - If AL is not 1h, 6h, 7h, 8h, or Ah, the buffer is flushed and
+         *     no input are attempted.
+         */
+        case 0xC:
+
+            break;
+        /*
+         * 0Dh - Disk reset.
+         * Input: None.
+         * Return: None.
+         *
+         * Notes:
+         * - Write all buffers to disk without updating directory information.
+         */
+        case 0xD:
+
+            break;
+        /*
+         * 0Eh - Select default drive.
+         * Input: DL (incrementing from 0 for A:)
+         * Return: AL (number of potentially valid drive letters)
+         *
+         * Notes:
+         * - The return value is the highest drive present.
+         */
+        case 0xE:
+
+            break;
+        /*
+         * 19h - Get default drive.
+         * Input: None.
+         * Return: AL (incrementing from 0 for A:)
+         */
+        case 0x19:
+
+            break;
+        /*
+         * 25h - Set interrupt vector.
+         * Input:
+         *   AL (Interrupt number)
+         *   DS:DX (New interrupt handler)
+         * Return: None.
+         *
+         * Notes:
+         * - Preferred over manually changing the interrupt vector table.
+         */
+        case 0x25:
+
+            break;
+        /*
+         * 2Ah - Get system date.
+         * Input: None.
+         * Return:
+         *   CX (Year, 1980-2099)
+         *   DH (Month)
+         *   DL (Day)
+         *   AL (Day of the week, Sunday = 0)
+         */
+        case 0x2A:
+
+            break;
+        /*
+         * 2Bh - Set system date.
+         * Input:
+         *   CX (Year, 1980-2099)
+         *   DH (Month)
+         *   DL (Day)
+         * Return: AL (00h if successful, FFh if failed (invalid))
+         */
+        case 0x2B:
+
+            break;
+        /*
+         * 2Ch - Get system time.
+         * Input: None.
+         * Return:
+         *   CH (Hour)
+         *   CL (Minute)
+         *   DH (Second)
+         *   DL (1/100 seconds)
+         */
+        case 0x2C:
+
+            break;
+        /*
+         * 2Dh - Set system time.
+         * Input:
+         *   CH (Hour)
+         *   CL (Minute)
+         *   DH (Second)
+         *   DL (1/100 seconds)
+         * Return: AL (00h if successful, FFh if failed (invalid))
+         */
+        case 0x2D:
+
+            break;
+        /*
+         * 2Eh - Set verify flag.
+         * Input: AL (00 = off, 01 = on)
+         * Return: None.
+         *
+         * Notes:
+         * - Default state at boot is off.
+         * - When on, all disk writes are verified provided the device driver
+         *     supports read-after-write verification.
+         */
+        case 0x2E:
+
+            break;
+        /*
+         * 30h - Get DOS version.
+         * Input: AL (00h = OEM Number in AL, 01h = Version flag in AL)
+         * Return:
+         *   AL (Major version, DOS 1.x = 00h)
+         *   AH (Minor version)
+         *   BL:CX (24bit user serial* if DOS<5 or AL=0)
+         *   BH (MS-DOS OEM number if DOS 5+ and AL=1)
+         *   BH (Version flag bit 3: DOS is in ROM other: reserved (0))
+         *
+         * *Most versions do not use this.
+         */
+        case 0x30:
+
+            break;
+        /*
+         * 35h - Get interrupt vector.
+         * Input: AL (Interrupt number)
+         * Return: ES:BX (Current interrupt number)
+         */
+        case 0x35:
+
+            break;
+        /*
+         * 36h - Get free disk space.
+         * Input: DL (Drive number, A: = 0)
+         * Return:
+         *   AX (FFFFh = invalid drive)
+         * or
+         *   AX (Sectors per cluster)
+         *   BX (Number of free clusters)
+         *   CX (bytes per sector)
+         *   DX (Total clusters on drive)
+         *
+         * Notes:
+         * - Free space on drive in bytes is AX * BX * CX.
+         * - Total space on drive in bytes is AX * CX * DX.
+         * - "lost clusters" are considered to be in use.
+         * - No proper results on CD-ROMs; use AX=4402h instead.
+         */
+        case 0x36:
+
+            break;
+        /*
+         * 39h - Create subdirectory.
+         * Input: DS:DX (ASCIZ path)
+         * Return:
+         *  CF clear if sucessful (AX set to 0)
+         *  CF set on error (AX = error code (3 or 5))
+         *
+         * Notes:
+         * - All directories in the given path except the last must exist.
+         * - Fails if the parent directory is the root and is full.
+         * - DOS 2.x-3.3 allow the creation of a directory sufficiently deep
+         *     that it is not possible to make that directory the current
+         *     directory because the path would exceed 64 characters.
+         */
+        case 0x39:
+
+            break;
+        /*
+         * 3Ah - Remove subdirectory.
+         * Input: DS:DX (ASCIZ path)
+         * Return: 
+         *   CF clear if successful (AX set to 0)
+         *   CF set on error (AX = error code (03h,05h,06h,10h))
+         *
+         * Notes:
+         * - Subdirectory must be empty.
+         */
+        case 0x3A:
+
+            break;
+        /*
+         * 3Bh - Set current directory.
+         * Input: DS:DX (ASCIZ path (maximum 64 Bytes))
+         * Return:
+         *  CF clear if sucessful (AX set to 0)
+         *  CF set on error (AX = error code (3))
+         *
+         * Notes:
+         * - If new directory name includes a drive letter, the default drive
+         *     is not changed, only the current directory on that drive.
+         */
+        case 0x3B:
+
+            break;
+        /*
+         * 3Ch - Create or truncate file.
+         * Input:
+         *   CX (File attributes, see ATTRIB)
+         *   DS:DX (ASCIZ path)
+         * Return:
+         *  CF clear if sucessful (AX = File handle)
+         *  CF set if error (AX = error code (3, 4, 5)
+         *
+         * Notes:
+         * - If the file already exists, it is truncated to zero-length.
+         *
+         * ATTRIB:
+         * | Bit         | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+         * | Description | S | - | A | D | V | S | H | R |
+         * 7 - S = Shareable
+         *     A = Archive
+         *     D = Directory
+         *     V = Volume label
+         *     S = System
+         *     H = Hidden
+         * 0 - R = Read-only
+         */
+        case 0x3C:
+
+            break;
+        /*
+         * 3Dh - Open file.
+         * Input:
+         *   AL (Access and sharing modes)
+         *   DS:DX (ASCIZ path)
+         * Return:
+         *   CF clear if successful (AX = File handle)
+         *   CF set on error (AX = error code (01h,02h,03h,04h,05h,0Ch,56h))
+         *
+         * Notes:
+         * - File pointer is set to start of file.
+         * - File handles which are inherited from a parent also inherit
+         *     sharing and access restrictions.
+         * - Files may be opened even if given the hidden or system attributes.
+         */
+        case 0x3D:
+
+            break;
+        /*
+         * 3Eh - Close file.
+         * Input: BX (File handle)
+         * Return:
+         *   CF clear if successful (AX = File handle)
+         *   CF set on error (AX = error code (06h))
+         *
+         * Notes:
+         * - If the file was written to, any pending disk writes are performed,
+         *     the time and date stamps are set to the current time, and the
+         *     directory entry is updated.
+         */
+        case 0x3E:
+
+            break;
+        /*
+         * 3Fh - Read from file or device.
+         * Input:
+         *   BX (File handle)
+         *   CX (Number of bytes to read)
+         *   DS:DX (Points to buffer)
+         * Return:
+         *   CF clear if successful (AX = bytes read)
+         *   CF set on error (AX = error code (05h,06h))
+         *
+         * Notes:
+         * - Data is read beginning at current file position, and the file
+         *     position is updated after a successful read.
+         * - The returned AX may be smaller than the request in CX if a
+         *     partial read occurred.
+         * - If reading from CON, read stops at first CR.
+         */
+        case 0x3F:
+
+            break;
+        /*
+         * 40h - Write to file or device.
+         * Input:
+         *   BX (File handle)
+         *   CX (Number of bytes to write)
+         *   DS:DX (Points to buffer)
+         * Return:
+         *   CF clear if successful (AX = bytes read)
+         *   CF set on error (AX = error code (05h,06h))
+         *
+         * Notes:
+         * - If CX is zero, no data is written, and the file is truncated or
+         *     extended to the current position.
+         * - Data is written beginning at the current file position, and the
+         *     file position is updated after a successful write.
+         * - The usual cause for AX < CX on return is a full disk.
+         */
+        case 0x40:
+
+            break;
+        /*
+         * 41h - Delete file.
+         * Input:
+         *   DS:DX (ASCIZ path)
+         *   CL (Attribute mask)
+         * Return:
+         *   CF clear if successful (AX = 0, AL seems to be drive number)
+         *   CF set on error (AX = error code (2, 3, 5))
+         *
+         * Notes:
+         * - (DOS 3.1+) wildcards are allowed if invoked via AX=5D00h, in
+         *     which case the filespec must be canonical (as returned by
+         *     AH=60h), and only files matching the attribute mask in CL are
+         *     deleted.
+         * - DOS does not erase the file's data; it merely becomes inaccessible
+         *     because the FAT chain for the file is cleared.
+         * - Deleting a file which is currently open may lead to filesystem
+         *     corruption.
+         */
+        case 0x41:
+
+            break;
+        /*
+         * 42h - Set current file position.
+         * Input:
+         *   AL (0 = SEEK_SET, 1 = SEEK_CUR, 2 = SEEK_END)
+         *   BX (File handle)
+         *   CX:DX (File origin offset)
+         * Return:
+         *   CF clear if successful (DX:AX = New position (from start))
+         *   CF set on error (AX = error code (1, 6))
+         *
+         * Notes:
+         * - For origins 01h and 02h, the pointer may be positioned before the
+         *     start of the file; no error is returned in that case, but
+         *     subsequent attempts at I/O will produce errors.
+         * - If the new position is beyond the current end of file, the file
+         *     will be extended by the next write (see AH=40h).
+         */
+        case 0x42:
+
+            break;
+        /*
+         * 43h - Get or set file attributes.
+         * Input:
+         *   AL (00 for getting, 01 for setting)
+         *   CX (New attributes if setting, see ATTRIB in 3Ch)
+         *   DS:DX (ASCIZ path)
+         * Return:
+         *   CF cleared if successful (CX=File attributes on getting, AX=0 on setting)
+         *   CF set on error (AX = error code (01h,02h,03h,05h))
+         *
+         * Bugs:
+         * - Windows for Workgroups returns error code 05h (access denied)
+         *     instead of error code 02h (file not found) when attempting to
+         *     get the attributes of a nonexistent file.
+         *
+         * Notes:
+         * - Setting will not change volume label or directory attribute bits,
+         *     but will change the other attribute bits of a directory.
+         * - MS-DOS 4.01 reportedly closes the file if it is currently open.
+         */
+        case 0x43:
+
+            break;
+        /*
+         * 47h - Get current working directory.
+         * Input:
+         *   DL (Drive number, 0 = Default, 1 = A:, etc.)
+         *   DS:DI (Pointer to 64-byte buffer for ASCIZ path)
+         * Return:
+         *   CF cleared if successful
+         *   CF set on error code (AX = error code (Fh))
+         *
+         * Notes:
+         * - The returned path does not include a drive or the initial
+         *     backslash
+         * - Many Microsoft products for Windows rely on AX being 0100h on
+         *     success.
+         */
+        case 0x47:
+
+            break;
+        /*
+         * 4Ch - Terminate with return code.
+         * Input: AL (Return code)
+         * Return: None. (Never returns)
+         *
+         * Notes:
+         * - Unless the process is its own parent, all open files are closed
+         *     and all memory belonging to the process is freed.
+         */
+        case 0x4C:
+
+            break;
+        /*
+         * 4Dh - Get return code. (ERRORLEVEL)
+         * Input: None
+         * Return:
+         *   AH (Termination type*)
+         *   AL (Code)
+         *
+         * *00 = Normal, 01 = Control-C Abort, 02h = Critical Error Abort,
+         *   03h Terminate and stay resident.
+         *
+         * Notes:
+         * - The word in which DOS stores the return code is cleared after
+         *     being read by this function, so the return code can only be
+         *     retrieved once.
+         * - COMMAND.COM stores the return code of the last external command
+         *     it executed as ERRORLEVEL.
+         */
+        case 0x4D:
+
+            break;
+        /*
+         * 54h - Get verify flag.
+         * Input: None.
+         * Return:
+         *   AL (0 = off, 1 = on)
+         */
+        case 0x54:
+
+            break;
+        /*
+         * 56h - Rename file.
+         * Input:
+         *   DS:DX (ASCIZ path)
+         *   ES:DI (ASCIZ new name)
+         *   CL (Attribute mask, server call only)
+         * Return:
+         *   CF cleared if successful
+         *   CF set on error (AX = error code (02h,03h,05h,11h))
+         *
+         * Notes:
+         * - Allows move between directories on same logical volume.
+         * - This function does not set the archive attribute.
+         * - Open files should not be renamed.
+         * - (DOS 3.0+) allows renaming of directories.
+         */
+        case 0x56:
+
+            break;
+        /*
+         * 57h - Get or set file's last-written time and date.
+         * Input:
+         *   AL (0 = get, 1 = set)
+         *   BX (File handle)
+         *   CX (New time (set), see TIME)
+         *   DX (New date (set), see DATE)
+         * Return (get):
+         *   CF clear if successful (CX = file's time, DX = file's date)
+         *   CF set on error (AX = error code (01h,06h))
+         * Return (set):
+         *   CF cleared if successful
+         *   CF set on error (AX = error code (01h,06h))
+         *
+         * TIME:
+         * | Bits        | 15-11 | 10-5    | 4-0     |
+         * | Description | hours | minutes | seconds |
+         * DATE:
+         * | Bits        | 15-9         | 8-5   | 4-0 |
+         * | Description | year (1980-) | month | day |
+         */
+        case 0x57:
+
+            break;
+        default: break;
+        }
+        break;
+    default: break;
+    }
 }
 
 ushort Intel8086::FetchWord(uint addr) {

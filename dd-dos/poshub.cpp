@@ -121,3 +121,19 @@ void poshub::SetTitleWide(std::wstring str) {
 #error: SetTitle needs implementation.
 #endif
 }
+
+/*
+ * STDIN
+ */
+
+unsigned char poshub::ReadChar()
+{
+    INPUT_RECORD in;
+    ReadConsoleInputA(hOut, &in, 1, NULL);
+
+    if (in.Event.KeyEvent.bKeyDown)
+    {
+        return in.Event.KeyEvent.uChar.AsciiChar;
+    }
+    return NULL;
+}

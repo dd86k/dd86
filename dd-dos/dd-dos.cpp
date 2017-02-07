@@ -11,7 +11,7 @@
 
 void DisplayVersion()
 {
-	std::cout << "DD-DOS - " << version << std::endl;;
+	std::cout << "DD-DOS - " << APP_VERSION << std::endl;;
 	std::cout << "Project page: <https://github.com/dd86k/dd-dos>" << std::endl;
 }
 
@@ -36,8 +36,6 @@ int main(int argc, char **argv)
 		} else if (arg == "-h" || arg == "--help") {
 			DisplayHelp(argv[0]);
             return 0;
-		} else {
-			file = arg;
 		}
     }
 

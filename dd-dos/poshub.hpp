@@ -23,4 +23,6 @@ public:
     void SetTitle(std::string);
     std::wstring GetTitleWide();
     void SetTitleWide(std::wstring);
+
+    unsigned char ReadChar();
 };

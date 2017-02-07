@@ -5,6 +5,6 @@
 #pragma once
 #include "poshub.hpp"
 
-static const char *version = "0.0.0";
+const char *APP_VERSION = "0.0.0";
 
 static poshub Con;
