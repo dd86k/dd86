@@ -8,12 +8,6 @@
  * 4. Write results (if instruction demands).
  */
 
-/*
- * ModR/M Byte:
- * |
- * (To write)
- */
-
 #include <iostream>
 #include <cstdlib>
 #include <cstring>
@@ -25,28 +19,13 @@
 //NOTE: Opened files should go in JFT
 
 Intel8086::Intel8086()
-	: AX(0)
-	, BX(0)
-	, CX(0)
-	, DX(0)
-	, SI(0)
-	, DI(0)
-	, BP(0)
-	, SP(0)
-	, CS(0)
-	, DS(0)
-	, ES(0)
-	, SS(0)
+	: AX(0), BX(0), CX(0), DX(0)
+	, SI(0), DI(0), BP(0), SP(0)
+	, CS(0xFFFF), DS(0), ES(0), SS(0)
 	, IP(0)
-	, OF(false)
-	, DF(false)
-	, IF(false)
-	, TF(false)
-	, SF(false)
-	, ZF(false)
-	, AF(false)
-	, PF(false)
-	, CF(false)
+	, OF(false), DF(false), IF(false)
+	, TF(false), SF(false), ZF(false)
+	, AF(false), PF(false), CF(false)
 {
     memoryBank = new byte[MAX_MEMORY]();
 }
@@ -63,10 +42,8 @@ void Intel8086::Init(const std::string &filename)
 {
 
 
-    Reset();
-
     while (true) {
-        ExecuteInstruction(memoryBank[IP]);
+        ExecuteInstruction(memoryBank[(CS << 4) | IP]);
     }
 }
 
@@ -166,6 +143,9 @@ inline void Intel8086::SetBH(byte v){
 /// REG : Register
 /// MEM : Memory location
 /// SEGREG : Segment register
+/// SHORT : +/- 128 Byte displacement (2 byte instruction)
+/// NEAR  : +/- 32K Byte displacement (3 byte instruction)
+/// FAR   : Any segment/offset (5 byte instruction)
 /// 
 /// The number represents bitness.
 /// </remark>
