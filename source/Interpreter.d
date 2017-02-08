@@ -10,7 +10,13 @@
 
 module Interpreter;
 
+import dd_dos;
+
 enum MAX_MEM = 0x10_0000; // 1 MB
+
+enum OEM_ID { // Used for INT 21h AH=30 so far.
+    IBM, Compaq, MSPackagedProduct, ATnT, ZDS
+};
 
 //NOTE: Opened files should go in JFT
 
@@ -18,7 +24,7 @@ class Intel8086
 {
     this()
     {
-        memoryBank = new byte[MAX_MEMORY]();
+        memoryBank = new ubyte[MAX_MEM];
         Reset();
     }
 
@@ -27,7 +33,7 @@ class Intel8086
         delete memoryBank;
     }
 
-    ubyte* memoryBank;
+    ubyte[] memoryBank;
 
     // Generic registers
     ubyte AH, AL, BH, BL, CH, CL, DH, DL;
@@ -57,7 +63,9 @@ class Intel8086
     void Init()
     {
         while (Running)
-            ExecuteInstruction(GetAddress(CS, IP));
+            ExecuteInstruction(
+                memoryBank[GetAddress(CS, IP)]
+            );
     }
 
     void Reset() {
@@ -75,11 +83,19 @@ class Intel8086
         AH = (v >> 8) & 0xFF;
         AL = v & 0xFF;
     }
+    @property void AX(int v) {
+        AH = (v >> 8) & 0xFF;
+        AL = v & 0xFF;
+    }
 
     @property ushort BX() {
         return (BH << 8) | BL;
     }
     @property void BX(ushort v) {
+        BH = (v >> 8) & 0xFF;
+        BL = v & 0xFF;
+    }
+    @property void BX(int v) {
         BH = (v >> 8) & 0xFF;
         BL = v & 0xFF;
     }
@@ -91,6 +107,10 @@ class Intel8086
         CH = (v >> 8) & 0xFF;
         CL = v & 0xFF;
     }
+    @property void CX(int v) {
+        CH = (v >> 8) & 0xFF;
+        CL = v & 0xFF;
+    }
 
     @property ushort DX() {
         return (DH << 8) | DL;
@@ -99,7 +119,10 @@ class Intel8086
         DH = (v >> 8) & 0xFF;
         DL = v & 0xFF;
     }
-
+    @property void DX(int v) {
+        DH = (v >> 8) & 0xFF;
+        DL = v & 0xFF;
+    }
     /// Execute the operation code. (ALU)
     void ExecuteInstruction(ubyte op)
     {
@@ -351,7 +374,7 @@ class Intel8086
         case 0x37: // AAA
             if (((AL & 0xF) > 9) || AF)
             {
-                AX += 0x106;
+                AX = AX + 0x106;
                 AF = CF = true;
             }
             else AF = CF = false;
@@ -382,7 +405,7 @@ class Intel8086
         case 0x3F: { // AAS
             if (((AL & 0xF) > 9) || AF)
             {
-                AX -= 6;
+                AX = AX - 6;
                 AH -= 1;
                 AF = CF = true;
                 AL &= 0xF;
@@ -396,19 +419,19 @@ class Intel8086
         }
             break;
         case 0x40: // INC AX
-            ++AX;
+            AX = AX + 1;
             ++IP;
             break;
         case 0x41: // INC CX
-            ++CX;
+            CX = CX + 1;
             ++IP;
             break;
         case 0x42: // INC DX
-            ++DX;
+            DX = DX + 1;
             ++IP;
             break;
         case 0x43: // INC BX
-            ++BX;
+            BX = BX + 1;
             ++IP;
             break;
         case 0x44: // INC SP
@@ -425,23 +448,22 @@ class Intel8086
             break;
         case 0x47: // INC DI
             ++DI;
-            ++SP;
             ++IP;
             break;
         case 0x48: // DEC AX
-            --AX;
+            AX = AX - 1;
             ++IP;
             break;
         case 0x49: // DEC CX
-            --CX;
+            CX = CX - 1;
             ++IP;
             break;
         case 0x4A: // DEC DX
-            --DX;
+            DX = DX - 1;
             ++IP;
             break;
         case 0x4B: // DEC BX
-            --BX;
+            BX = BX - 1;
             ++IP;
             break;
         case 0x4C: // DEC SP
@@ -752,7 +774,7 @@ class Intel8086
             ubyte rm = memoryBank[IP + 1];
             ubyte ra = memoryBank[IP + 2];
             //TODO: Group by MOD->REG->R/M instead (MOV REG8, R/M8)
-            switch (rm & 0b00000111) // R/M
+            final switch (rm & 0b00000111) // R/M
             {
             case 0b00000000: // BX + SI
                 final switch (rm & 0b00111000) // REG
@@ -912,7 +934,7 @@ class Intel8086
                         AL = memoryBank[BX + DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        AL + memoryBank[ra];
+                        AL = memoryBank[ra];
                         break;
                     }
                     break;
@@ -946,7 +968,7 @@ class Intel8086
                         DL = memoryBank[BX + DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        DL = memoryBank[ra]
+                        DL = memoryBank[ra];
                         break;
                     }
                     break;
@@ -1035,910 +1057,854 @@ class Intel8086
                         break;
                     }
                     break;
-                default: break;
                 }
                 break; // 001
             case 0b00000010: // BP + SI
-                switch (rm & 0b00111000) // REG
+                final switch (rm & 0b00111000) // REG
                 {
                 case 0b00000000: // AL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetAL(memoryBank[BP + SI]);
+                        AL = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        SetAL(memoryBank[BP + SI + ra]);
+                        AL = memoryBank[BP + SI + ra];
                         break;
                     case 0b10000000:
-                        SetAL(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                        AL = memoryBank[BP + SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetAL(ra);
+                        AL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00001000: // CL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetCL(memoryBank[BP + SI]);
+                        CL = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        SetCL(memoryBank[BP + SI + ra]);
+                        CL = memoryBank[BP + SI + ra];
                         break;
                     case 0b10000000:
-                        SetCL(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                        CL = memoryBank[BP + SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetCL(ra);
+                        CL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00010000: // DL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetDL(memoryBank[BP + SI]);
+                        DL = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        SetDL(memoryBank[BP + SI + ra]);
+                        DL = memoryBank[BP + SI + ra];
                         break;
                     case 0b10000000:
-                        SetDL(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                        DL = memoryBank[BP + SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetDL(ra);
+                        DL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00011000: // BL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetBL(memoryBank[BP + SI]);
+                        BL = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        SetBL(memoryBank[BP + SI + ra]);
+                        BL = memoryBank[BP + SI + ra];
                         break;
                     case 0b10000000:
-                        SetBL(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                        BL = memoryBank[BP + SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetBL(ra);
+                        BL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00100000: // AH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetAH(memoryBank[BP + SI]);
+                        AH = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        SetAH(memoryBank[BP + SI + ra]);
+                        AH = memoryBank[BP + SI + ra];
                         break;
                     case 0b10000000:
-                        SetAH(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                        AH = memoryBank[BP + SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetAH(ra);
+                        AH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00101000: // CH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetCH(memoryBank[BP + SI]);
+                        CH = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        SetCH(memoryBank[BP + SI + ra]);
+                        CH = memoryBank[BP + SI + ra];
                         break;
                     case 0b10000000:
-                        SetCH(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                        CH = memoryBank[BP + SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetCH(ra);
+                        CH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00110000: // DH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetDH(memoryBank[BP + SI]);
+                        DH = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        SetDH(memoryBank[BP + SI + ra]);
+                        DH = memoryBank[BP + SI + ra];
                         break;
                     case 0b10000000:
-                        SetDH(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                        DH = memoryBank[BP + SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetDH(ra);
+                        DH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00111000: // BH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetBH(memoryBank[BP + SI]);
+                        BH = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        SetBH(memoryBank[BP + SI + ra]);
+                        BH = memoryBank[BP + SI + ra];
                         break;
                     case 0b10000000:
-                        SetBH(memoryBank[BP + SI + FetchWord(IP + 2)]);
+                        BH = memoryBank[BP + SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetBH(ra);
+                        BH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
-                default: break;
                 }
                 break; // 010
             case 0b00000011: // BP + DI
-                switch (rm & 0b00111000) // REG
+                final switch (rm & 0b00111000) // REG
                 {
                 case 0b00000000: // AL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetAL(memoryBank[BP + DI]);
+                        AL = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        SetAL(memoryBank[BP + DI + ra]);
+                        AL = memoryBank[BP + DI + ra];
                         break;
                     case 0b10000000:
-                        SetAL(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                        AL = memoryBank[BP + DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetAL(ra);
+                        AL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00001000: // CL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetCL(memoryBank[BP + DI]);
+                        CL = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        SetCL(memoryBank[BP + DI + ra]);
+                        CL = memoryBank[BP + DI + ra];
                         break;
                     case 0b10000000:
-                        SetCL(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                        CL = memoryBank[BP + DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetCL(ra);
+                        CL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00010000: // DL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetDL(memoryBank[BP + DI]);
+                        DL = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        SetDL(memoryBank[BP + DI + ra]);
+                        DL = memoryBank[BP + DI + ra];
                         break;
                     case 0b10000000:
-                        SetDL(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                        DL = memoryBank[BP + DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetDL(ra);
+                        DL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00011000: // BL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetBL(memoryBank[BP + DI]);
+                        BL = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        SetBL(memoryBank[BP + DI + ra]);
+                        BL = memoryBank[BP + DI + ra];
                         break;
                     case 0b10000000:
-                        SetBL(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                        BL = memoryBank[BP + DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetBL(ra);
+                        BL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00100000: // AH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetAH(memoryBank[BP + DI]);
+                        AH = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        SetAH(memoryBank[BP + DI + ra]);
+                        AH = memoryBank[BP + DI + ra];
                         break;
                     case 0b10000000:
-                        SetAH(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                        AH = memoryBank[BP + DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetAH(ra);
+                        AH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00101000: // CH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetCH(memoryBank[BP + DI]);
+                        CH = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        SetCH(memoryBank[BP + DI + ra]);
+                        CH = memoryBank[BP + DI + ra];
                         break;
                     case 0b10000000:
-                        SetCH(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                        CH = memoryBank[BP + DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetCH(ra);
+                        CH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00110000: // DH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetDH(memoryBank[BP + DI]);
+                        DH = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        SetDH(memoryBank[BP + DI + ra]);
+                        DH = memoryBank[BP + DI + ra];
                         break;
                     case 0b10000000:
-                        SetDH(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                        DH = memoryBank[BP + DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetDH(ra);
+                        DH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00111000: // BH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetBH(memoryBank[BP + DI]);
+                        BH = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        SetBH(memoryBank[BP + DI + ra]);
+                        BH = memoryBank[BP + DI + ra];
                         break;
                     case 0b10000000:
-                        SetBH(memoryBank[BP + DI + FetchWord(IP + 2)]);
+                        BH = memoryBank[BP + DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetBH(ra);
+                        BH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
-                default: break;
                 }
                 break; // 011
             case 0b00000100: // SI
-                switch (rm & 0b00111000) // REG
+                final switch (rm & 0b00111000) // REG
                 {
                 case 0b00000000: // AL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetAL(memoryBank[SI]);
+                        AL = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        SetAL(memoryBank[SI + ra]);
+                        AL = memoryBank[SI + ra];
                         break;
                     case 0b10000000:
-                        SetAL(memoryBank[SI + FetchWord(IP + 2)]);
+                        AL = memoryBank[SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetAL(ra);
+                        AL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00001000: // CL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetCL(memoryBank[SI]);
+                        CL = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        SetCL(memoryBank[SI + ra]);
+                        CL = memoryBank[SI + ra];
                         break;
                     case 0b10000000:
-                        SetCL(memoryBank[SI + FetchWord(IP + 2)]);
+                        CL = memoryBank[SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetCL(ra);
+                        CL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00010000: // DL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetDL(memoryBank[SI]);
+                        DL = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        SetDL(memoryBank[SI + ra]);
+                        DL = memoryBank[SI + ra];
                         break;
                     case 0b10000000:
-                        SetDL(memoryBank[SI + FetchWord(IP + 2)]);
+                        DL = memoryBank[SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetDL(ra);
+                        DL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00011000: // BL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetBL(memoryBank[SI]);
+                        BL = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        SetBL(memoryBank[SI + ra]);
+                        BL = memoryBank[SI + ra];
                         break;
                     case 0b10000000:
-                        SetBL(memoryBank[SI + FetchWord(IP + 2)]);
+                        BL = memoryBank[SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetBL(ra);
+                        BL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00100000: // AH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetAH(memoryBank[SI]);
+                        AH = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        SetAH(memoryBank[SI + ra]);
+                        AH = memoryBank[SI + ra];
                         break;
                     case 0b10000000:
-                        SetAH(memoryBank[SI + FetchWord(IP + 2)]);
+                        AH = memoryBank[SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetAH(ra);
+                        AH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00101000: // CH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetCH(memoryBank[SI]);
+                        CH = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        SetCH(memoryBank[SI + ra]);
+                        CH = memoryBank[SI + ra];
                         break;
                     case 0b10000000:
-                        SetCH(memoryBank[SI + FetchWord(IP + 2)]);
+                        CH = memoryBank[SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetCH(ra);
+                        CH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00110000: // DH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetDH(memoryBank[SI]);
+                        DH = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        SetDH(memoryBank[SI + ra]);
+                        DH = memoryBank[SI + ra];
                         break;
                     case 0b10000000:
-                        SetDH(memoryBank[SI + FetchWord(IP + 2)]);
+                        DH = memoryBank[SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetDH(ra);
+                        DH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00111000: // BH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetBH(memoryBank[SI]);
+                        BH = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        SetBH(memoryBank[SI + ra]);
+                        BH = memoryBank[SI + ra];
                         break;
                     case 0b10000000:
-                        SetBH(memoryBank[SI + FetchWord(IP + 2)]);
+                        BH = memoryBank[SI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetBH(ra);
+                        BH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
-                default: break;
                 }
                 break; // 100
             case 0b00000101: // DI
-                switch (rm & 0b00111000) // REG
+                final switch (rm & 0b00111000) // REG
                 {
                 case 0b00000000: // AL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetAL(memoryBank[DI]);
+                        AL = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        SetAL(memoryBank[DI + ra]);
+                        AL = memoryBank[DI + ra];
                         break;
                     case 0b10000000:
-                        SetAL(memoryBank[DI + FetchWord(IP + 2)]);
+                        AL = memoryBank[DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetAL(ra);
+                        AL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00001000: // CL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetCL(memoryBank[DI]);
+                        CL = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        SetCL(memoryBank[DI + ra]);
+                        CL = memoryBank[DI + ra];
                         break;
                     case 0b10000000:
-                        SetCL(memoryBank[DI + FetchWord(IP + 2)]);
+                        CL = memoryBank[DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetCL(ra);
+                        CL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00010000: // DL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetDL(memoryBank[DI]);
+                        DL = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        SetDL(memoryBank[DI + ra]);
+                        DL = memoryBank[DI + ra];
                         break;
                     case 0b10000000:
-                        SetDL(memoryBank[DI + FetchWord(IP + 2)]);
+                        DL = memoryBank[DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetDL(ra);
+                        DL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00011000: // BL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetBL(memoryBank[DI]);
+                        BL = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        SetBL(memoryBank[DI + ra]);
+                        BL = memoryBank[DI + ra];
                         break;
                     case 0b10000000:
-                        SetBL(memoryBank[DI + FetchWord(IP + 2)]);
+                        BL = memoryBank[DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetBL(ra);
+                        BL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00100000: // AH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetAH(memoryBank[DI]);
+                        AH = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        SetAH(memoryBank[DI + ra]);
+                        AH = memoryBank[DI + ra];
                         break;
                     case 0b10000000:
-                        SetAH(memoryBank[DI + FetchWord(IP + 2)]);
+                        AH = memoryBank[DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetAH(ra);
+                        AH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00101000: // CH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetCH(memoryBank[DI]);
+                        CH = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        SetCH(memoryBank[DI + ra]);
+                        CH = memoryBank[DI + ra];
                         break;
                     case 0b10000000:
-                        SetCH(memoryBank[DI + FetchWord(IP + 2)]);
+                        CH = memoryBank[DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetCH(ra);
+                        CH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00110000: // DH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetDH(memoryBank[DI]);
+                        DH = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        SetDH(memoryBank[DI + ra]);
+                        DH = memoryBank[DI + ra];
                         break;
                     case 0b10000000:
-                        SetDH(memoryBank[DI + FetchWord(IP + 2)]);
+                        DH = memoryBank[DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetDH(ra);
+                        DH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00111000: // BH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetBH(memoryBank[DI]);
+                        BH = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        SetBH(memoryBank[DI + ra]);
+                        BH = memoryBank[DI + ra];
                         break;
                     case 0b10000000:
-                        SetBH(memoryBank[DI + FetchWord(IP + 2)]);
+                        BH = memoryBank[DI + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetBH(ra);
+                        BH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
-                default: break;
                 }
                 break; // 101
             case 0b00000110: // BP*
-                switch (rm & 0b00111000) // REG
+                final switch (rm & 0b00111000) // REG
                 {
                 case 0b00000000: // AL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetAL(memoryBank[BP]); // DIRECT ADDRESS
+                        AL = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        SetAL(memoryBank[BP + ra]);
+                        AL = memoryBank[BP + ra];
                         break;
                     case 0b10000000:
-                        SetAL(memoryBank[BP + FetchWord(IP + 2)]);
+                        AL = memoryBank[BP + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetAL(ra);
+                        AL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00001000: // CL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetCL(memoryBank[BP]); // DIRECT ADDRESS
+                        CL = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        SetCL(memoryBank[BP + ra]);
+                        CL = memoryBank[BP + ra];
                         break;
                     case 0b10000000:
-                        SetCL(memoryBank[BP + FetchWord(IP + 2)]);
+                        CL = memoryBank[BP + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetCL(ra);
+                        CL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00010000: // DL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetDL(memoryBank[BP]); // DIRECT ADDRESS
+                        DL = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        SetDL(memoryBank[BP + ra]);
+                        DL = memoryBank[BP + ra];
                         break;
                     case 0b10000000:
-                        SetDL(memoryBank[BP + FetchWord(IP + 2)]);
+                        DL = memoryBank[BP + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetDL(ra);
+                        DL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00011000: // BL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetBL(memoryBank[BP]); // DIRECT ADDRESS
+                        BL = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        SetBL(memoryBank[BP + ra]);
+                        BL = memoryBank[BP + ra];
                         break;
                     case 0b10000000:
-                        SetBL(memoryBank[BP + FetchWord(IP + 2)]);
+                        BL = memoryBank[BP + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetBL(ra);
+                        BL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00100000: // AH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetAH(memoryBank[BP]); // DIRECT ADDRESS
+                        AH = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        SetAH(memoryBank[BP + ra]);
+                        AH = memoryBank[BP + ra];
                         break;
                     case 0b10000000:
-                        SetAH(memoryBank[BP + FetchWord(IP + 2)]);
+                        AH = memoryBank[BP + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetAH(ra);
+                        AH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00101000: // CH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetCH(memoryBank[BP]); // DIRECT ADDRESS
+                        CH = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        SetCH(memoryBank[BP + ra]);
+                        CH = memoryBank[BP + ra];
                         break;
                     case 0b10000000:
-                        SetCH(memoryBank[BP + FetchWord(IP + 2)]);
+                        CH = memoryBank[BP + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetCH(ra);
+                        CH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00110000: // DH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetDH(memoryBank[BP]); // DIRECT ADDRESS
+                        DH = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        SetDH(memoryBank[BP + ra]);
+                        DH = memoryBank[BP + ra];
                         break;
                     case 0b10000000:
-                        SetDH(memoryBank[BP + FetchWord(IP + 2)]);
+                        DH = memoryBank[BP + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetDH(ra);
+                        DH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00111000: // BH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetBH(memoryBank[BP]); // DIRECT ADDRESS
+                        BH = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        SetBH(memoryBank[BP + ra]);
+                        BH = memoryBank[BP + ra];
                         break;
                     case 0b10000000:
-                        SetBH(memoryBank[BP + FetchWord(IP + 2)]);
+                        BH = memoryBank[BP + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetBH(ra);
+                        BH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
-                default: break;
                 }
                 break; // 110
             case 0b111: // BX
-                switch (rm & 0b00111000) // REG
+                final switch (rm & 0b00111000) // REG
                 {
                 case 0b00000000: // AL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetAL(memoryBank[BX]);
+                        AL = memoryBank[BX];
                         break;
                     case 0b01000000:
-                        SetAL(memoryBank[BX + ra]);
+                        AL = memoryBank[BX + ra];
                         break;
                     case 0b10000000:
-                        SetAL(memoryBank[BX + FetchWord(IP + 2)]);
+                        AL = memoryBank[BX + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetAL(ra);
+                        AL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00001000: // CL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetCL(memoryBank[BX]);
+                        CL = memoryBank[BX];
                         break;
                     case 0b01000000:
-                        SetCL(memoryBank[BX + ra]);
+                        CL = memoryBank[BX + ra];
                         break;
                     case 0b10000000:
-                        SetCL(memoryBank[BX + FetchWord(IP + 2)]);
+                        CL = memoryBank[BX + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetCL(ra);
+                        CL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00010000: // DL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetDL(memoryBank[BX]);
+                        DL = memoryBank[BX];
                         break;
                     case 0b01000000:
-                        SetDL(memoryBank[BX + ra]);
+                        DL = memoryBank[BX + ra];
                         break;
                     case 0b10000000:
-                        SetDL(memoryBank[BX + FetchWord(IP + 2)]);
+                        DL = memoryBank[BX + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetDL(ra);
+                        DL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00011000: // BL
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetBL(memoryBank[BX]);
+                        BL = memoryBank[BX];
                         break;
                     case 0b01000000:
-                        SetBL(memoryBank[BX + ra]);
+                        BL = memoryBank[BX + ra];
                         break;
                     case 0b10000000:
-                        SetBL(memoryBank[BX + FetchWord(IP + 2)]);
+                        BL = memoryBank[BX + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetBL(ra);
+                        BL = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00100000: // AH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetAH(memoryBank[BX]);
+                        AH = memoryBank[BX];
                         break;
                     case 0b01000000:
-                        SetAH(memoryBank[BX + ra]);
+                        AH = memoryBank[BX + ra];
                         break;
                     case 0b10000000:
-                        SetAH(memoryBank[BX + FetchWord(IP + 2)]);
+                        AH = memoryBank[BX + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetAH(ra);
+                        AH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00101000: // CH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetCH(memoryBank[BX]); // DIRECT ADDRESS
+                        CH = memoryBank[BX]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        SetCH(memoryBank[BX + ra]);
+                        CH = memoryBank[BX + ra];
                         break;
                     case 0b10000000:
-                        SetCH(memoryBank[BX + FetchWord(IP + 2)]);
+                        CH = memoryBank[BX + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetCH(ra);
+                        CH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00110000: // DH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetDH(memoryBank[BX]);
+                        DH = memoryBank[BX];
                         break;
                     case 0b01000000:
-                        SetDH(memoryBank[BX + ra]);
+                        DH = memoryBank[BX + ra];
                         break;
                     case 0b10000000:
-                        SetDH(memoryBank[BX + FetchWord(IP + 2)]);
+                        DH = memoryBank[BX + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetDH(ra);
+                        DH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00111000: // BH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
-                        SetBH(memoryBank[BX]); // DIRECT ADDRESS
+                        BH = memoryBank[BX]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        SetBH(memoryBank[BX + ra]);
+                        BH = memoryBank[BX + ra];
                         break;
                     case 0b10000000:
-                        SetBH(memoryBank[BX + FetchWord(IP + 2)]);
+                        BH = memoryBank[BX + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        SetBH(ra);
+                        BH = memoryBank[ra];
                         break;
-                    default: break;
                     }
                     break;
-                default: break;
                 }
                 break; // 111
-            default: break;
             }
             break;
         }
@@ -1966,10 +1932,10 @@ class Intel8086
             else
             {
                 //TODO: Check if POP R/M16 was done correctly.
-                switch (rm & 0b00000111)
+                final switch (rm & 0b00000111)
                 {
                 case 0b000: // BX + SI
-                    switch (rm & 0b11000000)
+                    final switch (rm & 0b11000000)
                     {
                     case 0:
                         SetWord(BX + SI, Pop());
@@ -1986,7 +1952,7 @@ class Intel8086
                     }
                     break;
                 case 0b001: // BX + DI
-                    switch (rm & 0b11000000)
+                    final switch (rm & 0b11000000)
                     {
                     case 0:
                         SetWord(BX + DI, Pop());
@@ -2003,7 +1969,7 @@ class Intel8086
                     }
                     break;
                 case 0b010: // BP + SI
-                    switch (rm & 0b11000000)
+                    final switch (rm & 0b11000000)
                     {
                     case 0:
                         SetWord(BP + SI, Pop());
@@ -2020,7 +1986,7 @@ class Intel8086
                     }
                     break;
                 case 0b011: // BP + DI
-                    switch (rm & 0b11000000)
+                    final switch (rm & 0b11000000)
                     {
                     case 0:
                         SetWord(BP + DI, Pop());
@@ -2037,7 +2003,7 @@ class Intel8086
                     }
                     break;
                 case 0b100: // SI
-                    switch (rm & 0b11000000)
+                    final switch (rm & 0b11000000)
                     {
                     case 0:
                         SetWord(SI, Pop());
@@ -2054,7 +2020,7 @@ class Intel8086
                     }
                     break;
                 case 0b101: // DI
-                    switch (rm & 0b11000000)
+                    final switch (rm & 0b11000000)
                     {
                     case 0:
                         SetWord(DI, Pop());
@@ -2071,7 +2037,7 @@ class Intel8086
                     }
                     break;
                 case 0b110: // BP
-                    switch (rm & 0b11000000)
+                    final switch (rm & 0b11000000)
                     {
                     case 0:
                         //SetWord(BP, Pop()); - DIRECT ACCESS
@@ -2088,7 +2054,7 @@ class Intel8086
                     }
                     break;
                 case 0b111: // BX
-                    switch (rm & 0b11000000)
+                    final switch (rm & 0b11000000)
                     {
                     case 0:
                         SetWord(BX, Pop());
@@ -2104,7 +2070,6 @@ class Intel8086
                         break;
                     }
                     break;
-                default: break;
                 }
             }
             IP += 4;
@@ -2135,10 +2100,10 @@ class Intel8086
 
             break;
         case 0x98: // CBW
-            if (GetAL() & 0b10000000)
-                SetAH(0xFF);
+            if (AL & 0b10000000)
+                AH = 0xFF;
             else
-                SetAH(0);
+                AH = 0;
             ++IP;
             break;
         case 0x99: // CWD
@@ -2163,11 +2128,11 @@ class Intel8086
             ++IP;
             break;
         case 0x9E: // SAHF (AH to Flags)
-            SetFlag(GetUpper(AX));
+            SetFlag(AH);
             ++IP;
             break;
         case 0x9F: // LAHF (Flags to AH)
-            SetUpper(AX, GetFlag());
+            AH = GetFlag();
             ++IP;
             break;
         case 0xA0: // MOV AL, MEM8
@@ -2219,35 +2184,35 @@ class Intel8086
 
             break;
         case 0xB0: // MOV AL, IMM8
-            SetAL(memoryBank[IP + 1]);
+            AL = memoryBank[IP + 1];
             IP += 2;
             break;
         case 0xB1: // MOV CL, IMM8
-            SetCL(memoryBank[IP + 1]);
+            CL = memoryBank[IP + 1];
             IP += 2;
             break;
         case 0xB2: // MOV DL, IMM8
-            SetDL(memoryBank[IP + 1]);
+            DL = memoryBank[IP + 1];
             IP += 2;
             break;
         case 0xB3: // MOV BL, IMM8
-            SetBL(memoryBank[IP + 1]);
+            BL = memoryBank[IP + 1];
             IP += 2;
             break;
         case 0xB4: // MOV AH, IMM8
-            SetAH(memoryBank[IP + 1]);
+            AH = memoryBank[IP + 1];
             IP += 2;
             break;
         case 0xB5: // MOV CH, IMM8
-            SetCH(memoryBank[IP + 1]);
+            CH = memoryBank[IP + 1];
             IP += 2;
             break;
         case 0xB6: // MOV DH, IMM8
-            SetDH(memoryBank[IP + 1]);
+            DH = memoryBank[IP + 1];
             IP += 2;
             break;
         case 0xB7: // MOV BH, IMM8
-            SetBH(memoryBank[IP + 1]);
+            BH = memoryBank[IP + 1];
             IP += 2;
             break;
         case 0xB8: // MOV AX, IMM16
@@ -2431,18 +2396,18 @@ class Intel8086
             }*/
             break;
         case 0xD4: { // AAM
-            byte tempAL = GetAL();
-            SetAH(tempAL / 0xA);
-            SetAL(tempAL % 0xA);
-            IP += 2;
+            ubyte tempAL = AL;
+            AH = cast(ubyte)(tempAL / 0xA);
+            AL = cast(ubyte)(tempAL % 0xA);
+            ++IP;
         }
             break;
         case 0xD5: { // AAD
-            byte tempAL = GetAL();
-            byte tempAH = GetAH();
-            SetAL((tempAL + (tempAH * 0xA)) & 0xFF);
-            SetAH(0);
-            IP += 2;
+            ubyte tempAL = AL;
+            ubyte tempAH = AH;
+            AL = ((tempAL + (tempAH * 0xA)) & 0xFF);
+            AH = 0;
+            ++IP;
         }
             break;
         case 0xD7: // XLAT SOURCE-TABLE
@@ -2655,33 +2620,28 @@ class Intel8086
         }
     }
 
-    // Page 2-99 contains the IF message processor
-
-
-
-    void Intel8086::Push(ushort value)
+    void Push(ushort value)
     {
         SP -= 2;
         uint addr = GetAddress(SS, SP);
-        *((ushort *)&memoryBank[addr]) = value;
+        *(cast(ushort *)&memoryBank[addr]) = value;
     }
 
-    ushort Intel8086::Pop()
+    ushort Pop()
     {
         uint addr = GetAddress(SS, SP);
         SP += 2;
-        return *((ushort *)&memoryBank[addr]);
+        return *(cast(ushort *)&memoryBank[addr]);
     }
 
-    inline uint Intel8086::GetAddress(ushort segment, ushort offset)
+    uint GetAddress(ushort segment, ushort offset)
     {
         return (segment << 4) + offset;
     }
 
-    /// <summary>
+    // Page 2-99 contains the interrupt message processor
     /// Raise interrupt.
-    /// </summary>
-    void Intel8086::Raise(byte code)
+    void Raise(byte code)
     {
         Push(GetFlagWord());
         IF = TF = 0;
@@ -2696,7 +2656,7 @@ class Intel8086
         switch (code)
         {
         case 0x21: // MS-DOS Services
-            switch (GetAH())
+            switch (AH)
             {
             /*
             * 00h - Terminate program.
@@ -2975,9 +2935,9 @@ class Intel8086
             * *Most versions do not use this.
             */
             case 0x30:
-                SetBH(GetAL() == 0 ? OEM_ID::IBM : 1);
-                SetAL(DOS_VERSION >> 8);
-                SetAH(DOS_VERSION & 0xFF);
+                BH = AL == 0 ? OEM_ID.IBM : 1;
+                AL = DOS_VERSION >> 8;
+                AH = DOS_VERSION & 0xFF;
                 break;
             /*
             * 35h - Get interrupt vector.
@@ -3329,25 +3289,25 @@ class Intel8086
         SetFlagWord(Pop());
     }
 
-    ushort Intel8086::FetchWord(uint addr) {
-        return *((ushort *)&memoryBank[addr]);
+    ushort FetchWord(uint addr) {
+        return *(cast(ushort *)&memoryBank[addr]);
     }
 
-    void Intel8086::SetWord(uint addr, ushort value) {
-        *((ushort *)&memoryBank[addr]) = value;
+    void SetWord(uint addr, ushort value) {
+        *(cast(ushort *)&memoryBank[addr]) = value;
     }
 
-    byte Intel8086::GetFlag()
+    ubyte GetFlag()
     {
-        return
+        return cast(ubyte)(
             SF ? 0x80 : 0 |
             ZF ? 0x40 : 0 |
             AF ? 0x10 : 0 |
             PF ? 0x4  : 0 |
-            CF ? 1    : 0;
+            CF ? 1    : 0);
     }
 
-    void Intel8086::SetFlag(byte flag)
+    void SetFlag(byte flag)
     {
         SF = (flag & 0x80) != 0;
         ZF = (flag & 0x40) != 0;
@@ -3356,7 +3316,7 @@ class Intel8086
         CF = (flag & 1   ) != 0;
     }
 
-    ushort Intel8086::GetFlagWord()
+    ushort GetFlagWord()
     {
         return
             OF ? 0x800 : 0 |
@@ -3370,7 +3330,7 @@ class Intel8086
             CF ? 1     : 0;
     }
 
-    void Intel8086::SetFlagWord(ushort flag)
+    void SetFlagWord(ushort flag)
     {
         OF = (flag & 0x800) != 0;
         DF = (flag & 0x400) != 0;
@@ -3381,5 +3341,5 @@ class Intel8086
         AF = (flag & 0x10 ) != 0;
         PF = (flag & 0x4  ) != 0;
         CF = (flag & 1    ) != 0;
-}
+    }
 }

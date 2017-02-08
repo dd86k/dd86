@@ -7,17 +7,18 @@ module dd_dos;
 import std.stdio;
 import std.path;
 import std.file;
+
 import Interpreter;
-import Poshub;
+import poshublib;
 
 // DD-DOS version.
 enum APP_VERSION = "0.0.0";
 // Reported DOS version.
 enum DOS_VERSION = 0x0000; // 00.00
 
-enum OEM_ID { // Used for INT 21h AH=30 so far.
-    IBM, Compaq, MSPackagedProduct, ATnT, ZDS
-};
+pragma(msg, "Compiling DD-DOS Version ", APP_VERSION);
+pragma(msg, "Reported DOS major version: ", DOS_VERSION >> 8);
+pragma(msg, "Reported DOS minor version: ", DOS_VERSION & 0xFF);
 
 static Intel8086 machine;
 static poshub Con;

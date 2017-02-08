@@ -2,6 +2,9 @@
 Thumbs.db
 ehthumbs.db
 
+# VSCode
+.vscode
+
 # VS2015 VC++ files
 *.db
 *.opendb
