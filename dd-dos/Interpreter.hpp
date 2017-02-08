@@ -23,7 +23,7 @@ public:
 	void Push(ushort value);
 	ushort Pop();
 
-	uint GetPhysicalAddress(ushort segment, ushort offset);
+	uint GetAddress(ushort segment, ushort offset);
 
 private:
     void Raise(byte);

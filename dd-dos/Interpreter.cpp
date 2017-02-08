@@ -43,7 +43,7 @@ void Intel8086::Init(const std::string &filename)
 
 
     while (true) {
-        ExecuteInstruction(memoryBank[(CS << 4) | IP]);
+        ExecuteInstruction(GetAddress(CS, IP));
     }
 }
 
@@ -2721,32 +2721,60 @@ void Intel8086::ExecuteInstruction(byte op)
 void Intel8086::Push(ushort value)
 {
 	SP -= 2;
-	uint addr = GetPhysicalAddress(SS, SP);
+	uint addr = GetAddress(SS, SP);
 	*((ushort *)&memoryBank[addr]) = value;
 }
 
 ushort Intel8086::Pop()
 {
-	uint addr = GetPhysicalAddress(SS, SP);
+	uint addr = GetAddress(SS, SP);
 	SP += 2;
 	return *((ushort *)&memoryBank[addr]);
 }
 
-uint inline Intel8086::GetPhysicalAddress(ushort segment, ushort offset)
+inline uint Intel8086::GetAddress(ushort segment, ushort offset)
 {
 	return (segment << 4) + offset;
 }
 
 /// <summary>
-/// Raise hardware IF.
-/// <summary>
-void Intel8086::Raise(byte IF)
+/// Raise interrupt.
+/// </summary>
+void Intel8086::Raise(byte code)
 {
-    switch (IF)
+	Push(GetFlagWord());
+	IF = TF = 0;
+	Push(CS);
+	Push(IP);
+	//CS ← IDT[Interrupt number * 4].selector;
+	//IP ← IDT[Interrupt number * 4].offset;
+
+	// http://www.ctyme.com/intr/int.htm
+	// http://www.shsu.edu/csc_tjm/spring2001/cs272/interrupt.html
+	// http://spike.scu.edu.au/~barry/interrupts.html
+    switch (code)
     {
     case 0x21: // MS-DOS Services
         switch (GetAH())
         {
+		/*
+		 * 00h - Terminate program.
+		 * Input:
+		 *   CS (PSP Segment)
+		 *
+		 * Notes: Microsoft recommends using INT 21/AH=4Ch for DOS 2+. This
+		 * function sets the program's return code (ERRORLEVEL) to 00h. Execution
+		 * continues at the address stored in INT 22 after DOS performs whatever
+		 * cleanup it needs to do (restoring the INT 22,INT 23,INT 24 vectors
+		 * from the PSP assumed to be located at offset 0000h in the segment
+		 * indicated by the stack copy of CS, etc.). If the PSP is its own parent,
+		 * the process's memory is not freed; if INT 22 additionally points into the
+		 * terminating program, the process is effectively NOT terminated. Not
+		 * supported by MS Windows 3.0 DOSX.EXE DOS extender.
+		 */
+		case 0:
+
+			break;
         /*
          * 01h - Read character from stdin with echo.
          * Input: None
@@ -3351,6 +3379,11 @@ void Intel8086::Raise(byte IF)
         break;
     default: break;
     }
+
+	IP = Pop();
+	CS = Pop();
+	IF = TF = 1;
+	SetFlagWord(Pop());
 }
 
 ushort Intel8086::FetchWord(uint addr) {
