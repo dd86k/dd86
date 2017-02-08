@@ -36,25 +36,44 @@ Intel8086::~Intel8086()
 }
 
 /// <summary>
-/// Load the machine and OS with optional starting app other than COMMAND.COM.
+/// Initiate the machine and run.
 /// </summary>
 void Intel8086::Init(const std::string &filename)
 {
-
-
     while (true) {
         ExecuteInstruction(GetAddress(CS, IP));
     }
 }
 
 /// <summary>
-/// Opens a file from the host and adjusts the virtual program's PSP.JFT.
+/// Load an executable in virtual memory.
 /// </summary>
-/*void Intel8086::Open(const std::string &filename)
+void Intel8086::LoadExec(std::string &filename)
 {
+    FILE* file;
 
+    if (file = fopen(filename.data, "r")) { // If file exists
+        std::string::size_type idx = filename.rfind('.');
 
-}*/
+        if (idx != std::string::npos) {
+            std::string extension = filename.substr(idx + 1);
+
+            for (char & c: extension) c = toupper(c);
+
+            if (extension == "COM") {
+
+            } else if (extension == "EXE") {
+
+            } else {
+
+            }
+        } else { // No extension found
+
+        }
+    } else { // File doesn't exist
+
+    }
+}
 
 void Intel8086::Reset() {
     OF = DF = IF = TF = SF =
@@ -2874,14 +2893,14 @@ void Intel8086::Raise(byte code)
             break;
         /*
          * 0Ah - Buffered input.
-         * Input: DS:DX (See Buffer)
+         * Input: DS:DX (Pointer to BUFFER)
          * Return: Buffer filled with used input.
          *
          * Notes:
          * - ^C and ^Break are checked.
          * - Reads from stdin.
          *
-         * Buffer:
+         * BUFFER:
          * | Offset | Size | Description
          * +--------+------+-----------------
          * | 0      | 1    | Maximum characters buffer can hold
@@ -3034,7 +3053,9 @@ void Intel8086::Raise(byte code)
          * *Most versions do not use this.
          */
         case 0x30:
-
+            SetBH(GetAL() == 0 ? OEM_ID::IBM : 1);
+            SetAL(DOS_VERSION >> 8);
+            SetAH(DOS_VERSION & 0xFF);
             break;
         /*
          * 35h - Get interrupt vector.

@@ -16,8 +16,10 @@ public:
 	~Intel8086();
 
     void Init(const std::string &file);
-    //void Open(const std::string &file);
+    void LoadExec(std::string &file);
     void Reset();
+
+private:
 	void ExecuteInstruction(byte);
 
 	void Push(ushort value);
@@ -25,7 +27,6 @@ public:
 
 	uint GetAddress(ushort segment, ushort offset);
 
-private:
     void Raise(byte);
     ushort FetchWord(uint addr);
     void SetWord(uint addr, ushort value);
