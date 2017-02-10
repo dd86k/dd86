@@ -1,16 +1,10 @@
 ﻿/*
- * Interpreter.cpp: Legacy machine code interpreter. Mimics an Intel 8086.
- * 
- * Architecture: Page 2-3 (P18)
- * 1. Fetch the next instruction from memory.
- * 2. Read an operand (if instruction demands).
- * 3. Execute.
- * 4. Write results (if instruction demands).
+ * Interpreter.d: Legacy machine code interpreter. Mimics an Intel 8086.
  */
 
 module Interpreter;
 
-import dd_dos;
+import main;
 
 enum MAX_MEM = 0x10_0000; // 1 MB
 
@@ -35,13 +29,13 @@ class Intel8086
 
     ubyte[] memoryBank;
 
-    // Generic registers
+    /// Generic register
     ubyte AH, AL, BH, BL, CH, CL, DH, DL;
-        // Index registers
+    /// Index register
     ushort SI, DI, BP, SP;
-        // Segment registers
+    /// Segment register
     ushort CS, DS, ES, SS;
-        // Program Counter
+    /// Program Counter
     ushort IP;
 
     bool // FLAG
@@ -57,9 +51,7 @@ class Intel8086
 
     bool Running = true;
 
-    /// <summary>
     /// Initiate the machine and run.
-    /// </summary>
     void Init()
     {
         while (Running)
@@ -123,22 +115,108 @@ class Intel8086
         DH = (v >> 8) & 0xFF;
         DL = v & 0xFF;
     }
-    /// Execute the operation code. (ALU)
-    void ExecuteInstruction(ubyte op)
+
+    void Push(ushort value)
     {
-        // Queue-Bus (Q-BUS) is one byte large.
+        SP -= 2;
+        uint addr = GetAddress(SS, SP);
+        *(cast(ushort *)&memoryBank[addr]) = value;
+    }
+
+    ushort Pop()
+    {
+        uint addr = GetAddress(SS, SP);
+        SP += 2;
+        return *(cast(ushort *)&memoryBank[addr]);
+    }
+
+    uint GetAddress(ushort segment, ushort offset)
+    {
+        return (segment << 4) + offset;
+    }
+    uint GetIPAddress()
+    {
+        return GetAddress(CS, IP);
+    }
+    uint GetDataAddress(ushort offset)
+    {
+        return GetAddress(DI, offset);
+    }
+
+    ushort FetchWord(uint addr) {
+        return *(cast(ushort *)&memoryBank[addr]);
+    }
+
+    uint FetchDWord(uint addr) {
+        return *(cast(uint *)&memoryBank[addr]);
+    }
+
+    void SetWord(uint addr, ushort value) {
+        *(cast(ushort *)&memoryBank[addr]) = value;
+    }
+
+    void SetDWord(uint addr, uint value) {
+        *(cast(uint *)&memoryBank[addr]) = value;
+    }
+
+    ubyte GetFlag()
+    {
+        return cast(ubyte)(
+            SF ? 0x80 : 0 |
+            ZF ? 0x40 : 0 |
+            AF ? 0x10 : 0 |
+            PF ? 0x4  : 0 |
+            CF ? 1    : 0);
+    }
+
+    void SetFlag(byte flag)
+    {
+        SF = (flag & 0x80) != 0;
+        ZF = (flag & 0x40) != 0;
+        AF = (flag & 0x10) != 0;
+        PF = (flag & 0x4 ) != 0;
+        CF = (flag & 1   ) != 0;
+    }
+
+    ushort GetFlagWord()
+    {
+        return
+            OF ? 0x800 : 0 |
+            DF ? 0x400 : 0 |
+            IF ? 0x200 : 0 |
+            TF ? 0x100 : 0 |
+            SF ? 0x80  : 0 |
+            ZF ? 0x40  : 0 |
+            AF ? 0x10  : 0 |
+            PF ? 0x4   : 0 |
+            CF ? 1     : 0;
+    }
+
+    void SetFlagWord(ushort flag)
+    {
+        OF = (flag & 0x800) != 0;
+        DF = (flag & 0x400) != 0;
+        IF = (flag & 0x200) != 0;
+        TF = (flag & 0x100) != 0;
+        SF = (flag & 0x80 ) != 0;
+        ZF = (flag & 0x40 ) != 0;
+        AF = (flag & 0x10 ) != 0;
+        PF = (flag & 0x4  ) != 0;
+        CF = (flag & 1    ) != 0;
+    }
+
+    /// Execute the operation code. (ALU)
+    void ExecuteInstruction(ubyte op) // QBUS is 1-byte large.
+    {
         // Page 4-27 (P169) of the Intel 8086 User Manual
         // contains decoding guide.
         //
         // Legend:
-        // R/M : Mod{Register/Memory} byte
+        // R/M : ModRegister/Memory byte
         // IMM : Immediate value
         // REG : Register
         // MEM : Memory location
         // SEGREG : Segment register
-        // SHORT : +/- 128 Byte displacement (2 byte instruction)
-        // NEAR  : +/- 32K Byte displacement (3 byte instruction)
-        // FAR   : Any segment/offset (5 byte instruction)
         // 
         // The number represents bitness.
         // Instruction descriptions are available at Page 2-35 (P50).
@@ -2449,16 +2527,22 @@ class Intel8086
 
             break;
         case 0xE8: // CALL NEAR-PROC
-
+            Push(IP);
+            IP += cast(short)FetchWord(IP + 1); // Direct within segment
             break;
         case 0xE9: // JMP  NEAR-LABEL
-
+            IP += cast(short)FetchWord(IP + 1); // ±32 KB
             break;
-        case 0xEA: // JMP  FAR-LABEL
-
+        case 0xEA: { // JMP  FAR-LABEL
+            // Any segment, any fragment, 5 byte instruction.
+            // EAh (LO-IP) (HI-IP) (LO-CS) (HI-CS)
+            ushort ip = cast(ushort)(IP + 1);
+            IP = FetchWord(ip);
+            CS = FetchWord(ip + 2);
+        }
             break;
         case 0xEB: // JMP  SHORT-LABEL
-
+            IP += cast(byte)memoryBank[IP + 1]; // ±128 B
             break;
         case 0xEC: // IN AL, DX
 
@@ -2618,25 +2702,6 @@ class Intel8086
             // Raise vector
             break;
         }
-    }
-
-    void Push(ushort value)
-    {
-        SP -= 2;
-        uint addr = GetAddress(SS, SP);
-        *(cast(ushort *)&memoryBank[addr]) = value;
-    }
-
-    ushort Pop()
-    {
-        uint addr = GetAddress(SS, SP);
-        SP += 2;
-        return *(cast(ushort *)&memoryBank[addr]);
-    }
-
-    uint GetAddress(ushort segment, ushort offset)
-    {
-        return (segment << 4) + offset;
     }
 
     // Page 2-99 contains the interrupt message processor
@@ -3287,59 +3352,5 @@ class Intel8086
         CS = Pop();
         IF = TF = 1;
         SetFlagWord(Pop());
-    }
-
-    ushort FetchWord(uint addr) {
-        return *(cast(ushort *)&memoryBank[addr]);
-    }
-
-    void SetWord(uint addr, ushort value) {
-        *(cast(ushort *)&memoryBank[addr]) = value;
-    }
-
-    ubyte GetFlag()
-    {
-        return cast(ubyte)(
-            SF ? 0x80 : 0 |
-            ZF ? 0x40 : 0 |
-            AF ? 0x10 : 0 |
-            PF ? 0x4  : 0 |
-            CF ? 1    : 0);
-    }
-
-    void SetFlag(byte flag)
-    {
-        SF = (flag & 0x80) != 0;
-        ZF = (flag & 0x40) != 0;
-        AF = (flag & 0x10) != 0;
-        PF = (flag & 0x4 ) != 0;
-        CF = (flag & 1   ) != 0;
-    }
-
-    ushort GetFlagWord()
-    {
-        return
-            OF ? 0x800 : 0 |
-            DF ? 0x400 : 0 |
-            IF ? 0x200 : 0 |
-            TF ? 0x100 : 0 |
-            SF ? 0x80  : 0 |
-            ZF ? 0x40  : 0 |
-            AF ? 0x10  : 0 |
-            PF ? 0x4   : 0 |
-            CF ? 1     : 0;
-    }
-
-    void SetFlagWord(ushort flag)
-    {
-        OF = (flag & 0x800) != 0;
-        DF = (flag & 0x400) != 0;
-        IF = (flag & 0x200) != 0;
-        TF = (flag & 0x100) != 0;
-        SF = (flag & 0x80 ) != 0;
-        ZF = (flag & 0x40 ) != 0;
-        AF = (flag & 0x10 ) != 0;
-        PF = (flag & 0x4  ) != 0;
-        CF = (flag & 1    ) != 0;
     }
 }
