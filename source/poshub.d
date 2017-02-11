@@ -4,6 +4,10 @@
 
 module poshublib;
 
+enum {
+    POSHUB_VER = "0.0.0"
+}
+
 struct poshub
 {
     version (Windows)

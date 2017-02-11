@@ -8,4 +8,8 @@ There is currently no End-User Manual.
 
 ## Compiling
 
-It is highly recommended to use `dub`, and build with `dub build`.
+### dub
+The easiest way to compile the project is to use [dub](https://code.dlang.org/download), and build with `dub build` in the root directory of the project.
+
+### dmd
+To compile a basic executable with DMD, change directory to `source` and `dmd main Interpreter poshub`.

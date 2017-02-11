@@ -1,5 +1,6 @@
 name "dd-dos"
-description "Comptability layer."
+description "DOS Comptability layer."
 authors "dd86k"
 copyright "Copyright © 2017, dd86k"
 license "MIT"
+homepage "https://github.com/dd86k/dd-dos"

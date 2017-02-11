@@ -4,12 +4,16 @@
 
 module main;
 
-import std.stdio;
-import std.path;
-import std.file;
+import std.stdio, std.path, std.file;
 
 import Interpreter;
 import poshublib;
+
+pragma(msg, "Compiling DD-DOS Version ", APP_VERSION);
+pragma(msg, "Reporting DOS major version: ", DOS_VERSION >> 8);
+pragma(msg, "Reporting DOS minor version: ", DOS_VERSION & 0xFF);
+pragma(msg, "Interpreter version : ", INTERPRETER_VER);
+pragma(msg, "Poshub version : ", POSHUB_VER);
 
 // DD-DOS version.
 enum APP_VERSION = "0.0.0";
@@ -20,9 +24,7 @@ enum {
     E_INVCLI = 1,
 }
 
-pragma(msg, "Compiling DD-DOS Version ", APP_VERSION);
-pragma(msg, "Reporting DOS major version: ", DOS_VERSION >> 8);
-pragma(msg, "Reporting DOS minor version: ", DOS_VERSION & 0xFF);
+static bool Verbose;
 
 static Intel8086 machine;
 static poshub Con;
@@ -33,12 +35,14 @@ private void DisplayVersion()
 	writeln("Project page: <https://github.com/dd86k/dd-dos>");
 }
 
-private void DisplayHelp(string program_name)
+private void DisplayHelp(string name)
 {
 	writeln("Usage: ");
-	writefln("  %s [<Options>] [<Program>]\n", program_name);
-	writeln("  -h | --help       Display help and quit.");
-	writeln("  -v | --version    Display version and quit.");
+	writefln("  %s [<Options>]", name);
+    writeln("Options:");
+    writeln("  -p <File>    Load a program at start.");
+	writeln("\n  -h, --help       Display help and quit.");
+	writeln("  -v, --version    Display version and quit.");
 }
 
 private int main(string[] args)
@@ -48,11 +52,15 @@ private int main(string[] args)
 	for (size_t i = 0; i < argl; ++i) {
         switch (args[i])
         {
-            case "-v", "--version":
+            case "-V", "--version", "/version", "/ver":
                 DisplayVersion();
                 break;
             case "-h", "--help", "/?":
                 DisplayHelp(args[0]);
+                break;
+
+            case "-v", "--verbose":
+                Verbose = true;
                 break;
 
             case "-p", "/p":
@@ -70,89 +78,129 @@ private int main(string[] args)
 
     Con = poshub();
     Con.Init();
-
     machine = new Intel8086();
+
     if (init_file != null) {
         Load(init_file);
+        machine.Init();
     } else {
-        import std.array;
-        while (true) {
-            write('$');
-            // Read line from stdln and remove endl, then split arguments.
-            string[] s = split(readln()[0..$-1], ' ');
-
-            if (s.length > 0)
-                switch (s[0])
-                {
-                    case "load":
-                        if (s.length > 1)
-                            Load(s[1]);
-                        break;
-                    case "run":
-                        machine.Init();
-                        break;
-                    case "?r":
-                        with (machine) {
-                            writef(
-                                "AX=%04X BX=%04X CX=%04X DX=%04X " ~
-                                "SP=%04X BP=%04X SI=%04X DI=%04X\n" ~
-                                "CS=%04X DS=%04X ES=%04X SS=%04X " ~
-                                "IP=%04X\n\n",
-                                AX, BX, CX, DX, SP, BP, SI, DI,
-                                CS, DS, ES, SS, IP
-                            );
-                            write("FLAG: ");
-                            if (OF) write("OF ");
-                            if (DF) write("DF ");
-                            if (IF) write("IF ");
-                            if (TF) write("TF ");
-                            if (SF) write("SF ");
-                            if (ZF) write("ZF ");
-                            if (AF) write("AF ");
-                            if (PF) write("PF ");
-                            if (CF) write("CF ");
-                            writeln();
-                        }
-                        break;
-                    default:
-                        writefln("%s: Invalid command.", s[0]);
-                        break;
-                }
-        }
+        EnterVShell();
     }
-    machine.Init();
 
     return 0;
+}
+
+void EnterVShell()
+{
+    import std.array;
+    while (true) {
+        write('$');
+        // Read line from stdln and remove endl, then split arguments.
+        string[] s = split(readln()[0..$-1], ' ');
+
+        if (s.length > 0)
+        switch (s[0])
+        {
+        case "load":
+            if (s.length > 1)
+                Load(s[1]);
+            break;
+        case "run":
+            machine.Init();
+            break;
+        case "?r":
+            with (machine) {
+                writef(
+                    "AX=%04X BX=%04X CX=%04X DX=%04X " ~
+                    "SP=%04X BP=%04X SI=%04X DI=%04X\n" ~
+                    "CS=%04X DS=%04X ES=%04X SS=%04X " ~
+                    "IP=%04X\n\n",
+                    AX, BX, CX, DX, SP, BP, SI, DI,
+                    CS, DS, ES, SS, IP
+                );
+                write("FLAG: ");
+                if (OF) write("OF ");
+                if (DF) write("DF ");
+                if (IF) write("IF ");
+                if (TF) write("TF ");
+                if (SF) write("SF ");
+                if (ZF) write("ZF ");
+                if (AF) write("AF ");
+                if (PF) write("PF ");
+                if (CF) write("CF ");
+                writeln();
+            }
+            break;
+        default:
+            writefln("%s: Invalid command.", s[0]);
+            break;
+        }
+    }
+}
+
+void HelloTest() //TODO: HelloTest
+{ // Hello world
+  // Offset: 0
+  // Address: CS:0100
+    with (machine) { //TODO: Consider a Push method
+        {
+            // msg (Offset: 000E, Address: 010E)
+            // "Hello World!\r\n$" ($ terminated in machine code)
+
+            //GetDataAddress(0xE)
+        }
+        // Copy CODE segment to DATA segment
+        // prepare for print msg
+        Execute(0xE0); // PUSH CS
+        Execute(0x1F); // POP DS
+        Execute(0xBA); // mov DX 010Eh
+        Execute(0x0E); // [msg]
+        Execute(0x01);
+        // print(...);
+        Execute(0xB4); // mov AH (9)
+        Execute(0x09); // 9
+        Execute(0xCD); // int
+        Execute(0x21); // 21h
+        // return 1;
+        Execute(0xB8); // mov AX 4C01h
+        Execute(0x01); // 01
+        Execute(0x4C); // 4C
+        Execute(0xCD); // int
+        Execute(0x21); // 21h
+    }
 }
 
 /// Load a file in virtual memory.
 void Load(string filename)
 {
-    import std.string;
-    import core.stdc.string;
-
     if (exists(filename))
     {
+        import core.stdc.string, std.string;
         File f = File(filename);
 
         if (f.size <= 0xFFFF_FFFFL)
             switch (capitalize(extension(f.name)))
             {
                 case ".COM": {
-                    write("Loading COM... ");
+                    if (Verbose) write("Loading COM... ");
                     uint s = cast(uint)f.size;
                     ubyte[] buf = f.rawRead(new ubyte[s]);
                     // Temporary, but will be the first thing to run.
-                    ubyte[]* offset = &machine.memoryBank + 0xFFFF0;
+                    ubyte* offset = // Loads at 0 but starts at CS:0100
+                        &machine.memoryBank[0] + (machine.CS << 4);// + 0x100;
                     memcpy(offset, &buf, s);
-                    writeln("loaded");
+                    with (machine) {
+                        DS = ES = offset;
+                        IP = offset + 0x100;
+                    }
+                    if (Verbose) writeln("loaded");
                 }
                     break;
                 default: // null is included here.
             }
-        else writeln("File too big.");
+        else if (Verbose) writeln("File too big.");
     }
-    else
+    else if (Verbose)
     {
         writefln("File %s does not exist, skipping.", filename);
     }
