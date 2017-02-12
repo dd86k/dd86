@@ -34,10 +34,13 @@ struct poshub
             CONSOLE_SCREEN_BUFFER_INFO i;
             GetConsoleScreenBufferInfo(hOut, &i);
             return cast(ushort)(i.srWindow.Right - i.srWindow.Left + 1);
-        } else {
+        } else version (Posix) {
+            import core.sys.posix.sys.ioctl;
             winsize ws;
             ioctl(0, TIOCGWINSZ, &ws);
             return ws.ws_col;
+        } else {
+            static assert(0, "poshub::GetWindowWidth : Needs implementation.");
         }
     }
 
@@ -46,9 +49,12 @@ struct poshub
         version (Windows) {
             COORD c = { cast(SHORT)w, cast(SHORT)GetWindowWidth() };
             SetConsoleScreenBufferSize(hOut, c);
-        } else {
+        } else version (Posix) {
+            import core.sys.posix.sys.ioctl;
             winsize ws = { w, GetWindowWidth() };
             ioctl(0, TIOCSWINSZ, &ws);
+        } else {
+            static assert(0, "poshub::SetWindowWidth : Needs implementation.");
         }
     }
 
@@ -57,10 +63,13 @@ struct poshub
             CONSOLE_SCREEN_BUFFER_INFO i;
             GetConsoleScreenBufferInfo(hOut, &i);
             return cast(ushort)(i.srWindow.Bottom - i.srWindow.Top + 1);
-        } else {
+        } else version (Posix) {
+            import core.sys.posix.sys.ioctl;
             winsize ws;
             ioctl(0, TIOCGWINSZ, &ws);
             return ws.ws_row;
+        } else {
+            static assert(0, "poshub::GetWindowHeight : Needs implementation.");
         }
     }
 
@@ -68,9 +77,12 @@ struct poshub
         version (Windows) {
             COORD c = { cast(SHORT)GetWindowWidth(), cast(SHORT)h };
             SetConsoleScreenBufferSize(hOut, c);
-        } else {
+        } else version (Posix) {
+            import core.sys.posix.sys.ioctl;
             winsize ws = { GetWindowWidth(), h, 0, 0 };
             ioctl(0, TIOCSWINSZ, &ws);
+        } else {
+            static assert(0, "poshub::SetWindowHeight : Needs implementation.");
         }
     }
 
@@ -84,15 +96,13 @@ struct poshub
             GetConsoleTitleA(cast(char*)&str[0], MAX_PATH);
             return str;
         } else {
-            static assert(0, "GetTitle needs implementation.");
+            return null;
         }
     }
 
     void SetTitle(string str) {
         version (Windows) {
             SetConsoleTitleA(&str[0]);
-        } else {
-            static assert(0, "SetTitle needs implementation.");
         }
     }
 
@@ -106,15 +116,13 @@ struct poshub
             GetConsoleTitleW(cast(wchar*)&str[0], MAX_PATH);
             return str;
         } else {
-            static assert(0, "GetTitleWide needs implementation.");
+            return null;
         }
     }
 
     void SetTitleWide(wstring str) {
         version (Windows) {
             SetConsoleTitleW(&str[0]);
-        } else {
-            static assert(0, "SetTitle needs implementation.");
         }
     }
 
@@ -134,8 +142,10 @@ struct poshub
             }
 
             return 0;
-        } else {
+        } else version (Posix) {
 
+
+            return 0;
         }
     }
 }

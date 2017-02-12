@@ -185,13 +185,15 @@ void Load(string filename)
                     if (Verbose) write("Loading COM... ");
                     uint s = cast(uint)f.size;
                     ubyte[] buf = f.rawRead(new ubyte[s]);
-                    // Temporary, but will be the first thing to run.
-                    ubyte* offset = // Loads at 0 but starts at CS:0100
-                        &machine.memoryBank[0] + (machine.CS << 4);// + 0x100;
-                    memcpy(offset, &buf, s);
                     with (machine) {
-                        DS = ES = offset;
-                        IP = offset + 0x100;
+                    // Temporary, but will be the first thing to run.
+                        ubyte* offset = // Loads at 0 but starts at CS:0100
+                        &machine.memoryBank[0] + (CS << 4);// + 0x100;
+                        memcpy(offset, &buf, s);
+                        /*
+                        DS = ES = 0x100;
+                        IP = cast(ushort)(CS + 0x100);
+                        */
                     }
                     if (Verbose) writeln("loaded");
                 }
