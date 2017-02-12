@@ -2762,12 +2762,12 @@ class Intel8086
             * Return: AL (Last character)
             * 
             * Notes:
-            * - ^C and ^Break are checked.
+            * - ^C and ^Break are checked. (If true, INT 23)
             * - If DL=09h on entry, in which case AL=20h is expended as blanks.
             * - If stdout is redirected to a file, no error-checks are performed.
             */
             case 2:
-
+            
                 break;
             /*
             * 05h - Write character to printer.
@@ -2838,8 +2838,7 @@ class Intel8086
             * - ^C and ^Break are not checked.
             */
             case 9:
-                uint pd = cast(uint)((DS << 4) + DX), start = pd;
-                uint endl;
+                uint pd = GetAddress(DS, DX);
                 
                 while (memoryBank[pd] != '$')
                     write(cast(char)memoryBank[pd++]);
@@ -2936,6 +2935,20 @@ class Intel8086
 
                 break;
             /*
+             * 26h - Create PSP
+             * Input: DX (Segment to create PSP)
+             * Return: AL destroyed
+             *
+             * Notes:
+             * - New PSP is updated with memory size information; INTs 22h, 23h,
+             *     24h taken from interrupt vector table; the parent PSP field
+             *     is set to 0. (DOS 2+) DOS assumes that the caller's CS is the`
+             *     segment of the PSP to copy.
+             */
+            case 0x26:
+
+                break;
+            /*
             * 2Ah - Get system date.
             * Input: None.
             * Return:
@@ -2945,7 +2958,34 @@ class Intel8086
             *   AL (Day of the week, Sunday = 0)
             */
             case 0x2A:
+                version (Windows)
+                {
+                    import core.sys.windows.windows;
+                    SYSTEMTIME s;
+                    GetLocalTime(&s);
 
+                    CX = s.wYear;
+                    DH = cast(ubyte)s.wMonth;
+                    DL = cast(ubyte)s.wDay;
+                    AL = cast(ubyte)s.wDayOfWeek;
+                }
+                else version (Posix)
+                {
+                    import core.sys.posix.time;
+                    timer_t r = { 0 };
+                    tm* s;
+                    time(&r);
+                    s = localtime(&r);
+
+                    CX = s.tm_year;
+                    DH = s.tm_mon;
+                    DL = s.tm_mday;
+                    AL = s.tm_wday;
+                }
+                else
+                {
+                    static assert(0, "Implement INT 21h AH=2Ah");
+                }
                 break;
             /*
             * 2Bh - Set system date.
@@ -2968,7 +3008,42 @@ class Intel8086
             *   DL (1/100 seconds)
             */
             case 0x2C:
+                version (Windows)
+                {
+                    import core.sys.windows.windows;
+                    SYSTEMTIME s;
+                    GetLocalTime(&s);
 
+                    CH = cast(ubyte)s.wHour;
+                    CL = cast(ubyte)s.wMinute;
+                    DH = cast(ubyte)s.wSecond;
+                    DL = cast(ubyte)s.wMilliseconds;
+                }
+                else version (Posix)
+                {
+                    import core.sys.posix.time;
+                    timer_t r = { 0 };
+                    tm* s;
+                    time(&r);
+                    s = localtime(&r);
+
+                    CH = cast(ubyte)s.tm_hour;
+                    CL = cast(ubyte)s.tm_min;
+                    DH = cast(ubyte)s.tm_wday;
+
+                    version (linux)
+                    {
+                        //TODO: Check
+                        import core.sys.linux.sys.time;
+                        timeval tv;
+                        gettimeofday(&tv, 0);
+                        AL = cast(ubyte)tv.tv_usec;
+                    }
+                }
+                else
+                {
+                    static assert(0, "Implement INT 21h AH=2Ch");
+                }
                 break;
             /*
             * 2Dh - Set system time.
