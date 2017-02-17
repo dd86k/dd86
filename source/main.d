@@ -138,15 +138,13 @@ void EnterVShell()
     }
 }
 
-void HelloWorld()
+unittest
 {
     import core.stdc.string;
     // Hello world
     // Offset: 0
     // Address: CS:0100
     with (machine) { //TODO: Consider a Push method
-        enum NOPS = 14;
-        ubyte* cs = &memoryBank[(CS << 4) + IP]; // CS:0100
         // push CS
         // pop DS
         // mov DX 010Eh ([msg])
@@ -154,6 +152,8 @@ void HelloWorld()
         // int 21h
         // mov AX 4C01h | return 1
         // int 21h
+        enum NOPS = 14;
+        ubyte* cs = &memoryBank[(CS << 4) + IP]; // CS:0100
         ubyte[NOPS] ops = [0xE0, 0x1F, 0xBA, 0x0E, 0x01, 0xB4, 0x09, 0xCD, 0x21,
             0xB8, 0x01, 0x4C, 0xCD, 0x21];
         // msg (Offset: 000E, Address: 010E)
