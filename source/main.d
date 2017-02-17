@@ -138,35 +138,28 @@ void EnterVShell()
     }
 }
 
-void HelloTest() //TODO: HelloTest
-{ // Hello world
-  // Offset: 0
-  // Address: CS:0100
+void HelloWorld()
+{
+    import core.stdc.string;
+    // Hello world
+    // Offset: 0
+    // Address: CS:0100
     with (machine) { //TODO: Consider a Push method
-        {
-            // msg (Offset: 000E, Address: 010E)
-            // "Hello World!\r\n$" ($ terminated in machine code)
-
-            //GetDataAddress(0xE)
-        }
-        // Copy CODE segment to DATA segment
-        // prepare for print msg
-        Execute(0xE0); // PUSH CS
-        Execute(0x1F); // POP DS
-        Execute(0xBA); // mov DX 010Eh
-        Execute(0x0E); // [msg]
-        Execute(0x01);
-        // print(...);
-        Execute(0xB4); // mov AH (9)
-        Execute(0x09); // 9
-        Execute(0xCD); // int
-        Execute(0x21); // 21h
-        // return 1;
-        Execute(0xB8); // mov AX 4C01h
-        Execute(0x01); // 01
-        Execute(0x4C); // 4C
-        Execute(0xCD); // int
-        Execute(0x21); // 21h
+        enum NOPS = 14;
+        ubyte* cs = &memoryBank[(CS << 4) + IP]; // CS:0100
+        // push CS
+        // pop DS
+        // mov DX 010Eh ([msg])
+        // mov AH 9 | print()
+        // int 21h
+        // mov AX 4C01h | return 1
+        // int 21h
+        ubyte[NOPS] ops = [0xE0, 0x1F, 0xBA, 0x0E, 0x01, 0xB4, 0x09, 0xCD, 0x21,
+            0xB8, 0x01, 0x4C, 0xCD, 0x21];
+        // msg (Offset: 000E, Address: 010E)
+        string data = "Hello World!\r\n$";
+        memcpy(cs, &ops[0], NOPS);
+        memcpy(cs + NOPS, &data[0], data.length);
     }
 }
 
@@ -203,7 +196,5 @@ void Load(string filename)
         else if (Verbose) writeln("File too big.");
     }
     else if (Verbose)
-    {
         writefln("File %s does not exist, skipping.", filename);
-    }
 }

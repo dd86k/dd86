@@ -4,7 +4,7 @@
 
 module Interpreter;
 
-import main, std.stdio;
+import main, std.stdio, std.path;
 
 enum {
     INTERPRETER_VER = "0.0.0"
@@ -3078,7 +3078,7 @@ class Intel8086
             *   AH (Minor version)
             *   BL:CX (24bit user serial* if DOS<5 or AL=0)
             *   BH (MS-DOS OEM number if DOS 5+ and AL=1)
-            *   BH (Version flag bit 3: DOS is in ROM other: reserved (0))
+            *   BH (Version flag bit 3: DOS is in ROM, other: reserved (0))
             *
             * *Most versions do not use this.
             */
@@ -3130,7 +3130,7 @@ class Intel8086
             *     directory because the path would exceed 64 characters.
             */
             case 0x39:
-
+                
                 break;
             /*
             * 3Ah - Remove subdirectory.
