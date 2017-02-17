@@ -2366,10 +2366,12 @@ class Intel8086
 
             break;
         case 0xCC: // INT 3
-
+            Raise(3);
+            ++IP;
             break;
         case 0xCD: // INT IMM8
-
+            Raise(memoryBank[GetIPAddress + 1]);
+            IP += 2;
             break;
         case 0xCE: // INTO
             
