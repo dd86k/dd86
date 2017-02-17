@@ -93,14 +93,19 @@ private int main(string[] args)
 void EnterVShell()
 {
     import std.array;
+    
     while (true) {
         write('$');
-        // Read line from stdln and remove endl, then split arguments.
+        
+        // Read line from stdln and remove \n, then split arguments.
         string[] s = split(readln()[0..$-1], ' ');
 
         if (s.length > 0)
         switch (s[0])
         {
+        case "t0":
+            Test();
+            break;
         case "load":
             if (s.length > 1)
                 Load(s[1]);
@@ -156,7 +161,7 @@ void Load(string filename)
                     with (machine) {
                     // Temporary, but will be the first thing to run.
                         ubyte* offset = // Loads at 0 but starts at CS:0100
-                        &machine.memoryBank[0] + (CS << 4);// + 0x100;
+                        &machine.memoryBank[0] + (CS << 4);// + 0x100; // PSP
                         memcpy(offset, &buf, s);
                         /*
                         DS = ES = 0x100;
@@ -172,25 +177,4 @@ void Load(string filename)
     }
     else if (Verbose)
         writefln("File %s does not exist, skipping.", filename);
-}
-
-unittest
-{
-    Intel8086 machine = new Intel8086();
-    with (machine) {
-
-        Reset();
-        // Hello world (CS:0100), Offset: 0, Address: CS:0100
-        // push CS
-        // pop DS
-        // mov DX 010Eh ([msg])
-        // mov AH 9 | print()
-        // int 21h
-        // mov AX 4C01h | return 1
-        // int 21h
-        Insert([0xE0, 0x1F, 0xBA, 0x0E, 0x01, 0xB4, 0x09, 0xCD, 0x21, 0xB8,
-                0x01, 0x4C, 0xCD, 0x21]);
-        // msg (Offset: 000E, Address: 010E)
-        Insert("Hello World!\r\n$");
-    }
 }

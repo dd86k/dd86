@@ -59,7 +59,7 @@ class Intel8086
     void Init()
     {
         while (Running)
-            Execute(memoryBank[GetAddress(CS, IP)]);
+            Execute(memoryBank[GetIPAddress]);
     }
 
     void Reset() {
@@ -122,14 +122,14 @@ class Intel8086
     {
         SP -= 2;
         uint addr = GetAddress(SS, SP);
-        *(cast(ushort *)&memoryBank[addr]) = value;
+        SetWord(addr, value);
     }
 
     ushort Pop()
     {
         uint addr = GetAddress(SS, SP);
         SP += 2;
-        return *(cast(ushort *)&memoryBank[addr]);
+        return FetchWord(addr);
     }
 
     uint GetAddress(ushort segment, ushort offset)
@@ -148,7 +148,6 @@ class Intel8086
     ushort FetchWord(uint addr) {
         return *(cast(ushort *)&memoryBank[addr]);
     }
-
     uint FetchDWord(uint addr) {
         return *(cast(uint *)&memoryBank[addr]);
     }
@@ -156,7 +155,6 @@ class Intel8086
     void SetWord(uint addr, ushort value) {
         *(cast(ushort *)&memoryBank[addr]) = value;
     }
-
     void SetDWord(uint addr, uint value) {
         *(cast(uint *)&memoryBank[addr]) = value;
     }
@@ -2316,25 +2314,32 @@ class Intel8086
             IP += 3;
             break;
         case 0xB9: // MOV CX, IMM16
-
+            CX = FetchWord(GetIPAddress + 1);
+            IP += 3;
             break;
         case 0xBA: // MOV DX, IMM16
-
+            DX = FetchWord(GetIPAddress + 1);
+            IP += 3;
             break;
         case 0xBB: // MOV BX, IMM16
-
+            BX = FetchWord(GetIPAddress + 1);
+            IP += 3;
             break;
         case 0xBC: // MOV SP, IMM16
-
+            SP = FetchWord(GetIPAddress + 1);
+            IP += 3;
             break;
         case 0xBD: // MOV BP, IMM16
-
+            BP = FetchWord(GetIPAddress + 1);
+            IP += 3;
             break;
         case 0xBE: // MOV SI, IMM16
-
+            SI = FetchWord(GetIPAddress + 1);
+            IP += 3;
             break;
         case 0xBF: // MOV DI, IMM16
-
+            DI = FetchWord(GetIPAddress + 1);
+            IP += 3;
             break;
         case 0xC2: // RET IMM16 (intrasegment)
 
@@ -3451,5 +3456,32 @@ class Intel8086
         CS = Pop();
         IF = TF = 1;
         SetFlagWord(Pop());
+    }
+}
+
+void Test()
+{
+    Intel8086 machine = new Intel8086();
+    with (machine) {
+        /*
+         * Hello World
+         * Offset: 0, Address: CS:0100
+         */
+        Reset();
+        CS = 0;
+        IP = 0x100; // After PSP.
+        // push CS
+        // pop DS
+        // mov DX [msg] (010Eh)
+        // mov AH 9 | print()
+        // int 21h
+        // mov AX 4C01h | return 1
+        // int 21h
+        Insert(cast(ubyte[])
+               [0x0E, 0x1F, 0xBA, 0x0E, 0x01, 0xB4, 0x09, 0xCD, 0x21, 0xB8,
+                0x01, 0x4C, 0xCD, 0x21]);
+        // msg (Offset: 000E, Address: 010E)
+        Insert("Hello World!\r\n$");
+        Init();
     }
 }
