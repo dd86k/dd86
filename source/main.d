@@ -138,31 +138,6 @@ void EnterVShell()
     }
 }
 
-unittest
-{
-    import core.stdc.string;
-    // Hello world
-    // Offset: 0
-    // Address: CS:0100
-    with (machine) { //TODO: Consider a Push method
-        // push CS
-        // pop DS
-        // mov DX 010Eh ([msg])
-        // mov AH 9 | print()
-        // int 21h
-        // mov AX 4C01h | return 1
-        // int 21h
-        enum NOPS = 14;
-        ubyte* cs = &memoryBank[(CS << 4) + IP]; // CS:0100
-        ubyte[NOPS] ops = [0xE0, 0x1F, 0xBA, 0x0E, 0x01, 0xB4, 0x09, 0xCD, 0x21,
-            0xB8, 0x01, 0x4C, 0xCD, 0x21];
-        // msg (Offset: 000E, Address: 010E)
-        string data = "Hello World!\r\n$";
-        memcpy(cs, &ops[0], NOPS);
-        memcpy(cs + NOPS, &data[0], data.length);
-    }
-}
-
 /// Load a file in virtual memory.
 void Load(string filename)
 {
@@ -197,4 +172,25 @@ void Load(string filename)
     }
     else if (Verbose)
         writefln("File %s does not exist, skipping.", filename);
+}
+
+unittest
+{
+    Intel8086 machine = new Intel8086();
+    with (machine) {
+
+        Reset();
+        // Hello world (CS:0100), Offset: 0, Address: CS:0100
+        // push CS
+        // pop DS
+        // mov DX 010Eh ([msg])
+        // mov AH 9 | print()
+        // int 21h
+        // mov AX 4C01h | return 1
+        // int 21h
+        Insert([0xE0, 0x1F, 0xBA, 0x0E, 0x01, 0xB4, 0x09, 0xCD, 0x21, 0xB8,
+                0x01, 0x4C, 0xCD, 0x21]);
+        // msg (Offset: 000E, Address: 010E)
+        Insert("Hello World!\r\n$");
+    }
 }
