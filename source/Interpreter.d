@@ -207,20 +207,20 @@ class Intel8086
         CF = (flag & 1    ) != 0;
     }
 
-    /// Directly insert instructions at CS:IP.
+    /// Directly overwrite instructions at CS:IP.
     void Insert(ubyte[] ops)
     {
         ubyte* p = &memoryBank[0] + GetIPAddress;
         size_t i = 0;
-        foreach(b; ops) p[i] = b;
+        foreach(b; ops) p[i++] = b;
     }
 
-    /// Directly insert text data at CS:IP.
+    /// Directly overwrite data at CS:IP.
     void Insert(string data)
     {
         ubyte* p = &memoryBank[0] + GetIPAddress;
         size_t i = 0;
-        foreach(b; data) p[i] = b;
+        foreach(b; data) p[i++] = b;
     }
 
     /// Execute the operation code. (ALU)
