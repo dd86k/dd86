@@ -206,17 +206,17 @@ class Intel8086
     }
 
     /// Directly overwrite instructions at CS:IP.
-    void Insert(ubyte[] ops)
+    void Insert(ubyte[] ops, uint offset = 0)
     {
-        ubyte* p = &memoryBank[0] + GetIPAddress;
+        ubyte* p = &memoryBank[0] + GetIPAddress + offset;
         size_t i = 0;
         foreach(b; ops) p[i++] = b;
     }
 
     /// Directly overwrite data at CS:IP.
-    void Insert(string data)
+    void Insert(string data, uint offset = 0)
     {
-        ubyte* p = &memoryBank[0] + GetIPAddress;
+        ubyte* p = &memoryBank[0] + GetIPAddress + offset;
         size_t i = 0;
         foreach(b; data) p[i++] = b;
     }
@@ -3483,7 +3483,7 @@ void Test()
                [0x0E, 0x1F, 0xBA, 0x0E, 0x01, 0xB4, 0x09, 0xCD, 0x21, 0xB8,
                 0x01, 0x4C, 0xCD, 0x21]);
         // msg (Offset: 000E, Address: 010E)
-        Insert("Hello World!\r\n$");
+        Insert("Hello World!\r\n$", 0xE);
         Init();
     }
 }
