@@ -313,7 +313,7 @@ class Intel8086
             IP += 2;
             break;
         case 0x0D: // OR AX, IMM16
-            AX = (AX | FetchWord(GetIPAddress + 1));
+            AX = (AX | FetchWord);
             IP += 3;
             break;
         case 0x0E: // PUSH CS
