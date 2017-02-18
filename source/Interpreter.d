@@ -4,11 +4,13 @@
 
 module Interpreter;
 
-import main, std.stdio, std.path;
+import main, std.stdio, std.path, poshublib;
 
 enum {
     INTERPRETER_VER = "0.0.0"
 }
+
+pragma(msg, "Interpreter version : ", INTERPRETER_VER);
 
 enum MAX_MEM = 0x10_0000; // 1 MB
 
@@ -22,6 +24,7 @@ class Intel8086
 {
     this()
     {
+        Con = poshub();
         memoryBank = new ubyte[MAX_MEM];
         Reset();
     }
@@ -30,6 +33,8 @@ class Intel8086
     {
         delete memoryBank;
     }
+
+    poshub Con;
 
     ubyte[] memoryBank;
 

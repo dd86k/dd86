@@ -7,13 +7,10 @@ module main;
 import std.stdio, std.path, std.file;
 
 import Interpreter;
-import poshublib;
 
 pragma(msg, "Compiling DD-DOS Version ", APP_VERSION);
 pragma(msg, "Reporting DOS major version: ", DOS_VERSION >> 8);
 pragma(msg, "Reporting DOS minor version: ", DOS_VERSION & 0xFF);
-pragma(msg, "Interpreter version : ", INTERPRETER_VER);
-pragma(msg, "Poshub version : ", POSHUB_VER);
 
 // DD-DOS version.
 enum APP_VERSION = "0.0.0";
@@ -21,13 +18,12 @@ enum APP_VERSION = "0.0.0";
 enum DOS_VERSION = 0x00_00; // 00.00
 // CLI Error codes
 enum {
-    E_INVCLI = 1,
+    E_CLI = 1,
 }
 
 static bool Verbose;
 
 static Intel8086 machine;
-static poshub Con;
 
 private void DisplayVersion()
 {
@@ -68,7 +64,7 @@ private int main(string[] args)
                     init_file = args[i];
                 } else {
                     writeln("-p : Missing argument.");
-                    return E_INVCLI;
+                    return E_CLI;
                 }
                 break;
 
@@ -76,8 +72,6 @@ private int main(string[] args)
         }
     }
 
-    Con = poshub();
-    Con.Init();
     machine = new Intel8086();
 
     if (init_file != null) {

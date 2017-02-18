@@ -8,6 +8,8 @@ enum {
     POSHUB_VER = "0.0.0"
 }
 
+pragma(msg, "Poshub version : ", POSHUB_VER);
+
 struct poshub
 {
     version (Windows)
