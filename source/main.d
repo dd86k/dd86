@@ -153,7 +153,8 @@ void Load(string filename)
                     uint s = cast(uint)f.size;
                     ubyte[] buf = f.rawRead(new ubyte[s]);
                     with (machine) {
-                    // Temporary, but will be the first thing to run.
+                        CS = 0; IP = 0x100;
+                        // Temporary, but will be the first thing to run.
                         ubyte* offset = // Loads at 0 but starts at CS:0100
                         &machine.memoryBank[0] + (CS << 4);// + 0x100; // PSP
                         memcpy(offset, &buf, s);

@@ -150,6 +150,22 @@ class Intel8086
         return GetAddress(DI, offset);
     }
 
+    ubyte FetchByte() { // Immediate
+        return memoryBank[GetIPAddress + 1];
+    }
+    ubyte FetchByte(uint addr) { // Immediate
+        return memoryBank[addr];
+    }
+    byte FetchSByte() { // Immediate
+        return cast(byte)memoryBank[GetIPAddress + 1];
+    }
+    ushort FetchWord() { // Immediate
+        return *(cast(ushort *)&memoryBank[GetIPAddress + 1]);
+    }
+    short FetchSWord() { // Immediate
+        return *(cast(short *)&memoryBank[GetIPAddress + 1]);
+    }
+
     ushort FetchWord(uint addr) {
         return *(cast(ushort *)&memoryBank[addr]);
     }
@@ -292,14 +308,14 @@ class Intel8086
 
             break;
         }
-        case 0x0C: { // OR AL, IMM8
-
+        case 0x0C: // OR AL, IMM8
+            AL |= FetchByte;
+            IP += 2;
             break;
-        }
-        case 0x0D: { // OR AX, IMM16
-
+        case 0x0D: // OR AX, IMM16
+            AX = (AX | FetchWord(GetIPAddress + 1));
+            IP += 3;
             break;
-        }
         case 0x0E: // PUSH CS
             Push(CS);
             ++IP;
@@ -375,10 +391,12 @@ class Intel8086
 
             break;
         case 0x24: // AND AL, IMM8
-
+            AL &= FetchByte;
+            IP += 2;
             break;
         case 0x25: // AND AX, IMM16
-
+            AX = (AX & FetchWord(GetIPAddress + 1));
+            IP += 3;
             break;
         case 0x26: // ES: (Segment override prefix)
             // e.g. mov	ax, [es:100h] ; Use ES as the segment
@@ -647,87 +665,87 @@ class Intel8086
             break;
         case 0x70: // JO    SHORT-LABEL
             if (OF)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x71: // JNO   SHORT-LABEL
             if (OF == false)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x72: // JB/JNAE/JC    SHORT-LABEL
             if (CF)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x73: // JNB/JAE/JNC   SHORT-LABEL
             if (CF == false)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x74: // JE/JZ     SHORT-LABEL
             if (ZF)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x75: // JNE/JNZ   SHORT-LABEL
             if (ZF == false)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x76: // JBE/JNA   SHORT-LABEL
             if (CF || ZF)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x77: // JNBE/JA   SHORT-LABEL
             if (CF == false && ZF == false)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x78: // JS        SHORT-LABEL
             if (SF)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x79: // JNS       SHORT-LABEL
             if (SF == false)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x7A: // JP/JPE    SHORT-LABEL
             if (PF)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x7B: // JNP/JPO   SHORT-LABEL
             if (PF == false)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x7C: // JL/JNGE   SHORT-LABEL
             if (SF != OF)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x7D: // JNL/JGE   SHORT-LABEL
             if (SF == OF)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x7E: // JLE/JNG   SHORT-LABEL
             if (SF != OF || ZF)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x7F: // JNLE/JG   SHORT-LABEL
             if (SF == OF && ZF == false)
-                IP += cast(byte)memoryBank[GetIPAddress + 1];
+                IP += FetchSByte;
             else IP += 2;
             break;
         case 0x80: { // GRP1 R/M8, IMM8
-            ubyte rm = memoryBank[GetIPAddress + 1]; // Get ModR/M byte
-            ubyte ra = memoryBank[IP + 2]; // 8-bit Immediate
+            ubyte rm = FetchByte; // Get ModR/M byte
+            ubyte ra = FetchByte(GetIPAddress + 2); // 8-bit Immediate
             switch (rm & 0b00111000) { // REG
             case 0b00000000: // 000 - ADD
 
@@ -759,8 +777,8 @@ class Intel8086
             break;
         }
         case 0x81: { // GRP1 R/M16, IMM16
-            ubyte rm = memoryBank[GetIPAddress + 1];  // Get ModR/M byte
-            ushort ra = FetchWord(IP + 2); // 16-bit Immediate
+            ubyte rm = FetchByte;  // Get ModR/M byte
+            ushort ra = FetchWord(GetIPAddress + 2); // 16-bit Immediate
             switch (rm & 0b00111000) { // ModR/M's REG
             case 0b00000000: // 000 - ADD
 
@@ -870,8 +888,8 @@ class Intel8086
 
             break;
         case 0x8A: { // MOV REG8, R/M8
-            ubyte rm = memoryBank[GetIPAddress + 1];
-            ubyte ra = memoryBank[IP + 2];
+            ubyte rm = FetchByte;
+            ubyte ra = FetchByte(GetIPAddress + 2);
             //TODO: Group by MOD->REG->R/M instead (MOV REG8, R/M8)
             final switch (rm & 0b00000111) // R/M
             {
@@ -2022,7 +2040,7 @@ class Intel8086
 
             break;
         case 0x8F: { // POP R/M16
-            byte rm = memoryBank[GetIPAddress + 1];
+            byte rm = FetchByte;
             ushort add = FetchWord(IP + 2);
             if (rm & 0b00111000) // MOD 000 R/M only
             {
@@ -2283,79 +2301,84 @@ class Intel8086
 
             break;
         case 0xB0: // MOV AL, IMM8
-            AL = memoryBank[GetIPAddress + 1];
+            AL = FetchByte;
             IP += 2;
             break;
         case 0xB1: // MOV CL, IMM8
-            CL = memoryBank[GetIPAddress + 1];
+            CL = FetchByte;
             IP += 2;
             break;
         case 0xB2: // MOV DL, IMM8
-            DL = memoryBank[GetIPAddress + 1];
+            DL = FetchByte;
             IP += 2;
             break;
         case 0xB3: // MOV BL, IMM8
-            BL = memoryBank[GetIPAddress + 1];
+            BL = FetchByte;
             IP += 2;
             break;
         case 0xB4: // MOV AH, IMM8
-            AH = memoryBank[GetIPAddress + 1];
+            AH = FetchByte;
             IP += 2;
             break;
         case 0xB5: // MOV CH, IMM8
-            CH = memoryBank[GetIPAddress + 1];
+            CH = FetchByte;
             IP += 2;
             break;
         case 0xB6: // MOV DH, IMM8
-            DH = memoryBank[GetIPAddress + 1];
+            DH = FetchByte;
             IP += 2;
             break;
         case 0xB7: // MOV BH, IMM8
-            BH = memoryBank[GetIPAddress + 1];
+            BH = FetchByte;
             IP += 2;
             break;
         case 0xB8: // MOV AX, IMM16
-            AX = FetchWord(GetIPAddress + 1);
+            AX = FetchWord();
             IP += 3;
             break;
         case 0xB9: // MOV CX, IMM16
-            CX = FetchWord(GetIPAddress + 1);
+            CX = FetchWord();
             IP += 3;
             break;
         case 0xBA: // MOV DX, IMM16
-            DX = FetchWord(GetIPAddress + 1);
+            DX = FetchWord();
             IP += 3;
             break;
         case 0xBB: // MOV BX, IMM16
-            BX = FetchWord(GetIPAddress + 1);
+            BX = FetchWord();
             IP += 3;
             break;
         case 0xBC: // MOV SP, IMM16
-            SP = FetchWord(GetIPAddress + 1);
+            SP = FetchWord();
             IP += 3;
             break;
         case 0xBD: // MOV BP, IMM16
-            BP = FetchWord(GetIPAddress + 1);
+            BP = FetchWord();
             IP += 3;
             break;
         case 0xBE: // MOV SI, IMM16
-            SI = FetchWord(GetIPAddress + 1);
+            SI = FetchWord();
             IP += 3;
             break;
         case 0xBF: // MOV DI, IMM16
-            DI = FetchWord(GetIPAddress + 1);
+            DI = FetchWord();
             IP += 3;
             break;
-        case 0xC2: // RET IMM16 (intrasegment)
-
+        case 0xC2: // RET IMM16 (NEAR)
+            IP = Pop();
+            SP = cast(ushort)(SP + FetchWord());
+            //IP += 3; ?
             break;
-        case 0xC3: // RET (intrasegment)
-
+        case 0xC3: // RET (NEAR)
+            IP = Pop();
+            //++IP; ?
             break;
         case 0xC4: // LES REG16, MEM16
-
+    // Load into REG and ES
+            
             break;
         case 0xC5: // LDS REG16, MEM16
+    // Load into REG and DS
 
             break;
         case 0xC6: // MOV MEM8, IMM8
@@ -2364,22 +2387,29 @@ class Intel8086
         case 0xC7: // MOV MEM16, IMM16
             // MOD 000 R/M only
             break;
-        case 0xCA: // RET IMM16 (intersegment)
-
+        case 0xCA: // RET IMM16 (FAR)
+            IP = Pop();
+            CS = Pop();
+            SP = cast(ushort)(SP + FetchWord());
+            // IP += 3; ?
             break;
-        case 0xCB: // RET (intersegment)
-
+        case 0xCB: // RET (FAR)
+            IP = Pop();
+            CS = Pop();
+            //++IP; ?
             break;
         case 0xCC: // INT 3
             Raise(3);
             ++IP;
             break;
         case 0xCD: // INT IMM8
-            Raise(memoryBank[GetIPAddress + 1]);
+            Raise(FetchByte);
             IP += 2;
             break;
         case 0xCE: // INTO
-            
+            if (CF)
+                Raise(4);
+            ++IP;
             break;
         case 0xCF: // IRET
             IP = Pop();
@@ -2558,10 +2588,10 @@ class Intel8086
             break;
         case 0xE8: // CALL NEAR-PROC
             Push(IP);
-            IP += cast(short)FetchWord(GetIPAddress + 1); // Direct within segment
+            IP += FetchSWord(); // Direct within segment
             break;
-        case 0xE9: // JMP  NEAR-LABEL
-            IP += cast(short)FetchWord(GetIPAddress + 1); // ±32 KB
+        case 0xE9: // JMP    NEAR-LABEL
+            IP += FetchSWord(); // ±32 KB
             break;
         case 0xEA: { // JMP  FAR-LABEL
             // Any segment, any fragment, 5 byte instruction.
@@ -2572,7 +2602,7 @@ class Intel8086
         }
             break;
         case 0xEB: // JMP  SHORT-LABEL
-            IP += cast(byte)memoryBank[GetIPAddress + 1]; // ±128 B
+            IP += FetchSByte; // ±128 B
             break;
         case 0xEC: // IN AL, DX
 
