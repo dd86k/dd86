@@ -69,9 +69,25 @@ void LoadFile(string path)
                     break;
 
                 case ".EXE": { // Real party starts here
+                    mz_hdr mzh;
+                    {
+                        ubyte[mz_hdr.sizeof] buf;
+                        f.rawRead(buf);
+                        memcpy(&mzh, &buf, mz_hdr.sizeof);
+                    }
+
+                    /+{
+                        char[2] sig;
+                        f.seek(mzh.e_lfanew);
+                        f.rawRead(sig);
+                        switch (sig)
+                        {
+                            case "NE", "LE", "LX", "PE":
+                            default:
+                        }
+                    }+/
 
 
-                
                 }
                     break;
 

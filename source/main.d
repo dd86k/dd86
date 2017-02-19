@@ -25,6 +25,11 @@ enum {
     E_CLI = 1,
 }
 
+version (X86)
+    version = PLATFORM_X86;
+else version (X86_64)
+    version = PLATFORM_X86;
+
 static bool Verbose;
 
 static Intel8086 machine;
@@ -106,6 +111,12 @@ void EnterVShell()
         if (s.length > 0)
         switch (s[0])
         {
+        case "help", "?", "??":
+            writeln("run     Run the VM");
+            writeln("load    Load a file");
+            writeln("?r      Print register information");
+            writeln("?v      Toggle verbose mode");
+            break;
         case "t0":
             Test();
             break;

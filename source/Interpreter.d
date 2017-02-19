@@ -2888,18 +2888,24 @@ class Intel8086
 
                 break;
             /*
-            * 09h - Write string to stdout.
-            * Input: DS:DX ('$' terminated)
-            * Return: AL = 24h
-            *
-            * Notes:
-            * - ^C and ^Break are not checked.
-            */
+             * 09h - Write string to stdout.
+             * Input: DS:DX ('$' terminated)
+             * Return: AL = 24h
+             *
+             * Notes:
+             * - ^C and ^Break are not checked.
+             */
             case 9:
                 uint pd = GetAddress(DS, DX);
-                
-                while (memoryBank[pd] != '$')
-                    write(cast(char)memoryBank[pd++]);
+
+                version (PLATFORM_X86) {
+                    char* p = cast(char*)&memoryBank[0] + pd;
+                    while (*p != '$')
+                        write(*p++);
+                } else {
+                    while (memoryBank[pd] != '$')
+                        write(cast(char)memoryBank[pd++]);
+                }
 
                 AL = 0x24;
                 break;
@@ -2936,27 +2942,27 @@ class Intel8086
 
                 break;
             /*
-            * 0Ch - Flush stdin buffer and read character.
-            * Input:
-            *   AL (STDIN input function to execute after flushing)
-            *   Other registers as appropriate for the input function.
-            * Return: As appropriate for the input function.
-            *
-            * Notes:
-            * - If AL is not 1h, 6h, 7h, 8h, or Ah, the buffer is flushed and
-            *     no input are attempted.
-            */
+             * 0Ch - Flush stdin buffer and read character.
+             * Input:
+             *   AL (STDIN input function to execute after flushing)
+             *   Other registers as appropriate for the input function.
+             * Return: As appropriate for the input function.
+             *
+             * Notes:
+             * - If AL is not 1h, 6h, 7h, 8h, or Ah, the buffer is flushed and
+             *     no input are attempted.
+             */
             case 0xC:
 
                 break;
             /*
-            * 0Dh - Disk reset.
-            * Input: None.
-            * Return: None.
-            *
-            * Notes:
-            * - Write all buffers to disk without updating directory information.
-            */
+             * 0Dh - Disk reset.
+             * Input: None.
+             * Return: None.
+             *
+             * Notes:
+             * - Write all buffers to disk without updating directory information.
+             */
             case 0xD:
 
                 break;
@@ -3007,14 +3013,14 @@ class Intel8086
 
                 break;
             /*
-            * 2Ah - Get system date.
-            * Input: None.
-            * Return:
-            *   CX (Year, 1980-2099)
-            *   DH (Month)
-            *   DL (Day)
-            *   AL (Day of the week, Sunday = 0)
-            */
+             * 2Ah - Get system date.
+             * Input: None.
+             * Return:
+             *   CX (Year, 1980-2099)
+             *   DH (Month)
+             *   DL (Day)
+             *   AL (Day of the week, Sunday = 0)
+             */
             case 0x2A:
                 version (Windows)
                 {
