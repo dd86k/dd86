@@ -137,7 +137,7 @@ void EnterVShell()
                 if (AF) write("AF ");
                 if (PF) write("PF ");
                 if (CF) write("CF ");
-                writeln();
+                writefln("(%Xh)", GetFlagWord);
             }
             break;
         default:

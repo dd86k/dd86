@@ -6,6 +6,30 @@ module Loader;
 
 import main, std.stdio, std.path, std.file;
 
+/// MS-DOS EXE header
+private struct mz_hdr {
+	ushort e_magic;        /* Magic number, "MZ" */
+	ushort e_cblp;         /* Bytes on last page of file */
+	ushort e_cp;           /* Pages in file */
+	ushort e_crlc;         /* Relocations */
+	ushort e_cparh;        /* Size of header in paragraphs */
+	ushort e_minalloc;     /* Minimum extra paragraphs needed */
+	ushort e_maxalloc;     /* Maximum extra paragraphs needed */
+	ushort e_ss;           /* Initial (relative) SS value */
+	ushort e_sp;           /* Initial SP value */
+	ushort e_csum;         /* Checksum */
+	ushort e_ip;           /* Initial IP value */
+	ushort e_cs;           /* Initial (relative) CS value */
+	ushort e_lfarlc;       /* File address of relocation table */
+	ushort e_ovno;         /* Overlay number */
+	ushort[ERESWDS] e_res; /* Reserved words */
+	uint   e_lfanew;       /* File address of new exe header (usually at 0x3c) */
+};
+
+//private struct mz_bdy { }
+
+private enum ERESWDS = 0x10;
+
 /// Load a file in virtual memory.
 void LoadFile(string path)
 {
@@ -35,6 +59,14 @@ void LoadFile(string path)
                     if (Verbose) writeln("loaded");
                 }
                     break;
+
+                case ".EXE": { // Real party starts here
+
+
+                
+                }
+                    break;
+
                 default: // null is included here.
             }
         else if (Verbose) writeln("Error : File too big.");
