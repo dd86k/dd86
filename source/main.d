@@ -1,21 +1,24 @@
 /*
- * main.d : Defines the entry point for the console application.
+ * main.d : Entry point, CLI, internal shell.
  */
 
 module main;
 
-import std.stdio, std.path, std.file;
+import std.stdio;
 
-import Interpreter;
+import Interpreter, Loader;
 
 pragma(msg, "Compiling DD-DOS Version ", APP_VERSION);
-pragma(msg, "Reporting DOS major version: ", DOS_VERSION >> 8);
-pragma(msg, "Reporting DOS minor version: ", DOS_VERSION & 0xFF);
+pragma(msg, "Reporting DOS major version: ", DOS_MAJOR_VERSION);
+pragma(msg, "Reporting DOS minor version: ", DOS_MINOR_VERSION);
 
 // DD-DOS version.
 enum APP_VERSION = "0.0.0";
 // Reported DOS version.
-enum DOS_VERSION = 0x00_00; // 00.00
+enum {
+    DOS_MINOR_VERSION = 0,
+    DOS_MAJOR_VERSION = 0
+}
 // CLI Error codes
 enum {
     E_CLI = 1,
@@ -48,17 +51,6 @@ private int main(string[] args)
 	for (size_t i = 0; i < argl; ++i) {
         switch (args[i])
         {
-            case "-V", "--version", "/version", "/ver":
-                DisplayVersion();
-                break;
-            case "-h", "--help", "/?":
-                DisplayHelp(args[0]);
-                break;
-
-            case "-v", "--verbose":
-                Verbose = true;
-                break;
-
             case "-p", "/p":
                 if (++i < argl) {
                     init_file = args[i];
@@ -68,14 +60,25 @@ private int main(string[] args)
                 }
                 break;
 
+            case "-v", "--verbose":
+                Verbose = true;
+                break;
+
+            case "-V", "--version", "/version", "/ver":
+                DisplayVersion();
+                break;
+            case "-h", "--help", "/?":
+                DisplayHelp(args[0]);
+                break;
             default:
         }
     }
 
+    writeln("DD-DOS is starting...");
     machine = new Intel8086();
 
     if (init_file != null) {
-        Load(init_file);
+        LoadFile(init_file);
         machine.Init();
     } else {
         EnterVShell();
@@ -101,11 +104,18 @@ void EnterVShell()
             Test();
             break;
         case "load":
-            if (s.length > 1)
-                Load(s[1]);
+            if (s.length > 1) {
+                if (Verbose)
+                    writeln("Loader initiated");
+                LoadFile(s[1]);
+            }
             break;
         case "run":
             machine.Init();
+            break;
+        case "?v":
+            Verbose = !Verbose;
+            writeln("Verbose turned ", Verbose ? "on" : "off");
             break;
         case "?r":
             with (machine) {
@@ -135,41 +145,4 @@ void EnterVShell()
             break;
         }
     }
-}
-
-/// Load a file in virtual memory.
-void Load(string filename)
-{
-    if (exists(filename))
-    {
-        import core.stdc.string, std.string;
-        File f = File(filename);
-
-        if (f.size <= 0xFFFF_FFFFL)
-            switch (capitalize(extension(f.name)))
-            {
-                case ".COM": {
-                    if (Verbose) write("Loading COM... ");
-                    uint s = cast(uint)f.size;
-                    ubyte[] buf = f.rawRead(new ubyte[s]);
-                    with (machine) {
-                        CS = 0; IP = 0x100;
-                        // Temporary, but will be the first thing to run.
-                        ubyte* offset = // Loads at 0 but starts at CS:0100
-                        &machine.memoryBank[0] + (CS << 4);// + 0x100; // PSP
-                        memcpy(offset, &buf, s);
-                        /*
-                        DS = ES = 0x100;
-                        IP = cast(ushort)(CS + 0x100);
-                        */
-                    }
-                    if (Verbose) writeln("loaded");
-                }
-                    break;
-                default: // null is included here.
-            }
-        else if (Verbose) writeln("File too big.");
-    }
-    else if (Verbose)
-        writefln("File %s does not exist, skipping.", filename);
 }

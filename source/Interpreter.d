@@ -3129,27 +3129,27 @@ class Intel8086
 
                 break;
             /*
-            * 30h - Get DOS version.
-            * Input: AL (00h = OEM Number in AL, 01h = Version flag in AL)
-            * Return:
-            *   AL (Major version, DOS 1.x = 00h)
-            *   AH (Minor version)
-            *   BL:CX (24bit user serial* if DOS<5 or AL=0)
-            *   BH (MS-DOS OEM number if DOS 5+ and AL=1)
-            *   BH (Version flag bit 3: DOS is in ROM, other: reserved (0))
-            *
-            * *Most versions do not use this.
-            */
+             * 30h - Get DOS version.
+             * Input: AL (00h = OEM Number in AL, 01h = Version flag in AL)
+             * Return:
+             *   AL (Major version, DOS 1.x = 00h)
+             *   AH (Minor version)
+             *   BL:CX (24bit user serial* if DOS<5 or AL=0)
+             *   BH (MS-DOS OEM number if DOS 5+ and AL=1)
+             *   BH (Version flag bit 3: DOS is in ROM, other: reserved (0))
+             *
+             * *Most versions do not use this.
+             */
             case 0x30:
                 BH = AL == 0 ? OEM_ID.IBM : 1;
-                AL = DOS_VERSION >> 8;
-                AH = DOS_VERSION & 0xFF;
+                AL = DOS_MAJOR_VERSION;
+                AH = DOS_MINOR_VERSION;
                 break;
             /*
-            * 35h - Get interrupt vector.
-            * Input: AL (Interrupt number)
-            * Return: ES:BX (Current interrupt number)
-            */
+             * 35h - Get interrupt vector.
+             * Input: AL (Interrupt number)
+             * Return: ES:BX (Current interrupt number)
+             */
             case 0x35:
 
                 break;
