@@ -7,6 +7,7 @@ module main;
 import std.stdio;
 
 import Interpreter, Loader;
+import poshublib : POSHUB_VER;
 
 pragma(msg, "Compiling DD-DOS Version ", APP_VERSION);
 pragma(msg, "Reporting DOS major version: ", DOS_MAJOR_VERSION);
@@ -30,7 +31,12 @@ static Intel8086 machine;
 
 private void DisplayVersion()
 {
-	writeln("DD-DOS - ", APP_VERSION);
+	writeln("DD-DOS - v", APP_VERSION);
+    writeln("Interpreter - v", INTERPRETER_VER);
+    writeln("Loader - v", LOADER_VER);
+    writeln("Poshub - v", POSHUB_VER);
+    writeln("Copyright (c) 2017 dd86k");
+    writeln("License: MIT");
 	writeln("Project page: <https://github.com/dd86k/dd-dos>");
 }
 

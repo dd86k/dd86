@@ -28,7 +28,15 @@ private struct mz_hdr {
 
 //private struct mz_bdy { }
 
-private enum ERESWDS = 0x10;
+private enum ERESWDS = 16;
+
+enum {
+    LOADER_VER = "0.0.0"
+}
+
+enum {
+    MZ_MAGIC = 0x5A4D,
+}
 
 /// Load a file in virtual memory.
 void LoadFile(string path)
