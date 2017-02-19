@@ -3504,7 +3504,7 @@ void Test()
          * Hello World
          * Offset: 0, Address: CS:0100
          */
-        Reset();
+        //Reset();
         CS = 0;
         IP = 0x100; // After PSP.
         // push CS
