@@ -25,11 +25,6 @@ enum {
     E_CLI = 1,
 }
 
-version (X86)
-    version = PLATFORM_X86;
-else version (X86_64)
-    version = PLATFORM_X86;
-
 static bool Verbose;
 
 static Intel8086 machine;

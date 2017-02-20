@@ -4,6 +4,8 @@
 
 module poshublib;
 
+import std.stdio;
+
 enum {
     POSHUB_VER = "0.0.0"
 }
@@ -89,10 +91,42 @@ struct poshub
     }
 
     /*
-     * ASCII Titles
+     * Cursor
      */
 
-    string GetTitle() {
+    /// Set cursor position relating to the window position.
+    void SetPos(short x, short y)
+    {
+        version (Windows)
+        {
+            COORD c = { x, y };
+            SetConsoleCursorPosition(hOut, c);
+        }
+    }
+
+    /*
+     * Titles
+     */
+
+    @property void Title(string value)
+    {
+        version (Windows)
+        {
+            //TODO: Check if null terminating is necessary
+            SetConsoleTitleA(&value[0]);
+        }
+    }
+
+    @property void Title(wstring value)
+    {
+        version (Windows)
+        {
+            //TODO: Check if null terminating is necessary
+            SetConsoleTitleW(&value[0]);
+        }
+    }
+
+    @property string Title() {
         version (Windows) {
             string str = new string(MAX_PATH);
             GetConsoleTitleA(cast(char*)&str[0], MAX_PATH);
@@ -102,37 +136,11 @@ struct poshub
         }
     }
 
-    void SetTitle(string str) {
-        version (Windows) {
-            SetConsoleTitleA(&str[0]);
-        }
-    }
-
-    /*
-    * Wide Titles
-    */
-
-    wstring GetTitleWide() {
-        version (Windows) {
-            wstring str = new wstring(MAX_PATH);
-            GetConsoleTitleW(cast(wchar*)&str[0], MAX_PATH);
-            return str;
-        } else {
-            return null;
-        }
-    }
-
-    void SetTitleWide(wstring str) {
-        version (Windows) {
-            SetConsoleTitleW(&str[0]);
-        }
-    }
-
     /*
      * STDIN
      */
 
-    char ReadChar()
+    char ReadChar(bool echo = false)
     {
         version (Windows) {
             INPUT_RECORD ir;
@@ -140,14 +148,61 @@ struct poshub
 
             if (ir.Event.KeyEvent.bKeyDown)
             {
+                if (echo)
+                    write(ir.Event.KeyEvent.uChar.AsciiChar);
                 return ir.Event.KeyEvent.uChar.AsciiChar;
             }
 
             return 0;
         } else version (Posix) {
-
-
-            return 0;
+            //TODO: Test
+            import std.uni;
+            int t;
+            while (isControl(t = getchar())) {}
+            c = cast(char)t;
+            if (echo)
+                write(c);
+            return c;
         }
     }
+
+    KeyInfo ReadKey(bool echo = false)
+    {
+        version (Windows) {
+            import core.sys.windows.windows;
+            INPUT_RECORD ir;
+            ReadConsoleInputA(hOut, &ir, 1, NULL);
+
+            KeyInfo k;
+            
+            k.alt  = ir.KeyEvent.dwControlKeyState & RIGHT_ALT_PRESSED ||
+                     ir.KeyEvent.dwControlKeyState & LEFT_ALT_PRESSED;
+            k.ctrl = ir.KeyEvent.dwControlKeyState & RIGHT_CTRL_PRESSED ||
+                     ir.KeyEvent.dwControlKeyState & LEFT_ALT_PRESSED;
+            k.shift = (ir.KeyEvent.dwControlKeyState & SHIFT_PRESSED) != 0;
+            k.keyChar = ir.KeyEvent.AsciiChar;
+            k.key = ir.KeyEvent.wVirtualKeyCode;
+            k.down = ir.KeyEvent.bKeyDown != 0;
+
+            if (k.down && echo)
+                write(k.asciiChar);
+
+            return k;
+        } else version (Posix) {
+            import core.sys.posix.termios;
+            KeyInfo k;
+
+
+
+            return k;
+        }
+    }
+}
+
+struct KeyInfo
+{
+    char keyChar;
+    ushort key;
+    bool down;
+    bool ctrl, alt, shift;
 }

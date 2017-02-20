@@ -6,11 +6,16 @@ module Interpreter;
 
 import main, std.stdio, std.path, poshublib;
 
+version (X86)
+    version = PLATFORM_X86;
+else version (X86_64)
+    version = PLATFORM_X86;
+
+pragma(msg, "Interpreter version : ", INTERPRETER_VER);
+
 enum {
     INTERPRETER_VER = "0.0.0"
 }
-
-pragma(msg, "Interpreter version : ", INTERPRETER_VER);
 
 enum MAX_MEM = 0x10_0000; // 1 MB
 
@@ -301,7 +306,8 @@ class Intel8086
             break;
         }
         case 0x0A: { // OR REG8, R/M8
-
+            import std.uni;
+            isControl(0);
             break;
         }
         case 0x0B: { // OR REG16, R/M16
@@ -2766,7 +2772,7 @@ class Intel8086
 
     // Page 2-99 contains the interrupt message processor
     /// Raise interrupt.
-    void Raise(byte code)
+    void Raise(ubyte code)
     {
         Push(GetFlagWord());
         IF = TF = 0;
@@ -2866,15 +2872,15 @@ class Intel8086
 
                 break;
             /*
-            * 07h - Read character directly from stdin without echo.
-            * Input: None
-            * Return: AL (Character)
-            *
-            * Notes:
-            * - ^C/^Break are not checked.
-            */
+             * 07h - Read character directly from stdin without echo.
+             * Input: None
+             * Return: AL (Character)
+             *
+             * Notes:
+             * - ^C/^Break are not checked.
+             */
             case 7:
-
+                while ((AL = Con.ReadChar()) == 0) {}
                 break;
             /*
             * 08h - Read character from stdin without echo.
@@ -3506,25 +3512,19 @@ void Test()
 {
     Intel8086 machine = new Intel8086();
     with (machine) {
-        /*
-         * Hello World
-         * Offset: 0, Address: CS:0100
-         */
-        //Reset();
+        // Hello World. Offset: 0, Address: CS:0100
         CS = 0;
         IP = 0x100; // After PSP.
-        // push CS
-        // pop DS
-        // mov DX [msg] (010Eh)
-        // mov AH 9 | print()
-        // int 21h
-        // mov AX 4C01h | return 1
-        // int 21h
-        Insert(cast(ubyte[])
-               [0x0E, 0x1F, 0xBA, 0x0E, 0x01, 0xB4, 0x09, 0xCD, 0x21, 0xB8,
-                0x01, 0x4C, 0xCD, 0x21]);
-        // msg (Offset: 000E, Address: 010E)
-        Insert("Hello World!\r\n$", 0xE);
+        ubyte[] ops =
+            [0x0E, // push CD
+             0x1F, // pop DS
+             0xBA, 0x0E, 0x01, // mov DX [msg] ;010Eh
+             0xB4, 0x09, // mov AH 9 ;print()
+             0xCD, 0x21, // int 21h
+             0xB8, 0x01, 0x4C, // mov AX 4C01h ;return 1
+             0xCD, 0x21]; // int 21h
+        Insert(ops);
+        Insert("Hello World!\r\n$", ops.length); // msg (Offset: 000E, Address: 010E)
         Init();
     }
 }
