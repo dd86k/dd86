@@ -306,8 +306,7 @@ class Intel8086
             break;
         }
         case 0x0A: { // OR REG8, R/M8
-            import std.uni;
-            isControl(0);
+        
             break;
         }
         case 0x0B: { // OR REG16, R/M16
@@ -3411,6 +3410,25 @@ class Intel8086
             case 0x47:
 
                 break;
+            /*
+             * 4Ah - Resize memory block
+             * Input:
+             *   BX (New size in paragraphs)
+             *   ES (Segment of block to resize)
+             * Return: 
+             *   CF set on error, otherwise cleared
+             *   AX error code (07h,08h,09h)
+             *   BX (Maximum paragraphs available for specified memory block)
+             *
+             * Notes:
+             * - Notes: Under DOS 2.1 to 6.0, if there is insufficient memory to
+             *     expand the block as much as requested, the block will be made
+             *     as large as possible. DOS 2.1-6.0 coalesces any free blocks
+             *     immediately following the block to be resized.
+             */
+            /*case 0x4A:
+
+                break;*/
             /*
             * 4Ch - Terminate with return code.
             * Input: AL (Return code)

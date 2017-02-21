@@ -182,10 +182,10 @@ struct poshub
             k.shift = (ir.KeyEvent.dwControlKeyState & SHIFT_PRESSED) != 0;
             k.keyChar = ir.KeyEvent.AsciiChar;
             k.key = ir.KeyEvent.wVirtualKeyCode;
-            k.down = ir.KeyEvent.bKeyDown != 0;
+            k.isKeyDown = ir.KeyEvent.bKeyDown != 0;
 
             if (k.down && echo)
-                write(k.asciiChar);
+                write(k.keyChar);
 
             return k;
         } else version (Posix) {
@@ -203,6 +203,6 @@ struct KeyInfo
 {
     char keyChar;
     ushort key;
-    bool down;
+    bool isKeyDown;
     bool ctrl, alt, shift;
 }
