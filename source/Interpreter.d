@@ -21,7 +21,7 @@ enum MAX_MEM = 0x10_0000; // 1 MB
 
 enum OEM_ID { // Used for INT 21h AH=30 so far.
     IBM, Compaq, MSPackagedProduct, ATnT, ZDS
-};
+}
 
 //NOTE: Opened files should go in JFT
 
@@ -32,11 +32,6 @@ class Intel8086
         Con = poshub();
         memoryBank = new ubyte[MAX_MEM];
         Reset();
-    }
-
-    ~this()
-    {
-        delete memoryBank;
     }
 
     poshub Con;
@@ -232,7 +227,7 @@ class Intel8086
     }
 
     /// Directly overwrite instructions at CS:IP.
-    void Insert(ubyte[] ops, uint offset = 0)
+    void Insert(ubyte[] ops, size_t offset = 0)
     {
         ubyte* p = &memoryBank[0] + GetIPAddress + offset;
         size_t i = 0;
@@ -240,7 +235,7 @@ class Intel8086
     }
 
     /// Directly overwrite data at CS:IP.
-    void Insert(string data, uint offset = 0)
+    void Insert(string data, size_t offset = 0)
     {
         ubyte* p = &memoryBank[0] + GetIPAddress + offset;
         size_t i = 0;
@@ -3041,15 +3036,15 @@ class Intel8086
                 else version (Posix)
                 {
                     import core.sys.posix.time;
-                    timer_t r = { 0 };
+                    time_t r;
                     tm* s;
                     time(&r);
                     s = localtime(&r);
 
                     CX = s.tm_year;
-                    DH = s.tm_mon;
-                    DL = s.tm_mday;
-                    AL = s.tm_wday;
+                    DH = cast(ubyte)s.tm_mon;
+                    DL = cast(ubyte)s.tm_mday;
+                    AL = cast(ubyte)s.tm_wday;
                 }
                 else
                 {
@@ -3091,7 +3086,7 @@ class Intel8086
                 else version (Posix)
                 {
                     import core.sys.posix.time;
-                    timer_t r = { 0 };
+                    time_t r;
                     tm* s;
                     time(&r);
                     s = localtime(&r);
@@ -3105,7 +3100,7 @@ class Intel8086
                         //TODO: Check
                         import core.sys.linux.sys.time;
                         timeval tv;
-                        gettimeofday(&tv, 0);
+                        gettimeofday(&tv, null);
                         AL = cast(ubyte)tv.tv_usec;
                     }
                 }

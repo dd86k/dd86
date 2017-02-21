@@ -155,11 +155,10 @@ struct poshub
 
             return 0;
         } else version (Posix) {
-            //TODO: Test
             import std.uni;
             int t;
             while (isControl(t = getchar())) {}
-            c = cast(char)t;
+            char c = cast(char)t;
             if (echo)
                 write(c);
             return c;
@@ -184,7 +183,7 @@ struct poshub
             k.key = ir.KeyEvent.wVirtualKeyCode;
             k.isKeyDown = ir.KeyEvent.bKeyDown != 0;
 
-            if (k.down && echo)
+            if (k.isKeyDown && echo)
                 write(k.keyChar);
 
             return k;
