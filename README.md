@@ -1,5 +1,6 @@
-# DD-DOS, A Small MS-DOS Interpreter Machine
+# DD-DOS
+## A Small DOS Virtual Machine
 
-Email [dd86k](mailto:devddstuff@gmail.com) for a copy of the latest DD-DOS Reference Manual.
+DD-DOS aims to be a simple compatibility layer between the host OS and an emulated world for DOS applications, just like NTDVM, but for 64-bit systems.
 
-There is currently no End-User Manual.
+Consult for the Wiki for extra information.

@@ -30,62 +30,100 @@ struct poshub
     }
 
     /*
+     * Buffer management.
+     */
+
+    void Clear()
+    {
+        alias sys = core.stdc.stdlib.system;
+
+        version (Windows)
+            sys ("cls");
+        else version (Posix)
+            sys ("clear");
+    }
+
+    /*
      * Window dimensions.
      */
 
-    ushort GetWindowWidth() {
-        version (Windows) {
+    ushort GetWindowWidth()
+    {
+        version (Windows)
+        {
             CONSOLE_SCREEN_BUFFER_INFO i;
             GetConsoleScreenBufferInfo(hOut, &i);
             return cast(ushort)(i.srWindow.Right - i.srWindow.Left + 1);
-        } else version (Posix) {
+        }
+        else version (Posix)
+        {
             import core.sys.posix.sys.ioctl;
             winsize ws;
             ioctl(0, TIOCGWINSZ, &ws);
             return ws.ws_col;
-        } else {
+        }
+        else
+        {
             static assert(0, "poshub::GetWindowWidth : Needs implementation.");
         }
     }
 
-    void SetWindowWidth(ushort w) {
+    void SetWindowWidth(ushort w)
+    {
         // Note: A COORD uses SHORT (short) and Linux uses unsigned shorts.
-        version (Windows) {
+        version (Windows)
+        {
             COORD c = { cast(SHORT)w, cast(SHORT)GetWindowWidth() };
             SetConsoleScreenBufferSize(hOut, c);
-        } else version (Posix) {
+        }
+        else version (Posix)
+        {
             import core.sys.posix.sys.ioctl;
             winsize ws = { w, GetWindowWidth() };
             ioctl(0, TIOCSWINSZ, &ws);
-        } else {
+        }
+        else
+        {
             static assert(0, "poshub::SetWindowWidth : Needs implementation.");
         }
     }
 
-    ushort GetWindowHeight() {
-        version (Windows) {
+    ushort GetWindowHeight()
+    {
+        version (Windows)
+        {
             CONSOLE_SCREEN_BUFFER_INFO i;
             GetConsoleScreenBufferInfo(hOut, &i);
             return cast(ushort)(i.srWindow.Bottom - i.srWindow.Top + 1);
-        } else version (Posix) {
+        }
+        else version (Posix)
+        {
             import core.sys.posix.sys.ioctl;
             winsize ws;
             ioctl(0, TIOCGWINSZ, &ws);
             return ws.ws_row;
-        } else {
+        }
+        else
+        {
             static assert(0, "poshub::GetWindowHeight : Needs implementation.");
         }
     }
 
-    void SetWindowHeight(ushort h) {
-        version (Windows) {
+    void SetWindowHeight(ushort h)
+    {
+        version (Windows)
+        {
             COORD c = { cast(SHORT)GetWindowWidth(), cast(SHORT)h };
             SetConsoleScreenBufferSize(hOut, c);
-        } else version (Posix) {
+        }
+        else version (Posix)
+        {
             import core.sys.posix.sys.ioctl;
             winsize ws = { GetWindowWidth(), h, 0, 0 };
             ioctl(0, TIOCSWINSZ, &ws);
-        } else {
+        }
+        else
+        {
             static assert(0, "poshub::SetWindowHeight : Needs implementation.");
         }
     }
@@ -101,6 +139,10 @@ struct poshub
         {
             COORD c = { x, y };
             SetConsoleCursorPosition(hOut, c);
+        }
+        else version (Posix)
+        {
+
         }
     }
 
@@ -126,12 +168,16 @@ struct poshub
         }
     }
 
-    @property string Title() {
-        version (Windows) {
+    @property string Title()
+    {
+        version (Windows)
+        {
             string str = new string(MAX_PATH);
             GetConsoleTitleA(cast(char*)&str[0], MAX_PATH);
             return str;
-        } else {
+        }
+        else 
+        {
             return null;
         }
     }
@@ -142,7 +188,8 @@ struct poshub
 
     char ReadChar(bool echo = false)
     {
-        version (Windows) {
+        version (Windows)
+        {
             INPUT_RECORD ir;
             ReadConsoleInputA(hOut, &ir, 1, NULL);
 
@@ -154,7 +201,9 @@ struct poshub
             }
 
             return 0;
-        } else version (Posix) {
+        }
+        else version (Posix)
+        {
             import std.uni;
             int t;
             while (isControl(t = getchar())) {}
@@ -162,12 +211,35 @@ struct poshub
             if (echo)
                 write(c);
             return c;
+            /+
+    int character;
+    struct termios orig_term_attr;
+    struct termios new_term_attr;
+
+    /* set the terminal to raw mode */
+    tcgetattr(fileno(stdin), &orig_term_attr);
+    memcpy(&new_term_attr, &orig_term_attr, sizeof(struct termios));
+    new_term_attr.c_lflag &= ~(ECHO|ICANON);
+    new_term_attr.c_cc[VTIME] = 0;
+    new_term_attr.c_cc[VMIN] = 0;
+    tcsetattr(fileno(stdin), TCSANOW, &new_term_attr);
+
+    /* read a character from the stdin stream without blocking */
+    /*   returns EOF (-1) if no character is available */
+    character = fgetc(stdin);
+
+    /* restore the original terminal attributes */
+    tcsetattr(fileno(stdin), TCSANOW, &orig_term_attr);
+
+    return character;
+            +/
         }
     }
 
     KeyInfo ReadKey(bool echo = false)
     {
-        version (Windows) {
+        version (Windows)
+        {
             import core.sys.windows.windows;
             INPUT_RECORD ir;
             ReadConsoleInputA(hOut, &ir, 1, NULL);
@@ -187,7 +259,9 @@ struct poshub
                 write(k.keyChar);
 
             return k;
-        } else version (Posix) {
+        }
+        else version (Posix)
+        {
             import core.sys.posix.termios;
             KeyInfo k;
 

@@ -30,6 +30,7 @@ class Intel8086
     this()
     {
         Con = poshub();
+        Con.Init();
         memoryBank = new ubyte[MAX_MEM];
         Reset();
     }
@@ -150,34 +151,55 @@ class Intel8086
         return GetAddress(DI, offset);
     }
 
-    ubyte FetchByte() { // Immediate
+    /// Fetch an immediate unsigned byte (ubyte).
+    ubyte FetchByte() {
         return memoryBank[GetIPAddress + 1];
     }
-    ubyte FetchByte(uint addr) { // Immediate
+    /// Fetch an unsigned byte (ubyte).
+    ubyte FetchByte(uint addr) {
         return memoryBank[addr];
     }
-    byte FetchSByte() { // Immediate
+    /// Fetch an immediate byte (byte).
+    byte FetchSByte() {
         return cast(byte)memoryBank[GetIPAddress + 1];
     }
-    ushort FetchWord() { // Immediate
-        return *(cast(ushort *)&memoryBank[GetIPAddress + 1]);
-    }
-    short FetchSWord() { // Immediate
-        return *(cast(short *)&memoryBank[GetIPAddress + 1]);
-    }
 
+    /// Fetch an immediate unsigned word (ushort).
+    ushort FetchWord() {
+        version (PLATFORM_X86)
+            return *(cast(ushort*)&memoryBank[GetIPAddress + 1]);
+        else {
+            uint addr = GetIPAddress + 1;
+            return cast(ushort)(memoryBank[addr] | memoryBank[addr + 1] << 8);
+        }
+    }
+    /// Fetch an unsigned word (ushort).
     ushort FetchWord(uint addr) {
-        return *(cast(ushort *)&memoryBank[addr]);
+        version (PLATFORM_X86)
+            return *(cast(ushort *)&memoryBank[addr]);
+        else
+            return cast(ushort)(memoryBank[addr] | memoryBank[addr + 1] << 8);
     }
-    uint FetchDWord(uint addr) {
-        return *(cast(uint *)&memoryBank[addr]);
+    /// Fetch an immediate word (short).
+    short FetchSWord() {
+        version (PLATFORM_X86)
+            return *(cast(short*)&memoryBank[GetIPAddress + 1]);
+        else {
+            uint addr = GetIPAddress + 1;
+            return cast(short)(memoryBank[addr] | memoryBank[addr + 1] << 8);
+        }
     }
 
+    /// Set an unsigned word in memory.
     void SetWord(uint addr, ushort value) {
-        *(cast(ushort *)&memoryBank[addr]) = value;
-    }
-    void SetDWord(uint addr, uint value) {
-        *(cast(uint *)&memoryBank[addr]) = value;
+        version (PLATFORM_X86)
+            *(cast(ushort *)&memoryBank[addr]) = value;
+        else {
+            memoryBank[addr] = value & 0xFF;
+            memoryBank[addr + 1] = value >> 8 & 0xFF;
+            memoryBank[addr + 2] = value >> 16 & 0xFF;
+            memoryBank[addr + 3] = value >> 24 & 0xFF;
+        }
     }
 
     ubyte GetFlag()
@@ -229,17 +251,15 @@ class Intel8086
     /// Directly overwrite instructions at CS:IP.
     void Insert(ubyte[] ops, size_t offset = 0)
     {
-        ubyte* p = &memoryBank[0] + GetIPAddress + offset;
-        size_t i = 0;
-        foreach(b; ops) p[i++] = b;
+        size_t i = GetIPAddress + offset;
+        foreach(b; ops) memoryBank[i++] = b;
     }
 
     /// Directly overwrite data at CS:IP.
     void Insert(string data, size_t offset = 0)
     {
-        ubyte* p = &memoryBank[0] + GetIPAddress + offset;
-        size_t i = 0;
-        foreach(b; data) p[i++] = b;
+        size_t i = GetIPAddress + offset;
+        foreach(b; data) memoryBank[i++] = b;
     }
 
     /// Execute the operation code. (ALU)

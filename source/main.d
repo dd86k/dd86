@@ -46,7 +46,8 @@ private void DisplayHelp(string name)
 	writefln("  %s [<Options>]", name);
     writeln("Options:");
     writeln("  -p <File>    Load a program at start.");
-	writeln("\n  -h, --help       Display help and quit.");
+    writeln();
+	writeln("  -h, --help       Display help and quit.");
 	writeln("  -v, --version    Display version and quit.");
 }
 
@@ -54,7 +55,8 @@ private int main(string[] args)
 {
     size_t argl = args.length;
     string init_file;
-	for (size_t i = 0; i < argl; ++i) {
+	for (size_t i = 0; i < argl; ++i)
+    {
         switch (args[i])
         {
             case "-p", "/p":
@@ -67,6 +69,7 @@ private int main(string[] args)
                 break;
 
             case "-v", "--verbose":
+                writeln("Verbose mode turned on.");
                 Verbose = true;
                 break;
 
@@ -76,7 +79,7 @@ private int main(string[] args)
             case "-h", "--help", "/?":
                 DisplayHelp(args[0]);
                 break;
-            default:
+            default: break;
         }
     }
 
@@ -95,34 +98,51 @@ private int main(string[] args)
 
 void EnterVShell()
 {
-    import std.array;
-    
+    import std.array : split;
+    import std.uni : toLower;
+    import std.file : getcwd;
+
     while (true) {
+        //write(getcwd ~ '$');
         write('$');
-        
+
         // Read line from stdln and remove \n, then split arguments.
         string[] s = split(readln()[0..$-1], ' ');
 
         if (s.length > 0)
-        switch (s[0])
+        switch (toLower(s[0]))
         {
         case "help", "?", "??":
-            writeln("run     Run the VM");
-            writeln("load    Load a file");
-            writeln("?r      Print register information");
-            writeln("?v      Toggle verbose mode");
+            writeln("?run     Run the VM");
+            writeln("?load    Load a file");
+            writeln("?r       Print register information");
+            writeln("?v       Toggle verbose mode");
             break;
-        case "t0":
+        /*case "time":
+            writeln("Current time is   ");
+            break;*/
+        /*case "date":
+            writeln("Current date is   ");
+            break;*/
+        case "ver":
+            writeln("DD-DOS Version ", APP_VERSION);
+            writefln("MS-DOS Version %d.%d", DOS_MAJOR_VERSION, DOS_MINOR_VERSION);
+            break;
+        //case "mem":break;
+        case "cls":
+            machine.Con.Clear();
+            break;
+        case "?t0":
             Test();
             break;
-        case "load":
+        case "?load":
             if (s.length > 1) {
                 if (Verbose)
                     writeln("Loader initiated");
                 LoadFile(s[1]);
             }
             break;
-        case "run":
+        case "?run":
             machine.Init();
             break;
         case "?v":
@@ -135,7 +155,7 @@ void EnterVShell()
                     "AX=%04X BX=%04X CX=%04X DX=%04X " ~
                     "SP=%04X BP=%04X SI=%04X DI=%04X\n" ~
                     "CS=%04X DS=%04X ES=%04X SS=%04X " ~
-                    "IP=%04X\n\n",
+                    "IP=%04X\n",
                     AX, BX, CX, DX, SP, BP, SI, DI,
                     CS, DS, ES, SS, IP
                 );
@@ -152,6 +172,7 @@ void EnterVShell()
                 writefln("(%Xh)", GetFlagWord);
             }
             break;
+        case "exit": return;
         default:
             writefln("%s: Invalid command.", s[0]);
             break;
