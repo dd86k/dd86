@@ -36,6 +36,7 @@ class Intel8086
     }
 
     poshub Con;
+    bool Sleep = true;
 
     ubyte[] memoryBank;
 
@@ -65,10 +66,15 @@ class Intel8086
     void Init()
     {
         while (Running)
+        {
+            if (Sleep)
+                HSLEEP( 2 ); // Intel 8086 5 MHz
             Execute(memoryBank[GetIPAddress]);
+        }
     }
 
-    void Reset() {
+    void Reset()
+    {
         OF = DF = IF = TF = SF =
              ZF = AF = PF = CF = false;
         CS = 0xFFFF;
@@ -176,7 +182,7 @@ class Intel8086
     /// Fetch an unsigned word (ushort).
     ushort FetchWord(uint addr) {
         version (PLATFORM_X86)
-            return *(cast(ushort *)&memoryBank[addr]);
+            return *(cast(ushort*)&memoryBank[addr]);
         else
             return cast(ushort)(memoryBank[addr] | memoryBank[addr + 1] << 8);
     }
@@ -890,9 +896,8 @@ class Intel8086
 
             break;
         case 0x8A: { // MOV REG8, R/M8
+            uint addr = GetIPAddress + 2;
             ubyte rm = FetchByte;
-            ubyte ra = FetchByte(GetIPAddress + 2);
-            //TODO: Group by MOD->REG->R/M instead (MOV REG8, R/M8)
             final switch (rm & 0b00000111) // R/M
             {
             case 0b00000000: // BX + SI
@@ -905,13 +910,13 @@ class Intel8086
                         AL = memoryBank[BX + SI];
                         break;
                     case 0b01000000: // 01
-                        AL = memoryBank[BX + SI + ra];
+                        AL = memoryBank[BX + SI + FetchByte(addr)];
                         break;
                     case 0b10000000: // 10
-                        AL = memoryBank[BX + SI + FetchWord(IP + 2)];
+                        AL = memoryBank[BX + SI + FetchWord(addr)];
                         break;
                     case 0b11000000: // 11
-                        AL = memoryBank[ra];
+                        AL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -922,13 +927,13 @@ class Intel8086
                         CL = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
-                        CL = memoryBank[BX + SI + ra];
+                        CL = memoryBank[BX + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CL = memoryBank[BX + SI + FetchWord(IP + 2)];
+                        CL = memoryBank[BX + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CL = memoryBank[ra];
+                        CL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -939,13 +944,13 @@ class Intel8086
                         DL = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
-                        DL = memoryBank[BX + SI + ra];
+                        DL = memoryBank[BX + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DL = memoryBank[BX + SI + FetchWord(IP + 2)];
+                        DL = memoryBank[BX + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DL = memoryBank[ra];
+                        DL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -956,13 +961,13 @@ class Intel8086
                         BL = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
-                        BL = memoryBank[BX + SI + ra];
+                        BL = memoryBank[BX + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BL = memoryBank[BX + SI + FetchWord(IP + 2)];
+                        BL = memoryBank[BX + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BL = memoryBank[ra];
+                        BL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -973,13 +978,13 @@ class Intel8086
                         AH = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
-                        AH = memoryBank[BX + SI + ra];
+                        AH = memoryBank[BX + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AH = memoryBank[BX + SI + FetchWord(IP + 2)];
+                        AH = memoryBank[BX + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AH = memoryBank[ra];
+                        AH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -990,32 +995,31 @@ class Intel8086
                         CH = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
-                        CH = memoryBank[BX + SI + ra];
+                        CH = memoryBank[BX + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CH = memoryBank[BX + SI + FetchWord(IP + 2)];
+                        CH = memoryBank[BX + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CH = memoryBank[ra];
+                        CH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
                 case 0b00110000: // DH
-                    switch (rm & 0b11000000) // MOD
+                    final switch (rm & 0b11000000) // MOD
                     {
                     case 0b00000000:
                         DH = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
-                        DH = memoryBank[BX + SI + ra];
+                        DH = memoryBank[BX + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DH = memoryBank[BX + SI + FetchWord(IP + 2)];
+                        DH = memoryBank[BX + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DH = memoryBank[ra];
+                        DH = memoryBank[FetchByte(addr)];
                         break;
-                    default: break;
                     }
                     break;
                 case 0b00111000: // BH
@@ -1025,13 +1029,13 @@ class Intel8086
                         BH = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
-                        BH = memoryBank[BX + SI + ra];
+                        BH = memoryBank[BX + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BH = memoryBank[BX + SI + FetchWord(IP + 2)];
+                        BH = memoryBank[BX + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BH = memoryBank[ra];
+                        BH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1047,13 +1051,13 @@ class Intel8086
                         AL = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
-                        AL = memoryBank[BX + DI + ra];
+                        AL = memoryBank[BX + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AL = memoryBank[BX + DI + FetchWord(IP + 2)];
+                        AL = memoryBank[BX + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AL = memoryBank[ra];
+                        AL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1064,13 +1068,13 @@ class Intel8086
                         CL = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
-                        CL = memoryBank[BX + DI + ra];
+                        CL = memoryBank[BX + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CL = memoryBank[BX + DI + FetchWord(IP + 2)];
+                        CL = memoryBank[BX + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CL = memoryBank[ra];
+                        CL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1081,13 +1085,13 @@ class Intel8086
                         DL = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
-                        DL = memoryBank[BX + DI + ra];
+                        DL = memoryBank[BX + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DL = memoryBank[BX + DI + FetchWord(IP + 2)];
+                        DL = memoryBank[BX + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DL = memoryBank[ra];
+                        DL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1098,13 +1102,13 @@ class Intel8086
                         BL = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
-                        BL = memoryBank[BX + DI + ra];
+                        BL = memoryBank[BX + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BL = memoryBank[BX + DI + FetchWord(IP + 2)];
+                        BL = memoryBank[BX + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BL = memoryBank[ra];
+                        BL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1115,13 +1119,13 @@ class Intel8086
                         AH = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
-                        AH = memoryBank[BX + DI + ra];
+                        AH = memoryBank[BX + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AH = memoryBank[BX + DI + FetchWord(IP + 2)];
+                        AH = memoryBank[BX + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AH = memoryBank[ra];
+                        AH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1132,13 +1136,13 @@ class Intel8086
                         CH = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
-                        CH = memoryBank[BX + DI + ra];
+                        CH = memoryBank[BX + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CH = memoryBank[BX + DI + FetchWord(IP + 2)];
+                        CH = memoryBank[BX + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CH = memoryBank[ra];
+                        CH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1149,13 +1153,13 @@ class Intel8086
                         DH = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
-                        DH = memoryBank[BX + DI + ra];
+                        DH = memoryBank[BX + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DH = memoryBank[BX + DI + FetchWord(IP + 2)];
+                        DH = memoryBank[BX + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DH = memoryBank[ra];
+                        DH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1166,13 +1170,13 @@ class Intel8086
                         BH = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
-                        BH = memoryBank[BX + DI + ra];
+                        BH = memoryBank[BX + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BH = memoryBank[BX + DI + FetchWord(IP + 2)];
+                        BH = memoryBank[BX + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BH = memoryBank[ra];
+                        BH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1188,13 +1192,13 @@ class Intel8086
                         AL = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        AL = memoryBank[BP + SI + ra];
+                        AL = memoryBank[BP + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AL = memoryBank[BP + SI + FetchWord(IP + 2)];
+                        AL = memoryBank[BP + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AL = memoryBank[ra];
+                        AL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1205,13 +1209,13 @@ class Intel8086
                         CL = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        CL = memoryBank[BP + SI + ra];
+                        CL = memoryBank[BP + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CL = memoryBank[BP + SI + FetchWord(IP + 2)];
+                        CL = memoryBank[BP + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CL = memoryBank[ra];
+                        CL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1222,13 +1226,13 @@ class Intel8086
                         DL = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        DL = memoryBank[BP + SI + ra];
+                        DL = memoryBank[BP + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DL = memoryBank[BP + SI + FetchWord(IP + 2)];
+                        DL = memoryBank[BP + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DL = memoryBank[ra];
+                        DL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1239,13 +1243,13 @@ class Intel8086
                         BL = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        BL = memoryBank[BP + SI + ra];
+                        BL = memoryBank[BP + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BL = memoryBank[BP + SI + FetchWord(IP + 2)];
+                        BL = memoryBank[BP + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BL = memoryBank[ra];
+                        BL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1256,13 +1260,13 @@ class Intel8086
                         AH = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        AH = memoryBank[BP + SI + ra];
+                        AH = memoryBank[BP + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AH = memoryBank[BP + SI + FetchWord(IP + 2)];
+                        AH = memoryBank[BP + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AH = memoryBank[ra];
+                        AH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1273,13 +1277,13 @@ class Intel8086
                         CH = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        CH = memoryBank[BP + SI + ra];
+                        CH = memoryBank[BP + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CH = memoryBank[BP + SI + FetchWord(IP + 2)];
+                        CH = memoryBank[BP + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CH = memoryBank[ra];
+                        CH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1290,13 +1294,13 @@ class Intel8086
                         DH = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        DH = memoryBank[BP + SI + ra];
+                        DH = memoryBank[BP + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DH = memoryBank[BP + SI + FetchWord(IP + 2)];
+                        DH = memoryBank[BP + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DH = memoryBank[ra];
+                        DH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1307,13 +1311,13 @@ class Intel8086
                         BH = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
-                        BH = memoryBank[BP + SI + ra];
+                        BH = memoryBank[BP + SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BH = memoryBank[BP + SI + FetchWord(IP + 2)];
+                        BH = memoryBank[BP + SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BH = memoryBank[ra];
+                        BH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1329,13 +1333,13 @@ class Intel8086
                         AL = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        AL = memoryBank[BP + DI + ra];
+                        AL = memoryBank[BP + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AL = memoryBank[BP + DI + FetchWord(IP + 2)];
+                        AL = memoryBank[BP + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AL = memoryBank[ra];
+                        AL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1346,13 +1350,13 @@ class Intel8086
                         CL = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        CL = memoryBank[BP + DI + ra];
+                        CL = memoryBank[BP + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CL = memoryBank[BP + DI + FetchWord(IP + 2)];
+                        CL = memoryBank[BP + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CL = memoryBank[ra];
+                        CL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1363,13 +1367,13 @@ class Intel8086
                         DL = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        DL = memoryBank[BP + DI + ra];
+                        DL = memoryBank[BP + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DL = memoryBank[BP + DI + FetchWord(IP + 2)];
+                        DL = memoryBank[BP + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DL = memoryBank[ra];
+                        DL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1380,13 +1384,13 @@ class Intel8086
                         BL = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        BL = memoryBank[BP + DI + ra];
+                        BL = memoryBank[BP + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BL = memoryBank[BP + DI + FetchWord(IP + 2)];
+                        BL = memoryBank[BP + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BL = memoryBank[ra];
+                        BL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1397,13 +1401,13 @@ class Intel8086
                         AH = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        AH = memoryBank[BP + DI + ra];
+                        AH = memoryBank[BP + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AH = memoryBank[BP + DI + FetchWord(IP + 2)];
+                        AH = memoryBank[BP + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AH = memoryBank[ra];
+                        AH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1414,13 +1418,13 @@ class Intel8086
                         CH = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        CH = memoryBank[BP + DI + ra];
+                        CH = memoryBank[BP + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CH = memoryBank[BP + DI + FetchWord(IP + 2)];
+                        CH = memoryBank[BP + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CH = memoryBank[ra];
+                        CH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1431,13 +1435,13 @@ class Intel8086
                         DH = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        DH = memoryBank[BP + DI + ra];
+                        DH = memoryBank[BP + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DH = memoryBank[BP + DI + FetchWord(IP + 2)];
+                        DH = memoryBank[BP + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DH = memoryBank[ra];
+                        DH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1448,13 +1452,13 @@ class Intel8086
                         BH = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
-                        BH = memoryBank[BP + DI + ra];
+                        BH = memoryBank[BP + DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BH = memoryBank[BP + DI + FetchWord(IP + 2)];
+                        BH = memoryBank[BP + DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BH = memoryBank[ra];
+                        BH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1470,13 +1474,13 @@ class Intel8086
                         AL = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        AL = memoryBank[SI + ra];
+                        AL = memoryBank[SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AL = memoryBank[SI + FetchWord(IP + 2)];
+                        AL = memoryBank[SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AL = memoryBank[ra];
+                        AL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1487,13 +1491,13 @@ class Intel8086
                         CL = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        CL = memoryBank[SI + ra];
+                        CL = memoryBank[SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CL = memoryBank[SI + FetchWord(IP + 2)];
+                        CL = memoryBank[SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CL = memoryBank[ra];
+                        CL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1504,13 +1508,13 @@ class Intel8086
                         DL = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        DL = memoryBank[SI + ra];
+                        DL = memoryBank[SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DL = memoryBank[SI + FetchWord(IP + 2)];
+                        DL = memoryBank[SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DL = memoryBank[ra];
+                        DL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1521,13 +1525,13 @@ class Intel8086
                         BL = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        BL = memoryBank[SI + ra];
+                        BL = memoryBank[SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BL = memoryBank[SI + FetchWord(IP + 2)];
+                        BL = memoryBank[SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BL = memoryBank[ra];
+                        BL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1538,13 +1542,13 @@ class Intel8086
                         AH = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        AH = memoryBank[SI + ra];
+                        AH = memoryBank[SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AH = memoryBank[SI + FetchWord(IP + 2)];
+                        AH = memoryBank[SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AH = memoryBank[ra];
+                        AH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1555,13 +1559,13 @@ class Intel8086
                         CH = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        CH = memoryBank[SI + ra];
+                        CH = memoryBank[SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CH = memoryBank[SI + FetchWord(IP + 2)];
+                        CH = memoryBank[SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CH = memoryBank[ra];
+                        CH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1572,13 +1576,13 @@ class Intel8086
                         DH = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        DH = memoryBank[SI + ra];
+                        DH = memoryBank[SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DH = memoryBank[SI + FetchWord(IP + 2)];
+                        DH = memoryBank[SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DH = memoryBank[ra];
+                        DH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1589,13 +1593,13 @@ class Intel8086
                         BH = memoryBank[SI];
                         break;
                     case 0b01000000:
-                        BH = memoryBank[SI + ra];
+                        BH = memoryBank[SI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BH = memoryBank[SI + FetchWord(IP + 2)];
+                        BH = memoryBank[SI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BH = memoryBank[ra];
+                        BH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1611,13 +1615,13 @@ class Intel8086
                         AL = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        AL = memoryBank[DI + ra];
+                        AL = memoryBank[DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AL = memoryBank[DI + FetchWord(IP + 2)];
+                        AL = memoryBank[DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AL = memoryBank[ra];
+                        AL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1628,13 +1632,13 @@ class Intel8086
                         CL = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        CL = memoryBank[DI + ra];
+                        CL = memoryBank[DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CL = memoryBank[DI + FetchWord(IP + 2)];
+                        CL = memoryBank[DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CL = memoryBank[ra];
+                        CL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1645,13 +1649,13 @@ class Intel8086
                         DL = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        DL = memoryBank[DI + ra];
+                        DL = memoryBank[DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DL = memoryBank[DI + FetchWord(IP + 2)];
+                        DL = memoryBank[DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DL = memoryBank[ra];
+                        DL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1662,13 +1666,13 @@ class Intel8086
                         BL = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        BL = memoryBank[DI + ra];
+                        BL = memoryBank[DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BL = memoryBank[DI + FetchWord(IP + 2)];
+                        BL = memoryBank[DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BL = memoryBank[ra];
+                        BL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1679,13 +1683,13 @@ class Intel8086
                         AH = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        AH = memoryBank[DI + ra];
+                        AH = memoryBank[DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AH = memoryBank[DI + FetchWord(IP + 2)];
+                        AH = memoryBank[DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AH = memoryBank[ra];
+                        AH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1696,13 +1700,13 @@ class Intel8086
                         CH = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        CH = memoryBank[DI + ra];
+                        CH = memoryBank[DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CH = memoryBank[DI + FetchWord(IP + 2)];
+                        CH = memoryBank[DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CH = memoryBank[ra];
+                        CH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1713,13 +1717,13 @@ class Intel8086
                         DH = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        DH = memoryBank[DI + ra];
+                        DH = memoryBank[DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DH = memoryBank[DI + FetchWord(IP + 2)];
+                        DH = memoryBank[DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DH = memoryBank[ra];
+                        DH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1730,13 +1734,13 @@ class Intel8086
                         BH = memoryBank[DI];
                         break;
                     case 0b01000000:
-                        BH = memoryBank[DI + ra];
+                        BH = memoryBank[DI + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BH = memoryBank[DI + FetchWord(IP + 2)];
+                        BH = memoryBank[DI + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BH = memoryBank[ra];
+                        BH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1752,13 +1756,13 @@ class Intel8086
                         AL = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        AL = memoryBank[BP + ra];
+                        AL = memoryBank[BP + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AL = memoryBank[BP + FetchWord(IP + 2)];
+                        AL = memoryBank[BP + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AL = memoryBank[ra];
+                        AL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1769,13 +1773,13 @@ class Intel8086
                         CL = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        CL = memoryBank[BP + ra];
+                        CL = memoryBank[BP + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CL = memoryBank[BP + FetchWord(IP + 2)];
+                        CL = memoryBank[BP + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CL = memoryBank[ra];
+                        CL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1786,13 +1790,13 @@ class Intel8086
                         DL = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        DL = memoryBank[BP + ra];
+                        DL = memoryBank[BP + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DL = memoryBank[BP + FetchWord(IP + 2)];
+                        DL = memoryBank[BP + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DL = memoryBank[ra];
+                        DL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1803,13 +1807,13 @@ class Intel8086
                         BL = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        BL = memoryBank[BP + ra];
+                        BL = memoryBank[BP + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BL = memoryBank[BP + FetchWord(IP + 2)];
+                        BL = memoryBank[BP + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BL = memoryBank[ra];
+                        BL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1820,13 +1824,13 @@ class Intel8086
                         AH = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        AH = memoryBank[BP + ra];
+                        AH = memoryBank[BP + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AH = memoryBank[BP + FetchWord(IP + 2)];
+                        AH = memoryBank[BP + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AH = memoryBank[ra];
+                        AH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1837,13 +1841,13 @@ class Intel8086
                         CH = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        CH = memoryBank[BP + ra];
+                        CH = memoryBank[BP + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CH = memoryBank[BP + FetchWord(IP + 2)];
+                        CH = memoryBank[BP + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CH = memoryBank[ra];
+                        CH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1854,13 +1858,13 @@ class Intel8086
                         DH = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        DH = memoryBank[BP + ra];
+                        DH = memoryBank[BP + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DH = memoryBank[BP + FetchWord(IP + 2)];
+                        DH = memoryBank[BP + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DH = memoryBank[ra];
+                        DH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1871,13 +1875,13 @@ class Intel8086
                         BH = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        BH = memoryBank[BP + ra];
+                        BH = memoryBank[BP + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BH = memoryBank[BP + FetchWord(IP + 2)];
+                        BH = memoryBank[BP + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BH = memoryBank[ra];
+                        BH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1893,13 +1897,13 @@ class Intel8086
                         AL = memoryBank[BX];
                         break;
                     case 0b01000000:
-                        AL = memoryBank[BX + ra];
+                        AL = memoryBank[BX + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        AL = memoryBank[BX + FetchWord(IP + 2)];
+                        AL = memoryBank[BX + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        AL = memoryBank[ra];
+                        AL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1910,13 +1914,13 @@ class Intel8086
                         CL = memoryBank[BX];
                         break;
                     case 0b01000000:
-                        CL = memoryBank[BX + ra];
+                        CL = memoryBank[BX + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        CL = memoryBank[BX + FetchWord(IP + 2)];
+                        CL = memoryBank[BX + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        CL = memoryBank[ra];
+                        CL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1927,13 +1931,13 @@ class Intel8086
                         DL = memoryBank[BX];
                         break;
                     case 0b01000000:
-                        DL = memoryBank[BX + ra];
+                        DL = memoryBank[BX + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        DL = memoryBank[BX + FetchWord(IP + 2)];
+                        DL = memoryBank[BX + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        DL = memoryBank[ra];
+                        DL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1944,13 +1948,13 @@ class Intel8086
                         BL = memoryBank[BX];
                         break;
                     case 0b01000000:
-                        BL = memoryBank[BX + ra];
+                        BL = memoryBank[BX + FetchByte(addr)];
                         break;
                     case 0b10000000:
-                        BL = memoryBank[BX + FetchWord(IP + 2)];
+                        BL = memoryBank[BX + FetchWord(addr)];
                         break;
                     case 0b11000000:
-                        BL = memoryBank[ra];
+                        BL = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1961,13 +1965,13 @@ class Intel8086
                         AH = memoryBank[BX];
                         break;
                     case 0b01000000:
-                        AH = memoryBank[BX + ra];
+                        AH = memoryBank[BX + FetchByte(addr)];
                         break;
                     case 0b10000000:
                         AH = memoryBank[BX + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        AH = memoryBank[ra];
+                        AH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1978,13 +1982,13 @@ class Intel8086
                         CH = memoryBank[BX]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        CH = memoryBank[BX + ra];
+                        CH = memoryBank[BX + FetchByte(addr)];
                         break;
                     case 0b10000000:
                         CH = memoryBank[BX + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        CH = memoryBank[ra];
+                        CH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -1995,13 +1999,13 @@ class Intel8086
                         DH = memoryBank[BX];
                         break;
                     case 0b01000000:
-                        DH = memoryBank[BX + ra];
+                        DH = memoryBank[BX + FetchByte(addr)];
                         break;
                     case 0b10000000:
                         DH = memoryBank[BX + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        DH = memoryBank[ra];
+                        DH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -2012,13 +2016,13 @@ class Intel8086
                         BH = memoryBank[BX]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
-                        BH = memoryBank[BX + ra];
+                        BH = memoryBank[BX + FetchByte(addr)];
                         break;
                     case 0b10000000:
                         BH = memoryBank[BX + FetchWord(IP + 2)];
                         break;
                     case 0b11000000:
-                        BH = memoryBank[ra];
+                        BH = memoryBank[FetchByte(addr)];
                         break;
                     }
                     break;
@@ -2392,7 +2396,7 @@ class Intel8086
         case 0xCA: // RET IMM16 (FAR)
             IP = Pop();
             CS = Pop();
-            SP = cast(ushort)(SP + FetchWord());
+            SP += FetchWord;
             // IP += 3; ?
             break;
         case 0xCB: // RET (FAR)
@@ -3521,6 +3525,18 @@ class Intel8086
         IF = TF = 1;
         SetFlagWord(Pop());
     }
+}
+
+pragma(inline, true) void HSLEEP(int n) {
+    import core.thread : Thread;
+    import core.time : dur;
+    Thread.sleep(dur!"hnsecs"(n));
+}
+
+pragma(inline, true) void NSLEEP(int n) {
+    import core.thread : Thread;
+    import core.time : dur;
+    Thread.sleep(dur!"nsecs"(n));
 }
 
 void Test()
