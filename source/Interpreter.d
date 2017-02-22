@@ -357,13 +357,18 @@ class Intel8086
             break;
         }
         case 0x14: { // ADC AL, IMM8
-
-            break;
+            AL += FetchByte;
+            if (CF) ++AL;
+            IP += 2;
         }
+            break;
         case 0x15: { // ADC AX, IMM16
-
-            break;
+            int t = AX + FetchWord;
+            if (CF) ++t;
+            AX = t;
+            IP += 3;
         }
+            break;
         case 0x16: // PUSH SS
             Push(SS);
             ++IP;
@@ -384,11 +389,18 @@ class Intel8086
         case 0x1B: // SBB REG16, R/M16
 
             break;
-        case 0x1C: // SBB R/M8, REG8
-
+        case 0x1C: { // SBB AL, IMM8
+            AL -= FetchByte - 1;
+            if (CF) --AL;
+            IP += 2;
+        }
             break;
-        case 0x1D: // SBB R/M16, REG16
-
+        case 0x1D: { // SBB AX, IMM16
+            int t = AX - FetchByte;
+            if (CF) --t;
+            AX = t;
+            IP += 3;
+        }
             break;
         case 0x1E: // PUSH DS
             Push(DS);
@@ -415,7 +427,7 @@ class Intel8086
             IP += 2;
             break;
         case 0x25: // AND AX, IMM16
-            AX = (AX & FetchWord(GetIPAddress + 1));
+            AX = AX & FetchWord;
             IP += 3;
             break;
         case 0x26: // ES: (Segment override prefix)
