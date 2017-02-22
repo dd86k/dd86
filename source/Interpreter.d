@@ -469,10 +469,12 @@ class Intel8086
 
             break;
         case 0x2C: // SUB AL, IMM8
-
+            AL -= FetchByte;
+            IP += 2;
             break;
         case 0x2D: // SUB AX, IMM16
-
+            AX = AX - FetchWord;
+            IP += 3;
             break;
         case 0x2E: // CS:
 
@@ -512,10 +514,12 @@ class Intel8086
 
             break;
         case 0x34: // XOR AL, IMM8
-
+            AL ^= FetchByte;
+            IP += 2;
             break;
         case 0x35: // XOR AX, IMM16
-
+            AX = AX ^ FetchWord;
+            IP += 3;
             break;
         case 0x36: // SS:
 
@@ -543,10 +547,26 @@ class Intel8086
 
             break;
         case 0x3C: // CMP AL, IMM8
-
+            ubyte b = FetchByte;
+            int r = AL - b;
+            SF = (r & 0x80) != 0;
+            OF = r < 0;
+            ZF = r == 0;
+            AF = ((AL & 0b1000) - (b & 0b1000)) < 0;
+            //PF =
+            //CF =
+            IP += 2;
             break;
         case 0x3D: // CMP AX, IMM16
-
+            ushort w = FetchWord;
+            int r = AL - w;
+            SF = (r & 0x8000) != 0;
+            OF = r < 0;
+            ZF = r == 0;
+            //AF = 
+            //PF =
+            //CF =
+            IP += 3;
             break;
         case 0x3E: // DS:
 
@@ -695,210 +715,160 @@ class Intel8086
             DI = Pop();
             ++IP;
             break;
-        case 0x70: // JO    SHORT-LABEL
-            if (OF)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x70: // JO            SHORT-LABEL
+            IP += OF ? FetchSByte : 2;
             break;
-        case 0x71: // JNO   SHORT-LABEL
-            if (OF == false)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x71: // JNO           SHORT-LABEL
+            IP += OF == false ? FetchSByte : 2;
             break;
         case 0x72: // JB/JNAE/JC    SHORT-LABEL
-            if (CF)
-                IP += FetchSByte;
-            else IP += 2;
+            IP += CF ? FetchSByte : 2;
             break;
         case 0x73: // JNB/JAE/JNC   SHORT-LABEL
-            if (CF == false)
-                IP += FetchSByte;
-            else IP += 2;
+            IP += CF == false ? FetchSByte : 2;
             break;
-        case 0x74: // JE/JZ     SHORT-LABEL
-            if (ZF)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x74: // JE/JZ         SHORT-LABEL
+            IP += ZF ? FetchSByte : 2;
             break;
-        case 0x75: // JNE/JNZ   SHORT-LABEL
-            if (ZF == false)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x75: // JNE/JNZ       SHORT-LABEL
+            IP += ZF == false ? FetchSByte : 2;
             break;
-        case 0x76: // JBE/JNA   SHORT-LABEL
-            if (CF || ZF)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x76: // JBE/JNA       SHORT-LABEL
+            IP += (CF || ZF) ? FetchSByte : 2;
             break;
-        case 0x77: // JNBE/JA   SHORT-LABEL
-            if (CF == false && ZF == false)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x77: // JNBE/JA       SHORT-LABEL
+            IP += CF == false && ZF == false ? FetchSByte : 2;
             break;
-        case 0x78: // JS        SHORT-LABEL
-            if (SF)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x78: // JS            SHORT-LABEL
+            IP += SF ? FetchSByte : 2;
             break;
-        case 0x79: // JNS       SHORT-LABEL
-            if (SF == false)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x79: // JNS           SHORT-LABEL
+            IP += SF == false ? FetchSByte : 2;
             break;
-        case 0x7A: // JP/JPE    SHORT-LABEL
-            if (PF)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x7A: // JP/JPE        SHORT-LABEL
+            IP += PF ? FetchSByte : 2;
             break;
-        case 0x7B: // JNP/JPO   SHORT-LABEL
-            if (PF == false)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x7B: // JNP/JPO       SHORT-LABEL
+            IP += PF == false ? FetchSByte : 2;
             break;
-        case 0x7C: // JL/JNGE   SHORT-LABEL
-            if (SF != OF)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x7C: // JL/JNGE       SHORT-LABEL
+            IP += SF != OF ? FetchSByte : 2;
             break;
-        case 0x7D: // JNL/JGE   SHORT-LABEL
-            if (SF == OF)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x7D: // JNL/JGE       SHORT-LABEL
+            IP += SF == OF ? FetchSByte : 2;
             break;
-        case 0x7E: // JLE/JNG   SHORT-LABEL
-            if (SF != OF || ZF)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x7E: // JLE/JNG       SHORT-LABEL
+            IP += SF != OF || ZF ? FetchSByte : 2;
             break;
-        case 0x7F: // JNLE/JG   SHORT-LABEL
-            if (SF == OF && ZF == false)
-                IP += FetchSByte;
-            else IP += 2;
+        case 0x7F: // JNLE/JG       SHORT-LABEL
+            IP += SF == OF && ZF == false ? FetchSByte : 2;
             break;
         case 0x80: { // GRP1 R/M8, IMM8
             ubyte rm = FetchByte; // Get ModR/M byte
-            ubyte ra = FetchByte(GetIPAddress + 2); // 8-bit Immediate
-            switch (rm & 0b00111000) { // REG
-            case 0b00000000: // 000 - ADD
+            ubyte im = FetchByte(GetIPAddress + 2); // 8-bit Immediate
+            final switch (rm & 0b00111000) { // REG
+            case 0b000_000: // 000 - ADD
 
                 break;
-            case 0b00001000: // 001 - OR
+            case 0b001_000: // 001 - OR
 
                 break;
-            case 0b00010000: // 010 - ADC
+            case 0b010_000: // 010 - ADC
 
                 break;
-            case 0b00011000: // 011 - SBB
+            case 0b011_000: // 011 - SBB
 
                 break;
-            case 0b00100000: // 100 - AND
+            case 0b100_000: // 100 - AND
 
                 break;
-            case 0b00101000: // 101 - SUB
+            case 0b101_000: // 101 - SUB
 
                 break;
-            case 0b00110000: // 110 - XOR
+            case 0b110_000: // 110 - XOR
 
                 break;
-            case 0b00111000: // 111 - CMP
+            case 0b111_000: // 111 - CMP
 
                 break;
-            default: break;
             }
             IP += 3;
             break;
         }
         case 0x81: { // GRP1 R/M16, IMM16
             ubyte rm = FetchByte;  // Get ModR/M byte
-            ushort ra = FetchWord(GetIPAddress + 2); // 16-bit Immediate
-            switch (rm & 0b00111000) { // ModR/M's REG
-            case 0b00000000: // 000 - ADD
+            ushort im = FetchWord(GetIPAddress + 2); // 16-bit Immediate
+            final switch (rm & 0b00111000) { // ModR/M's REG
+            case 0b000_000: // 000 - ADD
 
-            break;
-            case 0b00001000: // 001 - OR
+                break;
+            case 0b001_000: // 001 - OR
 
-            break;
-            case 0b00010000: // 010 - ADC
+                break;
+            case 0b010_000: // 010 - ADC
 
-            break;
-            case 0b00011000: // 011 - SBB
+                break;
+            case 0b011_000: // 011 - SBB
 
-            break;
-            case 0b00100000: // 100 - AND
+                break;
+            case 0b100_000: // 100 - AND
 
-            break;
-            case 0b00101000: // 101 - SUB
+                break;
+            case 0b101_000: // 101 - SUB
 
-            break;
-            case 0b00110000: // 110 - XOR
+                break;
+            case 0b110_000: // 110 - XOR
 
-            break;
-            case 0b00111000: // 111 - CMP
+                break;
+            case 0b111_000: // 111 - CMP
 
-            break;
-            default: break;
+                break;
             }
             break;
         }
-        case 0x82: // GRP1 R/M8, IMM8
-            /*byte rm; // Get ModR/M byte
+        case 0x82: // GRP2 R/M8, IMM8
+            ubyte rm = FetchByte; // Get ModR/M byte
+            ubyte im = FetchByte(GetIPAddress + 2);
             switch (rm & 0b00111000) { // ModRM REG
-            case 0b00000000: // 000 - ADD
+            case 0b000_000: // 000 - ADD
 
-            break;
-            case 0b00001000: // 001 - OR
+                break;
+            case 0b010_000: // 010 - ADC
 
-            break;
-            case 0b00010000: // 010 - ADC
+                break;
+            case 0b011_000: // 011 - SBB
 
-            break;
-            case 0b00011000: // 011 - SBB
+                break;
+            case 0b101_000: // 101 - SUB
 
-            break;
-            case 0b00100000: // 100 - AND
+                break;
+            case 0b111_000: // 111 - CMP
 
-            break;
-            case 0b00101000: // 101 - SUB
-
-            break;
-            case 0b00110000: // 110 - XOR
-
-            break;
-            case 0b00111000: // 111 - CMP
-
-            break;
+                break;
             default: break;
-            }*/
+            }
             break;
-        case 0x83: // GRP1 R/M16, IMM8
-            /*byte rm; // Get ModR/M byte
+        case 0x83: // GRP2 R/M16, IMM8
+            ubyte rm = FetchByte; // Get ModR/M byte
+            ushort im = FetchWord(GetIPAddress + 2);
             switch (rm & 0b00111000) { // ModRM REG
-            case 0b00000000: // 000 - ADD
+            case 0b000_000: // 000 - ADD
 
-            break;
-            case 0b00001000: // 001 - OR
+                break;
+            case 0b010_000: // 010 - ADC
 
-            break;
-            case 0b00010000: // 010 - ADC
+                break;
+            case 0b011_000: // 011 - SBB
 
-            break;
-            case 0b00011000: // 011 - SBB
+                break;
+            case 0b101_000: // 101 - SUB
 
-            break;
-            case 0b00100000: // 100 - AND
+                break;
+            case 0b111_000: // 111 - CMP
 
-            break;
-            case 0b00101000: // 101 - SUB
-
-            break;
-            case 0b00110000: // 110 - XOR
-
-            break;
-            case 0b00111000: // 111 - CMP
-
-            break;
+                break;
             default: break;
-            }*/
+            }
             break;
         case 0x84: // TEST R/M8, REG8
 
