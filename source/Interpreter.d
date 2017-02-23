@@ -43,7 +43,7 @@ class Intel8086
     ///
     poshub Con;
     ///
-    bool Sleep = true;
+    bool Sleep;
     ///
     bool Running = true;
 
@@ -71,12 +71,12 @@ class Intel8086
          CF; //  0, Carry Flag
 
     /// Initiate the machine and run.
-    void Init()
+    void Initiate()
     {
         while (Running)
         {
             if (Sleep)
-                HSLEEP( 2 ); // Intel 8086 5 MHz
+                HSLEEP( 2 ); // Intel 8086 - 5 MHz
             Execute(memoryBank[GetIPAddress]);
         }
     }
@@ -3586,6 +3586,6 @@ void Test()
              0xCD, 0x21]; // int 21h
         Insert(ops);
         Insert("Hello World!\r\n$", ops.length); // msg (Offset: 000E, Address: 010E)
-        Init();
+        Initiate();
     }
 }

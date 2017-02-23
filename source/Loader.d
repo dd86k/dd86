@@ -23,12 +23,13 @@ private struct mz_hdr {
 	ushort e_lfarlc;       /* File address of relocation table */
 	ushort e_ovno;         /* Overlay number */
 	ushort[ERESWDS] e_res; /* Reserved words */
-	uint   e_lfanew;       /* File address of new exe header (usually at 0x3c) */
+	uint   e_lfanew;       /* File address of new exe header */
 }
-
-//private struct mz_bdy { }
-
 private enum ERESWDS = 16;
+
+private struct mz_rlc {
+    ushort offset, segment;
+}
 
 enum {
     ///
@@ -53,7 +54,7 @@ void LoadFile(string path)
         if (Verbose)
             writeln("File exists");
 
-        if (fsize <= 0xFFFF_FFFFL)
+        if (fsize <= 0xFFFFL)
             switch (toUpper(extension(f.name)))
             {
                 case ".COM": {
@@ -71,18 +72,67 @@ void LoadFile(string path)
                     break;
 
                 case ".EXE": { // Real party starts here
-                    if (e_lfanew)
+                    mz_hdr mzh;
                     {
-                        char[2] sig;
-                        f.seek(0x3c);
-                        f.rawRead(sig);
-                        switch (sig)
-                        {
-                            //case "NE", "LE", "LX", "PE":
-                            default:
-                        }
+                        ubyte[mz_hdr.sizeof] buf;
+                        f.rawRead(buf);
+                        memcpy(&mzh, &buf, mz_hdr.sizeof);
                     }
-                    else LoadMZ(path);
+
+                    with (mzh) {
+                        if (e_lfanew)
+                        {
+                            char[2] sig;
+                            f.seek(e_lfanew);
+                            f.rawRead(sig);
+                            switch (sig)
+                            {
+                            //case "NE":
+                            default:
+                                if (Verbose)
+                                    writeln("Unsupported format : ", sig);
+                                return;
+                            }
+                        }
+
+                        if (Verbose)
+                            write("Loading MZ... ");
+
+                        /*
+                         * MZ File loader, temporary
+                         */
+                        
+                         /*if (e_minalloc && e_maxalloc) // High memory
+                         {
+
+                         }
+                         else // Low memory
+                         {
+
+                         }*/
+
+                         // The offset of the beginning of the EXE data
+                         uint datapos = e_cparh * 16;
+                         // The offset of the byte just after the EXE data
+                         uint extrapos = e_cp * 512;
+                         if (e_cblp) extrapos -= (512 - e_cblp);
+
+                         f.seek(e_lfarlc);
+                         mz_rlc[] rlct = new mz_rlc[e_crlc];
+                         f.rawRead(rlct);
+
+                         with (machine) {
+                            CS = e_cs;
+                            IP = e_ip;
+                            SS = e_ss;
+                            SP = e_sp;
+                            uint l = GetIPAddress;
+
+
+                         }
+
+                         if (Verbose) writeln("loaded");
+                    }
                 }
                     break;
 
@@ -96,10 +146,6 @@ void LoadFile(string path)
 
 void LoadMZ(string path)
 {
-    mz_hdr mzh;
-    {
-        ubyte[mz_hdr.sizeof] buf;
-        f.rawRead(buf);
-        memcpy(&mzh, &buf, mz_hdr.sizeof);
-    }
+
+
 }

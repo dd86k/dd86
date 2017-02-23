@@ -44,10 +44,19 @@ private void DisplayVersion()
 
 private void DisplayHelp(string name)
 {
+    writefln("%s  [-p <Program> [-a <arguments]] [-M] [-V]", name);
+    writefln("%s  {-h|--help|/?|-v|--version}", name);
+}
+
+private void DisplayFullHelp(string name)
+{
 	writeln("Usage: ");
 	writefln("  %s [<Options>]", name);
     writeln("Options:");
-    writeln("  -p <File>    Load a program at start.");
+    writeln("  -p <Program>     Load a program at start.");
+    //writeln("  -a <Arguments>   Arguments to pass to <Program>.");
+    writeln("  -M               Maximum performance (!)");
+    writeln("  -V               Verbose.");
     writeln();
 	writeln("  -h, --help       Display help and quit.");
 	writeln("  -v, --version    Display version and quit.");
@@ -56,7 +65,10 @@ private void DisplayHelp(string name)
 private int main(string[] args)
 {
     const size_t argl = args.length;
+
     string init_file;
+    bool sleep = true;
+
 	for (size_t i = 0; i < argl; ++i)
     {
         switch (args[i])
@@ -70,12 +82,16 @@ private int main(string[] args)
                 }
                 break;
 
-            case "-v", "--verbose":
+            case "-M":
+                sleep = false;
+                break;
+
+            case "-V", "--verbose":
                 writeln("Verbose mode turned on.");
                 Verbose = true;
                 break;
 
-            case "-V", "--version", "/version", "/ver":
+            case "-v", "--version", "/version", "/ver":
                 DisplayVersion();
                 break;
             case "-h", "--help", "/?":
@@ -87,11 +103,15 @@ private int main(string[] args)
 
     writeln("DD-DOS is starting...");
     machine = new Intel8086();
+    machine.Sleep = sleep;
 
-    if (init_file != null) {
+    if (init_file)
+    {
         LoadFile(init_file);
-        machine.Init();
-    } else {
+        machine.Initiate();
+    }
+    else
+    {
         EnterVShell();
     }
 
@@ -146,7 +166,7 @@ void EnterVShell()
             }
             break;
         case "?run":
-            machine.Init();
+            machine.Initiate();
             break;
         case "?v":
             Verbose = !Verbose;
