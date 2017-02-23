@@ -32,11 +32,11 @@ enum OEM_ID { // Used for INT 21h AH=30 so far.
 class Intel8086
 {
     ///
-    this()
+    this(uint memsize = MAX_MEM)
     {
         Con = poshub();
         Con.Init();
-        memoryBank = new ubyte[MAX_MEM];
+        memoryBank = new ubyte[memsize];
         Reset();
     }
 

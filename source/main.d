@@ -2,6 +2,8 @@
  * main.d : Entry point, CLI, internal shell.
  */
 
+//TODO: "Dynamic memory", allocate only what's necessary.
+
 module main;
 
 import std.stdio;
@@ -66,7 +68,7 @@ private int main(string[] args)
 {
     const size_t argl = args.length;
 
-    string init_file;
+    string init_file, init_args;
     bool sleep = true;
 
 	for (size_t i = 0; i < argl; ++i)
@@ -81,6 +83,19 @@ private int main(string[] args)
                     return E_CLI;
                 }
                 break;
+            
+            case "-a", "/a":
+                if (++i < argl) {
+                    if (init_file) {
+                        init_args = args[i];
+                    } else {
+                        writeln("-a : Missing <Program>.");
+                        return E_CLI;
+                    }
+                } else {
+
+                }
+                break;
 
             case "-M":
                 sleep = false;
@@ -93,10 +108,10 @@ private int main(string[] args)
 
             case "-v", "--version", "/version", "/ver":
                 DisplayVersion();
-                break;
+                return 0;
             case "-h", "--help", "/?":
                 DisplayHelp(args[0]);
-                break;
+                return 0;
             default: break;
         }
     }
