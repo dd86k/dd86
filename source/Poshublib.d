@@ -7,19 +7,28 @@ module poshublib;
 import std.stdio;
 
 enum {
+    /// Poshub version
     POSHUB_VER = "0.0.0"
 }
 
 pragma(msg, "Poshub version : ", POSHUB_VER);
 
+/// Poshub struct
 struct poshub
 {
     version (Windows)
     {
         import core.sys.windows.windows;
+        /// Input and output handles
         HANDLE hIn, hOut;
     }
+    else version (Posix)
+    {
+        import core.sys.posix.sys.ioctl;
+        //import core.sys.posix.termios;
+    }
 
+    /// Initiate poshub
     void Init()
     {
         version (Windows)
@@ -33,6 +42,7 @@ struct poshub
      * Buffer management.
      */
 
+    /// Clear screen
     void Clear()
     {
         alias sys = core.stdc.stdlib.system;
@@ -46,8 +56,10 @@ struct poshub
     /*
      * Window dimensions.
      */
+    // Note: A COORD uses SHORT (short) and Linux uses unsigned shorts.
 
-    ushort GetWindowWidth()
+    /// Window width
+    @property ushort WindowWidth()
     {
         version (Windows)
         {
@@ -57,7 +69,6 @@ struct poshub
         }
         else version (Posix)
         {
-            import core.sys.posix.sys.ioctl;
             winsize ws;
             ioctl(0, TIOCGWINSZ, &ws);
             return ws.ws_col;
@@ -68,18 +79,17 @@ struct poshub
         }
     }
 
-    void SetWindowWidth(ushort w)
+    /// Window width
+    @property void WindowWidth(int w)
     {
-        // Note: A COORD uses SHORT (short) and Linux uses unsigned shorts.
         version (Windows)
         {
-            COORD c = { cast(SHORT)w, cast(SHORT)GetWindowWidth() };
+            COORD c = { cast(SHORT)w, cast(SHORT)WindowWidth };
             SetConsoleScreenBufferSize(hOut, c);
         }
         else version (Posix)
         {
-            import core.sys.posix.sys.ioctl;
-            winsize ws = { w, GetWindowWidth() };
+            winsize ws = { cast(ushort)w, WindowWidth };
             ioctl(0, TIOCSWINSZ, &ws);
         }
         else
@@ -88,7 +98,8 @@ struct poshub
         }
     }
 
-    ushort GetWindowHeight()
+    /// Window height
+    @property ushort WindowHeight()
     {
         version (Windows)
         {
@@ -98,7 +109,6 @@ struct poshub
         }
         else version (Posix)
         {
-            import core.sys.posix.sys.ioctl;
             winsize ws;
             ioctl(0, TIOCGWINSZ, &ws);
             return ws.ws_row;
@@ -109,17 +119,17 @@ struct poshub
         }
     }
 
-    void SetWindowHeight(ushort h)
+    /// Window height
+    @property void WindowHeight(int h)
     {
         version (Windows)
         {
-            COORD c = { cast(SHORT)GetWindowWidth(), cast(SHORT)h };
+            COORD c = { cast(SHORT)WindowWidth, cast(SHORT)h };
             SetConsoleScreenBufferSize(hOut, c);
         }
         else version (Posix)
         {
-            import core.sys.posix.sys.ioctl;
-            winsize ws = { GetWindowWidth(), h, 0, 0 };
+            winsize ws = { WindowWidth, cast(ushort)h, 0, 0 };
             ioctl(0, TIOCSWINSZ, &ws);
         }
         else
@@ -132,7 +142,7 @@ struct poshub
      * Cursor
      */
 
-    /// Set cursor position relating to the window position.
+    /// Set cursor position.
     void SetPos(short x, short y)
     {
         version (Windows)
@@ -142,7 +152,8 @@ struct poshub
         }
         else version (Posix)
         {
-
+            //TODO: Test
+            writef("\033[%s;%sH", y + 1, x + 1);
         }
     }
 
@@ -150,6 +161,7 @@ struct poshub
      * Titles
      */
 
+    /// Set session title
     @property void Title(string value)
     {
         version (Windows)
@@ -159,6 +171,7 @@ struct poshub
         }
     }
 
+    /// Set session title
     @property void Title(wstring value)
     {
         version (Windows)
@@ -168,6 +181,7 @@ struct poshub
         }
     }
 
+    /// Get session title
     @property string Title()
     {
         version (Windows)
@@ -185,7 +199,8 @@ struct poshub
     /*
      * STDIN
      */
-
+    
+    /// Read a single character.
     char ReadChar(bool echo = false)
     {
         version (Windows)
@@ -204,7 +219,7 @@ struct poshub
         }
         else version (Posix)
         {
-            import std.uni;
+            import std.uni : isControl;
             int t;
             while (isControl(t = getchar())) {}
             char c = cast(char)t;
@@ -236,11 +251,11 @@ struct poshub
         }
     }
 
+    /// Read a single character.
     KeyInfo ReadKey(bool echo = false)
     {
         version (Windows)
         {
-            import core.sys.windows.windows;
             INPUT_RECORD ir;
             ReadConsoleInputA(hOut, &ir, 1, NULL);
 
@@ -262,7 +277,6 @@ struct poshub
         }
         else version (Posix)
         {
-            import core.sys.posix.termios;
             KeyInfo k;
 
 
@@ -272,10 +286,15 @@ struct poshub
     }
 }
 
+/// 
 struct KeyInfo
 {
+    ///
     char keyChar;
+    ///
     ushort key;
+    ///
     bool isKeyDown;
+    ///
     bool ctrl, alt, shift;
 }

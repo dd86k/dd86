@@ -24,17 +24,19 @@ private struct mz_hdr {
 	ushort e_ovno;         /* Overlay number */
 	ushort[ERESWDS] e_res; /* Reserved words */
 	uint   e_lfanew;       /* File address of new exe header (usually at 0x3c) */
-};
+}
 
 //private struct mz_bdy { }
 
 private enum ERESWDS = 16;
 
 enum {
+    ///
     LOADER_VER = "0.0.0"
 }
 
 enum {
+    /// MZ file magic
     MZ_MAGIC = 0x5A4D,
 }
 
@@ -46,7 +48,7 @@ void LoadFile(string path)
         import core.stdc.string, std.uni;
         File f = File(path);
 
-        ulong fsize = f.size;
+        const ulong fsize = f.size;
 
         if (Verbose)
             writeln("File exists");
@@ -69,32 +71,35 @@ void LoadFile(string path)
                     break;
 
                 case ".EXE": { // Real party starts here
-                    mz_hdr mzh;
+                    if (e_lfanew)
                     {
-                        ubyte[mz_hdr.sizeof] buf;
-                        f.rawRead(buf);
-                        memcpy(&mzh, &buf, mz_hdr.sizeof);
-                    }
-
-                    /+{
                         char[2] sig;
-                        f.seek(mzh.e_lfanew);
+                        f.seek(0x3c);
                         f.rawRead(sig);
                         switch (sig)
                         {
-                            case "NE", "LE", "LX", "PE":
+                            //case "NE", "LE", "LX", "PE":
                             default:
                         }
-                    }+/
-
-
+                    }
+                    else LoadMZ(path);
                 }
                     break;
 
-                default: // null is included here.
+                default: break; // null is included here.
             }
         else if (Verbose) writeln("Error : File too big.");
     }
     else if (Verbose)
         writefln("File %s does not exist, skipping.", path);
+}
+
+void LoadMZ(string path)
+{
+    mz_hdr mzh;
+    {
+        ubyte[mz_hdr.sizeof] buf;
+        f.rawRead(buf);
+        memcpy(&mzh, &buf, mz_hdr.sizeof);
+    }
 }

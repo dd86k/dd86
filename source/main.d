@@ -10,23 +10,25 @@ import Interpreter, Loader;
 import poshublib : POSHUB_VER;
 
 pragma(msg, "Compiling DD-DOS Version ", APP_VERSION);
-pragma(msg, "Reporting DOS major version: ", DOS_MAJOR_VERSION);
-pragma(msg, "Reporting DOS minor version: ", DOS_MINOR_VERSION);
 
-// DD-DOS version.
+/// DD-DOS version.
 enum APP_VERSION = "0.0.0";
-// Reported DOS version.
 enum {
+    /// Minor reported DOS version
     DOS_MINOR_VERSION = 0,
+    /// Major reported DOS version
     DOS_MAJOR_VERSION = 0
 }
 // CLI Error codes
 enum {
+    /// Generic CLI syntax error
     E_CLI = 1,
 }
 
+/// Verbose flags
 static bool Verbose;
 
+/// Current machine
 static Intel8086 machine;
 
 private void DisplayVersion()
@@ -53,7 +55,7 @@ private void DisplayHelp(string name)
 
 private int main(string[] args)
 {
-    size_t argl = args.length;
+    const size_t argl = args.length;
     string init_file;
 	for (size_t i = 0; i < argl; ++i)
     {
@@ -96,6 +98,7 @@ private int main(string[] args)
     return 0;
 }
 
+/// Enter internal shell
 void EnterVShell()
 {
     import std.array : split;

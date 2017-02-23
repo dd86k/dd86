@@ -14,19 +14,24 @@ else version (X86_64)
 pragma(msg, "Interpreter version : ", INTERPRETER_VER);
 
 enum {
+    ///
     INTERPRETER_VER = "0.0.0"
 }
 
+/// Initial amount of memory.
 enum MAX_MEM = 0x10_0000; // 1 MB
 
+/// OEM IDs
 enum OEM_ID { // Used for INT 21h AH=30 so far.
     IBM, Compaq, MSPackagedProduct, ATnT, ZDS
 }
 
 //NOTE: Opened files should go in JFT
 
+/// Mimics an Intel8086 system
 class Intel8086
 {
+    ///
     this()
     {
         Con = poshub();
@@ -35,9 +40,14 @@ class Intel8086
         Reset();
     }
 
+    ///
     poshub Con;
+    ///
     bool Sleep = true;
+    ///
+    bool Running = true;
 
+    ///
     ubyte[] memoryBank;
 
     /// Generic register
@@ -49,18 +59,16 @@ class Intel8086
     /// Program Counter
     ushort IP;
 
-    bool // FLAG
-        OF, // 11, Overflow Flag
-        DF, // 10, Direction Flag
-        IF, //  9, Interrupt Enable Flag
-        TF, //  8, Trap Flag
-        SF, //  7, Sign Flag
-        ZF, //  6, Zero Flag
-        AF, //  4, Auxiliary Carry Flag (aka Adjust Flag)
-        PF, //  2, Parity Flag
-        CF; //  0, Carry Flag
-
-    bool Running = true;
+    /// FLAG
+    bool OF, // 11, Overflow Flag
+         DF, // 10, Direction Flag
+         IF, //  9, Interrupt Enable Flag
+         TF, //  8, Trap Flag
+         SF, //  7, Sign Flag
+         ZF, //  6, Zero Flag
+         AF, //  4, Auxiliary Carry Flag (aka Adjust Flag)
+         PF, //  2, Parity Flag
+         CF; //  0, Carry Flag
 
     /// Initiate the machine and run.
     void Init()
@@ -73,6 +81,7 @@ class Intel8086
         }
     }
 
+    ///
     void Reset()
     {
         OF = DF = IF = TF = SF =
@@ -133,25 +142,28 @@ class Intel8086
     void Push(ushort value)
     {
         SP -= 2;
-        uint addr = GetAddress(SS, SP);
+        const uint addr = GetAddress(SS, SP);
         SetWord(addr, value);
     }
 
     ushort Pop()
     {
-        uint addr = GetAddress(SS, SP);
+        const uint addr = GetAddress(SS, SP);
         SP += 2;
         return FetchWord(addr);
     }
 
+    /// Get physical address out of two segment/register values.
     uint GetAddress(ushort segment, ushort offset)
     {
         return (segment << 4) + offset;
     }
+    /// Get next instruction location
     uint GetIPAddress()
     {
         return GetAddress(CS, IP);
     }
+    ///
     uint GetDataAddress(ushort offset)
     {
         return GetAddress(DI, offset);
@@ -175,7 +187,7 @@ class Intel8086
         version (PLATFORM_X86)
             return *(cast(ushort*)&memoryBank[GetIPAddress + 1]);
         else {
-            uint addr = GetIPAddress + 1;
+            const uint addr = GetIPAddress + 1;
             return cast(ushort)(memoryBank[addr] | memoryBank[addr + 1] << 8);
         }
     }
@@ -191,7 +203,7 @@ class Intel8086
         version (PLATFORM_X86)
             return *(cast(short*)&memoryBank[GetIPAddress + 1]);
         else {
-            uint addr = GetIPAddress + 1;
+            const uint addr = GetIPAddress + 1;
             return cast(short)(memoryBank[addr] | memoryBank[addr + 1] << 8);
         }
     }
@@ -218,7 +230,7 @@ class Intel8086
             CF ? 1    : 0);
     }
 
-    void SetFlag(byte flag)
+    void SetFlag(ubyte flag)
     {
         SF = (flag & 0x80) != 0;
         ZF = (flag & 0x40) != 0;
@@ -441,8 +453,8 @@ class Intel8086
 
             break;
         case 0x27: { // DAA
-            byte oldAL = AL;
-            bool oldCF = CF;
+            const byte oldAL = AL;
+            const bool oldCF = CF;
             CF = false;
 
             if (((oldAL & 0xF) > 9) || AF)
@@ -486,8 +498,8 @@ class Intel8086
 
             break;
         case 0x2F: { // DAS
-            ubyte oldAL = AL;
-            bool oldCF = CF;
+            const ubyte oldAL = AL;
+            const bool oldCF = CF;
             CF = false;
 
             if (((oldAL & 0xF) > 9) || AF)
@@ -553,8 +565,8 @@ class Intel8086
 
             break;
         case 0x3C: // CMP AL, IMM8
-            ubyte b = FetchByte;
-            int r = AL - b;
+            const ubyte b = FetchByte;
+            const int r = AL - b;
             SF = (r & 0x80) != 0;
             OF = r < 0;
             ZF = r == 0;
@@ -564,8 +576,8 @@ class Intel8086
             IP += 2;
             break;
         case 0x3D: // CMP AX, IMM16
-            ushort w = FetchWord;
-            int r = AL - w;
+            const ushort w = FetchWord;
+            const int r = AL - w;
             SF = (r & 0x8000) != 0;
             OF = r < 0;
             ZF = r == 0;
@@ -770,9 +782,9 @@ class Intel8086
             IP += SF == OF && ZF == false ? FetchSByte : 2;
             break;
         case 0x80: { // GRP1 R/M8, IMM8
-            ubyte rm = FetchByte; // Get ModR/M byte
-            ubyte im = FetchByte(GetIPAddress + 2); // 8-bit Immediate
-            final switch (rm & 0b00111000) { // REG
+            const ubyte rm = FetchByte; // Get ModR/M byte
+            const ubyte im = FetchByte(GetIPAddress + 2); // 8-bit Immediate
+            final switch (rm & 0b111_000) { // REG
             case 0b000_000: // 000 - ADD
 
                 break;
@@ -802,9 +814,9 @@ class Intel8086
             break;
         }
         case 0x81: { // GRP1 R/M16, IMM16
-            ubyte rm = FetchByte;  // Get ModR/M byte
-            ushort im = FetchWord(GetIPAddress + 2); // 16-bit Immediate
-            final switch (rm & 0b00111000) { // ModR/M's REG
+            const ubyte rm = FetchByte;  // Get ModR/M byte
+            const ushort im = FetchWord(GetIPAddress + 2); // 16-bit Immediate
+            final switch (rm & 0b111_000) { // ModR/M's REG
             case 0b000_000: // 000 - ADD
 
                 break;
@@ -830,12 +842,13 @@ class Intel8086
 
                 break;
             }
+            IP += 4;
             break;
         }
         case 0x82: // GRP2 R/M8, IMM8
-            ubyte rm = FetchByte; // Get ModR/M byte
-            ubyte im = FetchByte(GetIPAddress + 2);
-            switch (rm & 0b00111000) { // ModRM REG
+            const ubyte rm = FetchByte; // Get ModR/M byte
+            const ubyte im = FetchByte(GetIPAddress + 2);
+            switch (rm & 0b111_000) { // ModRM REG
             case 0b000_000: // 000 - ADD
 
                 break;
@@ -851,13 +864,16 @@ class Intel8086
             case 0b111_000: // 111 - CMP
 
                 break;
-            default: break;
+            default:
+            
+                break;
             }
+            IP += 3;
             break;
-        case 0x83: // GRP2 R/M16, IMM8
-            ubyte rm = FetchByte; // Get ModR/M byte
-            ushort im = FetchWord(GetIPAddress + 2);
-            switch (rm & 0b00111000) { // ModRM REG
+        case 0x83: // GRP2 R/M16, IMM16
+            const ubyte rm = FetchByte; // Get ModR/M byte
+            const ushort im = FetchWord(GetIPAddress + 2);
+            switch (rm & 0b111_000) { // ModRM REG
             case 0b000_000: // 000 - ADD
 
                 break;
@@ -873,8 +889,11 @@ class Intel8086
             case 0b111_000: // 111 - CMP
 
                 break;
-            default: break;
+            default:
+                
+                break;
             }
+            IP += 4;
             break;
         case 0x84: // TEST R/M8, REG8
 
@@ -896,17 +915,17 @@ class Intel8086
 
             break;
         case 0x8A: { // MOV REG8, R/M8
-            uint addr = GetIPAddress + 2;
-            ubyte rm = FetchByte;
-            final switch (rm & 0b00000111) // R/M
+            const uint addr = GetIPAddress + 2;
+            const ubyte rm = FetchByte;
+            final switch (rm & 0b111) // R/M
             {
-            case 0b00000000: // BX + SI
+            case 0: // BX + SI
                 final switch (rm & 0b00111000) // REG
                 {
-                case 0b00000000: // AL
+                case 0: // AL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000: // 00
+                    case 0: // 00
                         AL = memoryBank[BX + SI];
                         break;
                     case 0b01000000: // 01
@@ -923,7 +942,7 @@ class Intel8086
                 case 0b00001000: // CL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CL = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
@@ -940,7 +959,7 @@ class Intel8086
                 case 0b00010000: // DL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DL = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
@@ -957,7 +976,7 @@ class Intel8086
                 case 0b00011000: // BL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BL = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
@@ -974,7 +993,7 @@ class Intel8086
                 case 0b00100000: // AH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AH = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
@@ -991,7 +1010,7 @@ class Intel8086
                 case 0b00101000: // CH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CH = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
@@ -1008,7 +1027,7 @@ class Intel8086
                 case 0b00110000: // DH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DH = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
@@ -1025,7 +1044,7 @@ class Intel8086
                 case 0b00111000: // BH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BH = memoryBank[BX + SI];
                         break;
                     case 0b01000000:
@@ -1044,10 +1063,10 @@ class Intel8086
             case 0b00001000: // BX + DI
                 final switch (rm & 0b00111000) // REG
                 {
-                case 0b00000000: // AL
+                case 0: // AL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AL = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
@@ -1064,7 +1083,7 @@ class Intel8086
                 case 0b00001000: // CL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CL = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
@@ -1081,7 +1100,7 @@ class Intel8086
                 case 0b00010000: // DL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DL = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
@@ -1098,7 +1117,7 @@ class Intel8086
                 case 0b00011000: // BL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BL = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
@@ -1115,7 +1134,7 @@ class Intel8086
                 case 0b00100000: // AH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AH = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
@@ -1132,7 +1151,7 @@ class Intel8086
                 case 0b00101000: // CH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CH = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
@@ -1149,7 +1168,7 @@ class Intel8086
                 case 0b00110000: // DH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DH = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
@@ -1166,7 +1185,7 @@ class Intel8086
                 case 0b00111000: // BH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BH = memoryBank[BX + DI];
                         break;
                     case 0b01000000:
@@ -1185,10 +1204,10 @@ class Intel8086
             case 0b00000010: // BP + SI
                 final switch (rm & 0b00111000) // REG
                 {
-                case 0b00000000: // AL
+                case 0: // AL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AL = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
@@ -1205,7 +1224,7 @@ class Intel8086
                 case 0b00001000: // CL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CL = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
@@ -1222,7 +1241,7 @@ class Intel8086
                 case 0b00010000: // DL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DL = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
@@ -1239,7 +1258,7 @@ class Intel8086
                 case 0b00011000: // BL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BL = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
@@ -1256,7 +1275,7 @@ class Intel8086
                 case 0b00100000: // AH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AH = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
@@ -1273,7 +1292,7 @@ class Intel8086
                 case 0b00101000: // CH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CH = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
@@ -1290,7 +1309,7 @@ class Intel8086
                 case 0b00110000: // DH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DH = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
@@ -1307,7 +1326,7 @@ class Intel8086
                 case 0b00111000: // BH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BH = memoryBank[BP + SI];
                         break;
                     case 0b01000000:
@@ -1326,10 +1345,10 @@ class Intel8086
             case 0b00000011: // BP + DI
                 final switch (rm & 0b00111000) // REG
                 {
-                case 0b00000000: // AL
+                case 0: // AL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AL = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
@@ -1346,7 +1365,7 @@ class Intel8086
                 case 0b00001000: // CL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CL = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
@@ -1363,7 +1382,7 @@ class Intel8086
                 case 0b00010000: // DL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DL = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
@@ -1380,7 +1399,7 @@ class Intel8086
                 case 0b00011000: // BL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BL = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
@@ -1397,7 +1416,7 @@ class Intel8086
                 case 0b00100000: // AH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AH = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
@@ -1414,7 +1433,7 @@ class Intel8086
                 case 0b00101000: // CH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CH = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
@@ -1431,7 +1450,7 @@ class Intel8086
                 case 0b00110000: // DH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DH = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
@@ -1448,7 +1467,7 @@ class Intel8086
                 case 0b00111000: // BH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BH = memoryBank[BP + DI];
                         break;
                     case 0b01000000:
@@ -1467,10 +1486,10 @@ class Intel8086
             case 0b00000100: // SI
                 final switch (rm & 0b00111000) // REG
                 {
-                case 0b00000000: // AL
+                case 0: // AL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AL = memoryBank[SI];
                         break;
                     case 0b01000000:
@@ -1487,7 +1506,7 @@ class Intel8086
                 case 0b00001000: // CL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CL = memoryBank[SI];
                         break;
                     case 0b01000000:
@@ -1504,7 +1523,7 @@ class Intel8086
                 case 0b00010000: // DL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DL = memoryBank[SI];
                         break;
                     case 0b01000000:
@@ -1521,7 +1540,7 @@ class Intel8086
                 case 0b00011000: // BL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BL = memoryBank[SI];
                         break;
                     case 0b01000000:
@@ -1538,7 +1557,7 @@ class Intel8086
                 case 0b00100000: // AH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AH = memoryBank[SI];
                         break;
                     case 0b01000000:
@@ -1555,7 +1574,7 @@ class Intel8086
                 case 0b00101000: // CH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CH = memoryBank[SI];
                         break;
                     case 0b01000000:
@@ -1572,7 +1591,7 @@ class Intel8086
                 case 0b00110000: // DH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DH = memoryBank[SI];
                         break;
                     case 0b01000000:
@@ -1589,7 +1608,7 @@ class Intel8086
                 case 0b00111000: // BH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BH = memoryBank[SI];
                         break;
                     case 0b01000000:
@@ -1608,10 +1627,10 @@ class Intel8086
             case 0b00000101: // DI
                 final switch (rm & 0b00111000) // REG
                 {
-                case 0b00000000: // AL
+                case 0: // AL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AL = memoryBank[DI];
                         break;
                     case 0b01000000:
@@ -1628,7 +1647,7 @@ class Intel8086
                 case 0b00001000: // CL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CL = memoryBank[DI];
                         break;
                     case 0b01000000:
@@ -1645,7 +1664,7 @@ class Intel8086
                 case 0b00010000: // DL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DL = memoryBank[DI];
                         break;
                     case 0b01000000:
@@ -1662,7 +1681,7 @@ class Intel8086
                 case 0b00011000: // BL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BL = memoryBank[DI];
                         break;
                     case 0b01000000:
@@ -1679,7 +1698,7 @@ class Intel8086
                 case 0b00100000: // AH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AH = memoryBank[DI];
                         break;
                     case 0b01000000:
@@ -1696,7 +1715,7 @@ class Intel8086
                 case 0b00101000: // CH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CH = memoryBank[DI];
                         break;
                     case 0b01000000:
@@ -1713,7 +1732,7 @@ class Intel8086
                 case 0b00110000: // DH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DH = memoryBank[DI];
                         break;
                     case 0b01000000:
@@ -1730,7 +1749,7 @@ class Intel8086
                 case 0b00111000: // BH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BH = memoryBank[DI];
                         break;
                     case 0b01000000:
@@ -1749,10 +1768,10 @@ class Intel8086
             case 0b00000110: // BP*
                 final switch (rm & 0b00111000) // REG
                 {
-                case 0b00000000: // AL
+                case 0: // AL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AL = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
@@ -1769,7 +1788,7 @@ class Intel8086
                 case 0b00001000: // CL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CL = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
@@ -1786,7 +1805,7 @@ class Intel8086
                 case 0b00010000: // DL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DL = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
@@ -1803,7 +1822,7 @@ class Intel8086
                 case 0b00011000: // BL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BL = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
@@ -1820,7 +1839,7 @@ class Intel8086
                 case 0b00100000: // AH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AH = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
@@ -1837,7 +1856,7 @@ class Intel8086
                 case 0b00101000: // CH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CH = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
@@ -1854,7 +1873,7 @@ class Intel8086
                 case 0b00110000: // DH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DH = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
@@ -1871,7 +1890,7 @@ class Intel8086
                 case 0b00111000: // BH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BH = memoryBank[BP]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
@@ -1893,7 +1912,7 @@ class Intel8086
                 case 0b00000000: // AL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AL = memoryBank[BX];
                         break;
                     case 0b01000000:
@@ -1910,7 +1929,7 @@ class Intel8086
                 case 0b00001000: // CL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CL = memoryBank[BX];
                         break;
                     case 0b01000000:
@@ -1927,7 +1946,7 @@ class Intel8086
                 case 0b00010000: // DL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DL = memoryBank[BX];
                         break;
                     case 0b01000000:
@@ -1944,7 +1963,7 @@ class Intel8086
                 case 0b00011000: // BL
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BL = memoryBank[BX];
                         break;
                     case 0b01000000:
@@ -1961,7 +1980,7 @@ class Intel8086
                 case 0b00100000: // AH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         AH = memoryBank[BX];
                         break;
                     case 0b01000000:
@@ -1978,7 +1997,7 @@ class Intel8086
                 case 0b00101000: // CH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         CH = memoryBank[BX]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
@@ -1995,7 +2014,7 @@ class Intel8086
                 case 0b00110000: // DH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         DH = memoryBank[BX];
                         break;
                     case 0b01000000:
@@ -2012,7 +2031,7 @@ class Intel8086
                 case 0b00111000: // BH
                     final switch (rm & 0b11000000) // MOD
                     {
-                    case 0b00000000:
+                    case 0:
                         BH = memoryBank[BX]; // DIRECT ADDRESS
                         break;
                     case 0b01000000:
@@ -2046,8 +2065,8 @@ class Intel8086
 
             break;
         case 0x8F: { // POP R/M16
-            byte rm = FetchByte;
-            ushort add = FetchWord(IP + 2);
+            const byte rm = FetchByte;
+            const ushort add = FetchWord(IP + 2);
             if (rm & 0b00111000) // MOD 000 R/M only
             {
                 // Raise illegal instruction
@@ -2540,16 +2559,13 @@ class Intel8086
             }*/
             break;
         case 0xD4: { // AAM
-            ubyte tempAL = AL;
-            AH = cast(ubyte)(tempAL / 0xA);
-            AL = cast(ubyte)(tempAL % 0xA);
+            AH = cast(ubyte)(AL / 0xA);
+            AL = cast(ubyte)(AL % 0xA);
             ++IP;
         }
             break;
         case 0xD5: { // AAD
-            ubyte tempAL = AL;
-            ubyte tempAH = AH;
-            AL = ((tempAL + (tempAH * 0xA)) & 0xFF);
+            AL = (AL + (AH * 0xA)) & 0xFF;
             AH = 0;
             ++IP;
         }
@@ -3431,6 +3447,17 @@ class Intel8086
 
                 break;*/
             /*
+             * 4Bh - Load/execute program
+             * Input:
+             *   AL (see LOADTYPE)
+             *   DS:DX (ASCIZ path)
+             *   ES:BX (parameter block)
+             *   CX (Mode, only for AL=04h)
+             * Return:
+             *   CF set on error, or cleared
+             *   AX (error code (01h,02h,05h,08h,0Ah,0Bh))
+             *   BX and DX destroyed
+            /*
             * 4Ch - Terminate with return code.
             * Input: AL (Return code)
             * Return: None. (Never returns)
@@ -3527,18 +3554,21 @@ class Intel8086
     }
 }
 
+/// Sleep for n hecto-nanoseconds
 pragma(inline, true) void HSLEEP(int n) {
     import core.thread : Thread;
-    import core.time : dur;
-    Thread.sleep(dur!"hnsecs"(n));
+    import core.time : hnsecs;
+    Thread.sleep(hnsecs(n));
 }
 
+/// Sleep for n nanoseconds
 pragma(inline, true) void NSLEEP(int n) {
     import core.thread : Thread;
-    import core.time : dur;
-    Thread.sleep(dur!"nsecs"(n));
+    import core.time : nsecs;
+    Thread.sleep(nsecs(n));
 }
 
+///
 void Test()
 {
     Intel8086 machine = new Intel8086();
