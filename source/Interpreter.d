@@ -4,7 +4,7 @@
 
 module Interpreter;
 
-import main, std.stdio, std.path, poshublib;
+import dd_dos, std.stdio, std.path, poshublib;
 
 version (X86)
     version = PLATFORM_X86;

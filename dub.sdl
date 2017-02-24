@@ -1,6 +1,21 @@
 name "dd-dos"
-description "DOS Comptability layer."
+description "Small DOS Virtual Machine"
 authors "dd86k"
 copyright "Copyright © 2017, dd86k"
 license "MIT"
 homepage "https://github.com/dd86k/dd-dos"
+
+configurations {
+  application {
+    targetType "executable"
+  }
+  unittest {
+    targetType "executable"
+    
+    targetPath "tests"
+    buildOptions "unittests"
+    excludedSourceFiles "source/main.d"
+    sourcePaths "tests/"
+    importPaths "tests/"
+  }
+}

@@ -8,40 +8,26 @@ module main;
 
 import std.stdio;
 
-import Interpreter, Loader;
-import poshublib : POSHUB_VER;
+import Interpreter, Loader, dd_dos;
 
-pragma(msg, "Compiling DD-DOS Version ", APP_VERSION);
+pragma(msg, "Compiling DD-DOS v", APP_VERSION);
 
 /// DD-DOS version.
 enum APP_VERSION = "0.0.0";
-enum {
-    /// Minor reported DOS version
-    DOS_MINOR_VERSION = 0,
-    /// Major reported DOS version
-    DOS_MAJOR_VERSION = 0
-}
+
 // CLI Error codes
 enum {
     /// Generic CLI syntax error
     E_CLI = 1,
 }
 
-/// Verbose flags
-static bool Verbose;
-
-/// Current machine
-static Intel8086 machine;
-
 private void DisplayVersion()
 {
 	writeln("DD-DOS - v", APP_VERSION);
-    writeln("Interpreter - v", INTERPRETER_VER);
-    writeln("Loader - v", LOADER_VER);
-    writeln("Poshub - v", POSHUB_VER);
-    writeln("Copyright (c) 2017 dd86k");
-    writeln("License: MIT");
+    writeln("Copyright (c) 2017 dd86k, using MIT license");
 	writeln("Project page: <https://github.com/dd86k/dd-dos>");
+    writefln("Compiled %s (%s) using %s %s",
+        __FILE__, __TIMESTAMP__, __VENDOR__, __VERSION__);
 }
 
 private void DisplayHelp(string name)
