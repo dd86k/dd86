@@ -266,6 +266,11 @@ class Intel8086
         foreach(b; ops) memoryBank[i++] = b;
     }
 
+    void Insert(ubyte op, size_t offset = 0)
+    {
+        memoryBank[GetIPAddress] = op;
+    }
+
     /// Directly overwrite data at CS:IP.
     void Insert(string data, size_t offset = 0)
     {

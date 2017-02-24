@@ -4,7 +4,13 @@ import Interpreter;
 
 unittest
 {
-    Intel8086 m = new Intel8086();
+    Intel8086 machine = new Intel8086();
 
-    assert(false);
+    with (machine)
+    {
+        // Registers
+        Insert(0xDD, 1);
+        Execute(0xA0);
+        assert(AL == 0xDD);
+    }
 }

@@ -5,12 +5,15 @@ copyright "Copyright © 2017, dd86k"
 license "MIT"
 homepage "https://github.com/dd86k/dd-dos"
 
-configuration "tests" {
-  name "unittest"
+buildType "debug" {
+  targetType "executable"
+}
+
+buildType "unittest" {
   targetType "executable"
   
   targetPath "tests"
-  buildOptions "unittests"
+  buildType "unittest"
   excludedSourceFiles "source/main.d"
   sourcePaths "tests/"
   importPaths "tests/"
