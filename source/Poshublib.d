@@ -6,13 +6,6 @@ module poshublib;
 
 import std.stdio;
 
-enum {
-    /// Poshub version
-    POSHUB_VER = "0.0.0"
-}
-
-pragma(msg, "Poshub version : ", POSHUB_VER);
-
 /// Poshub struct
 struct poshub
 {

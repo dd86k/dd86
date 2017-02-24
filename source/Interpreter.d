@@ -11,13 +11,6 @@ version (X86)
 else version (X86_64)
     version = PLATFORM_X86;
 
-pragma(msg, "Interpreter version : ", INTERPRETER_VER);
-
-enum {
-    ///
-    INTERPRETER_VER = "0.0.0"
-}
-
 /// Initial amount of memory.
 enum MAX_MEM = 0x10_0000; // 1 MB
 

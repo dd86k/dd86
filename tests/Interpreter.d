@@ -6,5 +6,5 @@ unittest
 {
     Intel8086 m = new Intel8086();
 
-    assert(1);
+    assert(false);
 }

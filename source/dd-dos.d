@@ -2,11 +2,11 @@ module dd_dos;
 
 import Interpreter;
 
-/// Verbose flags
-static bool Verbose;
+pragma(msg, "Compiling DD-DOS v", APP_VERSION, "...");
+pragma(msg, "Reporting DOS v", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
-/// Current machine
-static Intel8086 machine;
+/// DD-DOS version.
+enum APP_VERSION = "0.0.0";
 
 enum {
     /// Minor reported DOS version
@@ -14,3 +14,9 @@ enum {
     /// Major reported DOS version
     DOS_MAJOR_VERSION = 0
 }
+
+/// Verbose flags
+static bool Verbose;
+
+/// Current machine
+static Intel8086 machine;

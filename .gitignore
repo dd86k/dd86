@@ -2,10 +2,14 @@
 Thumbs.db
 ehthumbs.db
 
+# DUB
 .dub
-t
-
 dd-dos.exe
+dd-dos-test-library.exe
+dd-dos
+dd-dos-test-library
+# Personal test folder with old executables
+t
 
 # VSCode
 .vscode

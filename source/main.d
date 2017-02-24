@@ -10,11 +10,6 @@ import std.stdio;
 
 import Interpreter, Loader, dd_dos;
 
-pragma(msg, "Compiling DD-DOS v", APP_VERSION);
-
-/// DD-DOS version.
-enum APP_VERSION = "0.0.0";
-
 // CLI Error codes
 enum {
     /// Generic CLI syntax error
