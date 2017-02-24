@@ -21,14 +21,14 @@ private void DisplayVersion()
 	writeln("DD-DOS - v", APP_VERSION);
     writeln("Copyright (c) 2017 dd86k, using MIT license");
 	writeln("Project page: <https://github.com/dd86k/dd-dos>");
-    writefln("Compiled %s (%s) using %s %s",
-        __FILE__, __TIMESTAMP__, __VENDOR__, __VERSION__);
+    writeln("Compiled ", __FILE__, " (", __TIMESTAMP__, ") using ",
+        __VENDOR__," ", __VERSION__);
 }
 
 private void DisplayHelp(string name)
 {
-    writefln("%s  [-p <Program> [-a <arguments]] [-M] [-V]", name);
-    writefln("%s  {-h|--help|/?|-v|--version}", name);
+    writeln(name, "  [-p <Program> [-a <Arguments>]] [-M] [-V]");
+    writeln(name, "  {-h|--help|/?|-v|--version}");
 }
 
 private void DisplayFullHelp(string name)
@@ -37,7 +37,7 @@ private void DisplayFullHelp(string name)
 	writefln("  %s [<Options>]", name);
     writeln("Options:");
     writeln("  -p <Program>     Load a program at start.");
-    //writeln("  -a <Arguments>   Arguments to pass to <Program>.");
+    writeln("  -a <Arguments>   Arguments to pass to <Program>.");
     writeln("  -M               Maximum performance (!)");
     writeln("  -V               Verbose.");
     writeln();
@@ -45,6 +45,7 @@ private void DisplayFullHelp(string name)
 	writeln("  -v, --version    Display version and quit.");
 }
 
+/// Main entry point.
 private int main(string[] args)
 {
     const size_t argl = args.length;
@@ -74,7 +75,8 @@ private int main(string[] args)
                         return E_CLI;
                     }
                 } else {
-
+                    writeln("-a : Missing argument.");
+                    return E_CLI;
                 }
                 break;
 

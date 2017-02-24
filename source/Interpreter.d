@@ -270,6 +270,12 @@ class Intel8086
     {
         memoryBank[GetIPAddress] = op;
     }
+    void Insert(ushort op, size_t offset = 0)
+    {
+        uint addr = GetIPAddress;
+        memoryBank[addr++] = op & 0xFF;
+        memoryBank[addr] = op >> 8;
+    }
 
     /// Directly overwrite data at CS:IP.
     void Insert(string data, size_t offset = 0)

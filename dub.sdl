@@ -13,7 +13,6 @@ buildType "unittest" {
   targetType "executable"
   
   targetPath "tests"
-  buildType "unittest"
   excludedSourceFiles "source/main.d"
   sourcePaths "tests/"
   importPaths "tests/"
