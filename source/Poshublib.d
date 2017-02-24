@@ -157,6 +157,34 @@ struct poshub
         }
     }
 
+    @property ushort CursorLeft()
+    {
+        version (Windows)
+        {
+
+
+            return 0;
+        }
+        else version (Posix)
+        {
+
+        }
+    }
+
+    @property ushort CursorTop()
+    {
+        version (Windows)
+        {
+
+
+            return 0;
+        }
+        else version (Posix)
+        {
+
+        }
+    }
+
     /*
      * Titles
      */
@@ -267,7 +295,8 @@ struct poshub
                      ir.KeyEvent.dwControlKeyState & LEFT_ALT_PRESSED;
             k.shift = (ir.KeyEvent.dwControlKeyState & SHIFT_PRESSED) != 0;
             k.keyChar = ir.KeyEvent.AsciiChar;
-            k.key = ir.KeyEvent.wVirtualKeyCode;
+            k.keyCode = ir.KeyEvent.wVirtualKeyCode;
+            k.scanCode = ir.KeyEvent.wVirtualScanCode;
             k.isKeyDown = ir.KeyEvent.bKeyDown != 0;
 
             if (k.isKeyDown && echo)
@@ -292,7 +321,7 @@ struct KeyInfo
     ///
     char keyChar;
     ///
-    ushort key;
+    ushort keyCode, scanCode;
     ///
     bool isKeyDown;
     ///

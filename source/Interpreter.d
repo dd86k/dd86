@@ -2802,6 +2802,115 @@ class Intel8086
         // http://spike.scu.edu.au/~barry/interrupts.html
         switch (code)
         {
+        case 0x10: // VIDEO
+            switch (AH)
+            {
+                /*
+                 * VIDEO - Set cursor position.
+                 * Input:
+                 *   BH (Page number)
+                 *   DH (Row, 0 is top)
+                 *   DL (Column, 0 is top)
+                 */
+                case 0x02:
+                    Con.SetPos(DH, DL);
+                    break;
+                /*
+                 * VIDEO - Get cursor position and size.
+                 * Input:
+                 *   BH (Page number)
+                 * Return:
+                 *   CH (Start scan line)
+                 *   CL (End scan line)
+                 *   DH (Row)
+                 *   DL (Column)
+                 */
+                case 0x03:
+                    AX = 0;
+                    DH = cast(ubyte)Con.CursorTop;
+                    DL = cast(ubyte)Con.CursorLeft;
+                    break;
+                /*
+                 * VIDEO - Read light pen position
+                 * Return:
+                 *   AH (Trigger flag)
+                 *   DH (Row)
+                 *   DL (Column)
+                 *   CH (Pixel row, modes 04h-06h)
+                 *   CX (Pixel row, modes >200 rows)
+                 *   BX (Pixel column)
+                 */
+                case 0x04:
+
+                    break;
+                default: break;
+            }
+            break;
+        case 0x11: // BIOS - Get equipement list
+            // Number of 16K banks of RAM on motherboard (PC only).
+            ushort ax = 0b10000; // VGA
+            /+if (FloppyDiskInstalled) {
+                ax |= 1;
+                // Bit 6-7 = Number of floppy drives
+            }+/
+            //if (PenInstalled) ax |= 0b100;
+            AX = ax;
+            break;
+        case 0x12: // BIOS - Get memory size
+            // Temporary
+            uint kbsize = memoryBank.length / 1024;
+            AX = cast(ushort)kbsize;
+            break;
+        case 0x13: // DISK operations
+
+            break;
+        case 0x14: // SERIAL
+
+            break;
+        case 0x16: // Keyboard
+            switch (AH)
+            {
+                case 0, 1: { // Get/Check keystroke
+                    KeyInfo k = Con.ReadKey;
+                    AH = cast(ubyte)k.scanCode;
+                    AL = cast(ubyte)k.keyCode;
+                    if (AH == 1) ZF = 0; // Keystroke available
+                }
+                    break;
+
+                case 2: // SHIFT
+                    // Bit | 7 | 6 | 5 | 4 | 3 | 2  | 1 | 0
+                    // Des | I | C | N | S | A | Ct | L | R
+                    // Insert, Capslock, Numlock, Scrolllock, Alt, Ctrl,
+                    //   Left, Right
+                    // AL = (flag)
+                    break;
+
+                default: break;
+            }
+            break;
+        case 0x17: // PRINTER
+
+            break;
+        case 0x1A: // TIME
+            switch (AH)
+            {
+                case 0: // Get system time
+                // CX:DX (Number of clock ticks since midnight)
+                // AL (Midnight flag)
+
+                    break;
+
+                case 1: // Set system time
+                // CX:DX (Number of clock ticks since midnight)
+                    break;
+
+                default: break;
+            }
+            break;
+        case 0x1B: // CTRL-BREAK handler
+
+            break;
         case 0x21: // MS-DOS Services
             switch (AH)
             {
@@ -3543,6 +3652,12 @@ class Intel8086
                 break;
             default: break;
             }
+            break;
+        case 0x27: // TERMINATE AND STAY RESIDANT
+
+            break;
+        case 0x29: // FAST CONSOLE OUTPUT
+            write(cast(char)AL);
             break;
         default: break;
         }
