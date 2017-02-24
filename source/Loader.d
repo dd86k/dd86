@@ -54,7 +54,7 @@ void LoadFile(string path)
         if (Verbose)
             writeln("File exists");
 
-        if (fsize <= 0xFFFFL)
+        if (fsize <= 0xFF_FFFFL)
             switch (toUpper(extension(f.name)))
             {
                 case ".COM": {
@@ -85,14 +85,14 @@ void LoadFile(string path)
                             char[2] sig;
                             f.seek(e_lfanew);
                             f.rawRead(sig);
-                            switch (sig)
+                            /*switch (sig)
                             {
                             //case "NE":
                             default:
                                 if (Verbose)
                                     writeln("Unsupported format : ", sig);
                                 return;
-                            }
+                            }*/
                         }
 
                         if (Verbose)
@@ -118,17 +118,21 @@ void LoadFile(string path)
                          if (e_cblp) extrapos -= (512 - e_cblp);
 
                          f.seek(e_lfarlc);
+                         // Relocation table
                          mz_rlc[] rlct = new mz_rlc[e_crlc];
                          f.rawRead(rlct);
 
                          with (machine) {
-                            CS = e_cs;
+                            //CS = e_cs;
+                            CS = 0;
                             IP = e_ip;
                             SS = e_ss;
                             SP = e_sp;
-                            uint l = GetIPAddress;
+                            //uint l = GetIPAddress;
 
-                            
+                            ubyte[] t = new ubyte[cast(uint)fsize - datapos];
+                            f.rawRead(t);
+                            Insert(t);
                          }
 
                          if (Verbose) writeln("loaded");
