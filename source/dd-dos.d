@@ -115,3 +115,8 @@ void EnterVShell()
         }
     }
 }
+
+void GeneratePSP()
+{
+
+}

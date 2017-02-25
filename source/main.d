@@ -22,7 +22,7 @@ private void DisplayVersion()
     writeln("Copyright (c) 2017 dd86k, using MIT license");
 	writeln("Project page: <https://github.com/dd86k/dd-dos>");
     writeln("Compiled ", __FILE__, " (", __TIMESTAMP__, ") using ",
-        __VENDOR__," ", __VERSION__);
+        __VENDOR__," v", __VERSION__);
 }
 
 private void DisplayHelp(string name = APP_NAME)
