@@ -6,7 +6,10 @@ pragma(msg, "Compiling DD-DOS v", APP_VERSION, "...");
 pragma(msg, "Reporting DOS v", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
 /// DD-DOS version.
-enum APP_VERSION = "0.0.0";
+enum {
+    APP_VERSION = "0.0.0",
+    APP_NAME = "dd-dos"
+}
 
 enum {
     /// Minor reported DOS version
@@ -41,7 +44,22 @@ void EnterVShell()
         if (s.length > 0)
         switch (toLower(s[0]))
         {
-        case "help", "?", "??":
+        case "help":
+            writeln("CLS            Clear screen.");
+            writeln("MEM            Show memory information.");
+            writeln("VER            Show DOS version.");
+            break;
+        case "ver":
+            writeln("DD-DOS Version ", APP_VERSION);
+            writefln("MS-DOS Version %d.%d", DOS_MAJOR_VERSION, DOS_MINOR_VERSION);
+            break;
+        case "mem":
+            writeln("Not implemented.");
+            break;
+        case "cls":
+            machine.Con.Clear();
+            break;
+        case "??":
             writeln("?run     Run the VM");
             writeln("?load    Load a file");
             writeln("?r       Print register information");
@@ -53,14 +71,6 @@ void EnterVShell()
         /*case "date":
             writeln("Current date is   ");
             break;*/
-        case "ver":
-            writeln("DD-DOS Version ", APP_VERSION);
-            writefln("MS-DOS Version %d.%d", DOS_MAJOR_VERSION, DOS_MINOR_VERSION);
-            break;
-        //case "mem":break;
-        case "cls":
-            machine.Con.Clear();
-            break;
         case "?load":
             if (s.length > 1) {
                 if (Verbose)

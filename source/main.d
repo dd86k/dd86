@@ -18,20 +18,20 @@ enum {
 
 private void DisplayVersion()
 {
-	writeln("DD-DOS - v", APP_VERSION);
+	writeln(APP_NAME, " - v", APP_VERSION);
     writeln("Copyright (c) 2017 dd86k, using MIT license");
 	writeln("Project page: <https://github.com/dd86k/dd-dos>");
     writeln("Compiled ", __FILE__, " (", __TIMESTAMP__, ") using ",
         __VENDOR__," ", __VERSION__);
 }
 
-private void DisplayHelp(string name)
+private void DisplayHelp(string name = APP_NAME)
 {
     writeln(name, "  [-p <Program> [-a <Arguments>]] [-M] [-V]");
     writeln(name, "  {-h|--help|/?|-v|--version}");
 }
 
-private void DisplayFullHelp(string name)
+private void DisplayFullHelp(string name = APP_NAME)
 {
 	writeln("Usage:");
 	writefln("  %s [<Options>]", name);
@@ -39,7 +39,7 @@ private void DisplayFullHelp(string name)
     writeln("  -p <Program>     Load a program at start.");
     writeln("  -a <Arguments>   Arguments to pass to <Program>.");
     writeln("  -M               Maximum performance (!)");
-    writeln("  -V               Verbose.");
+    writeln("  -V               Verbose mode.");
     writeln();
 	writeln("  -h, --help       Display help and quit.");
 	writeln("  -v, --version    Display version and quit.");
