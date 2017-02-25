@@ -18,6 +18,9 @@ enum {
 /// Verbose flags
 static bool Verbose;
 
+/// 
+static ubyte LastErrorCode;
+
 /// Current machine
 static Intel8086 machine;
 
@@ -57,9 +60,6 @@ void EnterVShell()
         //case "mem":break;
         case "cls":
             machine.Con.Clear();
-            break;
-        case "?t0":
-            Test();
             break;
         case "?load":
             if (s.length > 1) {

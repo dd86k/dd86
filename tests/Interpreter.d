@@ -11,7 +11,7 @@ unittest
         CS = 0;
 
         // MOV
-        
+
         Insert(1, 1);
         Execute(0xB0); // MOV AL, 1
         assert(AL == 1);
@@ -76,7 +76,211 @@ unittest
         Execute(0xBF); // MOV DI, 1119h
         assert(DI == 0x1119);
 
-        writefln("Resetting IP from %Xh to 0", IP);
-        IP = 0;
+        // MOV - ModR/M
+
+
+
+        // OR
+
+        Insert(0xF0, 1);
+        AL = 0xF;
+        Execute(0xC); // OR AL, 3
+        assert(AL == 0xFF);
+
+        Insert(0xFF00, 1);
+        Execute(0xD); // OR AX, F0h
+        assert(AX == 0xFFFF);
+
+        // OR - ModR/M
+
+
+
+        // INC
+
+        FullReset(); CS = 0;
+        Execute(0x40);
+        assert(AX == 1);
+        Execute(0x41);
+        assert(CX == 1);
+        Execute(0x42);
+        assert(DX == 1);
+        Execute(0x43);
+        assert(BX == 1);
+        Execute(0x44);
+        assert(SP == 1);
+        Execute(0x45);
+        assert(BP == 1);
+        Execute(0x46);
+        assert(SI == 1);
+        Execute(0x47);
+        assert(DI == 1);
+        
+        // DEC
+
+        Execute(0x48);
+        assert(AX == 0);
+        Execute(0x49);
+        assert(CX == 0);
+        Execute(0x4A);
+        assert(DX == 0);
+        Execute(0x4B);
+        assert(BX == 0);
+        Execute(0x4C);
+        assert(SP == 0);
+        Execute(0x4D);
+        assert(BP == 0);
+        Execute(0x4E);
+        assert(SI == 0);
+        Execute(0x4F);
+        assert(DI == 0);
+
+        // PUSH
+
+        SS = 0x100;
+        SP = 0x60;
+
+        AX = 0xDAD;
+        Execute(0x50);
+        assert(AX == FetchWord(GetAddress(SS, SP)));
+        Push(AX);
+        assert(AX == FetchWord(GetAddress(SS, SP)));
+
+        CX = 0x4488;
+        Execute(0x51);
+        assert(CX == FetchWord(GetAddress(SS, SP)));
+
+        DX = 0x4321;
+        Execute(0x52);
+        assert(DX == FetchWord(GetAddress(SS, SP)));
+
+        BX = 0x1234;
+        Execute(0x53);
+        assert(BX == FetchWord(GetAddress(SS, SP)));
+
+        Execute(0x54);
+        assert(SP == FetchWord(GetAddress(SS, SP)) - 2);
+
+        BP = 0xFBAC;
+        Execute(0x55);
+        assert(BP == FetchWord(GetAddress(SS, SP)));
+
+        SI = 0xF00F;
+        Execute(0x56);
+        assert(SI == FetchWord(GetAddress(SS, SP)));
+
+        DI = 0xB0B;
+        Execute(0x57);
+        assert(DI == FetchWord(GetAddress(SS, SP)));
+
+        // POP
+
+        SS = 0x100;
+        SP = 0x20;
+
+        Push(0xFFAA);
+        Execute(0x58);
+        assert(AX == 0xFFAA);
+        SP -= 2;
+        Execute(0x59);
+        assert(CX == 0xFFAA);
+        SP -= 2;
+        Execute(0x5A);
+        assert(DX == 0xFFAA);
+        SP -= 2;
+        Execute(0x5B);
+        assert(BX == 0xFFAA);
+        SP -= 2;
+        Execute(0x5C);
+        assert(SP == 0xFFAA);
+        SP = 0x1E;
+        Execute(0x5D);
+        assert(BP == 0xFFAA);
+        SP -= 2;
+        Execute(0x5E);
+        assert(SI == 0xFFAA);
+        SP -= 2;
+        Execute(0x5F);
+        assert(DI == 0xFFAA);
+
+        // XCHG
+
+        // 90h is NOP, also does XCHG AX,AX
+
+        AX = 0xFAB;
+        CX = 0xAABB;
+        Execute(0x91);
+        assert(AX == 0xAABB);
+        assert(CX == 0xFAB);
+
+        AX = 0xFAB;
+        DX = 0xAABB;
+        Execute(0x92);
+        assert(AX == 0xAABB);
+        assert(DX == 0xFAB);
+
+        AX = 0xFAB;
+        BX = 0xAABB;
+        Execute(0x93);
+        assert(AX == 0xAABB);
+        assert(BX == 0xFAB);
+
+        AX = 0xFAB;
+        SP = 0xAABB;
+        Execute(0x94);
+        assert(AX == 0xAABB);
+        assert(SP == 0xFAB);
+
+        AX = 0xFAB;
+        BP = 0xAABB;
+        Execute(0x95);
+        assert(AX == 0xAABB);
+        assert(BP == 0xFAB);
+
+        AX = 0xFAB;
+        SI = 0xAABB;
+        Execute(0x96);
+        assert(AX == 0xAABB);
+        assert(SI == 0xFAB);
+
+        AX = 0xFAB;
+        DI = 0xAABB;
+        Execute(0x97);
+        assert(AX == 0xAABB);
+        assert(DI == 0xFAB);
+
+        // CBW
+
+        AL = 0;
+        Execute(0x98);
+        assert(AH == 0);
+        AL = 0xFF;
+        Execute(0x98);
+        assert(AH == 0xFF);
+
+        // CWD
+
+        AX = 0;
+        Execute(0x99);
+        assert(DX == 0);
+        AX = 0xFFFFF;
+        Execute(0x99);
+        assert(DX == 0xFFFF);
+        
+        // Hello World. Offset: 0, Address: CS:0100
+        CS = 0;
+        IP = 0x100; // After PSP.
+        Insert("Hello World! Test complete.\r\n$", 0xE);
+        Execute(0x0E); // push CD
+        Execute(0x1F); // pop DS
+        Insert(0x10E, 1);
+        Execute(0xBA); // mov DX, 10Eh ;[msg]
+        Insert(0x9, 1);
+        Execute(0xB4); // mov AH, 9    ;print()
+        Insert(0x21, 1);
+        Execute(0xCD); // int 21h
+        Insert(0x4C01, 1);
+        Execute(0xB8); // mov AX 4C01h ;return 1
+        Insert(0x21, 1);
+        Execute(0xCD); // int 21h
     }
 }

@@ -116,5 +116,5 @@ private int main(string[] args)
         EnterVShell();
     }
 
-    return 0;
+    return LastErrorCode;
 }

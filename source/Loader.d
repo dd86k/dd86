@@ -131,6 +131,7 @@ void LoadFile(string path)
                             //uint l = GetIPAddress;
 
                             ubyte[] t = new ubyte[cast(uint)fsize - datapos];
+                            f.seek(datapos);
                             f.rawRead(t);
                             Insert(t);
                          }

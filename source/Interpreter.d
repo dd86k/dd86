@@ -84,6 +84,13 @@ class Intel8086
         // Empty Queue Bus
     }
 
+    void FullReset()
+    {
+        Reset();
+        AL = AH = BL = BH = CL = CH = DL = DH =
+            BP = SP = DI = SI = 0;
+    }
+
     @property ushort AX() {
         return (AH << 8) | AL;
     }
@@ -2225,26 +2232,47 @@ class Intel8086
         case 0x90: // NOP
             ++IP;
             break;
-        case 0x91: // XCHG AX, CX
-
+        case 0x91: { // XCHG AX, CX
+            ushort ax = AX;
+            AX = CX;
+            CX = ax;
+        }
             break;
-        case 0x92: // XCHG AX, DX
-
+        case 0x92: { // XCHG AX, DX
+            ushort ax = AX;
+            AX = DX;
+            DX = ax;
+        }
             break;
-        case 0x93: // XCHG AX, BX
-
+        case 0x93: { // XCHG AX, BX
+            ushort ax = AX;
+            AX = BX;
+            BX = ax;
+        }
             break;
-        case 0x94: // XCHG AX, SP
-
+        case 0x94: { // XCHG AX, SP
+            ushort ax = AX;
+            AX = SP;
+            SP = ax;
+        }
             break;
-        case 0x95: // XCHG AX, BP
-
+        case 0x95: { // XCHG AX, BP
+            ushort ax = AX;
+            AX = BP;
+            BP = ax;
+        }
             break;
-        case 0x96: // XCHG AX, SI
-
+        case 0x96: { // XCHG AX, SI
+            ushort ax = AX;
+            AX = SI;
+            SI = ax;
+        }
             break;
-        case 0x97: // XCHG AX, DI
-
+        case 0x97: { // XCHG AX, DI
+            ushort ax = AX;
+            AX = DI;
+            DI = ax;
+        }
             break;
         case 0x98: // CBW
             if (AL & 0b10000000)
@@ -3580,8 +3608,16 @@ class Intel8086
             * - Unless the process is its own parent, all open files are closed
             *     and all memory belonging to the process is freed.
             */
-            case 0x4C:
+            case 0x4B:
 
+                break;
+            /*
+             * 4Ch - Terminate with code
+             * Input: AL (Return code)
+             */
+            case 0x4C:
+                LastErrorCode = AL;
+                Running = false;
                 break;
             /*
             * 4Dh - Get return code. (ERRORLEVEL)
@@ -3601,7 +3637,8 @@ class Intel8086
             *     it executed as ERRORLEVEL.
             */
             case 0x4D:
-
+                
+                AL = LastErrorCode;
                 break;
             /*
             * 54h - Get verify flag.
@@ -3686,26 +3723,4 @@ pragma(inline, true) void NSLEEP(int n) {
     import core.thread : Thread;
     import core.time : nsecs;
     Thread.sleep(nsecs(n));
-}
-
-///
-void Test()
-{
-    Intel8086 machine = new Intel8086();
-    with (machine) {
-        // Hello World. Offset: 0, Address: CS:0100
-        CS = 0;
-        IP = 0x100; // After PSP.
-        ubyte[] ops =
-            [0x0E, // push CD
-             0x1F, // pop DS
-             0xBA, 0x0E, 0x01, // mov DX [msg] ;010Eh
-             0xB4, 0x09, // mov AH 9 ;print()
-             0xCD, 0x21, // int 21h
-             0xB8, 0x01, 0x4C, // mov AX 4C01h ;return 1
-             0xCD, 0x21]; // int 21h
-        Insert(ops);
-        Insert("Hello World!\r\n$", ops.length); // msg (Offset: 000E, Address: 010E)
-        Initiate();
-    }
 }
