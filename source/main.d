@@ -33,7 +33,7 @@ private void DisplayHelp(string name)
 
 private void DisplayFullHelp(string name)
 {
-	writeln("Usage: ");
+	writeln("Usage:");
 	writefln("  %s [<Options>]", name);
     writeln("Options:");
     writeln("  -p <Program>     Load a program at start.");
@@ -92,8 +92,11 @@ private int main(string[] args)
             case "-v", "--version", "/version", "/ver":
                 DisplayVersion();
                 return 0;
-            case "-h", "--help", "/?":
+            case "-h", "/?":
                 DisplayHelp(args[0]);
+                return 0;
+            case "--help":
+                DisplayFullHelp(args[0]);
                 return 0;
             default: break;
         }

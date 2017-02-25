@@ -268,13 +268,14 @@ class Intel8086
 
     void Insert(ubyte op, size_t offset = 0)
     {
-        memoryBank[GetIPAddress] = op;
+        memoryBank[GetIPAddress + offset] = op;
     }
     void Insert(ushort op, size_t offset = 0)
     {
-        uint addr = GetIPAddress;
-        memoryBank[addr++] = op & 0xFF;
-        memoryBank[addr] = op >> 8;
+        uint addr = GetIPAddress + offset;
+        memoryBank[addr] = op & 0xFF;
+        if (op > 0xFF)
+            memoryBank[++addr] = (op >> 8) & 0xFF;
     }
 
     /// Directly overwrite data at CS:IP.

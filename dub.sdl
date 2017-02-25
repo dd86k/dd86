@@ -1,7 +1,7 @@
 name "dd-dos"
 description "Small DOS Virtual Machine"
 authors "dd86k"
-copyright "Copyright © 2017, dd86k"
+copyright "Copyright © dd86k 2017"
 license "MIT"
 homepage "https://github.com/dd86k/dd-dos"
 
@@ -11,6 +11,8 @@ buildType "debug" {
 
 buildType "unittest" {
   targetType "executable"
+  targetName "tests"
+  buildOptions "unittests"
   
   targetPath "tests"
   excludedSourceFiles "source/main.d"
