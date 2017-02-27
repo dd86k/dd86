@@ -27,8 +27,9 @@ private struct mz_hdr {
 }
 private enum ERESWDS = 16;
 
+// For AL=03h
 private struct mz_rlc {
-    ushort offset, segment;
+    ushort segment, relocation; // reloc factor
 }
 
 enum {
@@ -117,10 +118,13 @@ void LoadFile(string path)
                          uint extrapos = e_cp * 512;
                          if (e_cblp) extrapos -= (512 - e_cblp);
 
-                         f.seek(e_lfarlc);
-                         // Relocation table
-                         mz_rlc[] rlct = new mz_rlc[e_crlc];
-                         f.rawRead(rlct);
+                         if (e_crlc)
+                         {
+                            f.seek(e_lfarlc);
+                            // Relocation table
+                            mz_rlc[] rlct = new mz_rlc[e_crlc];
+                            f.rawRead(rlct);
+                         }
 
                          with (machine) {
                             //CS = e_cs;
@@ -130,7 +134,7 @@ void LoadFile(string path)
                             SP = e_sp;
                             //uint l = GetIPAddress;
 
-                            ubyte[] t = new ubyte[cast(uint)fsize - datapos];
+                            ubyte[] t = new ubyte[extrapos - datapos - 1];
                             f.seek(datapos);
                             f.rawRead(t);
                             Insert(t);

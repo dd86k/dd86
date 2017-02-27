@@ -66,6 +66,9 @@ class Intel8086
     /// Initiate the machine and run.
     void Initiate()
     {
+        if (Verbose)
+            writeln("[ VM ] Running...");
+        
         while (Running)
         {
             if (Sleep)
@@ -88,7 +91,7 @@ class Intel8086
     {
         Reset();
         AL = AH = BL = BH = CL = CH = DL = DH =
-            BP = SP = DI = SI = 0;
+             BP = SP = DI = SI = 0;
     }
 
     @property ushort AX() {
@@ -163,11 +166,6 @@ class Intel8086
     {
         return GetAddress(CS, IP);
     }
-    ///
-    uint GetDataAddress(ushort offset)
-    {
-        return GetAddress(DI, offset);
-    }
 
     /// Fetch an immediate unsigned byte (ubyte).
     ubyte FetchByte() {
@@ -215,12 +213,10 @@ class Intel8086
         else {
             memoryBank[addr] = value & 0xFF;
             memoryBank[addr + 1] = value >> 8 & 0xFF;
-            memoryBank[addr + 2] = value >> 16 & 0xFF;
-            memoryBank[addr + 3] = value >> 24 & 0xFF;
         }
     }
 
-    ubyte GetFlag()
+    @property ubyte FLAGB()
     {
         return cast(ubyte)(
             SF ? 0x80 : 0 |
@@ -230,7 +226,7 @@ class Intel8086
             CF ? 1    : 0);
     }
 
-    void SetFlag(ubyte flag)
+    @property void FLAGB(ubyte flag)
     {
         SF = (flag & 0x80) != 0;
         ZF = (flag & 0x40) != 0;
@@ -239,7 +235,7 @@ class Intel8086
         CF = (flag & 1   ) != 0;
     }
 
-    ushort GetFlagWord()
+    @property ushort FLAG()
     {
         return
             OF ? 0x800 : 0 |
@@ -253,7 +249,7 @@ class Intel8086
             CF ? 1     : 0;
     }
 
-    void SetFlagWord(ushort flag)
+    @property void FLAG(ushort flag)
     {
         OF = (flag & 0x800) != 0;
         DF = (flag & 0x400) != 0;
@@ -293,7 +289,7 @@ class Intel8086
     }
 
     /// Execute the operation code. (ALU)
-    void Execute(ubyte op) // QBUS is 1-byte large.
+    void Execute(ubyte op) // All instructions are 1-byte initially.
     {
         // Page 4-27 (P169) of the Intel 8086 User Manual
         // contains decoding guide.
@@ -2295,19 +2291,19 @@ class Intel8086
 
             break;
         case 0x9C: // PUSHF
-            Push(GetFlagWord());
+            Push(FLAG);
             ++IP;
             break;
         case 0x9D: // POPF
-            SetFlagWord(Pop());
+            FLAG = Pop();
             ++IP;
             break;
         case 0x9E: // SAHF (AH to Flags)
-            SetFlag(AH);
+            FLAGB = AH;
             ++IP;
             break;
         case 0x9F: // LAHF (Flags to AH)
-            AH = GetFlag();
+            AH = FLAGB;
             ++IP;
             break;
         case 0xA0: // MOV AL, MEM8
@@ -2472,7 +2468,7 @@ class Intel8086
         case 0xCF: // IRET
             IP = Pop();
             CS = Pop();
-            SetFlagWord(Pop());
+            FLAG = Pop();
             ++IP;
             break;
         case 0xD0: // GRP2 R/M8, 1
@@ -2814,6 +2810,8 @@ class Intel8086
             }*/
             break;
         default: // Illegal instruction
+            if (Verbose)
+                writeln("Illegal instruction! (%Xh)", op);
             // Raise vector
             break;
         }
@@ -2823,7 +2821,10 @@ class Intel8086
     /// Raise interrupt.
     void Raise(ubyte code)
     {
-        Push(GetFlagWord());
+        if (Verbose)
+            writeln("[ VM ] INTERRUPT ", code, " RAISED");
+
+        Push(FLAG);
         IF = TF = 0;
         Push(CS);
         Push(IP);
@@ -3707,7 +3708,7 @@ class Intel8086
         IP = Pop();
         CS = Pop();
         IF = TF = 1;
-        SetFlagWord(Pop());
+        FLAG = Pop();
     }
 }
 
