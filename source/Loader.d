@@ -52,7 +52,7 @@ void LoadFile(string path)
         const ulong fsize = f.size;
 
         if (Verbose)
-            writeln("File exists");
+            writeln("[VMLI] File exists");
 
         if (fsize > 0 && fsize <= 0xFF_FFFFL)
         {
@@ -111,10 +111,8 @@ void LoadFile(string path)
                          {
 
                          }*/
-
-                         // The offset of the beginning of the EXE data
+                         
                          uint headersize = e_cparh * 16;
-                         // The offset of the byte just after the EXE data
                          uint imagesize = (e_cp * 512) - headersize;
                          //if (e_cblp) imagesize -= 512 - e_cblp;
                          if (headersize + imagesize < 512)
@@ -129,20 +127,27 @@ void LoadFile(string path)
                                 f.rawRead(rlct);
                             }
                             else
-                                writeln("[VMLW] No relocations");*/
+                                writeln("[VMLI] No relocations");*/
+
+                            /*uint minsize = imagesize + (e_minalloc << 4) + 256;
+                            uint maxsize = e_maxalloc ?
+                                imagesize + (e_maxalloc << 4) + 256 :
+                                0xFFFF;*/
 
                             DS = ES = 0; // DS:ES
                             
-                            //CS = e_cs;
-                            //IP = e_ip;
-                            CS = 0;
-                            IP = 0x100;
+                            CS = e_cs;
+                            IP = e_ip;
+                            //CS = 0;
+                            //IP = 0x100;
                             SS = e_ss;
                             SP = e_sp;
                             //uint l = GetIPAddress;
 
                             ubyte[] t = new ubyte[imagesize];
-                            f.seek(headersize);
+                            f.seek(
+                                headersize
+                                );
                             f.rawRead(t);
                             Insert(t);
                          }

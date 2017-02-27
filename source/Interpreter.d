@@ -2811,7 +2811,7 @@ class Intel8086
             break;
         default: // Illegal instruction
             if (Verbose)
-                writeln("[VMRE] Illegal instruction! (%Xh)", op);
+                writefln("[VMRE] Illegal instruction! (%Xh)", op);
             // Raise vector
             break;
         }
@@ -3148,7 +3148,7 @@ class Intel8086
             * Return: AL (incrementing from 0 for A:)
             */
             case 0x19:
-
+                AL = 2; // Temporary.
                 break;
             /*
             * 25h - Set interrupt vector.
@@ -3342,6 +3342,25 @@ class Intel8086
             * - No proper results on CD-ROMs; use AX=4402h instead.
             */
             case 0x36:
+
+                break;
+            /*
+             * Get country specific information
+             * Input:
+             *   AL (0)
+             *   DS:DX (Buffer location, see BUFFER)
+             * Return:
+             *   CF set on error, otherwise cleared
+             *   AX (Error code, 02h)
+             *   AL (0 for current country, 1h-feh specific, ffh for >ffh)
+             *   BX (16-bit country code)
+             *     http://www.ctyme.com/intr/rb-2773.htm#Table1400
+             *   Buffer at DS:DX filled
+             *
+             * BUFFER:
+             * http://www.ctyme.com/intr/rb-2773.htm#Table1399
+             */
+            case 0x38:
 
                 break;
             /*

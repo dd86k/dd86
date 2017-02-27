@@ -2,8 +2,8 @@ module dd_dos;
 
 import Interpreter, std.stdio, Loader;
 
-pragma(msg, "Compiling DD-DOS v", APP_VERSION, "...");
-pragma(msg, "Reporting DOS v", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
+pragma(msg, "Compiling DD-DOS ", APP_VERSION);
+pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
 /// DD-DOS version.
 enum {
@@ -50,8 +50,11 @@ void EnterVShell()
             writeln("VER            Show DOS version.");
             break;
         case "ver":
+            writeln;
             writeln("DD-DOS Version ", APP_VERSION);
-            writefln("MS-DOS Version %d.%d", DOS_MAJOR_VERSION, DOS_MINOR_VERSION);
+            writeln("MS-DOS Version ", DOS_MAJOR_VERSION,
+                ".", DOS_MINOR_VERSION);
+            writeln;
             break;
         case "mem":
             writeln("Not implemented.");
@@ -74,7 +77,7 @@ void EnterVShell()
         case "?load":
             if (s.length > 1) {
                 if (Verbose)
-                    writeln("Loader initiated");
+                    writeln("[VMSI] Loader initiated");
                 LoadFile(s[1]);
             }
             break;
@@ -83,7 +86,7 @@ void EnterVShell()
             break;
         case "?v":
             Verbose = !Verbose;
-            writeln("Verbose turned ", Verbose ? "on" : "off");
+            writeln("[VMSI] Verbose turned ", Verbose ? "on" : "off");
             break;
         case "?r":
             with (machine) {
@@ -110,7 +113,7 @@ void EnterVShell()
             break;
         case "exit": return;
         default:
-            writefln("%s: Invalid command.", s[0]);
+            writeln(s[0], ": Invalid command.");
             break;
         }
     }

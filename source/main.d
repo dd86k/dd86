@@ -16,6 +16,16 @@ enum {
     E_CLI = 1,
 }
 
+debug
+{ // --DRT-
+    extern(C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
+}
+else
+{
+    extern (C) __gshared bool rt_cmdline_enabled = false;
+    extern (C) __gshared bool rt_envvars_enabled = false;
+}
+
 private void DisplayVersion()
 {
 	writeln(APP_NAME, " - v", APP_VERSION);
@@ -34,7 +44,7 @@ private void DisplayHelp(string name = APP_NAME)
 private void DisplayFullHelp(string name = APP_NAME)
 {
 	writeln("Usage:");
-	writefln("  %s [<Options>]", name);
+	writeln("  ", name, " [<Options>]");
     writeln("Options:");
     writeln("  -p <Program>     Load a program at start.");
     writeln("  -a <Arguments>   Arguments to pass to <Program>.");
