@@ -30,7 +30,7 @@ class Intel8086
         Con = poshub();
         Con.Init();
         memoryBank = new ubyte[memsize];
-        Reset();
+        CS = 0xFFFF;
     }
 
     ///
@@ -67,7 +67,7 @@ class Intel8086
     void Initiate()
     {
         if (Verbose)
-            writeln("[ VM ] Running...");
+            writeln("[VMRI] Running...");
         
         while (Running)
         {
@@ -489,7 +489,7 @@ class Intel8086
 
             break;
         case 0x2A: // SUB REG8, R/M8
-
+        
             break;
         case 0x2B: // SUB REG16, R/M16
 
@@ -2811,7 +2811,7 @@ class Intel8086
             break;
         default: // Illegal instruction
             if (Verbose)
-                writeln("[ VM ] Illegal instruction! (%Xh)", op);
+                writeln("[VMRE] Illegal instruction! (%Xh)", op);
             // Raise vector
             break;
         }
@@ -2822,7 +2822,7 @@ class Intel8086
     void Raise(ubyte code)
     {
         if (Verbose)
-            writeln("[ VM ] INTERRUPT ", code, " RAISED");
+            writeln("[VMRI] INTERRUPT ", code, " RAISED");
 
         Push(FLAG);
         IF = TF = 0;

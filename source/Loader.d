@@ -27,8 +27,7 @@ private struct mz_hdr {
 }
 private enum ERESWDS = 16;
 
-// For AL=03h
-private struct mz_rlc {
+private struct mz_rlc { // For AL=03h
     ushort segment, relocation; // reloc factor
 }
 
@@ -55,11 +54,12 @@ void LoadFile(string path)
         if (Verbose)
             writeln("File exists");
 
-        if (fsize <= 0xFF_FFFFL)
+        if (fsize > 0 && fsize <= 0xFF_FFFFL)
+        {
             switch (toUpper(extension(f.name)))
             {
                 case ".COM": {
-                    if (Verbose) write("Loading COM... ");
+                    if (Verbose) write("[VMLI] Loading COM... ");
                     uint s = cast(uint)fsize;
                     ubyte[] buf = new ubyte[s];
                     f.rawRead(buf);
@@ -97,7 +97,7 @@ void LoadFile(string path)
                         }
 
                         if (Verbose)
-                            write("Loading MZ... ");
+                            writeln("[VMLI] Loading MZ");
 
                         /*
                          * MZ File loader, temporary
@@ -113,48 +113,48 @@ void LoadFile(string path)
                          }*/
 
                          // The offset of the beginning of the EXE data
-                         uint datapos = e_cparh * 16;
+                         uint headersize = e_cparh * 16;
                          // The offset of the byte just after the EXE data
-                         uint extrapos = e_cp * 512;
-                         if (e_cblp) extrapos -= (512 - e_cblp);
-
-                         if (e_crlc)
-                         {
-                            f.seek(e_lfarlc);
-                            // Relocation table
-                            mz_rlc[] rlct = new mz_rlc[e_crlc];
-                            f.rawRead(rlct);
-                         }
+                         uint imagesize = (e_cp * 512) - headersize;
+                         //if (e_cblp) imagesize -= 512 - e_cblp;
+                         if (headersize + imagesize < 512)
+                            imagesize = 512 - headersize;
 
                          with (machine) {
+                            /*if (e_crlc)
+                            {
+                                f.seek(e_lfarlc);
+                                // Relocation table
+                                mz_rlc[] rlct = new mz_rlc[e_crlc];
+                                f.rawRead(rlct);
+                            }
+                            else
+                                writeln("[VMLW] No relocations");*/
+
+                            DS = ES = 0; // DS:ES
+                            
                             //CS = e_cs;
+                            //IP = e_ip;
                             CS = 0;
-                            IP = e_ip;
+                            IP = 0x100;
                             SS = e_ss;
                             SP = e_sp;
                             //uint l = GetIPAddress;
 
-                            ubyte[] t = new ubyte[extrapos - datapos - 1];
-                            f.seek(datapos);
+                            ubyte[] t = new ubyte[imagesize];
+                            f.seek(headersize);
                             f.rawRead(t);
                             Insert(t);
                          }
-
-                         if (Verbose) writeln("loaded");
                     }
                 }
                     break;
 
                 default: break; // null is included here.
             }
-        else if (Verbose) writeln("Error : File too big.");
+        }
+        else if (Verbose) writeln("[VMLE] File is either 0 length or too big.");
     }
     else if (Verbose)
-        writefln("File %s does not exist, skipping.", path);
-}
-
-void LoadMZ(string path)
-{
-
-
+        writefln("[VMLE] File %s does not exist, skipping.", path);
 }
