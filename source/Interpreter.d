@@ -2811,7 +2811,7 @@ class Intel8086
             break;
         default: // Illegal instruction
             if (Verbose)
-                writeln("Illegal instruction! (%Xh)", op);
+                writeln("[ VM ] Illegal instruction! (%Xh)", op);
             // Raise vector
             break;
         }
