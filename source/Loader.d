@@ -42,7 +42,7 @@ enum {
 }
 
 /// Load a file in virtual memory.
-void LoadFile(string path)
+void LoadFile(string path, string args = null)
 {
     if (exists(path))
     {
@@ -119,15 +119,21 @@ void LoadFile(string path)
                             imagesize = 512 - headersize;
 
                          with (machine) {
-                            /*if (e_crlc)
+                            if (e_crlc)
                             {
                                 f.seek(e_lfarlc);
                                 // Relocation table
                                 mz_rlc[] rlct = new mz_rlc[e_crlc];
                                 f.rawRead(rlct);
+
+                                const int m = e_crlc * 2;
+                                for (int i = 0; i < m; i += 2)
+                                {
+
+                                }
                             }
                             else
-                                writeln("[VMLI] No relocations");*/
+                                writeln("[VMLI] No relocations");
 
                             /*uint minsize = imagesize + (e_minalloc << 4) + 256;
                             uint maxsize = e_maxalloc ?
@@ -136,18 +142,16 @@ void LoadFile(string path)
 
                             DS = ES = 0; // DS:ES
                             
-                            CS = e_cs;
-                            IP = e_ip;
-                            //CS = 0;
-                            //IP = 0x100;
+                            //CS = e_cs;
+                            //IP = e_ip;
+                            CS = 0;
+                            IP = 0x100;
                             SS = e_ss;
                             SP = e_sp;
                             //uint l = GetIPAddress;
 
                             ubyte[] t = new ubyte[imagesize];
-                            f.seek(
-                                headersize
-                                );
+                            f.seek(headersize);
                             f.rawRead(t);
                             Insert(t);
                          }
@@ -156,6 +160,21 @@ void LoadFile(string path)
                     break;
 
                 default: break; // null is included here.
+            }
+
+            // Make PSP
+            // temporary code
+            with (machine) {
+            uint psploc = CS << 4;
+            memoryBank[psploc + 0x81..psploc + 0x85] = cast(ubyte[])"yeah";
+            memoryBank[psploc + 0x80] = 4;
+            /*if (args)
+            {
+                memoryBank[psploc + 0x80] = args.length;
+                //TODO: PLATFORM_X86 version
+                for (size_t i = 0x81, size_t s = 0; i < 0xFF; ++i, ++s)
+                    memoryBank[psploc + i] = args[s];
+            }*/
             }
         }
         else if (Verbose) writeln("[VMLE] File is either 0 length or too big.");

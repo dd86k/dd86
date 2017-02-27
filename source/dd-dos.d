@@ -7,7 +7,7 @@ pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
 /// DD-DOS version.
 enum {
-    APP_VERSION = "0.0.0",
+    APP_VERSION = "0.0.0-dev",
     APP_NAME = "dd-dos"
 }
 

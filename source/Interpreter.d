@@ -322,14 +322,19 @@ class Intel8086
 
             break;
         }
-        case 0x04: { // ADD AL, IMM8
-        
+        case 0x04: // ADD AL, IMM8
+            AL += FetchByte;
+            IP += 2;
+            SF = CF = (AL & 0x80) != 0;
+            PF = (AL & 1) != 0;
+            AF = (AL & 0b1_0000) != 0;
+            ZF = AL == 0;
+            //OF = 
             break;
-        }
-        case 0x05: { // ADD AX, IMM16
-
+        case 0x05: // ADD AX, IMM16
+            AX = AX + FetchWord;
+            IP += 3;
             break;
-        }
         case 0x06: // PUSH ES
             Push(ES);
             ++IP;
@@ -597,21 +602,19 @@ class Intel8086
         case 0x3E: // DS:
 
             break;
-        case 0x3F: { // AAS
+        case 0x3F: // AAS
             if (((AL & 0xF) > 9) || AF)
             {
                 AX = AX - 6;
-                AH -= 1;
+                --AH;
                 AF = CF = true;
-                AL &= 0xF;
             }
             else
             {
                 AF = CF = false;
-                AL &= 0xF;
             }
+            AL &= 0xF;
             ++IP;
-        }
             break;
         case 0x40: // INC AX
             AX = AX + 1;
@@ -2225,7 +2228,7 @@ class Intel8086
             IP += 4;
         }
             break;
-        case 0x90: // NOP
+        case 0x90: // NOP (aka XCHG AX, AX)
             ++IP;
             break;
         case 0x91: { // XCHG AX, CX
@@ -2271,25 +2274,20 @@ class Intel8086
         }
             break;
         case 0x98: // CBW
-            if (AL & 0b10000000)
-                AH = 0xFF;
-            else
-                AH = 0;
+            AH = AL & 0x80 ? 0xFF : 0;
             ++IP;
             break;
         case 0x99: // CWD
-            if (AX & 0x8000)
-                DX = 0xFFFF;
-            else
-                DX = 0;
+            DX = AX & 0x8000 ? 0xFFFF : 0;
             ++IP;
             break;
         case 0x9A: // CALL FAR_PROC
-
+            Push(CS);
+            Push(IP);
             break;
-        case 0x9B: // WAIT
+        /*case 0x9B: // WAIT
 
-            break;
+            break;*/
         case 0x9C: // PUSHF
             Push(FLAG);
             ++IP;
