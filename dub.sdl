@@ -5,7 +5,6 @@ copyright "Copyright © dd86k 2017"
 license "MIT"
 homepage "https://github.com/dd86k/dd-dos"
 
-// Do not touch!
 buildType "unittest" {
   targetType "executable"
   targetName "tests"
@@ -15,4 +14,8 @@ buildType "unittest" {
   excludedSourceFiles "source/main.d"
   sourcePaths "tests/"
   importPaths "tests/"
+}
+
+buildType "doc" {
+  targetType
 }
