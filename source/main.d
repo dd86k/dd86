@@ -8,7 +8,7 @@ module main;
 
 import std.stdio;
 
-import dd_dos, Interpreter, Loader;
+import dd_dos, Interpreter, Loader, poshub;
 
 // CLI Error codes
 enum {
@@ -17,8 +17,8 @@ enum {
 }
 
 debug
-{ // --DRT-
-    extern(C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
+{
+    extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
 }
 else
 {
@@ -113,6 +113,7 @@ private int main(string[] args)
     }
 
     writeln("DD-DOS is starting...");
+    InitConsole();
     machine = new Intel8086();
     machine.Sleep = sleep;
 

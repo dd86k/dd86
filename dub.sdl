@@ -5,10 +5,7 @@ copyright "Copyright © dd86k 2017"
 license "MIT"
 homepage "https://github.com/dd86k/dd-dos"
 
-buildType "debug" {
-  targetType "executable"
-}
-
+// Do not touch!
 buildType "unittest" {
   targetType "executable"
   targetName "tests"

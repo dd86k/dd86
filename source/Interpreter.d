@@ -4,7 +4,7 @@
 
 module Interpreter;
 
-import dd_dos, std.stdio, std.path, poshublib;
+import dd_dos, std.stdio, std.path, poshub;
 
 version (X86)
     version = PLATFORM_X86;
@@ -27,14 +27,10 @@ class Intel8086
     ///
     this(uint memsize = MAX_MEM)
     {
-        Con = poshub();
-        Con.Init();
         memoryBank = new ubyte[memsize];
         CS = 0xFFFF;
     }
 
-    ///
-    poshub Con;
     ///
     bool Sleep;
     ///
@@ -387,11 +383,10 @@ class Intel8086
 
             break;
         }
-        case 0x14: { // ADC AL, IMM8
+        case 0x14: // ADC AL, IMM8
             AL += FetchByte;
             if (CF) ++AL;
             IP += 2;
-        }
             break;
         case 0x15: { // ADC AX, IMM16
             int t = AX + FetchWord;
@@ -473,7 +468,7 @@ class Intel8086
             if (((oldAL & 0xF) > 9) || AF)
             {
                 AL += 6;
-                CF = oldCF || (AL & 0b1000_0000);
+                CF = oldCF || (AL & 0x80);
                 AF = true;
             }
             else AF = false;
@@ -580,12 +575,11 @@ class Intel8086
         case 0x3C: // CMP AL, IMM8
             const ubyte b = FetchByte;
             const int r = AL - b;
-            SF = (r & 0x80) != 0;
+            CF = SF = (r & 0x80) != 0;
             OF = r < 0;
             ZF = r == 0;
-            AF = ((AL & 0b1000) - (b & 0b1000)) < 0;
+            AF = (r & 0b1_0000) != 0; //((AL & 0b1000) - (b & 0b1000)) < 0;
             //PF =
-            //CF =
             IP += 2;
             break;
         case 0x3D: // CMP AX, IMM16
@@ -2845,7 +2839,7 @@ class Intel8086
                  *   DL (Column, 0 is top)
                  */
                 case 0x02:
-                    Con.SetPos(DH, DL);
+                    SetPos(DH, DL);
                     break;
                 /*
                  * VIDEO - Get cursor position and size.
@@ -2859,8 +2853,8 @@ class Intel8086
                  */
                 case 0x03:
                     AX = 0;
-                    DH = cast(ubyte)Con.CursorTop;
-                    DL = cast(ubyte)Con.CursorLeft;
+                    DH = cast(ubyte)CursorTop;
+                    DL = cast(ubyte)CursorLeft;
                     break;
                 /*
                  * VIDEO - Read light pen position
@@ -2889,7 +2883,6 @@ class Intel8086
             AX = ax;
             break;
         case 0x12: // BIOS - Get memory size
-            // Temporary
             uint kbsize = memoryBank.length / 1024;
             AX = cast(ushort)kbsize;
             break;
@@ -2903,10 +2896,10 @@ class Intel8086
             switch (AH)
             {
                 case 0, 1: { // Get/Check keystroke
-                    KeyInfo k = Con.ReadKey;
+                    KeyInfo k = ReadKey;
                     AH = cast(ubyte)k.scanCode;
                     AL = cast(ubyte)k.keyCode;
-                    if (AH == 1) ZF = 0; // Keystroke available
+                    if (AH) ZF = 0; // Keystroke available
                 }
                     break;
 
@@ -2975,6 +2968,7 @@ class Intel8086
             * - ^Z is not interpreted.
             */
             case 1:
+                AL = ReadChar;
 
                 break;
             /*
@@ -3037,7 +3031,7 @@ class Intel8086
              * - ^C/^Break are not checked.
              */
             case 7:
-                while ((AL = Con.ReadChar()) == 0) {}
+                AL = ReadChar();
                 break;
             /*
             * 08h - Read character from stdin without echo.

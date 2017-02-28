@@ -1,6 +1,6 @@
 module dd_dos;
 
-import Interpreter, std.stdio, Loader;
+import Interpreter, std.stdio, Loader, poshub;
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
@@ -60,7 +60,7 @@ void EnterVShell()
             writeln("Not implemented.");
             break;
         case "cls":
-            machine.Con.Clear();
+            Clear();
             break;
         case "??":
             writeln("?run     Run the VM");

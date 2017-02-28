@@ -2,6 +2,8 @@ module test;
 
 import Interpreter, std.stdio;
 
+extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
+
 unittest
 {
     Intel8086 machine = new Intel8086();
@@ -266,10 +268,11 @@ unittest
         Execute(0x99);
         assert(DX == 0xFFFF);
         
+        write("Hello Test : ");
         // Hello World. Offset: 0, Address: CS:0100
         CS = 0;
         IP = 0x100; // After PSP.
-        Insert("Hello World! Test complete.\r\n$", 0xE);
+        Insert("Hello! Test complete.\r\n$", 0xE);
         Execute(0x0E); // push CD
         Execute(0x1F); // pop DS
         Insert(0x10E, 1);
