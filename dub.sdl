@@ -15,7 +15,3 @@ buildType "unittest" {
   sourcePaths "tests/"
   importPaths "tests/"
 }
-
-buildType "doc" {
-  targetType
-}
