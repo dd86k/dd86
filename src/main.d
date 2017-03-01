@@ -29,6 +29,15 @@ extern (C) __gshared
     }
 }
 
+/// Verbose flags
+static bool Verbose;
+
+/// 
+static ubyte LastErrorCode;
+
+/// Current machine
+static Intel8086 machine;
+
 /// Display version.
 void DisplayVersion()
 {
