@@ -16,14 +16,17 @@ enum {
     E_CLI = 1,
 }
 
-debug
-{ // --DRT-
-    extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
-}
-else
+extern (C) __gshared
 {
-    extern (C) __gshared bool rt_cmdline_enabled = false;
-    extern (C) __gshared bool rt_envvars_enabled = false;
+    debug
+    { // --DRT-
+        string[] rt_options = [ "gcopt=profile:1" ];
+    }
+    else
+    {
+        bool rt_cmdline_enabled = false;
+        bool rt_envvars_enabled = false;
+    }
 }
 
 /// Display version.
