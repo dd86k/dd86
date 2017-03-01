@@ -1,5 +1,5 @@
 /*
- * main.d : Entry point, CLI, internal shell.
+ * main.d : Main application.
  */
 
 //TODO: "Dynamic memory", allocate only what's necessary.
@@ -29,8 +29,17 @@ extern (C) __gshared
     }
 }
 
-/// Verbose flags
-static bool Verbose;
+
+debug
+{
+    /// Verbose flag
+    static bool Verbose = true;
+}
+else
+{
+    /// Verbose flag
+    static bool Verbose;
+}
 
 /// 
 static ubyte LastErrorCode;

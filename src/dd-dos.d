@@ -113,12 +113,36 @@ void EnterVShell()
     }
 }
 
+void MakePSP(uint location, string appname, string args = null)
+{
+    with (machine) {
+        alias l = location;
+        memoryBank[l + 0x40] = MajorVersion;
+        memoryBank[l + 0x41] = MinorVersion;
+        size_t len = appname.length;
+        if (args)
+            len += args.length + 1;
+        memoryBank[l + 0x80] = cast(ubyte)len;
+        version (PLATFORM_x86)
+        {
+            ubyte* pbank = &memoryBank[0] + 0x81;
+            size_t i;
+            foreach (b; appname) pbank[i++] = b;
+            if (args)
+            {
+                pbank[i++] = ' '; // Space
+                foreach (b; args) pbank[i++] = b;
+            }
+        }
+    }
+}
+
 // Page 2-99 contains the interrupt message processor
 /// Raise interrupt.
 void Raise(ubyte code)
 {
     if (Verbose)
-        writeln("[VMRI] INTERRUPT ", code, " RAISED");
+        writefln("[VMRI] INTERRUPT %X RAISED", code);
 
     with (machine) {
     Push(FLAG);
@@ -137,25 +161,25 @@ void Raise(ubyte code)
         switch (AH)
         {
             /*
-                * VIDEO - Set cursor position.
-                * Input:
-                *   BH (Page number)
-                *   DH (Row, 0 is top)
-                *   DL (Column, 0 is top)
-                */
+             * VIDEO - Set cursor position.
+             * Input:
+             *   BH (Page number)
+             *   DH (Row, 0 is top)
+             *   DL (Column, 0 is top)
+             */
             case 0x02:
                 SetPos(DH, DL);
                 break;
             /*
-                * VIDEO - Get cursor position and size.
-                * Input:
-                *   BH (Page number)
-                * Return:
-                *   CH (Start scan line)
-                *   CL (End scan line)
-                *   DH (Row)
-                *   DL (Column)
-                */
+             * VIDEO - Get cursor position and size.
+             * Input:
+             *   BH (Page number)
+             * Return:
+             *   CH (Start scan line)
+             *   CL (End scan line)
+             *   DH (Row)
+             *   DL (Column)
+             */
             case 0x03:
                 AX = 0;
                 DH = cast(ubyte)CursorTop;
@@ -179,7 +203,7 @@ void Raise(ubyte code)
         break;
     case 0x11: // BIOS - Get equipement list
         // Number of 16K banks of RAM on motherboard (PC only).
-        ushort ax = 0b10000; // VGA
+        int ax = 0b10000; // VGA
         /+if (FloppyDiskInstalled) {
             ax |= 1;
             // Bit 6-7 = Number of floppy drives

@@ -54,12 +54,19 @@ void LoadFile(string path, string args = null)
         if (Verbose)
             writeln("[VMLI] File exists");
 
-        if (fsize > 0 && fsize <= 0xFFF_FFFFL)
+        if (fsize == 0)
+        {
+            if (Verbose)
+                writeln("[VMLE] File is zero length.");
+            return;
+        }
+
+        if (fsize <= 0xFFF_FFFFL)
         {
             switch (toUpper(extension(f.name)))
             {
                 case ".COM": {
-                    if (fsize > 0xFF00) // - PSP
+                    if (fsize > 0xFF00) // Size - PSP
                     {
                         if (Verbose)
                             writeln("[VMLE] COM file too large.");
@@ -73,6 +80,8 @@ void LoadFile(string path, string args = null)
                         CS = 0; IP = 0x100;
                         ubyte* o = &memoryBank[0] + IP;
                         foreach (b; buf) *o++ = b;
+
+                        MakePSP(GetIPAddress - 0x100, "TEST");
                     }
                     if (Verbose) writeln("loaded");
                 }
@@ -160,6 +169,9 @@ void LoadFile(string path, string args = null)
                             f.seek(headersize);
                             f.rawRead(t);
                             Insert(t);
+
+                            // Make PSP
+                            MakePSP(machine.GetIPAddress, "test");
                          }
                     }
                 }
@@ -167,29 +179,9 @@ void LoadFile(string path, string args = null)
 
                 default: break; // null is included here.
             }
-
-            // Make PSP
-            // temporary code
-            with (machine) {
-            uint psploc = CS << 4;
-            memoryBank[psploc + 0x81..psploc + 0x85] = cast(ubyte[])"yeah";
-            memoryBank[psploc + 0x80] = 4;
-            /*if (args)
-            {
-                memoryBank[psploc + 0x80] = args.length;
-                //TODO: PLATFORM_X86 version
-                for (size_t i = 0x81, size_t s = 0; i < 0xFF; ++i, ++s)
-                    memoryBank[psploc + i] = args[s];
-            }*/
-            }
         }
-        else if (Verbose) writeln("[VMLE] File is either 0 length or too big.");
+        else if (Verbose) writeln("[VMLE] File is too big.");
     }
     else if (Verbose)
         writefln("[VMLE] File %s does not exist, skipping.", path);
-}
-
-void GeneratePSP()
-{
-
 }
