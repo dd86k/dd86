@@ -54,11 +54,17 @@ void LoadFile(string path, string args = null)
         if (Verbose)
             writeln("[VMLI] File exists");
 
-        if (fsize > 0 && fsize <= 0xFF_FFFFL)
+        if (fsize > 0 && fsize <= 0xFFF_FFFFL)
         {
             switch (toUpper(extension(f.name)))
             {
                 case ".COM": {
+                    if (fsize > 0xFF00) // - PSP
+                    {
+                        if (Verbose)
+                            writeln("[VMLE] COM file too large.");
+                        return;
+                    }
                     if (Verbose) write("[VMLI] Loading COM... ");
                     uint s = cast(uint)fsize;
                     ubyte[] buf = new ubyte[s];
@@ -181,4 +187,9 @@ void LoadFile(string path, string args = null)
     }
     else if (Verbose)
         writefln("[VMLE] File %s does not exist, skipping.", path);
+}
+
+void GeneratePSP()
+{
+
 }

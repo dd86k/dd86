@@ -6,7 +6,7 @@ module Interpreter;
 
 import main, dd_dos, std.stdio, std.path, poshub;
 import core.thread : Thread;
-import core.time : hnsecs;
+import core.time : hnsecs, nsecs;
 
 version (X86)
     version = PLATFORM_X86;
@@ -216,12 +216,10 @@ class Intel8086
 
     @property ubyte FLAGB()
     {
-        return cast(ubyte)(
-            SF ? 0x80 : 0 |
-            ZF ? 0x40 : 0 |
-            AF ? 0x10 : 0 |
-            PF ? 0x4  : 0 |
-            CF ? 1    : 0);
+        return 
+            SF ? 0x80 : 0 | ZF ? 0x40 : 0 |
+            AF ? 0x10 : 0 | PF ? 0x4  : 0 |
+            CF ? 1    : 0;
     }
 
     @property void FLAGB(ubyte flag)
@@ -236,15 +234,9 @@ class Intel8086
     @property ushort FLAG()
     {
         return
-            OF ? 0x800 : 0 |
-            DF ? 0x400 : 0 |
-            IF ? 0x200 : 0 |
-            TF ? 0x100 : 0 |
-            SF ? 0x80  : 0 |
-            ZF ? 0x40  : 0 |
-            AF ? 0x10  : 0 |
-            PF ? 0x4   : 0 |
-            CF ? 1     : 0;
+            OF ? 0x800 : 0 | DF ? 0x400 : 0 | IF ? 0x200 : 0 |
+            TF ? 0x100 : 0 | SF ? 0x80  : 0 | ZF ? 0x40  : 0 |
+            AF ? 0x10  : 0 | PF ? 0x4   : 0 | CF ? 1     : 0;
     }
 
     @property void FLAG(ushort flag)
@@ -325,7 +317,7 @@ class Intel8086
             IP += 2;
             SF = CF = (AL & 0x80) != 0;
             PF = (AL & 1) != 0;
-            AF = (AL & 0b1_0000) != 0;
+            AF = (AL & 0x10) != 0;
             ZF = AL == 0;
             //OF = 
             break;
@@ -580,7 +572,7 @@ class Intel8086
             CF = SF = (r & 0x80) != 0;
             OF = r < 0;
             ZF = r == 0;
-            AF = (r & 0b1_0000) != 0; //((AL & 0b1000) - (b & 0b1000)) < 0;
+            AF = (r & 0x10) != 0; //((AL & 0b1000) - (b & 0b1000)) < 0;
             //PF =
             IP += 2;
             break;
@@ -612,9 +604,16 @@ class Intel8086
             AL &= 0xF;
             ++IP;
             break;
-        case 0x40: // INC AX
-            AX = AX + 1;
+        case 0x40: { // INC AX
+            int r = AX + 1;
+            ZF = r == 0;
+            SF = (r & 0x8000) != 0;
+            AF = (r & 0x10) != 0;
+            //PF =
+            //OF =
+            AX = r;
             ++IP;
+        }
             break;
         case 0x41: // INC CX
             CX = CX + 1;

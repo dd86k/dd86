@@ -106,6 +106,8 @@ int main(string[] args)
                     }
                     break;
 
+                //case "-v": break;
+
                 case "-M":
                     sleep = false;
                     break;
@@ -115,7 +117,7 @@ int main(string[] args)
                     Verbose = true;
                     break;
 
-                case "-v", "--version", "/version", "/ver":
+                case "--version", "/version", "/ver":
                     DisplayVersion();
                     return 0;
                 case "-h", "/?":

@@ -18,6 +18,9 @@ enum {
     DOS_MAJOR_VERSION = 0
 }
 
+static ubyte MajorVersion = DOS_MAJOR_VERSION,
+             MinorVersion = DOS_MINOR_VERSION;
+
 /// Enter internal shell
 void EnterVShell()
 {
@@ -108,11 +111,6 @@ void EnterVShell()
             break;
         }
     }
-}
-
-void GeneratePSP()
-{
-
 }
 
 // Page 2-99 contains the interrupt message processor
