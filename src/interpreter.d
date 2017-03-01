@@ -194,6 +194,15 @@ class Intel8086
         else
             return cast(ushort)(memoryBank[addr] | memoryBank[addr + 1] << 8);
     }
+    /// Fetch an immediate unsigned word with optional offset.
+    ushort FetchImmWord(uint offset) {
+        version (PLATFORM_X86)
+            return *(cast(ushort*)&memoryBank[GetIPAddress + offset]);
+        else {
+            uint l = GetIPAddress + offset;
+            return cast(ushort)(memoryBank[l] | memoryBank[l + 1] << 8);
+        }
+    }
     /// Fetch an immediate word (short).
     short FetchSWord() {
         version (PLATFORM_X86)
@@ -2051,10 +2060,15 @@ class Intel8086
             }
             break;
         }
-        case 0x8B: // MOV REG16, R/M16
-            //ubyte 
-
+        case 0x8B: { // MOV REG16, R/M16
+            ubyte rm = FetchByte;
+            ushort reg = FetchImmWord(1);
+            final switch (rm & 0b11_000000)
+            {
+                case 
+            }
             IP += 4;
+        }
             break;
         case 0x8C: // MOV R/M16, SEGREG
             // MOD 0SR R/M

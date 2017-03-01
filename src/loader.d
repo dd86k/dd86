@@ -166,12 +166,12 @@ void LoadFile(string path, string args = null)
                             //uint l = GetIPAddress;
 
                             ubyte[] t = new ubyte[imagesize];
-                            f.seek(headersize + 16);
+                            f.seek(headersize);
                             f.rawRead(t);
                             Insert(t);
 
                             // Make PSP
-                            MakePSP(machine.GetIPAddress, "test");
+                            MakePSP(GetIPAddress, "test");
                          }
                     }
                 }
