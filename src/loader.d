@@ -166,7 +166,7 @@ void LoadFile(string path, string args = null)
                             //uint l = GetIPAddress;
 
                             ubyte[] t = new ubyte[imagesize];
-                            f.seek(headersize);
+                            f.seek(headersize + 16);
                             f.rawRead(t);
                             Insert(t);
 

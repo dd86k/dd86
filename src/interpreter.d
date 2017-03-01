@@ -281,19 +281,14 @@ class Intel8086
     /// Execute the operation code. (ALU)
     void Execute(ubyte op) // All instructions are 1-byte initially.
     {
-        // Page 4-27 (P169) of the Intel 8086 User Manual
-        // contains decoding guide.
-        //
         // Legend:
-        // R/M : ModRegister/Memory byte
-        // IMM : Immediate value
-        // REG : Register
-        // MEM : Memory location
-        // SEGREG : Segment register
+        // R/M - ModRegister/Memory byte
+        // IMM - Immediate value
+        // REG - Register
+        // MEM - Memory location
+        // SEGREG - Segment register
         // 
         // The number represents bitness.
-        // Instruction descriptions are available at Page 2-35 (P50).
-        // Note: ModR/M explanation is location at Page 4-20 (P162).
         //TODO: Group instructions. -dd
         switch (op) {
         case 0x00: { // ADD R/M8, REG8
@@ -2057,7 +2052,9 @@ class Intel8086
             break;
         }
         case 0x8B: // MOV REG16, R/M16
+            //ubyte 
 
+            IP += 4;
             break;
         case 0x8C: // MOV R/M16, SEGREG
             // MOD 0SR R/M
