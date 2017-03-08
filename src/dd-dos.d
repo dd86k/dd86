@@ -1,6 +1,6 @@
 module dd_dos;
 
-import main, Interpreter, std.stdio, Loader, poshub;
+import main, Interpreter, std.stdio, Loader, Poshub;
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
@@ -182,8 +182,8 @@ void Raise(ubyte code)
              */
             case 0x03:
                 AX = 0;
-                DH = cast(ubyte)CursorTop;
-                DL = cast(ubyte)CursorLeft;
+                //DH = cast(ubyte)CursorTop;
+                //DL = cast(ubyte)CursorLeft;
                 break;
             /*
                 * VIDEO - Read light pen position
@@ -297,7 +297,7 @@ void Raise(ubyte code)
         * - ^Z is not interpreted.
         */
         case 1:
-            AL = ReadChar;
+            AL = cast(ubyte)ReadKey.keyCode;
 
             break;
         /*
@@ -360,7 +360,7 @@ void Raise(ubyte code)
             * - ^C/^Break are not checked.
             */
         case 7:
-            AL = ReadChar();
+            AL = cast(ubyte)ReadKey.keyCode;
             break;
         /*
         * 08h - Read character from stdin without echo.

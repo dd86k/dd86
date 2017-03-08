@@ -4,7 +4,7 @@
 
 module Interpreter;
 
-import main, dd_dos, std.stdio, std.path, poshub;
+import main, dd_dos, std.stdio, std.path, Poshub;
 import core.thread : Thread;
 import core.time : hnsecs, nsecs;
 
@@ -2063,10 +2063,10 @@ class Intel8086
         case 0x8B: { // MOV REG16, R/M16
             ubyte rm = FetchByte;
             ushort reg = FetchImmWord(1);
-            final switch (rm & 0b11_000000)
+            /*final switch (rm & 0b11_000000)
             {
                 case 
-            }
+            }*/
             IP += 4;
         }
             break;

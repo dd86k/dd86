@@ -8,7 +8,7 @@ module main;
 
 import std.stdio;
 
-import dd_dos, Interpreter, Loader, poshub;
+import dd_dos, Interpreter, Loader, Poshub;
 
 // CLI Error codes
 enum {
