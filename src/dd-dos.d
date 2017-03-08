@@ -212,7 +212,7 @@ void Raise(ubyte code)
         AX = ax;
         break;
     case 0x12: // BIOS - Get memory size
-        uint kbsize = memoryBank.length / 1024;
+        size_t kbsize = memoryBank.length / 1024;
         AX = cast(ushort)kbsize;
         break;
     case 0x13: // DISK operations
