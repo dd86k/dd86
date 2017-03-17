@@ -34,9 +34,11 @@ class Intel8086
     }
 
     ///
-    bool Sleep;
+    bool Sleep = true;
     ///
     bool Running = true;
+    /// 
+    bool Verbose;
 
     ///
     ubyte[] memoryBank;

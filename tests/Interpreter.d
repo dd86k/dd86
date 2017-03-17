@@ -1,14 +1,15 @@
-module test;
+module InterpreterTest;
 
-import Interpreter, std.stdio;
+import Interpreter, dd_dos, std.stdio;
 
 extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
 
 unittest
 {
-    Intel8086 machine = new Intel8086();
+    Intel8086 cpu = new Intel8086();
+    cpu.Sleep = false; // Maximum performance
 
-    with (machine)
+    with (cpu)
     {
         CS = 0;
 
@@ -29,7 +30,7 @@ unittest
         Insert(4, 1);
         Execute(0xB3); // MOV BL, 4
         assert(BL == 4);
-
+        
         Insert(5, 1);
         Execute(0xB4); // MOV AH, 5
         assert(AH == 5);
@@ -267,7 +268,7 @@ unittest
         AX = 0xFFFFF;
         Execute(0x99);
         assert(DX == 0xFFFF);
-        
+
         write("Hello Test : ");
         // Hello World. Offset: 0, Address: CS:0100
         CS = 0;

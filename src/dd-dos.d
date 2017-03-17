@@ -5,24 +5,27 @@ import main, Interpreter, std.stdio, Loader, Poshub;
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
-/// DD-DOS version.
-enum {
-    APP_VERSION = "0.0.0-dev",
-    APP_NAME = "dd-dos"
-}
+debug enum APP_VERSION = "0.0.0-debug";
+else  enum APP_VERSION = "0.0.0";
+enum APP_NAME = "dd-dos";
 
 enum {
-    /// Minor reported DOS version
+    /// Default Major DOS Version
+    DOS_MAJOR_VERSION = 0,
+    /// Default Minor DOS Version
     DOS_MINOR_VERSION = 0,
-    /// Major reported DOS version
-    DOS_MAJOR_VERSION = 0
 }
 
-static ubyte MajorVersion = DOS_MAJOR_VERSION,
-             MinorVersion = DOS_MINOR_VERSION;
+/// DOS Version
+ubyte MajorVersion = DOS_MAJOR_VERSION,
+      MinorVersion = DOS_MINOR_VERSION;
+/// Last-define error-code for CLI.
+ubyte LastErrorCode;
+/// Current machine
+Intel8086 machine;
 
 /// Enter internal shell
-void EnterVShell()
+void EnterVShell(bool verbose = false)
 {
     import std.array : split;
     import std.uni : toLower;
@@ -70,7 +73,7 @@ void EnterVShell()
             break;*/
         case "?load":
             if (s.length > 1) {
-                if (Verbose)
+                if (verbose)
                     writeln("[VMSI] Loader initiated");
                 LoadFile(s[1]);
             }
@@ -79,8 +82,8 @@ void EnterVShell()
             machine.Initiate();
             break;
         case "?v":
-            Verbose = !Verbose;
-            writeln("[VMSI] Verbose turned ", Verbose ? "on" : "off");
+            verbose = !verbose;
+            writeln("[VMSI] verbose turned ", verbose ? "on" : "off");
             break;
         case "?r":
             with (machine) {
@@ -139,9 +142,9 @@ void MakePSP(uint location, string appname, string args = null)
 
 // Page 2-99 contains the interrupt message processor
 /// Raise interrupt.
-void Raise(ubyte code)
+void Raise(ubyte code, bool verbose = false)
 {
-    if (Verbose)
+    if (verbose)
         writefln("[VMRI] INTERRUPT %X RAISED", code);
 
     with (machine) {

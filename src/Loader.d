@@ -42,7 +42,7 @@ enum {
 }
 
 /// Load a file in virtual memory.
-void LoadFile(string path, string args = null)
+void LoadFile(string path, string args = null, bool verbose = false)
 {
     if (exists(path))
     {
@@ -51,12 +51,12 @@ void LoadFile(string path, string args = null)
 
         const ulong fsize = f.size;
 
-        if (Verbose)
+        if (verbose)
             writeln("[VMLI] File exists");
 
         if (fsize == 0)
         {
-            if (Verbose)
+            if (verbose)
                 writeln("[VMLE] File is zero length.");
             return;
         }
@@ -68,11 +68,11 @@ void LoadFile(string path, string args = null)
                 case ".COM": {
                     if (fsize > 0xFF00) // Size - PSP
                     {
-                        if (Verbose)
+                        if (verbose)
                             writeln("[VMLE] COM file too large.");
                         return;
                     }
-                    if (Verbose) write("[VMLI] Loading COM... ");
+                    if (verbose) write("[VMLI] Loading COM... ");
                     uint s = cast(uint)fsize;
                     ubyte[] buf = new ubyte[s];
                     f.rawRead(buf);
@@ -83,7 +83,7 @@ void LoadFile(string path, string args = null)
 
                         MakePSP(GetIPAddress - 0x100, "TEST");
                     }
-                    if (Verbose) writeln("loaded");
+                    if (verbose) writeln("loaded");
                 }
                     break;
 
@@ -105,13 +105,13 @@ void LoadFile(string path, string args = null)
                             {
                             //case "NE":
                             default:
-                                if (Verbose)
+                                if (verbose)
                                     writeln("Unsupported format : ", sig);
                                 return;
                             }*/
                         }
 
-                        if (Verbose)
+                        if (verbose)
                             writeln("[VMLI] Loading MZ");
 
                         /*
@@ -180,8 +180,8 @@ void LoadFile(string path, string args = null)
                 default: break; // null is included here.
             }
         }
-        else if (Verbose) writeln("[VMLE] File is too big.");
+        else if (verbose) writeln("[VMLE] File is too big.");
     }
-    else if (Verbose)
+    else if (verbose)
         writefln("[VMLE] File %s does not exist, skipping.", path);
 }

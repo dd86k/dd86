@@ -1,4 +1,5 @@
 name "dd-dos"
+version "0.0.0"
 description "Small DOS Virtual Machine"
 authors "dd86k"
 copyright "Copyright © dd86k 2017"

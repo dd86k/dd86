@@ -7,7 +7,6 @@
 module main;
 
 import std.stdio;
-
 import dd_dos, Interpreter, Loader, Poshub;
 
 // CLI Error codes
@@ -16,52 +15,31 @@ enum {
     E_CLI = 1,
 }
 
-extern (C) __gshared
-{
-    debug
-    { // --DRT-
-        string[] rt_options = [ "gcopt=profile:1" ];
-    }
-    else
-    {
-        bool rt_cmdline_enabled = false;
-        bool rt_envvars_enabled = false;
-    }
-}
-
-
 debug
 {
-    /// Verbose flag
-    static bool Verbose = true;
+    extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
 }
 else
 {
-    /// Verbose flag
-    static bool Verbose;
+    extern (C) __gshared bool
+        rt_envvars_enabled = false,
+        rt_cmdline_enabled = false;
 }
-
-/// 
-static ubyte LastErrorCode;
-
-/// Current machine
-static Intel8086 machine;
 
 /// Display version.
 void DisplayVersion()
 {
-	writeln(APP_NAME, " - v", APP_VERSION);
-    writeln("Copyright (c) 2017 dd86k, using MIT license");
+	writeln(APP_NAME, " - v", APP_VERSION, " (", __TIMESTAMP__, ")");
+    writeln("Copyright (c) 2017 dd86k, MIT license");
 	writeln("Project page: <https://github.com/dd86k/dd-dos>");
-    writeln("Compiled ", __FILE__, " (", __TIMESTAMP__, ") using ",
-        __VENDOR__," v", __VERSION__);
+    writeln("Compiled ", __FILE__, " using ", __VENDOR__," v", __VERSION__);
 }
 
 /// Display short help.
 void DisplayHelp(string name = APP_NAME)
 {
-    writeln(name, "  [-p <Program> [-a <Arguments>]] [-M] [-V]");
-    writeln(name, "  {-h|--help|/?|-v|--version}");
+    writeln("  ", name, "  [-p <Program> [-a <Arguments>]] [-M] [-V]");
+    writeln("  ", name, "  {-h|--help|/?|-v|--version}");
 }
 
 /// Display long help.
@@ -72,7 +50,7 @@ void DisplayFullHelp(string name = APP_NAME)
     writeln("Options:");
     writeln("  -p <Program>     Load a program at start.");
     writeln("  -a <Arguments>   Arguments to pass to <Program>.");
-    writeln("  -M               Maximum performance (!)");
+    writeln("  -M               Maximum performance(!)");
     writeln("  -V               Verbose mode.");
     writeln();
 	writeln("  -h, --help       Display help and quit.");
@@ -85,65 +63,64 @@ int main(string[] args)
     const size_t argl = args.length;
 
     string init_file, init_args;
+    bool sleep = true;
+    bool verbose;
 
+    for (size_t i = 0; i < argl; ++i)
     {
-        bool sleep = true;
-        for (size_t i = 0; i < argl; ++i)
+        switch (args[i])
         {
-            switch (args[i])
-            {
-                case "-p", "/p":
-                    if (++i < argl) {
-                        init_file = args[i];
+            case "-p", "/p":
+                if (++i < argl) {
+                    init_file = args[i];
+                } else {
+                    writeln("-p : Missing argument.");
+                    return E_CLI;
+                }
+                break;
+            
+            case "-a", "/a":
+                if (++i < argl) {
+                    if (init_file) {
+                        init_args = args[i];
                     } else {
-                        writeln("-p : Missing argument.");
+                        writeln("-a : Missing <Program>.");
                         return E_CLI;
                     }
-                    break;
-                
-                case "-a", "/a":
-                    if (++i < argl) {
-                        if (init_file) {
-                            init_args = args[i];
-                        } else {
-                            writeln("-a : Missing <Program>.");
-                            return E_CLI;
-                        }
-                    } else {
-                        writeln("-a : Missing argument.");
-                        return E_CLI;
-                    }
-                    break;
+                } else {
+                    writeln("-a : Missing argument.");
+                    return E_CLI;
+                }
+                break;
 
-                //case "-v": break;
+            //case "-v": break;
 
-                case "-M":
-                    sleep = false;
-                    break;
+            case "-M":
+                sleep = false;
+                break;
 
-                case "-V", "--verbose":
-                    writeln("Verbose mode turned on.");
-                    Verbose = true;
-                    break;
+            case "-V", "--verbose":
+                writeln("Verbose mode turned on.");
+                verbose = true;
+                break;
 
-                case "--version", "/version", "/ver":
-                    DisplayVersion();
-                    return 0;
-                case "-h", "/?":
-                    DisplayHelp(args[0]);
-                    return 0;
-                case "--help":
-                    DisplayFullHelp(args[0]);
-                    return 0;
-                default:
-            }
+            case "--version", "/version", "/ver":
+                DisplayVersion();
+                return 0;
+            case "-h", "/?":
+                DisplayHelp(args[0]);
+                return 0;
+            case "--help":
+                DisplayFullHelp(args[0]);
+                return 0;
+            default:
         }
-
-        writeln("DD-DOS is starting...");
-        InitConsole();
-        machine = new Intel8086();
-        machine.Sleep = sleep;
     }
+
+    writeln("DD-DOS is starting...");
+    InitConsole();
+    machine = new Intel8086();
+    machine.Sleep = sleep;
 
     if (init_file)
     {
