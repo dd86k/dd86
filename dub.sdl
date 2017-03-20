@@ -12,7 +12,7 @@ buildType "unittest" {
   buildOptions "unittests"
   
   targetPath "tests"
-  excludedSourceFiles "source/main.d"
+  excludedSourceFiles "src/main.d"
   sourcePaths "tests/"
   importPaths "tests/"
 }

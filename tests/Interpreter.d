@@ -1,19 +1,41 @@
-module InterpreterTest;
+module InterpreterTests;
 
-import Interpreter, dd_dos, std.stdio;
+import Interpreter, std.stdio;
 
 extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
 
 unittest
 {
     Intel8086 cpu = new Intel8086();
-    cpu.Sleep = false; // Maximum performance
 
     with (cpu)
     {
+        Sleep = false; // Maximum performance
+        Verbose = true;
+
+        writeln("** Help functions **");
+        {
+            write("Insert : ");
+
+            uint ip = GetIPAddress;
+            Insert(0xFF);
+            assert(memoryBank[ip] == 0xFF);
+            Insert(0xABCD);
+            assert(memoryBank[ip] == 0xCD);
+            assert(memoryBank[ip + 1] == 0xAB);
+            Insert("ABC");
+            assert(memoryBank[ip]     == 'A');
+            assert(memoryBank[ip + 1] == 'B');
+            assert(memoryBank[ip + 2] == 'C');
+
+            writeln("OK");
+        }
+        writeln("** Instructions **");
         CS = 0;
 
         // MOV
+
+        write("MOV : ");
 
         Insert(1, 1);
         Execute(0xB0); // MOV AL, 1
@@ -79,11 +101,19 @@ unittest
         Execute(0xBF); // MOV DI, 1119h
         assert(DI == 0x1119);
 
+        writeln("OK");
+
         // MOV - ModR/M
 
+        //write("MOV+ModR/M : ");
 
+
+
+        //writeln("OK");
 
         // OR
+
+        write("OR : ");
 
         Insert(0xF0, 1);
         AL = 0xF;
@@ -94,11 +124,19 @@ unittest
         Execute(0xD); // OR AX, F0h
         assert(AX == 0xFFFF);
 
+        writeln("OK");
+
         // OR - ModR/M
 
+        //write("OR+ModR/M : ");
 
+
+
+        //writeln("OK");
 
         // INC
+
+        write("INC : ");
 
         FullReset(); CS = 0;
         Execute(0x40);
@@ -117,8 +155,12 @@ unittest
         assert(SI == 1);
         Execute(0x47);
         assert(DI == 1);
+
+        writeln("OK");
         
         // DEC
+
+        write("DEC : ");
 
         Execute(0x48);
         assert(AX == 0);
@@ -137,7 +179,11 @@ unittest
         Execute(0x4F);
         assert(DI == 0);
 
+        writeln("OK");
+
         // PUSH
+
+        write("PUSH : ");
 
         SS = 0x100;
         SP = 0x60;
@@ -175,7 +221,11 @@ unittest
         Execute(0x57);
         assert(DI == FetchWord(GetAddress(SS, SP)));
 
+        writeln("OK");
+
         // POP
+
+        write("POP : ");
 
         SS = 0x100;
         SP = 0x20;
@@ -205,9 +255,19 @@ unittest
         Execute(0x5F);
         assert(DI == 0xFFAA);
 
+        writeln("OK");
+
         // XCHG
 
-        // 90h is NOP, also does XCHG AX,AX
+        write("XCHG : ");
+
+        // 90h is NOP which is basically a XCHG AX,AX
+        // Nevertheless, let's test it
+        {
+            uint ip = IP;
+            Execute(0x90);
+            assert(ip + 1 == IP);
+        }
 
         AX = 0xFAB;
         CX = 0xAABB;
@@ -251,7 +311,11 @@ unittest
         assert(AX == 0xAABB);
         assert(DI == 0xFAB);
 
+        writeln("OK");
+
         // CBW
+
+        write("CBW : ");
 
         AL = 0;
         Execute(0x98);
@@ -260,7 +324,11 @@ unittest
         Execute(0x98);
         assert(AH == 0xFF);
 
+        writeln("OK");
+
         // CWD
+
+        write("CBW : ");
 
         AX = 0;
         Execute(0x99);
@@ -268,6 +336,10 @@ unittest
         AX = 0xFFFFF;
         Execute(0x99);
         assert(DX == 0xFFFF);
+
+        writeln("OK");
+
+        // Manual Hello World
 
         write("Hello Test : ");
         // Hello World. Offset: 0, Address: CS:0100

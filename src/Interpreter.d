@@ -4,14 +4,14 @@
 
 module Interpreter;
 
-import main, dd_dos, std.stdio, std.path, Poshub;
+import dd_dos, std.stdio, std.path, Poshub;
 import core.thread : Thread;
 import core.time : hnsecs, nsecs;
 
 version (X86)
-    version = PLATFORM_X86;
+    version = X86_ANY;
 else version (X86_64)
-    version = PLATFORM_X86;
+    version = X86_ANY;
 
 /// Initial amount of memory.
 enum MAX_MEM = 0x10_0000; // 1 MB
@@ -21,7 +21,15 @@ enum OEM_ID { // Used for INT 21h AH=30 so far.
     IBM, Compaq, MSPackagedProduct, ATnT, ZDS
 }
 
-//NOTE: Opened files should go in JFT
+/// Sleep for n hecto-nanoseconds
+pragma(inline, true) void HSLEEP(int n) {
+    Thread.sleep(hnsecs(n));
+}
+
+/// Sleep for n nanoseconds
+pragma(inline, true) void NSLEEP(int n) {
+    Thread.sleep(nsecs(n));
+}
 
 /// Mimics an Intel8086 system
 class Intel8086
@@ -33,14 +41,14 @@ class Intel8086
         CS = 0xFFFF;
     }
 
-    ///
+    /// Is sleeping vcpu between cycles?
     bool Sleep = true;
-    ///
+    /// Is currently running?
     bool Running = true;
-    /// 
+    /// Is verbose?
     bool Verbose;
 
-    ///
+    /// Main memory brank;
     ubyte[] memoryBank;
 
     /// Generic register
@@ -68,7 +76,7 @@ class Intel8086
     {
         if (Verbose)
             writeln("[VMRI] Running...");
-        
+
         while (Running)
         {
             if (Sleep)
@@ -182,7 +190,7 @@ class Intel8086
 
     /// Fetch an immediate unsigned word (ushort).
     ushort FetchWord() {
-        version (PLATFORM_X86)
+        version (X86_ANY)
             return *(cast(ushort*)&memoryBank[GetIPAddress + 1]);
         else {
             const uint addr = GetIPAddress + 1;
@@ -191,14 +199,14 @@ class Intel8086
     }
     /// Fetch an unsigned word (ushort).
     ushort FetchWord(uint addr) {
-        version (PLATFORM_X86)
+        version (X86_ANY)
             return *(cast(ushort*)&memoryBank[addr]);
         else
             return cast(ushort)(memoryBank[addr] | memoryBank[addr + 1] << 8);
     }
     /// Fetch an immediate unsigned word with optional offset.
     ushort FetchImmWord(uint offset) {
-        version (PLATFORM_X86)
+        version (X86_ANY)
             return *(cast(ushort*)&memoryBank[GetIPAddress + offset]);
         else {
             uint l = GetIPAddress + offset;
@@ -207,7 +215,7 @@ class Intel8086
     }
     /// Fetch an immediate word (short).
     short FetchSWord() {
-        version (PLATFORM_X86)
+        version (X86_ANY)
             return *(cast(short*)&memoryBank[GetIPAddress + 1]);
         else {
             const uint addr = GetIPAddress + 1;
@@ -217,7 +225,7 @@ class Intel8086
 
     /// Set an unsigned word in memory.
     void SetWord(uint addr, ushort value) {
-        version (PLATFORM_X86)
+        version (X86_ANY)
             *(cast(ushort *)&memoryBank[addr]) = value;
         else {
             memoryBank[addr] = value & 0xFF;
@@ -2822,14 +2830,4 @@ class Intel8086
             break;
         }
     }
-}
-
-/// Sleep for n hecto-nanoseconds
-pragma(inline, true) void HSLEEP(int n) {
-    Thread.sleep(hnsecs(n));
-}
-
-/// Sleep for n nanoseconds
-pragma(inline, true) void NSLEEP(int n) {
-    Thread.sleep(nsecs(n));
 }

@@ -1,6 +1,6 @@
 module dd_dos;
 
-import main, Interpreter, std.stdio, Loader, Poshub;
+import Interpreter, std.stdio, Loader, Poshub;
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);

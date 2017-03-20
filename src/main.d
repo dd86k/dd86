@@ -22,8 +22,7 @@ debug
 else
 {
     extern (C) __gshared bool
-        rt_envvars_enabled = false,
-        rt_cmdline_enabled = false;
+        rt_envvars_enabled = false, rt_cmdline_enabled = false;
 }
 
 /// Display version.
@@ -70,7 +69,7 @@ int main(string[] args)
     {
         switch (args[i])
         {
-            case "-p", "/p":
+            case "-p":
                 if (++i < argl) {
                     init_file = args[i];
                 } else {
@@ -79,7 +78,7 @@ int main(string[] args)
                 }
                 break;
             
-            case "-a", "/a":
+            case "-a":
                 if (++i < argl) {
                     if (init_file) {
                         init_args = args[i];
@@ -104,7 +103,7 @@ int main(string[] args)
                 verbose = true;
                 break;
 
-            case "--version", "/version", "/ver":
+            case "-v", "--version":
                 DisplayVersion();
                 return 0;
             case "-h", "/?":
