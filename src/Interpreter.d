@@ -179,6 +179,10 @@ class Intel8086
     ubyte FetchImmByte() {
         return memoryBank[GetIPAddress + 1];
     }
+    /// Fetch an immediate unsigned byte (ubyte) with offset.
+    ubyte FetchImmByte(int offset) {
+        return memoryBank[GetIPAddress + offset];
+    }
     /// Fetch an unsigned byte (ubyte).
     ubyte FetchByte(uint addr) {
         return memoryBank[addr];
@@ -281,6 +285,16 @@ class Intel8086
     void Insert(ubyte op, size_t offset = 0)
     {
         memoryBank[GetIPAddress + offset] = op;
+    }
+    void InsertImm(int op, int offset = 1)
+    {
+        memoryBank[GetIPAddress + offset] = op & 0xFF;
+        if (op > 0xFF)
+            memoryBank[GetIPAddress + offset + 1] = (op >> 8) & 0xFF;
+        if (op > 0xFFFF)
+            memoryBank[GetIPAddress + offset + 2] = (op >> 16) & 0xFF;
+        if (op > 0xFFFFFF)
+            memoryBank[GetIPAddress + offset + 3] = (op >> 24) & 0xFF;
     }
     void Insert(ushort op, size_t offset = 0)
     {
@@ -803,32 +817,65 @@ class Intel8086
             break;
         case 0x80: { // GRP1 R/M8, IMM8
             const ubyte rm = FetchImmByte; // Get ModR/M byte
-            const ubyte im = FetchByte(GetIPAddress + 2); // 8-bit Immediate
-            final switch (rm & 0b111_000) { // REG
-            case 0b000_000: // 000 - ADD
+            const ubyte im = FetchImmByte(2); // 8-bit Immediate
+            final switch (rm & 0b11_000000) {
+                case 0: // No displacement
+                    final switch (rm & 0b111_000) { // REG
+                    case 0: // 000 - ADD
+                        final switch (rm & 0b111)
+                        {
+                        case 0:
+                            AL += im;
+                            break;
+                        case 0b001:
+                            CL += im;
+                            break;
+                        case 0b010:
+                            DL += im;
+                            break;
+                        case 0b011:
+                            BL += im;
+                            break;
+                        case 0b100:
+                            AH += im;
+                            break;
+                        case 0b101:
+                            CH += im;
+                            break;
+                        case 0b110:
+                            DH += im;
+                            break;
+                        case 0b111:
+                            BH += im;
+                            break;
+                        }
+                        break;
+                    case 0b001_000: // 001 - OR
 
-                break;
-            case 0b001_000: // 001 - OR
+                        break;
+                    case 0b010_000: // 010 - ADC
 
-                break;
-            case 0b010_000: // 010 - ADC
+                        break;
+                    case 0b011_000: // 011 - SBB
 
-                break;
-            case 0b011_000: // 011 - SBB
+                        break;
+                    case 0b100_000: // 100 - AND
 
-                break;
-            case 0b100_000: // 100 - AND
+                        break;
+                    case 0b101_000: // 101 - SUB
 
-                break;
-            case 0b101_000: // 101 - SUB
+                        break;
+                    case 0b110_000: // 110 - XOR
 
-                break;
-            case 0b110_000: // 110 - XOR
+                        break;
+                    case 0b111_000: // 111 - CMP
 
-                break;
-            case 0b111_000: // 111 - CMP
+                        break;
+                    }
+                    break; // case 0
+                case 0b01_000000: // 8-bit displacement
 
-                break;
+                    break; // case 01
             }
             IP += 3;
             break;

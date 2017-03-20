@@ -325,13 +325,50 @@ unittest
 
         writeln("OK");
 
-        // GRP1 R/M8, IMM8
+        // GRP1
 
         write("GRP1 ADD : ");
 
-
+        AL = CL = DL = BL = 
+             AH = CH = DH = BH = 6;
+        Insert(0x10, 2);
+        InsertImm(0, 1);
+        Execute(0x80);
+        assert(AL == 0x16);
+        IP -= 3;
+        InsertImm(0b001);
+        Execute(0x80);
+        assert(CL == 0x16);
+        IP -= 3;
+        InsertImm(0b010);
+        Execute(0x80);
+        assert(DL == 0x16);
+        IP -= 3;
+        InsertImm(0b011);
+        Execute(0x80);
+        assert(BL == 0x16);
+        IP -= 3;
+        InsertImm(0b100);
+        Execute(0x80);
+        assert(AH == 0x16);
+        IP -= 3;
+        InsertImm(0b101);
+        Execute(0x80);
+        assert(CH == 0x16);
+        IP -= 3;
+        InsertImm(0b110);
+        Execute(0x80);
+        assert(DH == 0x16);
+        IP -= 3;
+        InsertImm(0b111);
+        Execute(0x80);
+        assert(BH == 0x16);
 
         writeln("OK");
+
+        write("GRP1 OR : ");
+
+        writeln("TODO");
 
         // CBW
 
