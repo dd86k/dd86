@@ -1,14 +1,14 @@
 module InterpreterTests;
 
-import Interpreter, std.stdio;
+import Interpreter, std.stdio, dd_dos;
 
 extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
 
 unittest
 {
-    Intel8086 cpu = new Intel8086();
+    machine = new Intel8086();
 
-    with (cpu)
+    with (machine)
     {
         Sleep = false; // Maximum performance
         Verbose = true;
@@ -273,8 +273,8 @@ unittest
 
         write("XCHG : ");
 
-        // 90h is NOP which is basically a XCHG AX,AX
-        // Nevertheless, let's test it
+        // 90h is NOP which is basically a XCHG AX,AX internally
+        // Nevertheless, let's test it (for the Program Counter's sake)
         {
             uint ip = IP;
             Execute(0x90);
@@ -325,6 +325,14 @@ unittest
 
         writeln("OK");
 
+        // GRP1 R/M8, IMM8
+
+        write("GRP1 ADD : ");
+
+
+
+        writeln("OK");
+
         // CBW
 
         write("CBW : ");
@@ -354,8 +362,8 @@ unittest
         // Manual Hello World
 
         // Hello World. Offset: 0, Address: CS:0100
-        /*CS = 0; IP = 0x100;
-        Insert("Hello! Test complete.\r\n$", 0xE);
+        CS = 0; IP = 0x100;
+        Insert("Hello World!\n$", 0xE);
         Execute(0x0E); // push CS
         Execute(0x1F); // pop DS
         Insert(0x10E, 1);
@@ -368,15 +376,8 @@ unittest
         Insert(0x4C01, 1);
         Execute(0xB8); // mov AX 4C01h ;return 1
         Insert(0x21, 1);
-        Execute(0xCD); // int 21h*/
-
-        /*Insert("Hello World!\n$", 3); // 🤔
-        DS = 0; DX = 3; CS = 0; IP = 0x100;
-        Execute(0xB4); // mov AH, 9    ;print()
-        Insert(0x21, 1);
         Execute(0xCD); // int 21h
-        assert(AL == 0x24);*/
 
-        writeln("Profile :");
+        writeln("Interpreter tests complete.");
     }
 }

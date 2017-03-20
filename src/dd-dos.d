@@ -385,11 +385,7 @@ void Raise(ubyte code, bool verbose = false)
          * - ^C and ^Break are not checked.
          */
         case 9:
-            writefln("DS=%X  DX=%X", DS, DX);
-
             uint pd = GetAddress(DS, DX);
-
-            writefln("pd:%X", pd);
 
             version (X86_ANY) {
                 char* p = cast(char*)&memoryBank[0] + pd;
