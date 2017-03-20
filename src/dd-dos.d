@@ -126,7 +126,7 @@ void MakePSP(uint location, string appname, string args = null)
         if (args)
             len += args.length + 1;
         memoryBank[l + 0x80] = cast(ubyte)len;
-        version (PLATFORM_x86)
+        version (X86_ANY)
         {
             ubyte* pbank = &memoryBank[0] + 0x81;
             size_t i;
@@ -377,17 +377,21 @@ void Raise(ubyte code, bool verbose = false)
 
             break;
         /*
-            * 09h - Write string to stdout.
-            * Input: DS:DX ('$' terminated)
-            * Return: AL = 24h
-            *
-            * Notes:
-            * - ^C and ^Break are not checked.
-            */
+         * 09h - Write string to stdout.
+         * Input: DS:DX ('$' terminated)
+         * Return: AL = 24h
+         *
+         * Notes:
+         * - ^C and ^Break are not checked.
+         */
         case 9:
+            writefln("DS=%X  DX=%X", DS, DX);
+
             uint pd = GetAddress(DS, DX);
 
-            version (PLATFORM_X86) {
+            writefln("pd:%X", pd);
+
+            version (X86_ANY) {
                 char* p = cast(char*)&memoryBank[0] + pd;
                 while (*p != '$')
                     write(*p++);

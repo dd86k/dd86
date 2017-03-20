@@ -176,7 +176,7 @@ class Intel8086
     }
 
     /// Fetch an immediate unsigned byte (ubyte).
-    ubyte FetchByte() {
+    ubyte FetchImmByte() {
         return memoryBank[GetIPAddress + 1];
     }
     /// Fetch an unsigned byte (ubyte).
@@ -327,7 +327,7 @@ class Intel8086
             break;
         }
         case 0x04: // ADD AL, IMM8
-            AL += FetchByte;
+            AL += FetchImmByte;
             IP += 2;
             SF = CF = (AL & 0x80) != 0;
             PF = (AL & 1) != 0;
@@ -364,7 +364,7 @@ class Intel8086
             break;
         }
         case 0x0C: // OR AL, IMM8
-            AL |= FetchByte;
+            AL |= FetchImmByte;
             IP += 2;
             break;
         case 0x0D: // OR AX, IMM16
@@ -392,7 +392,7 @@ class Intel8086
             break;
         }
         case 0x14: // ADC AL, IMM8
-            AL += FetchByte;
+            AL += FetchImmByte;
             if (CF) ++AL;
             IP += 2;
             break;
@@ -424,13 +424,13 @@ class Intel8086
 
             break;
         case 0x1C: { // SBB AL, IMM8
-            AL -= FetchByte - 1;
+            AL -= FetchImmByte - 1;
             if (CF) --AL;
             IP += 2;
         }
             break;
         case 0x1D: { // SBB AX, IMM16
-            int t = AX - FetchByte;
+            int t = AX - FetchImmByte;
             if (CF) --t;
             AX = t;
             IP += 3;
@@ -457,7 +457,7 @@ class Intel8086
 
             break;
         case 0x24: // AND AL, IMM8
-            AL &= FetchByte;
+            AL &= FetchImmByte;
             IP += 2;
             break;
         case 0x25: // AND AX, IMM16
@@ -503,7 +503,7 @@ class Intel8086
 
             break;
         case 0x2C: // SUB AL, IMM8
-            AL -= FetchByte;
+            AL -= FetchImmByte;
             IP += 2;
             break;
         case 0x2D: // SUB AX, IMM16
@@ -548,7 +548,7 @@ class Intel8086
 
             break;
         case 0x34: // XOR AL, IMM8
-            AL ^= FetchByte;
+            AL ^= FetchImmByte;
             IP += 2;
             break;
         case 0x35: // XOR AX, IMM16
@@ -581,7 +581,7 @@ class Intel8086
 
             break;
         case 0x3C: // CMP AL, IMM8
-            const ubyte b = FetchByte;
+            const ubyte b = FetchImmByte;
             const int r = AL - b;
             CF = SF = (r & 0x80) != 0;
             OF = r < 0;
@@ -802,7 +802,7 @@ class Intel8086
             IP += SF == OF && ZF == false ? FetchSByte : 2;
             break;
         case 0x80: { // GRP1 R/M8, IMM8
-            const ubyte rm = FetchByte; // Get ModR/M byte
+            const ubyte rm = FetchImmByte; // Get ModR/M byte
             const ubyte im = FetchByte(GetIPAddress + 2); // 8-bit Immediate
             final switch (rm & 0b111_000) { // REG
             case 0b000_000: // 000 - ADD
@@ -834,7 +834,7 @@ class Intel8086
             break;
         }
         case 0x81: { // GRP1 R/M16, IMM16
-            const ubyte rm = FetchByte;  // Get ModR/M byte
+            const ubyte rm = FetchImmByte;  // Get ModR/M byte
             const ushort im = FetchWord(GetIPAddress + 2); // 16-bit Immediate
             final switch (rm & 0b111_000) { // ModR/M's REG
             case 0b000_000: // 000 - ADD
@@ -866,7 +866,7 @@ class Intel8086
             break;
         }
         case 0x82: // GRP2 R/M8, IMM8
-            const ubyte rm = FetchByte; // Get ModR/M byte
+            const ubyte rm = FetchImmByte; // Get ModR/M byte
             const ubyte im = FetchByte(GetIPAddress + 2);
             switch (rm & 0b111_000) { // ModRM REG
             case 0b000_000: // 000 - ADD
@@ -891,7 +891,7 @@ class Intel8086
             IP += 3;
             break;
         case 0x83: // GRP2 R/M16, IMM16
-            const ubyte rm = FetchByte; // Get ModR/M byte
+            const ubyte rm = FetchImmByte; // Get ModR/M byte
             const ushort im = FetchWord(GetIPAddress + 2);
             switch (rm & 0b111_000) { // ModRM REG
             case 0b000_000: // 000 - ADD
@@ -936,7 +936,7 @@ class Intel8086
             break;
         case 0x8A: { // MOV REG8, R/M8
             const uint addr = GetIPAddress + 2;
-            const ubyte rm = FetchByte;
+            const ubyte rm = FetchImmByte;
             final switch (rm & 0b111) // R/M
             {
             case 0: // BX + SI
@@ -2071,7 +2071,7 @@ class Intel8086
             break;
         }
         case 0x8B: { // MOV REG16, R/M16
-            ubyte rm = FetchByte;
+            ubyte rm = FetchImmByte;
             ushort reg = FetchImmWord(1);
             /*final switch (rm & 0b11_000000)
             {
@@ -2092,7 +2092,7 @@ class Intel8086
 
             break;
         case 0x8F: { // POP R/M16
-            const byte rm = FetchByte;
+            const byte rm = FetchImmByte;
             const ushort add = FetchWord(IP + 2);
             if (rm & 0b00111000) // MOD 000 R/M only
             {
@@ -2369,35 +2369,35 @@ class Intel8086
 
             break;
         case 0xB0: // MOV AL, IMM8
-            AL = FetchByte;
+            AL = FetchImmByte;
             IP += 2;
             break;
         case 0xB1: // MOV CL, IMM8
-            CL = FetchByte;
+            CL = FetchImmByte;
             IP += 2;
             break;
         case 0xB2: // MOV DL, IMM8
-            DL = FetchByte;
+            DL = FetchImmByte;
             IP += 2;
             break;
         case 0xB3: // MOV BL, IMM8
-            BL = FetchByte;
+            BL = FetchImmByte;
             IP += 2;
             break;
         case 0xB4: // MOV AH, IMM8
-            AH = FetchByte;
+            AH = FetchImmByte;
             IP += 2;
             break;
         case 0xB5: // MOV CH, IMM8
-            CH = FetchByte;
+            CH = FetchImmByte;
             IP += 2;
             break;
         case 0xB6: // MOV DH, IMM8
-            DH = FetchByte;
+            DH = FetchImmByte;
             IP += 2;
             break;
         case 0xB7: // MOV BH, IMM8
-            BH = FetchByte;
+            BH = FetchImmByte;
             IP += 2;
             break;
         case 0xB8: // MOV AX, IMM16
@@ -2471,7 +2471,7 @@ class Intel8086
             ++IP;
             break;
         case 0xCD: // INT IMM8
-            Raise(FetchByte);
+            Raise(FetchImmByte);
             IP += 2;
             break;
         case 0xCE: // INTO

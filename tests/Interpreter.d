@@ -12,6 +12,7 @@ unittest
     {
         Sleep = false; // Maximum performance
         Verbose = true;
+        CS = 0;
 
         writeln("** Help functions **");
         {
@@ -20,18 +21,29 @@ unittest
             uint ip = GetIPAddress;
             Insert(0xFF);
             assert(memoryBank[ip] == 0xFF);
+            Insert(0x12, 2);
+            assert(memoryBank[ip + 2] == 0x12);
             Insert(0xABCD);
             assert(memoryBank[ip] == 0xCD);
             assert(memoryBank[ip + 1] == 0xAB);
-            Insert("ABC");
+            Insert(0x5678, 4);
+            assert(memoryBank[ip + 4] == 0x78);
+            assert(memoryBank[ip + 5] == 0x56);
+            Insert("AB$");
             assert(memoryBank[ip]     == 'A');
             assert(memoryBank[ip + 1] == 'B');
-            assert(memoryBank[ip + 2] == 'C');
+            assert(memoryBank[ip + 2] == '$');
+            Insert("QWERTY", 10);
+            assert(memoryBank[ip + 10] == 'Q');
+            assert(memoryBank[ip + 11] == 'W');
+            assert(memoryBank[ip + 12] == 'E');
+            assert(memoryBank[ip + 13] == 'R');
+            assert(memoryBank[ip + 14] == 'T');
+            assert(memoryBank[ip + 15] == 'Y');
 
             writeln("OK");
         }
         writeln("** Instructions **");
-        CS = 0;
 
         // MOV
 
@@ -341,12 +353,10 @@ unittest
 
         // Manual Hello World
 
-        write("Hello Test : ");
         // Hello World. Offset: 0, Address: CS:0100
-        CS = 0;
-        IP = 0x100; // After PSP.
+        /*CS = 0; IP = 0x100;
         Insert("Hello! Test complete.\r\n$", 0xE);
-        Execute(0x0E); // push CD
+        Execute(0x0E); // push CS
         Execute(0x1F); // pop DS
         Insert(0x10E, 1);
         Execute(0xBA); // mov DX, 10Eh ;[msg]
@@ -354,9 +364,19 @@ unittest
         Execute(0xB4); // mov AH, 9    ;print()
         Insert(0x21, 1);
         Execute(0xCD); // int 21h
+        assert(AL == 0x24);
         Insert(0x4C01, 1);
         Execute(0xB8); // mov AX 4C01h ;return 1
         Insert(0x21, 1);
+        Execute(0xCD); // int 21h*/
+
+        /*Insert("Hello World!\n$", 3); // 🤔
+        DS = 0; DX = 3; CS = 0; IP = 0x100;
+        Execute(0xB4); // mov AH, 9    ;print()
+        Insert(0x21, 1);
         Execute(0xCD); // int 21h
+        assert(AL == 0x24);*/
+
+        writeln("Profile :");
     }
 }
