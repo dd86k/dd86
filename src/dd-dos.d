@@ -387,7 +387,7 @@ void Raise(ubyte code, bool verbose = false)
         case 9:
             uint pd = GetAddress(DS, DX);
 
-            version (X86_ANY) {
+            version (LittleEndian) {
                 char* p = cast(char*)&memoryBank[0] + pd;
                 while (*p != '$')
                     write(*p++);

@@ -79,9 +79,9 @@ void LoadFile(string path, string args = null, bool verbose = false)
                     with (machine) {
                         CS = 0; IP = 0x100;
                         ubyte* o = &memoryBank[0] + IP;
-                        foreach (b; buf) *o++ = b;
+                        memcpy(o, &buf[0], buf.length);
 
-                        MakePSP(GetIPAddress - 0x100, "TEST");
+                        //MakePSP(GetIPAddress - 0x100, "TEST");
                     }
                     if (verbose) writeln("loaded");
                 }
@@ -98,10 +98,10 @@ void LoadFile(string path, string args = null, bool verbose = false)
                     with (mzh) {
                         if (e_lfanew)
                         {
-                            char[2] sig;
+                            /*char[2] sig;
                             f.seek(e_lfanew);
                             f.rawRead(sig);
-                            /*switch (sig)
+                            switch (sig)
                             {
                             //case "NE":
                             default:
@@ -118,20 +118,22 @@ void LoadFile(string path, string args = null, bool verbose = false)
                          * MZ File loader, temporary
                          */
                         
-                         /*if (e_minalloc && e_maxalloc) // High memory
+                         if (e_minalloc && e_maxalloc) // High memory
                          {
-
+                            writeln("[VMLI] HIGH MEM");
                          }
                          else // Low memory
                          {
-
-                         }*/
+                            writeln("[VMLI] LOW MEM");
+                         }
                          
                          uint headersize = e_cparh * 16;
                          uint imagesize = (e_cp * 512) - headersize;
                          //if (e_cblp) imagesize -= 512 - e_cblp;
                          if (headersize + imagesize < 512)
                             imagesize = 512 - headersize;
+                         writeln("[VMLI] HDRSIZE: ", headersize);
+                         writeln("[VMLI] IMGSIZE: ", imagesize);
 
                          with (machine) {
                             if (e_crlc)
