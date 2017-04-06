@@ -525,7 +525,8 @@ class Intel8086
             IP += 3;
             break;
         case 0x2E: // CS:
-
+            //TODO: CS:
+            ++IP;
             break;
         case 0x2F: { // DAS
             const ubyte oldAL = AL;
@@ -978,9 +979,1142 @@ class Intel8086
 
             break;
         }
-        case 0x89: // MOV R/M16, REG16
-
+        case 0x89: { // MOV R/M16, REG16
+            const uint addr = GetIPAddress + 2;
+            const ubyte rm = FetchImmByte;
+            final switch (rm & 0b111) // R/M
+            {
+            case 0: // BX + SI
+                final switch (rm & 0b00111000) // REG
+                {
+                case 0: // AX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0: // 00
+                        AX = FetchWord(BX + SI);
+                        break;
+                    case 0b01000000: // 01
+                        AX = FetchWord(BX + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000: // 10
+                        AX = FetchWord(BX + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000: // 11
+                        AX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00001000: // CX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        CX = FetchWord(BX + SI);
+                        break;
+                    case 0b01000000:
+                        CX = FetchWord(BX + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        CX = FetchWord(BX + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        CX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00010000: // DX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DX = FetchWord(BX + SI);
+                        break;
+                    case 0b01000000:
+                        DX = FetchWord(BX + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DX = FetchWord(BX + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00011000: // BX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BX = FetchWord(BX + SI);
+                        break;
+                    case 0b01000000:
+                        BX = FetchWord(BX + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BX = FetchWord(BX + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00100000: // SP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SP = FetchWord(BX + SI);
+                        break;
+                    case 0b01000000:
+                        SP = FetchWord(BX + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SP = FetchWord(BX + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00101000: // BP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BP = FetchWord(BX + SI);
+                        break;
+                    case 0b01000000:
+                        BP = FetchWord(BX + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BP = FetchWord(BX + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00110000: // SI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SI = FetchWord(BX + SI);
+                        break;
+                    case 0b01000000:
+                        SI = FetchWord(BX + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SI = FetchWord(BX + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00111000: // DI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DI = FetchWord(BX + SI);
+                        break;
+                    case 0b01000000:
+                        DI = FetchWord(BX + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DI = FetchWord(BX + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                }
+                break; // 000
+            case 0b00001000: // BX + DI
+                final switch (rm & 0b00111000) // REG
+                {
+                case 0: // AX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        AX = FetchWord(BX + DI);
+                        break;
+                    case 0b01000000:
+                        AX = FetchWord(BX + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        AX = FetchWord(BX + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        AX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00001000: // CX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        CX = FetchWord(BX + DI);
+                        break;
+                    case 0b01000000:
+                        CX = FetchWord(BX + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        CX = FetchWord(BX + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        CX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00010000: // DX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DX = FetchWord(BX + DI);
+                        break;
+                    case 0b01000000:
+                        DX = FetchWord(BX + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DX = FetchWord(BX + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00011000: // BX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BX = FetchWord(BX + DI);
+                        break;
+                    case 0b01000000:
+                        BX = FetchWord(BX + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BX = FetchWord(BX + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00100000: // SP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SP = FetchWord(BX + DI);
+                        break;
+                    case 0b01000000:
+                        SP = FetchWord(BX + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SP = FetchWord(BX + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00101000: // BP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BP = FetchWord(BX + DI);
+                        break;
+                    case 0b01000000:
+                        BP = FetchWord(BX + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BP = FetchWord(BX + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00110000: // SI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SI = FetchWord(BX + DI);
+                        break;
+                    case 0b01000000:
+                        SI = FetchWord(BX + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SI = FetchWord(BX + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00111000: // DI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DI = FetchWord(BX + DI);
+                        break;
+                    case 0b01000000:
+                        DI = FetchWord(BX + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DI = FetchWord(BX + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                }
+                break; // 001
+            case 0b00000010: // BP + SI
+                final switch (rm & 0b00111000) // REG
+                {
+                case 0: // AX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        AX = FetchWord(BP + SI);
+                        break;
+                    case 0b01000000:
+                        AX = FetchWord(BP + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        AX = FetchWord(BP + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        AX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00001000: // CX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        CX = FetchWord(BP + SI);
+                        break;
+                    case 0b01000000:
+                        CX = FetchWord(BP + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        CX = FetchWord(BP + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        CX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00010000: // DX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DX = FetchWord(BP + SI);
+                        break;
+                    case 0b01000000:
+                        DX = FetchWord(BP + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DX = FetchWord(BP + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00011000: // BX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BX = FetchWord(BP + SI);
+                        break;
+                    case 0b01000000:
+                        BX = FetchWord(BP + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BX = FetchWord(BP + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00100000: // SP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SP = FetchWord(BP + SI);
+                        break;
+                    case 0b01000000:
+                        SP = FetchWord(BP + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SP = FetchWord(BP + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00101000: // BP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BP = FetchWord(BP + SI);
+                        break;
+                    case 0b01000000:
+                        BP = FetchWord(BP + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BP = FetchWord(BP + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00110000: // SI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SI = FetchWord(BP + SI);
+                        break;
+                    case 0b01000000:
+                        SI = FetchWord(BP + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SI = FetchWord(BP + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00111000: // DI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DI = FetchWord(BP + SI);
+                        break;
+                    case 0b01000000:
+                        DI = FetchWord(BP + SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DI = FetchWord(BP + SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                }
+                break; // 010
+            case 0b00000011: // BP + DI
+                final switch (rm & 0b00111000) // REG
+                {
+                case 0: // AX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        AX = FetchWord(BP + DI);
+                        break;
+                    case 0b01000000:
+                        AX = FetchWord(BP + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        AX = FetchWord(BP + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        AX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00001000: // CX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        CX = FetchWord(BP + DI);
+                        break;
+                    case 0b01000000:
+                        CX = FetchWord(BP + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        CX = FetchWord(BP + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        CX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00010000: // DX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DX = FetchWord(BP + DI);
+                        break;
+                    case 0b01000000:
+                        DX = FetchWord(BP + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DX = FetchWord(BP + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00011000: // BX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BX = FetchWord(BP + DI);
+                        break;
+                    case 0b01000000:
+                        BX = FetchWord(BP + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BX = FetchWord(BP + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00100000: // SP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SP = FetchWord(BP + DI);
+                        break;
+                    case 0b01000000:
+                        SP = FetchWord(BP + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SP = FetchWord(BP + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00101000: // BP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BP = FetchWord(BP + DI);
+                        break;
+                    case 0b01000000:
+                        BP = FetchWord(BP + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BP = FetchWord(BP + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00110000: // SI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SI = FetchWord(BP + DI);
+                        break;
+                    case 0b01000000:
+                        SI = FetchWord(BP + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SI = FetchWord(BP + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00111000: // DI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DI = FetchWord(BP + DI);
+                        break;
+                    case 0b01000000:
+                        DI = FetchWord(BP + DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DI = FetchWord(BP + DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                }
+                break; // 011
+            case 0b00000100: // SI
+                final switch (rm & 0b00111000) // REG
+                {
+                case 0: // AX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        AX = FetchWord(SI);
+                        break;
+                    case 0b01000000:
+                        AX = FetchWord(SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        AX = FetchWord(SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        AX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00001000: // CX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        CX = FetchWord(SI);
+                        break;
+                    case 0b01000000:
+                        CX = FetchWord(SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        CX = FetchWord(SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        CX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00010000: // DX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DX = FetchWord(SI);
+                        break;
+                    case 0b01000000:
+                        DX = FetchWord(SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DX = FetchWord(SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00011000: // BX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BX = FetchWord(SI);
+                        break;
+                    case 0b01000000:
+                        BX = FetchWord(SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BX = FetchWord(SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00100000: // SP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SP = FetchWord(SI);
+                        break;
+                    case 0b01000000:
+                        SP = FetchWord(SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SP = FetchWord(SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00101000: // BP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BP = FetchWord(SI);
+                        break;
+                    case 0b01000000:
+                        BP = FetchWord(SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BP = FetchWord(SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00110000: // SI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SI = FetchWord(SI);
+                        break;
+                    case 0b01000000:
+                        SI = FetchWord(SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SI = FetchWord(SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00111000: // DI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DI = FetchWord(SI);
+                        break;
+                    case 0b01000000:
+                        DI = FetchWord(SI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DI = FetchWord(SI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                }
+                break; // 100
+            case 0b00000101: // DI
+                final switch (rm & 0b00111000) // REG
+                {
+                case 0: // AX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        AX = FetchWord(DI);
+                        break;
+                    case 0b01000000:
+                        AX = FetchWord(DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        AX = FetchWord(DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        AX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00001000: // CX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        CX = FetchWord(DI);
+                        break;
+                    case 0b01000000:
+                        CX = FetchWord(DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        CX = FetchWord(DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        CX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00010000: // DX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DX = FetchWord(DI);
+                        break;
+                    case 0b01000000:
+                        DX = FetchWord(DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DX = FetchWord(DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00011000: // BX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BX = FetchWord(DI);
+                        break;
+                    case 0b01000000:
+                        BX = FetchWord(DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BX = FetchWord(DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00100000: // SP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SP = FetchWord(DI);
+                        break;
+                    case 0b01000000:
+                        SP = FetchWord(DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SP = FetchWord(DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00101000: // BP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BP = FetchWord(DI);
+                        break;
+                    case 0b01000000:
+                        BP = FetchWord(DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BP = FetchWord(DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00110000: // SI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SI = FetchWord(DI);
+                        break;
+                    case 0b01000000:
+                        SI = FetchWord(DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SI = FetchWord(DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00111000: // DI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DI = FetchWord(DI);
+                        break;
+                    case 0b01000000:
+                        DI = FetchWord(DI + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DI = FetchWord(DI + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                }
+                break; // 101
+            case 0b00000110: // BP*
+                final switch (rm & 0b00111000) // REG
+                {
+                case 0: // AX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        AX = FetchWord(BP); // DIRECT ADDRESS
+                        break;
+                    case 0b01000000:
+                        AX = FetchWord(BP + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        AX = FetchWord(BP + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        AX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00001000: // CX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        CX = FetchWord(BP); // DIRECT ADDRESS
+                        break;
+                    case 0b01000000:
+                        CX = FetchWord(BP + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        CX = FetchWord(BP + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        CX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00010000: // DX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DX = FetchWord(BP); // DIRECT ADDRESS
+                        break;
+                    case 0b01000000:
+                        DX = FetchWord(BP + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DX = FetchWord(BP + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00011000: // BX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BX = FetchWord(BP); // DIRECT ADDRESS
+                        break;
+                    case 0b01000000:
+                        BX = FetchWord(BP + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BX = FetchWord(BP + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00100000: // SP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SP = FetchWord(BP); // DIRECT ADDRESS
+                        break;
+                    case 0b01000000:
+                        SP = FetchWord(BP + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SP = FetchWord(BP + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00101000: // BP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BP = FetchWord(BP); // DIRECT ADDRESS
+                        break;
+                    case 0b01000000:
+                        BP = FetchWord(BP + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BP = FetchWord(BP + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00110000: // SI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SI = FetchWord(BP); // DIRECT ADDRESS
+                        break;
+                    case 0b01000000:
+                        SI = FetchWord(BP + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SI = FetchWord(BP + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        SI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00111000: // DI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DI = FetchWord(BP); // DIRECT ADDRESS
+                        break;
+                    case 0b01000000:
+                        DI = FetchWord(BP + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DI = FetchWord(BP + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                }
+                break; // 110
+            case 0b111: // BX
+                final switch (rm & 0b00111000) // REG
+                {
+                case 0b00000000: // AX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        AX = FetchWord(BX);
+                        break;
+                    case 0b01000000:
+                        AX = FetchWord(BX + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        AX = FetchWord(BX + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        AX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00001000: // CX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        CX = FetchWord(BX);
+                        break;
+                    case 0b01000000:
+                        CX = FetchWord(BX + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        CX = FetchWord(BX + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        CX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00010000: // DX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DX = FetchWord(BX);
+                        break;
+                    case 0b01000000:
+                        DX = FetchWord(BX + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DX = FetchWord(BX + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        DX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00011000: // BX
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BX = FetchWord(BX);
+                        break;
+                    case 0b01000000:
+                        BX = FetchWord(BX + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BX = FetchWord(BX + FetchWord(addr));
+                        break;
+                    case 0b11000000:
+                        BX = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00100000: // SP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SP = FetchWord(BX);
+                        break;
+                    case 0b01000000:
+                        SP = FetchWord(BX + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SP = FetchWord(BX + FetchWord(IP + 2));
+                        break;
+                    case 0b11000000:
+                        SP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00101000: // BP
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        BP = FetchWord(BX); // DIRECT ADDRESS
+                        break;
+                    case 0b01000000:
+                        BP = FetchWord(BX + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        BP = FetchWord(BX + FetchWord(IP + 2));
+                        break;
+                    case 0b11000000:
+                        BP = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00110000: // SI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        SI = FetchWord(BX);
+                        break;
+                    case 0b01000000:
+                        SI = FetchWord(BX + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        SI = FetchWord(BX + FetchWord(IP + 2));
+                        break;
+                    case 0b11000000:
+                        SI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                case 0b00111000: // DI
+                    final switch (rm & 0b11000000) // MOD
+                    {
+                    case 0:
+                        DI = FetchWord(BX); // DIRECT ADDRESS
+                        break;
+                    case 0b01000000:
+                        DI = FetchWord(BX + FetchByte(addr));
+                        break;
+                    case 0b10000000:
+                        DI = FetchWord(BX + FetchWord(IP + 2));
+                        break;
+                    case 0b11000000:
+                        DI = FetchWord(FetchByte(addr));
+                        break;
+                    }
+                    break;
+                }
+                break; // 111
+            }
             break;
+        }
         case 0x8A: { // MOV REG8, R/M8
             const uint addr = GetIPAddress + 2;
             const ubyte rm = FetchImmByte;
@@ -2832,13 +3966,13 @@ class Intel8086
             switch (rm & 0b00111000) {
             case 0b00000000: // 000 - INC
 
-            break;
+                break;
             case 0b00001000: // 001 - DEC
 
-            break;
+                break;
             default:
 
-            break;
+                break;
             }*/
             break;
         case 0xFF: // GRP5 R/M16

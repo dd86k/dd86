@@ -88,6 +88,7 @@ void LoadFile(string path, string args = null, bool verbose = false)
                     break;
 
                 case ".EXE": { // Real party starts here
+                    if (verbose) write("[VMLI] Loading EXE... ");
                     mz_hdr mzh;
                     {
                         ubyte[mz_hdr.sizeof] buf;

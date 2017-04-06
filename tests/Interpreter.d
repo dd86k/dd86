@@ -2,10 +2,12 @@ module InterpreterTests;
 
 import Interpreter, std.stdio, dd_dos;
 
-extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
+//extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
 
 unittest
 {
+    writeln("** Interpreter.d **");
+
     machine = new Intel8086();
 
     with (machine)
@@ -14,7 +16,7 @@ unittest
         Verbose = true;
         CS = 0;
 
-        writeln("** Help functions **");
+        writeln("[ Help functions ]");
         {
             write("Insert : ");
 
@@ -42,10 +44,16 @@ unittest
             assert(memoryBank[ip + 15] == 'Y');
 
             writeln("OK");
-        }
-        writeln("** Instructions **");
 
-        // MOV
+            write("Fetch : ");
+
+            writeln("TODO");
+        }
+        writeln("[ Instructions ]");
+
+        /*******
+         * MOV *
+         *******/
 
         write("MOV : ");
 
@@ -115,15 +123,37 @@ unittest
 
         writeln("OK");
 
-        // MOV - ModR/M
+        /****************
+         * MOV - ModR/M *
+         ****************/
 
-        //write("MOV+ModR/M : ");
+        // MOV R/M16, REG16
+
+        write("MOV R/M16, REG16 : ");
+        {
+            ubyte mod = 0; // AX
+            Insert(0x134A, 10);
+            BX = 5;
+            SI = 5;
+            AX = 0;
+            Execute(0x89);
+           // assert(AX == 0x134A);
+
+            mod = 1;
+        }
+        writeln("OK");
+
+        // MOV REG8, R/M8
+
+        //write("MOV REG8, R/M8 : ");
 
 
 
         //writeln("OK");
 
-        // OR
+        /******
+         * OR *
+         ******/
 
         write("OR : ");
 
@@ -138,7 +168,9 @@ unittest
 
         writeln("OK");
 
-        // OR - ModR/M
+        /***************
+         * OR - ModR/M *
+         ***************/
 
         //write("OR+ModR/M : ");
 
@@ -146,7 +178,9 @@ unittest
 
         //writeln("OK");
 
-        // INC
+        /*******
+         * INC *
+         *******/
 
         write("INC : ");
 
@@ -170,7 +204,9 @@ unittest
 
         writeln("OK");
         
-        // DEC
+        /*******
+         * DEC *
+         *******/
 
         write("DEC : ");
 
@@ -193,7 +229,9 @@ unittest
 
         writeln("OK");
 
-        // PUSH
+        /********
+         * PUSH *
+         ********/
 
         write("PUSH : ");
 
@@ -235,7 +273,9 @@ unittest
 
         writeln("OK");
 
-        // POP
+        /*******
+         * POP *
+         *******/
 
         write("POP : ");
 
@@ -269,12 +309,16 @@ unittest
 
         writeln("OK");
 
-        // XCHG
+        /********
+         * XCHG *
+         ********/
 
         write("XCHG : ");
 
-        // 90h is NOP which is basically a XCHG AX,AX internally
-        // Nevertheless, let's test it (for the Program Counter's sake)
+        /*
+         * 90h is NOP which is basically a XCHG AX,AX internally
+         * Nevertheless, let's test it (for the Program Counter's sake)
+         */
         {
             uint ip = IP;
             Execute(0x90);
@@ -366,9 +410,27 @@ unittest
 
         writeln("OK");
 
-        write("GRP1 OR : ");
+        /*write("GRP1 OR : ");
+        {
 
-        writeln("TODO");
+        }
+        writeln("TODO");*/
+
+        /*************************
+         * OVERRIDES (CS, etc.) *
+         *************************/
+
+         // CS:
+
+        /*write("CS Override : ");
+        {
+
+        }
+        writeln("TODO");*/
+
+        /*********
+         * MISC. *
+         *********/
 
         // CBW
 
@@ -395,26 +457,5 @@ unittest
         assert(DX == 0xFFFF);
 
         writeln("OK");
-
-        // Manual Hello World
-
-        // Hello World. Offset: 0, Address: CS:0100
-        CS = 0; IP = 0x100;
-        Insert("Hello World!\n$", 0xE);
-        Execute(0x0E); // push CS
-        Execute(0x1F); // pop DS
-        Insert(0x10E, 1);
-        Execute(0xBA); // mov DX, 10Eh ;[msg]
-        Insert(0x9, 1);
-        Execute(0xB4); // mov AH, 9    ;print()
-        Insert(0x21, 1);
-        Execute(0xCD); // int 21h
-        assert(AL == 0x24);
-        Insert(0x4C01, 1);
-        Execute(0xB8); // mov AX 4C01h ;return 1
-        Insert(0x21, 1);
-        Execute(0xCD); // int 21h
-
-        writeln("Interpreter tests complete.");
     }
 }
