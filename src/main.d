@@ -17,7 +17,7 @@ enum {
 
 debug
 {
-    extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
+    //extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
 }
 else
 {
@@ -50,6 +50,7 @@ void DisplayFullHelp(string name = APP_NAME)
     writeln("  -p <Program>     Load a program at start.");
     writeln("  -a <Arguments>   Arguments to pass to <Program>.");
     writeln("  -M               Maximum performance(!)");
+    writeln("  -H               No starting-up messages.");
     writeln("  -V               Verbose mode.");
     writeln();
 	writeln("  -h, --help       Display help and quit.");
@@ -64,6 +65,7 @@ int main(string[] args)
     string init_file, init_args;
     bool sleep = true;
     bool verbose;
+    bool smsg = true; // Startup message
 
     for (size_t i = 0; i < argl; ++i)
     {
@@ -94,6 +96,10 @@ int main(string[] args)
 
             //case "-v": break;
 
+            case "-H":
+                smsg = false;
+                break;
+
             case "-M":
                 sleep = false;
                 break;
@@ -116,7 +122,8 @@ int main(string[] args)
         }
     }
 
-    writeln("DD-DOS is starting...");
+    if (smsg)
+        writeln("DD-DOS is starting...");
     InitConsole();
     machine = new Intel8086();
     machine.Sleep = sleep;

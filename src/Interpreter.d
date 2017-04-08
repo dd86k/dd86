@@ -308,7 +308,12 @@ class Intel8086
     void Insert(string data, size_t offset = 0)
     {
         size_t i = GetIPAddress + offset;
-        foreach(b; data) memoryBank[i++] = b;
+        version (LittleEndian) {
+            char* p = &data[0];
+            
+        } else {
+            foreach(b; data) memoryBank[i++] = b;
+        }
     }
 
     /// Execute the operation code. (ALU)

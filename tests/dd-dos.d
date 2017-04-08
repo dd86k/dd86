@@ -6,16 +6,20 @@ unittest
 {
     writeln("** DD-DOS **");
 
-    Intel8086 machine = new Intel8086();
+    machine = new Intel8086();
 
     with (machine) {
+        Verbose = true;
+        FullReset();
         /***************
          * Hello World *
          ***************/
+        
+        write("INT 21h->0900h: ");
 
         // Hello World. Offset: 0, Address: CS:0100
         CS = 0; IP = 0x100;
-        Insert("Hello World!\n$", 0xE);
+        Insert("OK\n$", 0xE);
         Execute(0x0E); // push CS
         Execute(0x1F); // pop DS
         Insert(0x10E, 1);

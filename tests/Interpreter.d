@@ -22,26 +22,22 @@ unittest
 
             uint ip = GetIPAddress;
             Insert(0xFF);
-            assert(memoryBank[ip] == 0xFF);
+            assert(memoryBank[ip]      == 0xFF);
             Insert(0x12, 2);
-            assert(memoryBank[ip + 2] == 0x12);
+            assert(memoryBank[ip + 2]  == 0x12);
             Insert(0xABCD);
-            assert(memoryBank[ip] == 0xCD);
-            assert(memoryBank[ip + 1] == 0xAB);
+            assert(memoryBank[ip]      == 0xCD);
+            assert(memoryBank[ip + 1]  == 0xAB);
             Insert(0x5678, 4);
-            assert(memoryBank[ip + 4] == 0x78);
-            assert(memoryBank[ip + 5] == 0x56);
+            assert(memoryBank[ip + 4]  == 0x78);
+            assert(memoryBank[ip + 5]  == 0x56);
             Insert("AB$");
-            assert(memoryBank[ip]     == 'A');
-            assert(memoryBank[ip + 1] == 'B');
-            assert(memoryBank[ip + 2] == '$');
+            assert(memoryBank[ip..ip+3]     == "AB$");
             Insert("QWERTY", 10);
-            assert(memoryBank[ip + 10] == 'Q');
-            assert(memoryBank[ip + 11] == 'W');
-            assert(memoryBank[ip + 12] == 'E');
-            assert(memoryBank[ip + 13] == 'R');
-            assert(memoryBank[ip + 14] == 'T');
-            assert(memoryBank[ip + 15] == 'Y');
+            assert(memoryBank[ip+10..ip+16] == "QWERTY");
+            ubyte[] ar = [ 0xAA, 0xBB ];
+            Insert(ar, 2);
+            assert(memoryBank[ip+2..ip+4] == [ 0xAA, 0xBB ]);
 
             writeln("OK");
 
