@@ -624,97 +624,99 @@ void Raise(ubyte code, bool verbose = false)
 
             break;
         /*
-            * 30h - Get DOS version.
-            * Input: AL (00h = OEM Number in AL, 01h = Version flag in AL)
-            * Return:
-            *   AL (Major version, DOS 1.x = 00h)
-            *   AH (Minor version)
-            *   BL:CX (24bit user serial* if DOS<5 or AL=0)
-            *   BH (MS-DOS OEM number if DOS 5+ and AL=1)
-            *   BH (Version flag bit 3: DOS is in ROM, other: reserved (0))
-            *
-            * *Most versions do not use this.
-            */
+         * 30h - Get DOS version.
+         * Input: AL (00h = OEM Number in AL, 01h = Version flag in AL)
+         * Return:
+         *   AL (Major version, DOS 1.x = 00h)
+         *   AH (Minor version)
+         *   BL:CX (24bit user serial* if DOS<5 or AL=0)
+         *   BH (MS-DOS OEM number if DOS 5+ and AL=1)
+         *   BH (Version flag bit 3: DOS is in ROM, other: reserved (0))
+         *
+         * *Most versions do not use this.
+         */
         case 0x30:
             BH = AL == 0 ? OEM_ID.IBM : 1;
-            AL = DOS_MAJOR_VERSION;
-            AH = DOS_MINOR_VERSION;
+            AL = MajorVersion;
+            AH = MinorVersion;
             break;
         /*
-            * 35h - Get interrupt vector.
-            * Input: AL (Interrupt number)
-            * Return: ES:BX (Current interrupt number)
-            */
+         * 35h - Get interrupt vector.
+         * Input: AL (Interrupt number)
+         * Return: ES:BX (Current interrupt number)
+         */
         case 0x35:
 
             break;
         /*
-        * 36h - Get free disk space.
-        * Input: DL (Drive number, A: = 0)
-        * Return:
-        *   AX (FFFFh = invalid drive)
-        * or
-        *   AX (Sectors per cluster)
-        *   BX (Number of free clusters)
-        *   CX (bytes per sector)
-        *   DX (Total clusters on drive)
-        *
-        * Notes:
-        * - Free space on drive in bytes is AX * BX * CX.
-        * - Total space on drive in bytes is AX * CX * DX.
-        * - "lost clusters" are considered to be in use.
-        * - No proper results on CD-ROMs; use AX=4402h instead.
-        */
+         * 36h - Get free disk space.
+         * Input: DL (Drive number, A: = 0)
+         * Return:
+         *   AX (FFFFh = invalid drive)
+         * or
+         *   AX (Sectors per cluster)
+         *   BX (Number of free clusters)
+         *   CX (bytes per sector)
+         *   DX (Total clusters on drive)
+         *
+         * Notes:
+         * - Free space on drive in bytes is AX * BX * CX.
+         * - Total space on drive in bytes is AX * CX * DX.
+         * - "lost clusters" are considered to be in use.
+         * - No proper results on CD-ROMs; use AX=4402h instead.
+         */
         case 0x36:
 
             break;
         /*
-            * Get country specific information
-            * Input:
-            *   AL (0)
-            *   DS:DX (Buffer location, see BUFFER)
-            * Return:
-            *   CF set on error, otherwise cleared
-            *   AX (Error code, 02h)
-            *   AL (0 for current country, 1h-feh specific, ffh for >ffh)
-            *   BX (16-bit country code)
-            *     http://www.ctyme.com/intr/rb-2773.htm#Table1400
-            *   Buffer at DS:DX filled
-            *
-            * BUFFER:
-            * http://www.ctyme.com/intr/rb-2773.htm#Table1399
-            */
+         * Get country specific information
+         * Input:
+         *   AL (0)
+         *   DS:DX (Buffer location, see BUFFER)
+         * Return:
+         *   CF set on error, otherwise cleared
+         *   AX (Error code, 02h)
+         *   AL (0 for current country, 1h-feh specific, ffh for >ffh)
+         *   BX (16-bit country code)
+         *     http://www.ctyme.com/intr/rb-2773.htm#Table1400
+         *   Buffer at DS:DX filled
+         *
+         * BUFFER:
+         * http://www.ctyme.com/intr/rb-2773.htm#Table1399
+         */
         case 0x38:
 
             break;
         /*
-        * 39h - Create subdirectory.
-        * Input: DS:DX (ASCIZ path)
-        * Return:
-        *  CF clear if sucessful (AX set to 0)
-        *  CF set on error (AX = error code (3 or 5))
-        *
-        * Notes:
-        * - All directories in the given path except the last must exist.
-        * - Fails if the parent directory is the root and is full.
-        * - DOS 2.x-3.3 allow the creation of a directory sufficiently deep
-        *     that it is not possible to make that directory the current
-        *     directory because the path would exceed 64 characters.
-        */
+         * 39h - Create subdirectory.
+         * Input: DS:DX (ASCIZ path)
+         * Return:
+         *  CF clear if sucessful (AX set to 0)
+         *  CF set on error (AX = error code (3 or 5))
+         *
+         * Notes:
+         * - All directories in the given path except the last must exist.
+         * - Fails if the parent directory is the root and is full.
+         * - DOS 2.x-3.3 allow the creation of a directory sufficiently deep
+         *     that it is not possible to make that directory the current
+         *     directory because the path would exceed 64 characters.
+         */
         case 0x39:
+        //TODO: 21h->39_00h
             
             break;
         /*
-        * 3Ah - Remove subdirectory.
-        * Input: DS:DX (ASCIZ path)
-        * Return: 
-        *   CF clear if successful (AX set to 0)
-        *   CF set on error (AX = error code (03h,05h,06h,10h))
-        *
-        * Notes:
-        * - Subdirectory must be empty.
-        */
+         * 3Ah - Remove subdirectory.
+         * Input: DS:DX (ASCIZ path)
+         * Return: 
+         *   CF clear if successful (AX set to 0)
+         *   CF set on error (AX = error code (03h,05h,06h,10h))
+         *
+         * Notes:
+         * - Subdirectory must be empty.
+         */
         case 0x3A:
+        //TODO: 21h->3A_00h
 
             break;
         /*
@@ -960,6 +962,7 @@ void Raise(ubyte code, bool verbose = false)
             * Input: AL (Return code)
             */
         case 0x4C:
+        //TODO: Level count
             LastErrorCode = AL;
             Running = false;
             break;
@@ -1038,7 +1041,7 @@ void Raise(ubyte code, bool verbose = false)
             break;
         default: break;
         }
-        break;
+        break; // MS-DOS Services
     case 0x27: // TERMINATE AND STAY RESIDANT
 
         break;

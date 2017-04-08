@@ -4,34 +4,68 @@ import Interpreter, std.stdio, dd_dos;
 
 unittest
 {
-    writeln("** DD-DOS **");
+    writeln("---------- DD-DOS");
 
     machine = new Intel8086();
 
     with (machine) {
         Verbose = true;
         FullReset();
-        /***************
-         * Hello World *
-         ***************/
-        
-        write("INT 21h->0900h: ");
 
-        // Hello World. Offset: 0, Address: CS:0100
-        CS = 0; IP = 0x100;
-        Insert("OK\n$", 0xE);
-        Execute(0x0E); // push CS
-        Execute(0x1F); // pop DS
-        Insert(0x10E, 1);
-        Execute(0xBA); // mov DX, 10Eh ;[msg]
-        Insert(0x9, 1);
-        Execute(0xB4); // mov AH, 9    ;print()
-        Insert(0x21, 1);
-        Execute(0xCD); // int 21h
+        /*
+         * First half is the hardware and generic software interrupts while
+         * the rest is the MS-DOS API (AH=21h)
+         */
+
+        // MEMORY SIZE
+        
+        write("INT 12h: ");
+        Raise(0x12);
+        assert(memoryBank.length / 1024 == AX);
+        writeln("OK -- ", AX, " KB");
+
+        // FAST CONSOLE OUTPUT
+        
+        write("INT 29h: ");
+        AL = 'O';
+        Raise(0x29);
+        AL = 'K';
+        Raise(0x29);
+        AL = '\n';
+        Raise(0x29);
+
+        // HELLO WORLD
+        
+        write("INT 21h->09_00h: ");
+        Insert("OK\n$");
+        DS = CS; DX = IP;
+        AH = 9;
+        Raise(0x21);
         assert(AL == 0x24);
-        Insert(0x4C01, 1);
-        Execute(0xB8); // mov AX 4C01h ;return 1
-        Insert(0x21, 1);
-        Execute(0xCD); // int 21h
+
+        // GET DATE
+
+        write("INT 21h->2A_00h: ");
+        AH = 0x2A;
+        Raise(0x21);
+        writefln("(D/M/Y) %d/%d/%d Weekday=%d", DL, DH, CX, AL);
+
+        // GET TIME
+        
+        write("INT 21h->2C_00h: ");
+        AH = 0x2C;
+        Raise(0x21);
+        writefln("(H:M:S) %d:%d:%d.%d", CH, CL, DH, DL);
+
+        // GET VERSION
+
+        write("INT 21h->30_00h: ");
+        AL = 0;
+        AH = 0x30;
+        Raise(0x21);
+        assert(AH == DOS_MINOR_VERSION);
+        assert(AL == DOS_MAJOR_VERSION);
+        assert(BH == OEM_ID.IBM);
+        writeln("OK");
     }
 }

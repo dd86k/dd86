@@ -6,7 +6,7 @@ import Interpreter, std.stdio, dd_dos;
 
 unittest
 {
-    writeln("** Interpreter.d **");
+    writeln("---------- Interpreter");
 
     machine = new Intel8086();
 

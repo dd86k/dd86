@@ -21,6 +21,10 @@ enum OEM_ID { // Used for INT 21h AH=30 so far.
     IBM, Compaq, MSPackagedProduct, ATnT, ZDS
 }
 
+enum InterpreterType {
+    i8086, i80486
+}
+
 /// Sleep for n hecto-nanoseconds
 pragma(inline, true) void HSLEEP(int n) {
     Thread.sleep(hnsecs(n));
@@ -308,12 +312,7 @@ class Intel8086
     void Insert(string data, size_t offset = 0)
     {
         size_t i = GetIPAddress + offset;
-        version (LittleEndian) {
-            char* p = &data[0];
-            
-        } else {
-            foreach(b; data) memoryBank[i++] = b;
-        }
+        foreach(b; data) memoryBank[i++] = b;
     }
 
     /// Execute the operation code. (ALU)
