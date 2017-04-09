@@ -102,7 +102,7 @@ unittest
 
         write("INT 21h->39_00h: ");
         DS = CS; DX = IP;
-        Insert("TESTDIR");
+        Insert("TESTDIR\0");
         AH = 0x39;
         Raise(0x21);
         assert(exists("TESTDIR"));

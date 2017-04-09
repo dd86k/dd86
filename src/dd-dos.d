@@ -535,12 +535,11 @@ void Raise(ubyte code, bool verbose = false)
             {
                 import core.sys.posix.time;
                 time_t r;
-                tm* s;
                 time(&r);
-                s = localtime(&r);
+                tm* s = localtime(&r);
 
-                CX = s.tm_year;
-                DH = cast(ubyte)s.tm_mon;
+                CX = 1900 + s.tm_year;
+                DH = cast(ubyte)(s.tm_mon + 1);
                 DL = cast(ubyte)s.tm_mday;
                 AL = cast(ubyte)s.tm_wday;
             }
@@ -550,25 +549,25 @@ void Raise(ubyte code, bool verbose = false)
             }
             break;
         /*
-        * 2Bh - Set system date.
-        * Input:
-        *   CX (Year, 1980-2099)
-        *   DH (Month)
-        *   DL (Day)
-        * Return: AL (00h if successful, FFh if failed (invalid))
-        */
+         * 2Bh - Set system date.
+         * Input:
+         *   CX (Year, 1980-2099)
+         *   DH (Month)
+         *   DL (Day)
+         * Return: AL (00h if successful, FFh (invalid) if failed)
+         */
         case 0x2B:
 
             break;
         /*
-        * 2Ch - Get system time.
-        * Input: None.
-        * Return:
-        *   CH (Hour)
-        *   CL (Minute)
-        *   DH (Second)
-        *   DL (1/100 seconds)
-        */
+         * 2Ch - Get system time.
+         * Input: None.
+         * Return:
+         *   CH (Hour)
+         *   CL (Minute)
+         *   DH (Second)
+         *   DL (1/100 seconds)
+         */
         case 0x2C:
             version (Windows)
             {
@@ -591,7 +590,7 @@ void Raise(ubyte code, bool verbose = false)
 
                 CH = cast(ubyte)s.tm_hour;
                 CL = cast(ubyte)s.tm_min;
-                DH = cast(ubyte)s.tm_wday;
+                DH = cast(ubyte)s.tm_sec;
 
                 version (linux)
                 {
@@ -608,27 +607,27 @@ void Raise(ubyte code, bool verbose = false)
             }
             break;
         /*
-        * 2Dh - Set system time.
-        * Input:
-        *   CH (Hour)
-        *   CL (Minute)
-        *   DH (Second)
-        *   DL (1/100 seconds)
-        * Return: AL (00h if successful, FFh if failed (invalid))
-        */
+         * 2Dh - Set system time.
+         * Input:
+         *   CH (Hour)
+         *   CL (Minute)
+         *   DH (Second)
+         *   DL (1/100 seconds)
+         * Return: AL (00h if successful, FFh if failed (invalid))
+         */
         case 0x2D:
 
             break;
         /*
-        * 2Eh - Set verify flag.
-        * Input: AL (00 = off, 01 = on)
-        * Return: None.
-        *
-        * Notes:
-        * - Default state at boot is off.
-        * - When on, all disk writes are verified provided the device driver
-        *     supports read-after-write verification.
-        */
+         * 2Eh - Set verify flag.
+         * Input: AL (00 = off, 01 = on)
+         * Return: None.
+         *
+         * Notes:
+         * - Default state at boot is off.
+         * - When on, all disk writes are verified provided the device driver
+         *     supports read-after-write verification.
+         */
         case 0x2E:
 
             break;
@@ -773,16 +772,16 @@ void Raise(ubyte code, bool verbose = false)
         }
             break;
         /*
-        * 3Bh - Set current directory.
-        * Input: DS:DX (ASCIZ path (maximum 64 Bytes))
-        * Return:
-        *  CF clear if sucessful (AX set to 0)
-        *  CF set on error (AX = error code (3))
-        *
-        * Notes:
-        * - If new directory name includes a drive letter, the default drive
-        *     is not changed, only the current directory on that drive.
-        */
+         * 3Bh - Set current directory.
+         * Input: DS:DX (ASCIZ path (maximum 64 Bytes))
+         * Return:
+         *  CF clear if sucessful (AX set to 0)
+         *  CF set on error (AX = error code (3))
+         *
+         * Notes:
+         * - If new directory name includes a drive letter, the default drive
+         *     is not changed, only the current directory on that drive.
+         */
         case 0x3B:
 
             break;
@@ -944,97 +943,97 @@ void Raise(ubyte code, bool verbose = false)
         }
             break;
         /*
-        * 42h - Set current file position.
-        * Input:
-        *   AL (0 = SEEK_SET, 1 = SEEK_CUR, 2 = SEEK_END)
-        *   BX (File handle)
-        *   CX:DX (File origin offset)
-        * Return:
-        *   CF clear if successful (DX:AX = New position (from start))
-        *   CF set on error (AX = error code (1, 6))
-        *
-        * Notes:
-        * - For origins 01h and 02h, the pointer may be positioned before the
-        *     start of the file; no error is returned in that case, but
-        *     subsequent attempts at I/O will produce errors.
-        * - If the new position is beyond the current end of file, the file
-        *     will be extended by the next write (see AH=40h).
-        */
+         * 42h - Set current file position.
+         * Input:
+         *   AL (0 = SEEK_SET, 1 = SEEK_CUR, 2 = SEEK_END)
+         *   BX (File handle)
+         *   CX:DX (File origin offset)
+         * Return:
+         *   CF clear if successful (DX:AX = New position (from start))
+         *   CF set on error (AX = error code (1, 6))
+         *
+         * Notes:
+         * - For origins 01h and 02h, the pointer may be positioned before the
+         *     start of the file; no error is returned in that case, but
+         *     subsequent attempts at I/O will produce errors.
+         * - If the new position is beyond the current end of file, the file
+         *     will be extended by the next write (see AH=40h).
+         */
         case 0x42:
 
             break;
         /*
-        * 43h - Get or set file attributes.
-        * Input:
-        *   AL (00 for getting, 01 for setting)
-        *   CX (New attributes if setting, see ATTRIB in 3Ch)
-        *   DS:DX (ASCIZ path)
-        * Return:
-        *   CF cleared if successful (CX=File attributes on getting, AX=0 on setting)
-        *   CF set on error (AX = error code (01h,02h,03h,05h))
-        *
-        * Bugs:
-        * - Windows for Workgroups returns error code 05h (access denied)
-        *     instead of error code 02h (file not found) when attempting to
-        *     get the attributes of a nonexistent file.
-        *
-        * Notes:
-        * - Setting will not change volume label or directory attribute bits,
-        *     but will change the other attribute bits of a directory.
-        * - MS-DOS 4.01 reportedly closes the file if it is currently open.
-        */
+         * 43h - Get or set file attributes.
+         * Input:
+         *   AL (00 for getting, 01 for setting)
+         *   CX (New attributes if setting, see ATTRIB in 3Ch)
+         *   DS:DX (ASCIZ path)
+         * Return:
+         *   CF cleared if successful (CX=File attributes on getting, AX=0 on setting)
+         *   CF set on error (AX = error code (01h,02h,03h,05h))
+         *
+         * Bugs:
+         * - Windows for Workgroups returns error code 05h (access denied)
+         *     instead of error code 02h (file not found) when attempting to
+         *     get the attributes of a nonexistent file.
+         *
+         * Notes:
+         * - Setting will not change volume label or directory attribute bits,
+         *     but will change the other attribute bits of a directory.
+         * - MS-DOS 4.01 reportedly closes the file if it is currently open.
+         */
         case 0x43:
 
             break;
         /*
-        * 47h - Get current working directory.
-        * Input:
-        *   DL (Drive number, 0 = Default, 1 = A:, etc.)
-        *   DS:DI (Pointer to 64-byte buffer for ASCIZ path)
-        * Return:
-        *   CF cleared if successful
-        *   CF set on error code (AX = error code (Fh))
-        *
-        * Notes:
-        * - The returned path does not include a drive or the initial
-        *     backslash
-        * - Many Microsoft products for Windows rely on AX being 0100h on
-        *     success.
-        */
+         * 47h - Get current working directory.
+         * Input:
+         *   DL (Drive number, 0 = Default, 1 = A:, etc.)
+         *   DS:DI (Pointer to 64-byte buffer for ASCIZ path)
+         * Return:
+         *   CF cleared if successful
+         *   CF set on error code (AX = error code (Fh))
+         *
+         * Notes:
+         * - The returned path does not include a drive or the initial
+         *     backslash
+         * - Many Microsoft products for Windows rely on AX being 0100h on
+         *     success.
+         */
         case 0x47:
 
             break;
         /*
-            * 4Ah - Resize memory block
-            * Input:
-            *   BX (New size in paragraphs)
-            *   ES (Segment of block to resize)
-            * Return: 
-            *   CF set on error, otherwise cleared
-            *   AX error code (07h,08h,09h)
-            *   BX (Maximum paragraphs available for specified memory block)
-            *
-            * Notes:
-            * - Notes: Under DOS 2.1 to 6.0, if there is insufficient memory to
-            *     expand the block as much as requested, the block will be made
-            *     as large as possible. DOS 2.1-6.0 coalesces any free blocks
-            *     immediately following the block to be resized.
-            */
+         * 4Ah - Resize memory block
+         * Input:
+         *   BX (New size in paragraphs)
+         *   ES (Segment of block to resize)
+         * Return: 
+         *   CF set on error, otherwise cleared
+         *   AX error code (07h,08h,09h)
+         *   BX (Maximum paragraphs available for specified memory block)
+         *
+         * Notes:
+         * - Notes: Under DOS 2.1 to 6.0, if there is insufficient memory to
+         *     expand the block as much as requested, the block will be made
+         *     as large as possible. DOS 2.1-6.0 coalesces any free blocks
+         *     immediately following the block to be resized.
+         */
         /*case 0x4A:
 
             break;*/
         /*
-            * 4Bh - Load/execute program
-            * Input:
-            *   AL (see LOADTYPE)
-            *   DS:DX (ASCIZ path)
-            *   ES:BX (parameter block)
-            *   CX (Mode, only for AL=04h)
-            * Return:
-            *   CF set on error, or cleared
-            *   AX (error code (01h,02h,05h,08h,0Ah,0Bh))
-            *   BX and DX destroyed
-            */
+         * 4Bh - Load/execute program
+         * Input:
+         *   AL (see LOADTYPE)
+         *   DS:DX (ASCIZ path)
+         *   ES:BX (parameter block)
+         *   CX (Mode, only for AL=04h)
+         * Return:
+         *   CF set on error, or cleared
+         *   AX (error code (01h,02h,05h,08h,0Ah,0Bh))
+         *   BX and DX destroyed
+         */
         case 0x4B: {
         //TODO: INT 21h AH=4Bh
             string path = MemString(&memoryBank[0], GetAddress(DS, DX));
@@ -1050,12 +1049,7 @@ void Raise(ubyte code, bool verbose = false)
          * - Unless the process is its own parent, all open files are closed
          *     and all memory belonging to the process is freed.
          */
-        //case 0x4B: break;
-        /*
-         * 4Ch - Terminate with code
-         * Input: AL (Return code)
-         */
-        case 0x4B, 0x4C:
+        case 0x4C:
         //TODO: Level count
             LastErrorCode = AL;
             Running = false;
