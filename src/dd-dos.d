@@ -928,8 +928,20 @@ void Raise(ubyte code, bool verbose = false)
          * - Deleting a file which is currently open may lead to filesystem
          *     corruption.
          */
-        case 0x41:
-
+        case 0x41: {
+            import std.file : remove, FileException;
+            string path = MemString(&memoryBank[0], GetAddress(DS, DX));
+            try
+            {
+                remove(path);
+                CF = 0;
+            }
+            catch (FileException)
+            {
+                CF = 1;
+                AX = 2;
+            }
+        }
             break;
         /*
         * 42h - Set current file position.
@@ -1022,97 +1034,102 @@ void Raise(ubyte code, bool verbose = false)
             *   CF set on error, or cleared
             *   AX (error code (01h,02h,05h,08h,0Ah,0Bh))
             *   BX and DX destroyed
-        /*
-        * 4Ch - Terminate with return code.
-        * Input: AL (Return code)
-        * Return: None. (Never returns)
-        *
-        * Notes:
-        * - Unless the process is its own parent, all open files are closed
-        *     and all memory belonging to the process is freed.
-        */
-        case 0x4B:
-
+            */
+        case 0x4B: {
+        //TODO: INT 21h AH=4Bh
+            string path = MemString(&memoryBank[0], GetAddress(DS, DX));
+            //LoadFile(path);
+        }
             break;
         /*
-            * 4Ch - Terminate with code
-            * Input: AL (Return code)
-            */
-        case 0x4C:
+         * 4Ch - Terminate with return code.
+         * Input: AL (Return code)
+         * Return: None. (Never returns)
+         *
+         * Notes:
+         * - Unless the process is its own parent, all open files are closed
+         *     and all memory belonging to the process is freed.
+         */
+        //case 0x4B: break;
+        /*
+         * 4Ch - Terminate with code
+         * Input: AL (Return code)
+         */
+        case 0x4B, 0x4C:
         //TODO: Level count
             LastErrorCode = AL;
             Running = false;
             break;
         /*
-        * 4Dh - Get return code. (ERRORLEVEL)
-        * Input: None
-        * Return:
-        *   AH (Termination type*)
-        *   AL (Code)
-        *
-        * *00 = Normal, 01 = Control-C Abort, 02h = Critical Error Abort,
-        *   03h Terminate and stay resident.
-        *
-        * Notes:
-        * - The word in which DOS stores the return code is cleared after
-        *     being read by this function, so the return code can only be
-        *     retrieved once.
-        * - COMMAND.COM stores the return code of the last external command
-        *     it executed as ERRORLEVEL.
-        */
+         * 4Dh - Get return code. (ERRORLEVEL)
+         * Input: None
+         * Return:
+         *   AH (Termination type*)
+         *   AL (Code)
+         *
+         * *00 = Normal, 01 = Control-C Abort, 02h = Critical Error Abort,
+         *   03h Terminate and stay resident.
+         *
+         * Notes:
+         * - The word in which DOS stores the return code is cleared after
+         *     being read by this function, so the return code can only be
+         *     retrieved once.
+         * - COMMAND.COM stores the return code of the last external command
+         *     it executed as ERRORLEVEL.
+         */
         case 0x4D:
             
             AL = LastErrorCode;
             break;
         /*
-        * 54h - Get verify flag.
-        * Input: None.
-        * Return:
-        *   AL (0 = off, 1 = on)
-        */
+         * 54h - Get verify flag.
+         * Input: None.
+         * Return:
+         *   AL (0 = off, 1 = on)
+         */
         case 0x54:
 
             break;
         /*
-        * 56h - Rename file.
-        * Input:
-        *   DS:DX (ASCIZ path)
-        *   ES:DI (ASCIZ new name)
-        *   CL (Attribute mask, server call only)
-        * Return:
-        *   CF cleared if successful
-        *   CF set on error (AX = error code (02h,03h,05h,11h))
-        *
-        * Notes:
-        * - Allows move between directories on same logical volume.
-        * - This function does not set the archive attribute.
-        * - Open files should not be renamed.
-        * - (DOS 3.0+) allows renaming of directories.
-        */
+         * 56h - Rename file.
+         * Input:
+         *   DS:DX (ASCIZ path)
+         *   ES:DI (ASCIZ new name)
+         *   CL (Attribute mask, server call only)
+         * Return:
+         *   CF cleared if successful
+         *   CF set on error (AX = error code (02h,03h,05h,11h))
+         *
+         * Notes:
+         * - Allows move between directories on same logical volume.
+         * - This function does not set the archive attribute.
+         * - Open files should not be renamed.
+         * - (DOS 3.0+) allows renaming of directories.
+         */
         case 0x56:
 
             break;
         /*
-        * 57h - Get or set file's last-written time and date.
-        * Input:
-        *   AL (0 = get, 1 = set)
-        *   BX (File handle)
-        *   CX (New time (set), see TIME)
-        *   DX (New date (set), see DATE)
-        * Return (get):
-        *   CF clear if successful (CX = file's time, DX = file's date)
-        *   CF set on error (AX = error code (01h,06h))
-        * Return (set):
-        *   CF cleared if successful
-        *   CF set on error (AX = error code (01h,06h))
-        *
-        * TIME:
-        * | Bits        | 15-11 | 10-5    | 4-0     |
-        * | Description | hours | minutes | seconds |
-        * DATE:
-        * | Bits        | 15-9         | 8-5   | 4-0 |
-        * | Description | year (1980-) | month | day |
-        */
+         * 57h - Get or set file's last-written time and date.
+         * Input:
+         *   AL (0 = get, 1 = set)
+         *   BX (File handle)
+         *   CX (New time (set), see TIME)
+         *   DX (New date (set), see DATE)
+         * Return (get):
+         *   CF clear if successful (CX = file's time, DX = file's date)
+         *   CF set on error (AX = error code (01h,06h))
+         * Return (set):
+         *   CF cleared if successful
+         *   CF set on error (AX = error code (01h,06h))
+         *
+         * TIME:
+         * | Bits        | 15-11 | 10-5    | 4-0     |
+         * | Description | hours | minutes | seconds |
+         * DATE:
+         * | Bits        | 15-9         | 8-5   | 4-0 |
+         * | Description | year (1980-) | month | day |
+         */
         case 0x57:
 
             break;

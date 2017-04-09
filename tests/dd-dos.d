@@ -134,6 +134,15 @@ unittest
 
         // WRITE TO FILE/DEVICE
 
+        // RENAME FILE
+
         // DELETE FILE
+
+        write("INT 21h->41_00h: ");
+        CL = 0;
+        AH = 0x41;
+        Raise(0x21);
+        assert(!exists("TESTFILE"));
+        writeln("OK");
     }
 }
