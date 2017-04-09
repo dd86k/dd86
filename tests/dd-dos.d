@@ -1,6 +1,6 @@
 module DD_DOSTests;
 
-import Interpreter, std.stdio, dd_dos;
+import Interpreter, std.stdio, dd_dos, std.file : exists;
 
 unittest
 {
@@ -14,7 +14,11 @@ unittest
 
         /*
          * First half is the hardware and generic software interrupts while
-         * the rest is the MS-DOS API (AH=21h)
+         * the rest is the MS-DOS API (INT 21h).
+         */
+        
+        /**
+         * HARDWARE/BIOS
          */
 
         // MEMORY SIZE
@@ -24,7 +28,7 @@ unittest
         assert(memoryBank.length / 1024 == AX);
         writeln("OK -- ", AX, " KB");
 
-        // FAST CONSOLE OUTPUT
+        // FAST CONSOLE OUTPUT (DOS)
         
         write("INT 29h: ");
         AL = 'O';
@@ -33,6 +37,21 @@ unittest
         Raise(0x29);
         AL = '\n';
         Raise(0x29);
+
+        /**
+         * MS-DOS SERVICES
+         */
+
+        // FAST CONSOLE OUTPUT (MS-DOS)
+        
+        write("INT 21h->02_00h: ");
+        AH = 2;
+        DL = 'O';
+        Raise(0x21);
+        DL = 'K';
+        Raise(0x21);
+        DL = '\n';
+        Raise(0x21);
 
         // HELLO WORLD
         
@@ -48,7 +67,18 @@ unittest
         write("INT 21h->2A_00h: ");
         AH = 0x2A;
         Raise(0x21);
-        writefln("(D/M/Y) %d/%d/%d Weekday=%d", DL, DH, CX, AL);
+        write("(D/M/Y) ");
+        final switch (AL) {
+            case 0: write("Sunday"); break;
+            case 1: write("Monday"); break;
+            case 2: write("Tuesday"); break;
+            case 3: write("Wednesday"); break;
+            case 4: write("Thursday"); break;
+            case 5: write("Friday"); break;
+            case 6: write("Saturday"); break;
+            case 7: write("Sunday"); break;
+        }
+        writefln(" %d/%d/%d", DL, DH, CX);
 
         // GET TIME
         
@@ -67,5 +97,43 @@ unittest
         assert(AL == DOS_MAJOR_VERSION);
         assert(BH == OEM_ID.IBM);
         writeln("OK");
+
+        // CREATE SUBDIRECTORY
+
+        write("INT 21h->39_00h: ");
+        DS = CS; DX = IP;
+        Insert("TESTDIR");
+        AH = 0x39;
+        Raise(0x21);
+        assert(exists("TESTDIR"));
+        writeln("OK");
+
+        // REMOVE SUBDIRECTORY
+
+        write("INT 21h->3A_00h: ");
+        AH = 0x3A;
+        Raise(0x21);
+        assert(!exists("TESTDIR"));
+        writeln("OK");
+
+        // CREATE/TRUNC FILE
+
+        write("INT 21h->3C_00h: ");
+        Insert("TESTFILE\0");
+        CL = 0; // No attributes
+        AH = 0x3C;
+        Raise(0x21);
+        assert(exists("TESTFILE"));
+        //CL = 32; // Archive
+        //Raise(0x21); // On TESTFILE again
+        writeln("OK");
+
+        // OPEN FILE
+
+        // READ FILE
+
+        // WRITE TO FILE/DEVICE
+
+        // DELETE FILE
     }
 }

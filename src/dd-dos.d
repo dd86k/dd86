@@ -1,6 +1,6 @@
 module dd_dos;
 
-import Interpreter, std.stdio, Loader, Poshub;
+import Interpreter, std.stdio, Loader, Poshub, Utilities;
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
@@ -15,6 +15,15 @@ enum {
     /// Default Minor DOS Version
     DOS_MINOR_VERSION = 0,
 }
+
+enum
+    READONLY = 1,
+    HIDDEN = 2,
+    SYSTEM = 4,
+    VOLLABEL = 8,
+    DIRECTORY = 16,
+    ARCHIVE = 32,
+    SHAREABLE = 128;
 
 /// DOS Version
 ubyte MajorVersion = DOS_MAJOR_VERSION,
@@ -189,15 +198,15 @@ void Raise(ubyte code, bool verbose = false)
                 //DL = cast(ubyte)CursorLeft;
                 break;
             /*
-                * VIDEO - Read light pen position
-                * Return:
-                *   AH (Trigger flag)
-                *   DH (Row)
-                *   DL (Column)
-                *   CH (Pixel row, modes 04h-06h)
-                *   CX (Pixel row, modes >200 rows)
-                *   BX (Pixel column)
-                */
+             * VIDEO - Read light pen position
+             * Return:
+             *   AH (Trigger flag)
+             *   DH (Row)
+             *   DL (Column)
+             *   CH (Pixel row, modes 04h-06h)
+             *   CX (Pixel row, modes >200 rows)
+             *   BX (Pixel column)
+             */
             case 0x04:
 
                 break;
@@ -314,7 +323,7 @@ void Raise(ubyte code, bool verbose = false)
         * - If stdout is redirected to a file, no error-checks are performed.
         */
         case 2:
-        
+            write(cast(char)(AL = DL));
             break;
         /*
         * 05h - Write character to printer.
@@ -701,9 +710,32 @@ void Raise(ubyte code, bool verbose = false)
          *     that it is not possible to make that directory the current
          *     directory because the path would exceed 64 characters.
          */
-        case 0x39:
-        //TODO: 21h->39_00h
-            
+        case 0x39: {
+            import std.file : mkdir;
+            string path = MemString(&memoryBank[0], GetAddress(DS, DX));
+            version (Windows)
+            {
+                import std.windows.syserror : WindowsException;
+                try {
+                    mkdir(path);
+                    CF = 0;
+                } catch (WindowsException) {
+                    CF = 1;
+                    AX = 3;
+                }
+            }
+            else version (Posix)
+            {
+                import std.file : FileException;
+                try {
+                    mkdir(path);
+                    CF = 0;
+                } catch (FileException) {
+                    CF = 1;
+                    AX = 3;
+                }
+            }
+        }
             break;
         /*
          * 3Ah - Remove subdirectory.
@@ -715,9 +747,30 @@ void Raise(ubyte code, bool verbose = false)
          * Notes:
          * - Subdirectory must be empty.
          */
-        case 0x3A:
-        //TODO: 21h->3A_00h
-
+        case 0x3A: {
+            import std.file : rmdir;
+            string path = MemString(&memoryBank[0], GetAddress(DS, DX));
+            version (Windows)
+            {
+                import std.windows.syserror : WindowsException;
+                try {
+                    rmdir(path);
+                    CF = 0;
+                } catch (WindowsException) {
+                    CF = 1;
+                    AX = 3;
+                }
+            }
+            else version (Posix)
+            {
+                import std.file : FileException;
+                try {
+                    rmdir(path);
+                } catch (FileException) {
+                    AX = 3;
+                }
+            }
+        }
             break;
         /*
         * 3Bh - Set current directory.
@@ -734,123 +787,147 @@ void Raise(ubyte code, bool verbose = false)
 
             break;
         /*
-        * 3Ch - Create or truncate file.
-        * Input:
-        *   CX (File attributes, see ATTRIB)
-        *   DS:DX (ASCIZ path)
-        * Return:
-        *  CF clear if sucessful (AX = File handle)
-        *  CF set if error (AX = error code (3, 4, 5)
-        *
-        * Notes:
-        * - If the file already exists, it is truncated to zero-length.
-        *
-        * ATTRIB:
-        * | Bit         | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
-        * | Description | S | - | A | D | V | S | H | R |
-        * 7 - S = Shareable
-        *     A = Archive
-        *     D = Directory
-        *     V = Volume label
-        *     S = System
-        *     H = Hidden
-        * 0 - R = Read-only
-        */
-        case 0x3C:
-
+         * 3Ch - Create or truncate file.
+         * Input:
+         *   CX (File attributes, see ATTRIB)
+         *   DS:DX (ASCIZ path)
+         * Return:
+         *  CF clear if sucessful (AX = File handle)
+         *  CF set if error (AX = error code (3, 4, 5)
+         *
+         * Notes:
+         * - If the file already exists, it is truncated to zero-length.
+         *
+         * ATTRIB:
+         * | Bit         | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+         * | Description | S | - | A | D | V | S | H | R |
+         * 7 - S = Shareable
+         *     A = Archive
+         *     D = Directory
+         *     V = Volume label
+         *     S = System
+         *     H = Hidden
+         * 0 - R = Read-only
+         */
+        case 0x3C: {
+            import std.stdio : toFile;
+            import std.file : setAttributes;
+            enum EMPTY = cast(ubyte[])null;
+            string path = MemString(&memoryBank[0], GetAddress(DS, DX));
+            uint at; // VOLLABEL and DIRECTORY are ignored here
+            version (Windows) // 1:1 MS-DOS<->Windows
+            { // https://msdn.microsoft.com/en-us/library/gg258117(v=vs.85).aspx
+                if (CL & READONLY) at |= READONLY;
+                if (CL & HIDDEN)   at |= HIDDEN;
+                if (CL & SYSTEM)   at |= SYSTEM;
+                if (CL & ARCHIVE)  at |= ARCHIVE;
+            }
+            else version (Posix)
+            { // http://pubs.opengroup.org/onlinepubs/7908799/xsh/sysstat.h.html
+                import core.sys.posix.sys.stat; // (st_mode)
+                enum WRITE = S_IWUSR | S_IWGRP | S_IWOTH,
+                     READ  = S_IRUSR | S_IRGRP | S_IROTH;
+                if (CL & READONLY)
+                    at |= READ;
+                else
+                    at |= READ | WRITE;
+            }
+            toFile(EMPTY, path);
+            setAttributes(path, at);
+        }
             break;
         /*
-        * 3Dh - Open file.
-        * Input:
-        *   AL (Access and sharing modes)
-        *   DS:DX (ASCIZ path)
-        * Return:
-        *   CF clear if successful (AX = File handle)
-        *   CF set on error (AX = error code (01h,02h,03h,04h,05h,0Ch,56h))
-        *
-        * Notes:
-        * - File pointer is set to start of file.
-        * - File handles which are inherited from a parent also inherit
-        *     sharing and access restrictions.
-        * - Files may be opened even if given the hidden or system attributes.
-        */
+         * 3Dh - Open file.
+         * Input:
+         *   AL (Access and sharing modes)
+         *   DS:DX (ASCIZ path)
+         * Return:
+         *   CF clear if successful (AX = File handle)
+         *   CF set on error (AX = error code (01h,02h,03h,04h,05h,0Ch,56h))
+         *
+         * Notes:
+         * - File pointer is set to start of file.
+         * - File handles which are inherited from a parent also inherit
+         *     sharing and access restrictions.
+         * - Files may be opened even if given the hidden or system attributes.
+         */
         case 0x3D:
 
             break;
         /*
-        * 3Eh - Close file.
-        * Input: BX (File handle)
-        * Return:
-        *   CF clear if successful (AX = File handle)
-        *   CF set on error (AX = error code (06h))
-        *
-        * Notes:
-        * - If the file was written to, any pending disk writes are performed,
-        *     the time and date stamps are set to the current time, and the
-        *     directory entry is updated.
-        */
+         * 3Eh - Close file.
+         * Input: BX (File handle)
+         * Return:
+         *   CF clear if successful (AX = File handle)
+         *   CF set on error (AX = error code (06h))
+         *
+         * Notes:
+         * - If the file was written to, any pending disk writes are performed,
+         *     the time and date stamps are set to the current time, and the
+         *     directory entry is updated.
+         */
         case 0x3E:
 
             break;
         /*
-        * 3Fh - Read from file or device.
-        * Input:
-        *   BX (File handle)
-        *   CX (Number of bytes to read)
-        *   DS:DX (Points to buffer)
-        * Return:
-        *   CF clear if successful (AX = bytes read)
-        *   CF set on error (AX = error code (05h,06h))
-        *
-        * Notes:
-        * - Data is read beginning at current file position, and the file
-        *     position is updated after a successful read.
-        * - The returned AX may be smaller than the request in CX if a
-        *     partial read occurred.
-        * - If reading from CON, read stops at first CR.
-        */
+         * 3Fh - Read from file or device.
+         * Input:
+         *   BX (File handle)
+         *   CX (Number of bytes to read)
+         *   DS:DX (Points to buffer)
+         * Return:
+         *   CF clear if successful (AX = bytes read)
+         *   CF set on error (AX = error code (05h,06h))
+         *
+         * Notes:
+         * - Data is read beginning at current file position, and the file
+         *     position is updated after a successful read.
+         * - The returned AX may be smaller than the request in CX if a
+         *     partial read occurred.
+         * - If reading from CON, read stops at first CR.
+         */
         case 0x3F:
 
             break;
         /*
-        * 40h - Write to file or device.
-        * Input:
-        *   BX (File handle)
-        *   CX (Number of bytes to write)
-        *   DS:DX (Points to buffer)
-        * Return:
-        *   CF clear if successful (AX = bytes read)
-        *   CF set on error (AX = error code (05h,06h))
-        *
-        * Notes:
-        * - If CX is zero, no data is written, and the file is truncated or
-        *     extended to the current position.
-        * - Data is written beginning at the current file position, and the
-        *     file position is updated after a successful write.
-        * - The usual cause for AX < CX on return is a full disk.
-        */
+         * 40h - Write to file or device.
+         * Input:
+         *   BX (File handle)
+         *   CX (Number of bytes to write)
+         *   DS:DX (Points to buffer)
+         * Return:
+         *   CF clear if successful (AX = bytes read)
+         *   CF set on error (AX = error code (05h,06h))
+         *
+         * Notes:
+         * - If CX is zero, no data is written, and the file is truncated or
+         *     extended to the current position.
+         * - Data is written beginning at the current file position, and the
+         *     file position is updated after a successful write.
+         * - The usual cause for AX < CX on return is a full disk.
+         */
         case 0x40:
 
             break;
         /*
-        * 41h - Delete file.
-        * Input:
-        *   DS:DX (ASCIZ path)
-        *   CL (Attribute mask)
-        * Return:
-        *   CF clear if successful (AX = 0, AL seems to be drive number)
-        *   CF set on error (AX = error code (2, 3, 5))
-        *
-        * Notes:
-        * - (DOS 3.1+) wildcards are allowed if invoked via AX=5D00h, in
-        *     which case the filespec must be canonical (as returned by
-        *     AH=60h), and only files matching the attribute mask in CL are
-        *     deleted.
-        * - DOS does not erase the file's data; it merely becomes inaccessible
-        *     because the FAT chain for the file is cleared.
-        * - Deleting a file which is currently open may lead to filesystem
-        *     corruption.
-        */
+         * 41h - Delete file.
+         * Input:
+         *   DS:DX (ASCIZ path)
+         *   CL (Attribute mask)
+         * Return:
+         *   CF clear if successful (AX = 0, AL seems to be drive number)
+         *   CF set on error (AX = error code (2, 3, 5))
+         *
+         * Notes:
+         * - (DOS 3.1+) wildcards are allowed if invoked via AX=5D00h, in
+         *     which case the filespec must be canonical (as returned by
+         *     AH=60h), and only files matching the attribute mask in CL are
+         *     deleted.
+         * - DOS does not erase the file's data; it merely becomes inaccessible
+         *     because the FAT chain for the file is cleared.
+         * - Deleting a file which is currently open may lead to filesystem
+         *     corruption.
+         */
         case 0x41:
 
             break;
@@ -1041,7 +1118,7 @@ void Raise(ubyte code, bool verbose = false)
             break;
         default: break;
         }
-        break; // MS-DOS Services
+        break; // End MS-DOS Services
     case 0x27: // TERMINATE AND STAY RESIDANT
 
         break;

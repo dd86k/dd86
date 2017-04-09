@@ -47,9 +47,9 @@ unittest
         }
         writeln("[ Instructions ]");
 
-        /*******
-         * MOV *
-         *******/
+        /**
+         * MOV
+         */
 
         write("MOV : ");
 
@@ -119,9 +119,9 @@ unittest
 
         writeln("OK");
 
-        /****************
-         * MOV - ModR/M *
-         ****************/
+        /**
+         * MOV - ModR/M
+         */
 
         // MOV R/M16, REG16
 
@@ -147,9 +147,9 @@ unittest
 
         //writeln("OK");
 
-        /******
-         * OR *
-         ******/
+        /**
+         * OR
+         */
 
         write("OR : ");
 
@@ -164,9 +164,9 @@ unittest
 
         writeln("OK");
 
-        /***************
-         * OR - ModR/M *
-         ***************/
+        /**
+         * OR - ModR/M
+         */
 
         //write("OR+ModR/M : ");
 
@@ -174,9 +174,9 @@ unittest
 
         //writeln("OK");
 
-        /*******
-         * INC *
-         *******/
+        /**
+         * INC
+         */
 
         write("INC : ");
 
@@ -200,9 +200,9 @@ unittest
 
         writeln("OK");
         
-        /*******
-         * DEC *
-         *******/
+        /**
+         * DEC
+         */
 
         write("DEC : ");
 
@@ -225,9 +225,9 @@ unittest
 
         writeln("OK");
 
-        /********
-         * PUSH *
-         ********/
+        /**
+         * PUSH
+         */
 
         write("PUSH : ");
 
@@ -269,9 +269,9 @@ unittest
 
         writeln("OK");
 
-        /*******
-         * POP *
-         *******/
+        /**
+         * POP
+         */
 
         write("POP : ");
 
@@ -305,9 +305,9 @@ unittest
 
         writeln("OK");
 
-        /********
-         * XCHG *
-         ********/
+        /**
+         * XCHG
+         */
 
         write("XCHG : ");
 
@@ -412,9 +412,9 @@ unittest
         }
         writeln("TODO");*/
 
-        /*************************
-         * OVERRIDES (CS, etc.) *
-         *************************/
+        /**
+         * OVERRIDES (CS, etc.)
+         */
 
          // CS:
 
@@ -424,9 +424,9 @@ unittest
         }
         writeln("TODO");*/
 
-        /*********
-         * MISC. *
-         *********/
+        /**
+         * MISC.
+         */
 
         // CBW
 
