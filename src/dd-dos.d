@@ -583,8 +583,7 @@ void Raise(ubyte code, bool verbose = false)
             else version (Posix)
             {
                 import core.sys.posix.time;
-                time_t r;
-                tm* s;
+                time_t r; tm* s;
                 time(&r);
                 s = localtime(&r);
 
@@ -594,7 +593,6 @@ void Raise(ubyte code, bool verbose = false)
 
                 version (linux)
                 {
-                    //TODO: Check
                     import core.sys.linux.sys.time;
                     timeval tv;
                     gettimeofday(&tv, null);

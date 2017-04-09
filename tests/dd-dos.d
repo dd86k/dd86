@@ -4,7 +4,7 @@ import Interpreter, std.stdio, dd_dos, std.file : exists;
 
 unittest
 {
-    writeln("---------- DD-DOS");
+    writeln("---------- DD-DOS (MS-DOS, IBM)");
 
     machine = new Intel8086();
 
@@ -69,14 +69,13 @@ unittest
         Raise(0x21);
         write("(D/M/Y) ");
         final switch (AL) {
-            case 0: write("Sunday"); break;
+            case 0, 7: write("Sunday"); break;
             case 1: write("Monday"); break;
             case 2: write("Tuesday"); break;
             case 3: write("Wednesday"); break;
             case 4: write("Thursday"); break;
             case 5: write("Friday"); break;
             case 6: write("Saturday"); break;
-            case 7: write("Sunday"); break;
         }
         writefln(" %d/%d/%d", DL, DH, CX);
 
@@ -144,5 +143,13 @@ unittest
         Raise(0x21);
         assert(!exists("TESTFILE"));
         writeln("OK");
+
+        // GET FREE DISK SPACE
+
+        /*write("INT 21h->36_00h: ");
+        DL = 2; // C:
+        AH = 0x36;
+        Raise(0x21);
+        writeln("OK");*/
     }
 }
