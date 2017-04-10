@@ -5,16 +5,23 @@ import Interpreter, std.stdio, Loader, Poshub, Utilities;
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
+version (linux)
+    version = COOL_CLUB;
+else version (OSX)
+    version = COOL_CLUB;
+else version (FreeBSD)
+    version = COOL_CLUB;
+
 debug enum APP_VERSION = "0.0.0-debug";
 else  enum APP_VERSION = "0.0.0";
+
 enum APP_NAME = "dd-dos";
 
-enum {
+enum
     /// Default Major DOS Version
     DOS_MAJOR_VERSION = 0,
     /// Default Minor DOS Version
-    DOS_MINOR_VERSION = 0,
-}
+    DOS_MINOR_VERSION = 0;
 
 enum
     READONLY = 1,
@@ -522,7 +529,7 @@ void Raise(ubyte code, bool verbose = false)
         case 0x2A:
             version (Windows)
             {
-                import core.sys.windows.windows;
+                import core.sys.windows.winbase;
                 SYSTEMTIME s;
                 GetLocalTime(&s);
 
@@ -594,6 +601,20 @@ void Raise(ubyte code, bool verbose = false)
                 version (linux)
                 {
                     import core.sys.linux.sys.time;
+                    timeval tv;
+                    gettimeofday(&tv, null);
+                    AL = cast(ubyte)tv.tv_usec;
+                }
+                version (OSX)
+                {
+                    import core.sys.osx.sys.time;
+                    timeval tv;
+                    gettimeofday(&tv, null);
+                    AL = cast(ubyte)tv.tv_usec;
+                }
+                version (FreeBSD)
+                {
+                    import core.sys.freebsd.sys.time;
                     timeval tv;
                     gettimeofday(&tv, null);
                     AL = cast(ubyte)tv.tv_usec;
