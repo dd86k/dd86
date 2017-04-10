@@ -598,23 +598,9 @@ void Raise(ubyte code, bool verbose = false)
                 CL = cast(ubyte)s.tm_min;
                 DH = cast(ubyte)s.tm_sec;
 
-                version (linux)
+                version (COOL_CLUB)
                 {
                     import core.sys.linux.sys.time;
-                    timeval tv;
-                    gettimeofday(&tv, null);
-                    AL = cast(ubyte)tv.tv_usec;
-                }
-                version (OSX)
-                {
-                    import core.sys.osx.sys.time;
-                    timeval tv;
-                    gettimeofday(&tv, null);
-                    AL = cast(ubyte)tv.tv_usec;
-                }
-                version (FreeBSD)
-                {
-                    import core.sys.freebsd.sys.time;
                     timeval tv;
                     gettimeofday(&tv, null);
                     AL = cast(ubyte)tv.tv_usec;
