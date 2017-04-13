@@ -4,7 +4,7 @@ import Interpreter, std.stdio, dd_dos, std.file : exists;
 
 unittest
 {
-    writeln("---------- DD-DOS (MS-DOS, IBM)");
+    writeln("---------- DD-DOS (MS-DOS, IBM PC)");
 
     machine = new Intel8086();
 
@@ -25,7 +25,7 @@ unittest
         
         write("INT 12h: ");
         Raise(0x12);
-        assert(memoryBank.length / 1024 == AX);
+        assert(bank.length / 1024 == AX);
         writeln("OK -- ", AX, " KB | ", AX / 1024, " MB");
 
         // FAST CONSOLE OUTPUT (DOS)

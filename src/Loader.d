@@ -78,7 +78,7 @@ void LoadFile(string path, string args = null, bool verbose = false)
                     f.rawRead(buf);
                     with (machine) {
                         CS = 0; IP = 0x100;
-                        ubyte* o = &memoryBank[0] + IP;
+                        ubyte* o = &bank[0] + IP;
                         memcpy(o, &buf[0], buf.length);
 
                         //MakePSP(GetIPAddress - 0x100, "TEST");

@@ -22,22 +22,32 @@ unittest
 
             uint ip = GetIPAddress;
             Insert(0xFF);
-            assert(memoryBank[ip]      == 0xFF);
+            assert(bank[ip]      == 0xFF);
+            assert(bank[ip+1]    == 0);
+            Insert(0x100);
+            assert(bank[ip]      == 0);
+            assert(bank[ip+1]    == 1);
             Insert(0x12, 2);
-            assert(memoryBank[ip + 2]  == 0x12);
+            assert(bank[ip + 2]  == 0x12);
             Insert(0xABCD);
-            assert(memoryBank[ip]      == 0xCD);
-            assert(memoryBank[ip + 1]  == 0xAB);
+            assert(bank[ip]      == 0xCD);
+            assert(bank[ip + 1]  == 0xAB);
             Insert(0x5678, 4);
-            assert(memoryBank[ip + 4]  == 0x78);
-            assert(memoryBank[ip + 5]  == 0x56);
+            assert(bank[ip + 4]  == 0x78);
+            assert(bank[ip + 5]  == 0x56);
             Insert("AB$");
-            assert(memoryBank[ip..ip+3]     == "AB$");
+            assert(bank[ip..ip+3]     == "AB$");
             Insert("QWERTY", 10);
-            assert(memoryBank[ip+10..ip+16] == "QWERTY");
+            assert(bank[ip+10..ip+16] == "QWERTY");
+            InsertW("Heck"w);
+            assert(bank[ip .. ip+1]   == "H"w);
+            assert(bank[ip+2..ip+3]   == "e"w);
+            assert(bank[ip+4..ip+5]   == "c"w);
+            assert(bank[ip+6..ip+7]   == "k"w);
+            //assert(bank[ip .. ip+9]   == "Heck"w);
             ubyte[] ar = [ 0xAA, 0xBB ];
             Insert(ar, 2);
-            assert(memoryBank[ip+2..ip+4] == [ 0xAA, 0xBB ]);
+            assert(bank[ip+2..ip+4] == [ 0xAA, 0xBB ]);
 
             writeln("OK");
 
@@ -405,6 +415,68 @@ unittest
         assert(BH == 0x16);
 
         writeln("OK");
+
+        write("CMPSB : ");
+
+        CS = ES = 0xF00; IP = DI = 0x100;
+        Insert("HELL");
+        CS = DS = 0xF00; IP = SI = 0x110;
+        Insert("HeLL");
+        Execute(0xA6);
+        assert(ZF);
+        Execute(0xA6);
+        assert(!ZF);
+        Execute(0xA6);
+        assert(ZF);
+        Execute(0xA6);
+        assert(ZF);
+
+        writeln("OK");
+
+        write("CMPSW : ");
+
+        CS = ES = 0xF00; IP = DI = 0x100;
+        InsertW("HELL"w);
+        CS = DS = 0xF00; IP = SI = 0x110;
+        InsertW("HeLL"w);
+        Execute(0xA7);
+        assert(ZF);
+        Execute(0xA7);
+        assert(!ZF);
+        Execute(0xA7);
+        assert(ZF);
+        Execute(0xA7);
+        assert(ZF);
+
+        writeln("OK");
+
+        write("LODSB : ");
+
+        AL = 0;
+        DS = 0xA0; SI = 0x200;
+        bank[GetAddress(DS, SI)] = 'H';
+        Execute(0xAC);
+        assert(AL == 'H');
+        bank[GetAddress(DS, SI)] = 'e';
+        Execute(0xAC);
+        assert(AL == 'e');
+
+        writeln("OK");
+
+        write("LODSW : ");
+
+        AX = 0;
+        DS = 0x40; SI = 0x80;
+        Insert(0x4800, GetAddress(DS, SI));
+        Execute(0xAD);
+        assert(AX == 0x4800);
+        Insert(0x6500, GetAddress(DS, SI));
+        Execute(0xAD);
+        assert(AX == 0x6500);
+
+        writeln("OK");
+
+        //TODO: SCAS and STOS
 
         /*write("GRP1 OR : ");
         {

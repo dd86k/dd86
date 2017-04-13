@@ -121,7 +121,7 @@ void EnterVShell(bool verbose = false)
                 if (AF) write("AF ");
                 if (PF) write("PF ");
                 if (CF) write("CF ");
-                writefln("(%Xh)", FLAG);
+                writefln("(%Xh)", FLAGW);
             }
             break;
         case "exit": return;
@@ -136,15 +136,15 @@ void MakePSP(uint location, string appname, string args = null)
 {
     with (machine) {
         alias l = location;
-        memoryBank[l + 0x40] = MajorVersion;
-        memoryBank[l + 0x41] = MinorVersion;
+        bank[l + 0x40] = MajorVersion;
+        bank[l + 0x41] = MinorVersion;
         size_t len = appname.length;
         if (args)
             len += args.length + 1;
-        memoryBank[l + 0x80] = cast(ubyte)len;
+        bank[l + 0x80] = cast(ubyte)len;
         version (X86_ANY)
         {
-            ubyte* pbank = &memoryBank[0] + 0x81;
+            ubyte* pbank = &bank[0] + 0x81;
             size_t i;
             foreach (b; appname) pbank[i++] = b;
             if (args)
@@ -164,7 +164,7 @@ void Raise(ubyte code, bool verbose = false)
         writefln("[VMRI] INTERRUPT %X RAISED", code);
 
     with (machine) {
-    Push(FLAG);
+    Push(FLAGW);
     IF = TF = 0;
     Push(CS);
     Push(IP);
@@ -231,7 +231,7 @@ void Raise(ubyte code, bool verbose = false)
         AX = ax;
         break;
     case 0x12: // BIOS - Get memory size
-        size_t kbsize = memoryBank.length / 1024;
+        size_t kbsize = bank.length / 1024;
         AX = cast(ushort)kbsize;
         break;
     case 0x13: // DISK operations
@@ -404,12 +404,12 @@ void Raise(ubyte code, bool verbose = false)
             uint pd = GetAddress(DS, DX);
 
             version (LittleEndian) {
-                char* p = cast(char*)&memoryBank[0] + pd;
+                char* p = cast(char*)&bank[0] + pd;
                 while (*p != '$')
                     write(*p++);
             } else {
-                while (memoryBank[pd] != '$')
-                    write(cast(char)memoryBank[pd++]);
+                while (bank[pd] != '$')
+                    write(cast(char)bank[pd++]);
             }
 
             AL = 0x24;
@@ -716,7 +716,7 @@ void Raise(ubyte code, bool verbose = false)
          */
         case 0x39: {
             import std.file : mkdir;
-            string path = MemString(&memoryBank[0], GetAddress(DS, DX));
+            string path = MemString(&bank[0], GetAddress(DS, DX));
             version (Windows)
             {
                 import std.windows.syserror : WindowsException;
@@ -753,7 +753,7 @@ void Raise(ubyte code, bool verbose = false)
          */
         case 0x3A: {
             import std.file : rmdir;
-            string path = MemString(&memoryBank[0], GetAddress(DS, DX));
+            string path = MemString(&bank[0], GetAddress(DS, DX));
             version (Windows)
             {
                 import std.windows.syserror : WindowsException;
@@ -817,7 +817,7 @@ void Raise(ubyte code, bool verbose = false)
             import std.stdio : toFile;
             import std.file : setAttributes;
             enum EMPTY = cast(ubyte[])null;
-            string path = MemString(&memoryBank[0], GetAddress(DS, DX));
+            string path = MemString(&bank[0], GetAddress(DS, DX));
             uint at; // VOLLABEL and DIRECTORY are ignored here
             version (Windows) // 1:1 MS-DOS<->Windows
             { // https://msdn.microsoft.com/en-us/library/gg258117(v=vs.85).aspx
@@ -934,7 +934,7 @@ void Raise(ubyte code, bool verbose = false)
          */
         case 0x41: {
             import std.file : remove, FileException;
-            string path = MemString(&memoryBank[0], GetAddress(DS, DX));
+            string path = MemString(&bank[0], GetAddress(DS, DX));
             try
             {
                 remove(path);
@@ -1040,8 +1040,8 @@ void Raise(ubyte code, bool verbose = false)
          *   BX and DX destroyed
          */
         case 0x4B: {
-        //TODO: INT 21h AH=4Bh
-            string path = MemString(&memoryBank[0], GetAddress(DS, DX));
+        //TODO: (Load/Execute) INT 21h AH=4Bh
+            //string path = MemString(&bank[0], GetAddress(DS, DX));
             //LoadFile(path);
         }
             break;
@@ -1147,6 +1147,6 @@ void Raise(ubyte code, bool verbose = false)
     IP = Pop();
     CS = Pop();
     IF = TF = 1;
-    FLAG = Pop();
+    FLAGW = Pop();
     }
 }

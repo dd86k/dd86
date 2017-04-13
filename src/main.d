@@ -39,8 +39,8 @@ int main(string[] args)
 {
     string init_file, init_args;
     bool maxperf,
-        verbose,
-        smsg; // Startup message
+         verbose,
+         smsg; // Startup message
 
     GetoptResult r;
 	try {
@@ -77,12 +77,15 @@ int main(string[] args)
         return 0;
 	}
 
+    debug verbose = true;
+
     if (!smsg) writeln("DD-DOS is starting...");
     if (verbose) writeln("[VMMI] Verbose mode.");
+    if (verbose) writeln("[VMMI] Max perf: ", maxperf);
     InitConsole();
     machine = new Intel8086();
     machine.Sleep = !maxperf;
-    if (verbose) writeln("[VMMI] Max perf: ", maxperf);
+    machine.Verbose = verbose;
 
     if (init_file)
     {
@@ -91,7 +94,7 @@ int main(string[] args)
     }
     else
     {
-        EnterVShell();
+        EnterVShell(verbose);
     }
 
     return LastErrorCode;
