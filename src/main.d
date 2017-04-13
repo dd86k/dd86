@@ -38,9 +38,9 @@ void DisplayHelp(string name = APP_NAME)
 int main(string[] args)
 {
     string init_file, init_args;
-    bool sleep = true,
+    bool maxperf,
         verbose,
-        smsg = true; // Startup message
+        smsg; // Startup message
 
     GetoptResult r;
 	try {
@@ -50,7 +50,7 @@ int main(string[] args)
             config.caseSensitive,
             "args|a", "Starting program's arguments.", &init_args,
             config.bundling, config.caseSensitive,
-            "perf|P", "Maximum performance(!)", &sleep,
+            "perf|P", "Maximum performance(!)", &maxperf,
             config.bundling, config.caseSensitive,
             "nobootmsg|N", "No starting-up messages.", &smsg,
             config.bundling, config.caseSensitive,
@@ -77,18 +77,16 @@ int main(string[] args)
         return 0;
 	}
 
-    if (smsg) writeln("DD-DOS is starting...");
+    if (!smsg) writeln("DD-DOS is starting...");
     if (verbose) writeln("[VMMI] Verbose mode.");
     InitConsole();
     machine = new Intel8086();
-    machine.Sleep = sleep;
+    machine.Sleep = !maxperf;
+    if (verbose) writeln("[VMMI] Max perf: ", maxperf);
 
     if (init_file)
     {
-        if (init_args)
-            LoadFile(init_file, init_args);
-        else
-            LoadFile(init_file);
+        LoadFile(init_file, init_args ? init_args : null, verbose);
         machine.Initiate();
     }
     else
