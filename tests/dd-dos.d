@@ -26,7 +26,7 @@ unittest
         write("INT 12h: ");
         Raise(0x12);
         assert(memoryBank.length / 1024 == AX);
-        writeln("OK -- ", AX, " KB");
+        writeln("OK -- ", AX, " KB | ", AX / 1024, " MB");
 
         // FAST CONSOLE OUTPUT (DOS)
         

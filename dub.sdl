@@ -7,12 +7,28 @@ license "MIT"
 homepage "https://github.com/dd86k/dd-dos"
 
 buildType "unittest" {
-  targetType "executable"
   targetName "tests"
+  targetType "executable"
   buildOptions "unittests"
   
-  targetPath "tests"
+  //targetPath "tests"
   excludedSourceFiles "src/main.d"
   sourcePaths "tests/"
   importPaths "tests/"
+}
+
+buildType "bench" {
+  targetName "bench"
+  targetType "executable"
+  buildOptions "unittests"
+  
+  //targetPath "bench"
+  excludedSourceFiles "src/main.d"
+  sourcePaths "bench/"
+  importPaths "bench/"
+}
+
+buildType "release" {
+  targetName "bench"
+  buildOptions "releaseMode" "stackStomping"
 }
