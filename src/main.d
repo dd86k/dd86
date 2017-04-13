@@ -7,19 +7,10 @@
 module main;
 
 import std.stdio;
+import std.getopt;
 import dd_dos, Interpreter, Loader, Poshub;
 
-// CLI Error codes
-enum {
-    /// Generic CLI syntax error
-    E_CLI = 1,
-}
-
-debug
-{
-    //extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
-}
-else
+debug { } else
 {
     extern (C) __gshared bool
         rt_envvars_enabled = false, rt_cmdline_enabled = false;
@@ -28,102 +19,66 @@ else
 /// Display version.
 void DisplayVersion()
 {
-	writeln(APP_NAME, " - v", APP_VERSION, " (", __TIMESTAMP__, ")");
+    import core.stdc.stdlib : exit;
+	writefln("%s - v%s (%s)", APP_NAME, APP_VERSION, __TIMESTAMP__);
     writeln("Copyright (c) 2017 dd86k, MIT license");
 	writeln("Project page: <https://github.com/dd86k/dd-dos>");
-    writeln("Compiled ", __FILE__, " using ", __VENDOR__," v", __VERSION__);
+    writefln("Compiled %s using %s v%s", __FILE__, __VENDOR__, __VERSION__);
+    exit(0);
 }
 
 /// Display short help.
 void DisplayHelp(string name = APP_NAME)
 {
-    writeln("  ", name, "  [-p <Program> [-a <Arguments>]] [-M] [-V]");
-    writeln("  ", name, "  {-h|--help|/?|-v|--version}");
-}
-
-/// Display long help.
-void DisplayFullHelp(string name = APP_NAME)
-{
-	writeln("Usage:");
-	writeln("  ", name, " [<Options>]");
-    writeln("Options:");
-    writeln("  -p <Program>     Load a program at start.");
-    writeln("  -a <Arguments>   Arguments to pass to <Program>.");
-    writeln("  -M               Maximum performance(!)");
-    writeln("  -H               No starting-up messages.");
-    writeln("  -V               Verbose mode.");
-    writeln();
-	writeln("  -h, --help       Display help and quit.");
-	writeln("  -v, --version    Display version and quit.");
+    writefln("  %s  [-p <Program> [-a <Arguments>]] [-M] [-V]", name);
+    writefln("  %s  {-h|--help|/?|-v|--version}", name);
 }
 
 /// Main entry point.
 int main(string[] args)
 {
-    const size_t argl = args.length;
-
     string init_file, init_args;
-    bool sleep = true;
-    bool verbose;
-    bool smsg = true; // Startup message
+    bool sleep = true,
+        verbose,
+        smsg = true; // Startup message
 
-    for (size_t i = 0; i < argl; ++i)
+    GetoptResult r;
+	try {
+		r = getopt(args,
+            config.caseSensitive,
+            "program|p", "Run a program at boot.", &init_file,
+            config.caseSensitive,
+            "args|a", "Starting program's arguments.", &init_args,
+            config.bundling, config.caseSensitive,
+            "perf|P", "Maximum performance(!)", &sleep,
+            config.bundling, config.caseSensitive,
+            "nobootmsg|N", "No starting-up messages.", &smsg,
+            config.bundling, config.caseSensitive,
+			"verbose|V", "Verbose mode.", &verbose,
+            config.caseSensitive,
+            "version|v", "Print version screen.", &DisplayVersion);
+	} catch (GetOptException ex) {
+		stderr.writeln(ex.msg);
+        return 1;
+	}
+
+    if (r.helpWanted)
     {
-        switch (args[i])
-        {
-            case "-p":
-                if (++i < argl) {
-                    init_file = args[i];
-                } else {
-                    writeln("-p : Missing argument.");
-                    return E_CLI;
-                }
-                break;
-            
-            case "-a":
-                if (++i < argl) {
-                    if (init_file) {
-                        init_args = args[i];
-                    } else {
-                        writeln("-a : Missing <Program>.");
-                        return E_CLI;
-                    }
-                } else {
-                    writeln("-a : Missing argument.");
-                    return E_CLI;
-                }
-                break;
-
-            //case "-v": break;
-
-            case "-H":
-                smsg = false;
-                break;
-
-            case "-M":
-                sleep = false;
-                break;
-
-            case "-V", "--verbose":
-                writeln("Verbose mode turned on.");
-                verbose = true;
-                break;
-
-            case "-v", "--version":
-                DisplayVersion();
-                return 0;
-            case "-h", "/?":
-                DisplayHelp(args[0]);
-                return 0;
-            case "--help":
-                DisplayFullHelp(args[0]);
-                return 0;
-            default:
+        DisplayHelp;
+        writeln("\nSwitches");
+        foreach (it; r.options)
+        { // "custom" defaultGetoptPrinter
+            writefln("%*s, %-*s%s%s",
+                4,  it.optShort,
+                12, it.optLong,
+                it.required ? "Required: " : " ",
+                it.help);
         }
-    }
+        return 0;
+	}
 
-    if (smsg)
-        writeln("DD-DOS is starting...");
+    if (smsg) writeln("DD-DOS is starting...");
+    if (verbose) writeln("[VMMI] Verbose mode.");
     InitConsole();
     machine = new Intel8086();
     machine.Sleep = sleep;

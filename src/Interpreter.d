@@ -79,7 +79,7 @@ class Intel8086
     void Initiate()
     {
         if (Verbose)
-            writeln("[VMRI] Running...");
+            writeln("[VMII] Running...");
 
         while (Running)
         {
@@ -4010,7 +4010,7 @@ class Intel8086
             break;
         default: // Illegal instruction
             if (Verbose)
-                writefln("[VMRE] Illegal instruction! (%Xh)", op);
+                writefln("[VMIE] Illegal instruction! (%Xh)", op);
             // Raise vector
             break;
         }

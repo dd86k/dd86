@@ -9,23 +9,17 @@ unittest
 {
     writeln("---------- Benchmarks");
 
-    machine = new Intel8086();
+    const uint pos = 10;
+    char[] c = new char[50];
+    const char[] s = "Hello it's me\0";
+    char* p = &c[pos];
+    for (int i; i < s.length; ++i, ++p) *p = s[i];
 
-    with (machine) {
-        auto sw = StopWatch();
-        CS = IP = 0;
-        Insert("Hello it's me\0");
+    StopWatch sw;
 
-        write("MemString(ubyte*) : ");
-        sw.start();
-        writeln(to!Duration(sw.peek));
-        sw.stop();
-
-        sw.reset();
-
-        sw.start();
-        write("MemString(ubyte*, uint) : ");
-        sw.stop();
-        writeln(to!Duration(sw.peek));
-    }
+    write("MemString(ubyte*, uint) 1'000'000x : ");
+    sw.start();
+    for (int i; i < 2_000_000; ++i) MemString(&c[0], pos);
+    sw.stop();
+    writeln(to!Duration(sw.peek));
 }

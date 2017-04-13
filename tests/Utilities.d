@@ -6,16 +6,13 @@ unittest
 {
     writeln("---------- Utilities");
 
-    machine = new Intel8086();
+    const uint pos = 10;
+    char[] c = new char[50];
+    const char[] s = "Hello it's me\0";
+    char* p = &c[pos];
+    for (int i; i < s.length; ++i, ++p) *p = s[i];
 
-    with (machine) {
-        CS = IP = 0;
-        Insert("Hello it's me\0");
-        write("MemString(ubyte*) : ");
-        assert(MemString(&memoryBank[0]) == "Hello it's me");
-        writeln("OK");
-        write("MemString(ubyte*, uint) : ");
-        assert(MemString(&memoryBank[0], 0) == "Hello it's me");
-        writeln("OK");
-    }
+    write("MemString(ubyte*, uint) : ");
+    assert(MemString(&c[0], pos) == "Hello it's me");
+    writeln("OK");
 }
