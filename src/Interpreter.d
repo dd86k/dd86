@@ -169,7 +169,7 @@ class Intel8086
     }
 
     /// Get physical address out of two segment/register values.
-    uint GetAddress(ushort segment, ushort offset)
+    uint GetAddress(int segment, int offset)
     {
         return (segment << 4) + offset;
     }
@@ -244,9 +244,8 @@ class Intel8086
     @property ubyte FLAGB()
     {
         return 
-            SF ? 0x80 : 0 | ZF ? 0x40 : 0 |
-            AF ? 0x10 : 0 | PF ? 0x4  : 0 |
-            CF ? 1    : 0;
+            SF ? 0x80 : 0 | ZF ? 0x40 : 0 | AF ? 0x10 : 0 |
+            PF ? 0x4  : 0 | CF ? 1    : 0;
     }
 
     @property void FLAGB(ubyte flag)
@@ -272,11 +271,7 @@ class Intel8086
         DF = (flag & 0x400) != 0;
         IF = (flag & 0x200) != 0;
         TF = (flag & 0x100) != 0;
-        SF = (flag & 0x80 ) != 0;
-        ZF = (flag & 0x40 ) != 0;
-        AF = (flag & 0x10 ) != 0;
-        PF = (flag & 0x4  ) != 0;
-        CF = (flag & 1    ) != 0;
+        FLAGB = flag & 0xFF;
     }
 
     /// Directly overwrite instructions at CS:IP.
@@ -300,10 +295,19 @@ class Intel8086
         if (op > 0xFFFFFF)
             bank[GetIPAddress + offset + 3] = (op >> 24) & 0xFF;
     }
-
-    void Insert(ushort op, size_t offset = 0)
+    void Insert(int op, size_t addr = 0)
     {
-        size_t addr = GetIPAddress + offset;
+        bank[addr] = op & 0xFF;
+        if (op > 0xFF)
+            bank[++addr] = (op >> 8) & 0xFF;
+        if (op > 0xFFFF)
+            bank[++addr] = (op >> 16) & 0xFF;
+        if (op > 0xFFFFFF)
+            bank[++addr] = (op >> 24) & 0xFF;
+    }
+    void InsertImm(ushort op, size_t offset = 0)
+    {
+        size_t addr = GetIPAddress + offset + 1;
         bank[addr] = op & 0xFF;
         if (op > 0xFF)
             bank[++addr] = (op >> 8) & 0xFF;
@@ -3926,7 +3930,7 @@ class Intel8086
         case 0xEA: { // JMP  FAR-LABEL
             // Any segment, any fragment, 5 byte instruction.
             // EAh (LO-IP) (HI-IP) (LO-CS) (HI-CS)
-            ushort ip = cast(ushort)(GetIPAddress + 1);
+            const int ip = GetIPAddress + 1;
             IP = FetchWord(ip);
             CS = FetchWord(ip + 2);
         }

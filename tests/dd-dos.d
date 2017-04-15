@@ -53,7 +53,7 @@ unittest
         DL = '\n';
         Raise(0x21);
 
-        // HELLO WORLD
+        // "HELLO WORLD"
         
         write("INT 21h->09_00h: ");
         Insert("OK\n$");

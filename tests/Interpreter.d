@@ -6,6 +6,7 @@ import Interpreter, std.stdio, dd_dos;
 
 unittest
 {
+    import core.stdc.string : memset;
     writeln("---------- Interpreter");
 
     machine = new Intel8086();
@@ -20,7 +21,7 @@ unittest
         {
             write("Insert : ");
 
-            uint ip = GetIPAddress;
+            const uint ip = GetIPAddress;
             Insert(0xFF);
             assert(bank[ip]      == 0xFF);
             assert(bank[ip+1]    == 0);
@@ -51,91 +52,98 @@ unittest
 
             writeln("OK");
 
+            memset(&bank[0], bank.length, 1);
+
             write("Fetch : ");
+
+            Insert(0xAAFF, 1);
+            assert(FetchImmWord == 0xAAFF);
+            assert(FetchWord(ip + 1) == 0xAAFF);
 
             writeln("TODO");
         }
-        writeln("[ Instructions ]");
 
-        /**
-         * MOV
-         */
+        writeln("[ Warm-up ]");
+
+        //TODO: Test FLAG, register properties, etc.
+
+        writeln("[ General instructions ]");
+
+        // MOV
 
         write("MOV : ");
 
-        Insert(1, 1);
+        InsertImm(1);
         Execute(0xB0); // MOV AL, 1
         assert(AL == 1);
 
-        Insert(2, 1);
+        InsertImm(2);
         Execute(0xB1); // MOV CL, 2
         assert(CL == 2);
 
-        Insert(3, 1);
+        InsertImm(3);
         Execute(0xB2); // MOV DL, 3
         assert(DL == 3);
 
-        Insert(4, 1);
+        InsertImm(4);
         Execute(0xB3); // MOV BL, 4
         assert(BL == 4);
         
-        Insert(5, 1);
+        InsertImm(5);
         Execute(0xB4); // MOV AH, 5
         assert(AH == 5);
 
-        Insert(6, 1);
+        InsertImm(6);
         Execute(0xB5); // MOV CH, 6
         assert(CH == 6);
 
-        Insert(7, 1);
+        InsertImm(7);
         Execute(0xB6); // MOV DH, 7
         assert(DH == 7);
 
-        Insert(8, 1);
+        InsertImm(8);
         Execute(0xB7); // MOV BH, 8
         assert(BH == 8);
 
-        Insert(0x1112, 1); // [ 0x12, 0x11 ]
+        InsertImm(0x1112); // [ 0x12, 0x11 ]
         Execute(0xB8); // MOV AX, 1112h
         assert(AX == 0x1112);
 
-        Insert(0x1113, 1);
+        InsertImm(0x1113);
         Execute(0xB9); // MOV CX, 1113h
         assert(CX == 0x1113);
 
-        Insert(0x1114, 1);
+        InsertImm(0x1114);
         Execute(0xBA); // MOV DX, 1114h
         assert(DX == 0x1114);
 
-        Insert(0x1115, 1);
+        InsertImm(0x1115);
         Execute(0xBB); // MOV BX, 1115h
         assert(BX == 0x1115);
 
-        Insert(0x1116, 1);
+        InsertImm(0x1116);
         Execute(0xBC); // MOV SP, 1116h
         assert(SP == 0x1116);
 
-        Insert(0x1117, 1);
+        InsertImm(0x1117);
         Execute(0xBD); // MOV BP, 1117h
         assert(BP == 0x1117);
 
-        Insert(0x1118, 1);
+        InsertImm(0x1118);
         Execute(0xBE); // MOV SI, 1118h
         assert(SI == 0x1118);
 
-        Insert(0x1119, 1);
+        InsertImm(0x1119);
         Execute(0xBF); // MOV DI, 1119h
         assert(DI == 0x1119);
 
         writeln("OK");
 
-        /**
-         * MOV - ModR/M
-         */
+        // MOV - ModR/M
 
         // MOV R/M16, REG16
 
-        write("MOV R/M16, REG16 : ");
+        /*write("MOV R/M16, REG16 : ");
         {
             ubyte mod = 0; // AX
             Insert(0x134A, 10);
@@ -147,7 +155,7 @@ unittest
 
             mod = 1;
         }
-        writeln("OK");
+        writeln("OK");*/
 
         // MOV REG8, R/M8
 
@@ -157,26 +165,22 @@ unittest
 
         //writeln("OK");
 
-        /**
-         * OR
-         */
+        // OR
 
         write("OR : ");
 
-        Insert(0xF0, 1);
+        InsertImm(0xF0);
         AL = 0xF;
         Execute(0xC); // OR AL, 3
         assert(AL == 0xFF);
 
-        Insert(0xFF00, 1);
+        InsertImm(0xFF00);
         Execute(0xD); // OR AX, F0h
         assert(AX == 0xFFFF);
 
         writeln("OK");
 
-        /**
-         * OR - ModR/M
-         */
+        // OR - ModR/M
 
         //write("OR+ModR/M : ");
 
@@ -184,9 +188,7 @@ unittest
 
         //writeln("OK");
 
-        /**
-         * INC
-         */
+        // INC
 
         write("INC : ");
 
@@ -210,9 +212,7 @@ unittest
 
         writeln("OK");
         
-        /**
-         * DEC
-         */
+        // DEC
 
         write("DEC : ");
 
@@ -235,9 +235,7 @@ unittest
 
         writeln("OK");
 
-        /**
-         * PUSH
-         */
+        // PUSH
 
         write("PUSH : ");
 
@@ -279,9 +277,7 @@ unittest
 
         writeln("OK");
 
-        /**
-         * POP
-         */
+        // POP
 
         write("POP : ");
 
@@ -315,20 +311,15 @@ unittest
 
         writeln("OK");
 
-        /**
-         * XCHG
-         */
+        // XCHG
 
         write("XCHG : ");
 
-        /*
-         * 90h is NOP which is basically a XCHG AX,AX internally
-         * Nevertheless, let's test it (for the Program Counter's sake)
-         */
+        // Nevertheless, let's test the Program Counter
         {
-            uint ip = IP;
+            const uint oldip = IP;
             Execute(0x90);
-            assert(ip + 1 == IP);
+            assert(oldip + 1 == IP);
         }
 
         AX = 0xFAB;
@@ -416,6 +407,129 @@ unittest
 
         writeln("OK");
 
+        /*write("GRP1 OR : ");
+        {
+
+        }
+        writeln("TODO");*/
+
+        // OVERRIDES (CS:, etc.)
+
+        // CS:
+
+        /*write("CS Override : ");
+        {
+
+        }
+        writeln("TODO");*/
+
+        // CBW
+
+        write("CBW : ");
+
+        AL = 0;
+        Execute(0x98);
+        assert(AH == 0);
+        AL = 0xFF;
+        Execute(0x98);
+        assert(AH == 0xFF);
+
+        writeln("OK");
+
+        // CWD
+
+        write("CWD : ");
+
+        AX = 0;
+        Execute(0x99);
+        assert(DX == 0);
+        AX = 0xFFFFF;
+        Execute(0x99);
+        assert(DX == 0xFFFF);
+
+        writeln("OK");
+
+        // -- STRING INSTRUCTIONS --
+        
+        writeln("[ String instructions ]");
+
+        // STOS
+
+        write("STOSB : ");
+
+        ES = DI = 0x20;        
+        AL = 'Q';
+        Execute(0xAA);
+        assert(bank[GetAddress(ES, DI - 1)] == 'Q');
+
+        writeln("OK");
+
+        write("STOSW : ");
+
+        ES = DI = 0x200;        
+        AX = 0xACDC;
+        Execute(0xAB);
+        assert(FetchWord(GetAddress(ES, DI - 2)) == 0xACDC);
+
+        writeln("OK");
+
+        // LODS
+
+        write("LODSB : ");
+
+        AL = 0;
+        DS = 0xA0; SI = 0x200;
+        bank[GetAddress(DS, SI)] = 'H';
+        Execute(0xAC);
+        assert(AL == 'H');
+        bank[GetAddress(DS, SI)] = 'e';
+        Execute(0xAC);
+        assert(AL == 'e');
+
+        writeln("OK");
+
+        write("LODSW : ");
+
+        AX = 0;
+        DS = 0x40; SI = 0x80;
+        Insert(0x48AA, GetAddress(DS, SI));
+        Execute(0xAD);
+        assert(AX == 0x48AA);
+        Insert(0x65BB, GetAddress(DS, SI));
+        Execute(0xAD);
+        assert(AX == 0x65BB);
+
+        writeln("OK");
+
+        // SCAS
+
+        write("SCASB : ");
+
+        CS = ES = 0x600; IP = DI = 0x22;
+        Insert("Hello!");
+        AL = 'H';
+        Execute(0xAE);
+        assert(ZF);
+        AL = '1';
+        Execute(0xAE);
+        assert(!ZF);
+
+        writeln("OK");
+
+        write("SCASW : ");
+
+        CS = ES = 0x800; IP = DI = 0x30;
+        Insert(0xFE22, GetAddress(ES, DI));
+        AX = 0xFE22;
+        Execute(0xAF);
+        assert(ZF);
+        Execute(0xAF);
+        assert(!ZF);
+
+        writeln("OK");
+
+        // CMPS
+
         write("CMPSB : ");
 
         CS = ES = 0xF00; IP = DI = 0x100;
@@ -450,80 +564,6 @@ unittest
 
         writeln("OK");
 
-        write("LODSB : ");
-
-        AL = 0;
-        DS = 0xA0; SI = 0x200;
-        bank[GetAddress(DS, SI)] = 'H';
-        Execute(0xAC);
-        assert(AL == 'H');
-        bank[GetAddress(DS, SI)] = 'e';
-        Execute(0xAC);
-        assert(AL == 'e');
-
-        writeln("OK");
-
-        write("LODSW : ");
-
-        AX = 0;
-        DS = 0x40; SI = 0x80;
-        Insert(0x4800, GetAddress(DS, SI));
-        Execute(0xAD);
-        assert(AX == 0x4800);
-        Insert(0x6500, GetAddress(DS, SI));
-        Execute(0xAD);
-        assert(AX == 0x6500);
-
-        writeln("OK");
-
-        //TODO: SCAS and STOS
-
-        /*write("GRP1 OR : ");
-        {
-
-        }
-        writeln("TODO");*/
-
-        /**
-         * OVERRIDES (CS, etc.)
-         */
-
-         // CS:
-
-        /*write("CS Override : ");
-        {
-
-        }
-        writeln("TODO");*/
-
-        /**
-         * MISC.
-         */
-
-        // CBW
-
-        write("CBW : ");
-
-        AL = 0;
-        Execute(0x98);
-        assert(AH == 0);
-        AL = 0xFF;
-        Execute(0x98);
-        assert(AH == 0xFF);
-
-        writeln("OK");
-
-        // CWD
-
-        write("CBW : ");
-
-        AX = 0;
-        Execute(0x99);
-        assert(DX == 0);
-        AX = 0xFFFFF;
-        Execute(0x99);
-        assert(DX == 0xFFFF);
-
-        writeln("OK");
+        //TODO: TEST
     }
 }

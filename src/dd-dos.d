@@ -141,18 +141,16 @@ void MakePSP(uint location, string appname, string args = null)
         size_t len = appname.length;
         if (args)
             len += args.length + 1;
-        bank[l + 0x80] = cast(ubyte)len;
-        version (X86_ANY)
+        bank[l + 0x80] = len > 0xFF ? 0xFF : cast(ubyte)len;
+        ubyte* pbank = &bank[l] + 0x81;
+        size_t i;
+        foreach (b; appname) pbank[i++] = b;
+        if (args)
         {
-            ubyte* pbank = &bank[0] + 0x81;
-            size_t i;
-            foreach (b; appname) pbank[i++] = b;
-            if (args)
-            {
-                pbank[i++] = ' '; // Space
-                foreach (b; args) pbank[i++] = b;
-            }
+            pbank[i++] = ' '; // Space
+            foreach (b; args) pbank[i++] = b;
         }
+        pbank[i] = '\0';
     }
 }
 
