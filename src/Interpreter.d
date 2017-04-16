@@ -243,9 +243,13 @@ class Intel8086
 
     @property ubyte FLAGB()
     {
-        return 
-            SF ? 0x80 : 0 | ZF ? 0x40 : 0 | AF ? 0x10 : 0 |
-            PF ? 0x4  : 0 | CF ? 1    : 0;
+        ubyte b;
+        if (SF) b |= 0x80;
+        if (ZF) b |= 0x40;
+        if (AF) b |= 0x10;
+        if (PF) b |= 4;
+        if (CF) b |= 1;
+        return b;
     }
 
     @property void FLAGB(ubyte flag)
@@ -259,10 +263,12 @@ class Intel8086
 
     @property ushort FLAGW()
     {
-        return
-            OF ? 0x800 : 0 | DF ? 0x400 : 0 | IF ? 0x200 : 0 |
-            TF ? 0x100 : 0 | SF ? 0x80  : 0 | ZF ? 0x40  : 0 |
-            AF ? 0x10  : 0 | PF ? 0x4   : 0 | CF ? 1     : 0;
+        ushort b = FLAGB;
+        if (OF) b |= 0x800;
+        if (DF) b |= 0x400;
+        if (IF) b |= 0x200;
+        if (TF) b |= 0x100;
+        return b;
     }
 
     @property void FLAGW(ushort flag)

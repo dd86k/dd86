@@ -63,9 +63,51 @@ unittest
             writeln("TODO");
         }
 
-        writeln("[ Warm-up ]");
+        writeln("[ Registers ]");
 
         //TODO: Test FLAG, register properties, etc.
+
+        write("AL/AH : ");
+        assert((AL = 1) == 1);
+        assert((AH = 2) == 2);
+        writeln("OK");
+        write("BL/BH : ");
+        assert((BL = 1) == 1);
+        assert((BH = 2) == 2);
+        writeln("OK");
+        write("CL/CH : ");
+        assert((CL = 1) == 1);
+        assert((CH = 2) == 2);
+        writeln("OK");
+        write("DL/DH : ");
+        assert((DL = 1) == 1);
+        assert((DH = 2) == 2);
+        writeln("OK");
+        write("AX : ");
+        assert(AX == 0x0201);
+        writeln("OK");
+        write("BX : ");
+        assert(BX == 0x0201);
+        writeln("OK");
+        write("CX : ");
+        assert(CX == 0x0201);
+        writeln("OK");
+        write("DX : ");
+        assert(DX == 0x0201);
+        writeln("OK");
+
+        FLAGW = 0xFFFF;
+        assert(SF); assert(ZF); assert(AF); assert(PF); assert(CF);
+        assert(OF); assert(DF); assert(IF); assert(TF);
+        assert(FLAGB == 0xD5);
+        assert(FLAGW == 0xFD5);
+        FLAGW = 0;
+        assert(!SF); assert(!ZF); assert(!AF); assert(!PF); assert(!CF);
+        assert(!OF); assert(!DF); assert(!IF); assert(!TF);
+        assert(FLAGB == 0);
+        assert(FLAGW == 0);
+
+        FullReset; CS = 0;
 
         writeln("[ General instructions ]");
 
