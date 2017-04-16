@@ -45,7 +45,6 @@ unittest
             assert(bank[ip+2..ip+3]   == "e"w);
             assert(bank[ip+4..ip+5]   == "c"w);
             assert(bank[ip+6..ip+7]   == "k"w);
-            //assert(bank[ip .. ip+9]   == "Heck"w);
             ubyte[] ar = [ 0xAA, 0xBB ];
             Insert(ar, 2);
             assert(bank[ip+2..ip+4] == [ 0xAA, 0xBB ]);
