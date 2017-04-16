@@ -83,14 +83,13 @@ int main(string[] args)
     if (verbose) writeln("[VMMI] Verbose mode.");
     if (verbose) writeln("[VMMI] Max perf: ", maxperf);
     InitConsole();
-    machine = new Intel8086();
-    machine.Sleep = !maxperf;
-    machine.Verbose = verbose;
+    Sleep = !maxperf;
+    Verbose = verbose;
 
     if (init_file)
     {
         LoadFile(init_file, init_args ? init_args : null, verbose);
-        machine.Initiate();
+        Initiate();
     }
     else
     {

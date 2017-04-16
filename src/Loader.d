@@ -4,7 +4,7 @@
 
 module Loader;
 
-import std.stdio, std.path, std.file, dd_dos;
+import std.stdio, std.path, std.file, dd_dos, Interpreter;
 
 /// MS-DOS EXE header
 private struct mz_hdr {
@@ -31,15 +31,8 @@ private struct mz_rlc { // For AL=03h
     ushort segment, relocation; // reloc factor
 }
 
-enum {
-    ///
-    LOADER_VER = "0.0.0"
-}
-
-enum {
-    /// MZ file magic
-    MZ_MAGIC = 0x5A4D,
-}
+/// MZ file magic
+private enum MZ_MAGIC = 0x5A4D;
 
 /// Load a file in virtual memory.
 void LoadFile(string path, string args = null, bool verbose = false)
@@ -76,13 +69,11 @@ void LoadFile(string path, string args = null, bool verbose = false)
                     uint s = cast(uint)fsize;
                     ubyte[] buf = new ubyte[s];
                     f.rawRead(buf);
-                    with (machine) {
-                        CS = 0; IP = 0x100;
-                        ubyte* o = &bank[0] + IP;
-                        memcpy(o, &buf[0], buf.length);
+                    CS = 0; IP = 0x100;
+                    ubyte* o = &bank[0] + IP;
+                    memcpy(o, &buf[0], buf.length);
 
-                        //MakePSP(GetIPAddress - 0x100, "TEST");
-                    }
+                    //MakePSP(GetIPAddress - 0x100, "TEST");
                     if (verbose) writeln("loaded");
                 }
                     break;
@@ -136,46 +127,44 @@ void LoadFile(string path, string args = null, bool verbose = false)
                          writeln("[VMLI] HDRSIZE: ", headersize);
                          writeln("[VMLI] IMGSIZE: ", imagesize);
 
-                         with (machine) {
-                            if (e_crlc)
+                        if (e_crlc)
+                        {
+                            f.seek(e_lfarlc);
+                            // Relocation table
+                            mz_rlc[] rlct = new mz_rlc[e_crlc];
+                            f.rawRead(rlct);
+
+                            const int m = e_crlc * 2;
+                            for (int i = 0; i < m; i += 2)
                             {
-                                f.seek(e_lfarlc);
-                                // Relocation table
-                                mz_rlc[] rlct = new mz_rlc[e_crlc];
-                                f.rawRead(rlct);
 
-                                const int m = e_crlc * 2;
-                                for (int i = 0; i < m; i += 2)
-                                {
-
-                                }
                             }
-                            else
-                                writeln("[VMLI] No relocations");
+                        }
+                        else
+                            writeln("[VMLI] No relocations");
 
-                            /*uint minsize = imagesize + (e_minalloc << 4) + 256;
-                            uint maxsize = e_maxalloc ?
-                                imagesize + (e_maxalloc << 4) + 256 :
-                                0xFFFF;*/
+                        /*uint minsize = imagesize + (e_minalloc << 4) + 256;
+                        uint maxsize = e_maxalloc ?
+                            imagesize + (e_maxalloc << 4) + 256 :
+                            0xFFFF;*/
 
-                            DS = ES = 0; // DS:ES
-                            
-                            //CS = e_cs;
-                            //IP = e_ip;
-                            CS = 0;
-                            IP = 0x100;
-                            SS = e_ss;
-                            SP = e_sp;
-                            //uint l = GetIPAddress;
+                        DS = ES = 0; // DS:ES
+                        
+                        //CS = e_cs;
+                        //IP = e_ip;
+                        CS = 0;
+                        IP = 0x100;
+                        SS = e_ss;
+                        SP = e_sp;
+                        //uint l = GetIPAddress;
 
-                            ubyte[] t = new ubyte[imagesize];
-                            f.seek(headersize);
-                            f.rawRead(t);
-                            Insert(t);
+                        ubyte[] t = new ubyte[imagesize];
+                        f.seek(headersize);
+                        f.rawRead(t);
+                        Insert(t);
 
-                            // Make PSP
-                            MakePSP(GetIPAddress, "test");
-                         }
+                        // Make PSP
+                        MakePSP(GetIPAddress, "test");
                     }
                 }
                     break;

@@ -23,6 +23,13 @@ enum
     /// Default Minor DOS Version
     DOS_MINOR_VERSION = 0;
 
+/// OEM IDs
+enum OEM_ID { // Used for INT 21h AH=30 so far.
+    IBM, Compaq, MSPackagedProduct, ATnT, ZDS
+}
+
+/// File/Folder attribute. See INT 21h AH=3Ch
+// Did you know Windows still use these values?
 enum
     READONLY = 1,
     HIDDEN = 2,
@@ -37,8 +44,6 @@ ubyte MajorVersion = DOS_MAJOR_VERSION,
       MinorVersion = DOS_MINOR_VERSION;
 /// Last-define error-code for CLI.
 ubyte LastErrorCode;
-/// Current machine
-Intel8086 machine;
 
 /// Enter internal shell
 void EnterVShell(bool verbose = false)
@@ -95,34 +100,32 @@ void EnterVShell(bool verbose = false)
             }
             break;
         case "?run":
-            machine.Initiate();
+            Initiate();
             break;
         case "?v":
             verbose = !verbose;
             writeln("[VMSI] verbose turned ", verbose ? "on" : "off");
             break;
         case "?r":
-            with (machine) {
-                writef(
-                    "AX=%04X BX=%04X CX=%04X DX=%04X " ~
-                    "SP=%04X BP=%04X SI=%04X DI=%04X\n" ~
-                    "CS=%04X DS=%04X ES=%04X SS=%04X " ~
-                    "IP=%04X\n",
-                    AX, BX, CX, DX, SP, BP, SI, DI,
-                    CS, DS, ES, SS, IP
-                );
-                write("FLAG: ");
-                if (OF) write("OF ");
-                if (DF) write("DF ");
-                if (IF) write("IF ");
-                if (TF) write("TF ");
-                if (SF) write("SF ");
-                if (ZF) write("ZF ");
-                if (AF) write("AF ");
-                if (PF) write("PF ");
-                if (CF) write("CF ");
-                writefln("(%Xh)", FLAGW);
-            }
+            writef(
+                "AX=%04X BX=%04X CX=%04X DX=%04X " ~
+                "SP=%04X BP=%04X SI=%04X DI=%04X\n" ~
+                "CS=%04X DS=%04X ES=%04X SS=%04X " ~
+                "IP=%04X\n",
+                AX, BX, CX, DX, SP, BP, SI, DI,
+                CS, DS, ES, SS, IP
+            );
+            write("FLAG: ");
+            if (OF) write("OF ");
+            if (DF) write("DF ");
+            if (IF) write("IF ");
+            if (TF) write("TF ");
+            if (SF) write("SF ");
+            if (ZF) write("ZF ");
+            if (AF) write("AF ");
+            if (PF) write("PF ");
+            if (CF) write("CF ");
+            writefln("(%Xh)", FLAGW);
             break;
         case "exit": return;
         default:
@@ -134,24 +137,22 @@ void EnterVShell(bool verbose = false)
 
 void MakePSP(uint location, string appname, string args = null)
 {
-    with (machine) {
-        alias l = location;
-        bank[l + 0x40] = MajorVersion;
-        bank[l + 0x41] = MinorVersion;
-        size_t len = appname.length;
-        if (args)
-            len += args.length + 1;
-        bank[l + 0x80] = len > 0xFF ? 0xFF : cast(ubyte)len;
-        ubyte* pbank = &bank[l] + 0x81;
-        size_t i;
-        foreach (b; appname) pbank[i++] = b;
-        if (args)
-        {
-            pbank[i++] = ' '; // Space
-            foreach (b; args) pbank[i++] = b;
-        }
-        pbank[i] = '\0';
+    alias l = location;
+    bank[l + 0x40] = MajorVersion;
+    bank[l + 0x41] = MinorVersion;
+    size_t len = appname.length;
+    if (args)
+        len += args.length + 1;
+    bank[l + 0x80] = len > 0xFF ? 0xFF : cast(ubyte)len;
+    ubyte* pbank = &bank[l] + 0x81;
+    size_t i;
+    foreach (b; appname) pbank[i++] = b;
+    if (args)
+    {
+        pbank[i++] = ' '; // Space
+        foreach (b; args) pbank[i++] = b;
     }
+    pbank[i] = '\0';
 }
 
 // Page 2-99 contains the interrupt message processor
@@ -161,7 +162,6 @@ void Raise(ubyte code, bool verbose = false)
     if (verbose)
         writefln("[VMRI] INTERRUPT %X RAISED", code);
 
-    with (machine) {
     Push(FLAGW);
     IF = TF = 0;
     Push(CS);
@@ -1146,5 +1146,4 @@ void Raise(ubyte code, bool verbose = false)
     CS = Pop();
     IF = TF = 1;
     FLAGW = Pop();
-    }
 }
