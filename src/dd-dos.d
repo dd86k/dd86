@@ -12,16 +12,18 @@ else version (OSX)
 else version (FreeBSD)
     version = COOL_CLUB;
 
-debug enum APP_VERSION = "0.0.0-debug";
-else  enum APP_VERSION = "0.0.0";
+/// Application version
+debug enum APP_VERSION = "0.0.0-debug"; else
+/// Application version
+enum APP_VERSION = "0.0.0";
 
+/// Application name
 enum APP_NAME = "dd-dos";
 
-enum
-    /// Default Major DOS Version
-    DOS_MAJOR_VERSION = 0,
-    /// Default Minor DOS Version
-    DOS_MINOR_VERSION = 0;
+/// Default Major DOS Version
+enum DOS_MAJOR_VERSION = 0,
+/// Default Minor DOS Version
+     DOS_MINOR_VERSION = 0;
 
 /// OEM IDs
 enum OEM_ID { // Used for INT 21h AH=30 so far.
@@ -135,6 +137,7 @@ void EnterVShell(bool verbose = false)
     }
 }
 
+/// Make the Program Segment Prefix in memory
 void MakePSP(uint location, string appname, string args = null)
 {
     alias l = location;
@@ -229,7 +232,7 @@ void Raise(ubyte code, bool verbose = false)
         AX = ax;
         break;
     case 0x12: // BIOS - Get memory size
-        size_t kbsize = bank.length / 1024;
+        const size_t kbsize = bank.length / 1024;
         AX = cast(ushort)kbsize;
         break;
     case 0x13: // DISK operations
@@ -242,7 +245,7 @@ void Raise(ubyte code, bool verbose = false)
         switch (AH)
         {
             case 0, 1: { // Get/Check keystroke
-                KeyInfo k = ReadKey;
+                const KeyInfo k = ReadKey;
                 AH = cast(ubyte)k.scanCode;
                 AL = cast(ubyte)k.keyCode;
                 if (AH) ZF = 0; // Keystroke available
@@ -527,7 +530,7 @@ void Raise(ubyte code, bool verbose = false)
         case 0x2A:
             version (Windows)
             {
-                import core.sys.windows.winbase;
+                import core.sys.windows.winbase : SYSTEMTIME, GetLocalTime;
                 SYSTEMTIME s;
                 GetLocalTime(&s);
 
@@ -538,10 +541,10 @@ void Raise(ubyte code, bool verbose = false)
             }
             else version (Posix)
             {
-                import core.sys.posix.time;
+                import core.sys.posix.time : time_t, time, localtime;
                 time_t r;
                 time(&r);
-                tm* s = localtime(&r);
+                const tm* s = localtime(&r);
 
                 CX = 1900 + s.tm_year;
                 DH = cast(ubyte)(s.tm_mon + 1);
@@ -576,7 +579,7 @@ void Raise(ubyte code, bool verbose = false)
         case 0x2C:
             version (Windows)
             {
-                import core.sys.windows.windows;
+                import core.sys.windows.windows : SYSTEMTIME, GetLocalTime;
                 SYSTEMTIME s;
                 GetLocalTime(&s);
 
@@ -587,7 +590,7 @@ void Raise(ubyte code, bool verbose = false)
             }
             else version (Posix)
             {
-                import core.sys.posix.time;
+                import core.sys.posix.time : tm, time_t, time, localtime;
                 time_t r; tm* s;
                 time(&r);
                 s = localtime(&r);
@@ -598,7 +601,7 @@ void Raise(ubyte code, bool verbose = false)
 
                 version (COOL_CLUB)
                 {
-                    import core.sys.linux.sys.time;
+                    import core.sys.linux.sys.time : timeval, gettimeofday;
                     timeval tv;
                     gettimeofday(&tv, null);
                     AL = cast(ubyte)tv.tv_usec;

@@ -16,10 +16,6 @@ else version (X86_64)
 /// Initial amount of memory.
 enum MAX_MEM = 0x10_0000; // 1 MB
 
-enum InterpreterType {
-    i8086, i80486
-}
-
 /// Sleep for n hecto-nanoseconds
 pragma(inline, true) void HSLEEP(int n) {
     Thread.sleep(hnsecs(n));
@@ -109,7 +105,7 @@ ushort FetchImmWord(uint offset = 0) {
     version (X86_ANY)
         return *(cast(ushort*)&bank[GetIPAddress + offset + 1]);
     else {
-        uint l = GetIPAddress + offset + 1;
+        const uint l = GetIPAddress + offset + 1;
         return cast(ushort)(bank[l] | bank[l + 1] << 8);
     }
 }
@@ -139,7 +135,9 @@ void SetWord(uint addr, ushort value) {
         bank[addr] = value & 0xFF;
         bank[addr + 1] = value >> 8 & 0xFF;
     }
-}/*
+}
+
+/*
  * Insert functions
  */
 
@@ -150,6 +148,7 @@ void Insert(ubyte[] ops, size_t offset = 0)
     foreach(b; ops) bank[i++] = b;
 }
 
+/// Insert number at CS:IP.
 void InsertImm(int op, size_t offset = 1)
 {
     const size_t ip = GetIPAddress + offset;
@@ -161,7 +160,8 @@ void InsertImm(int op, size_t offset = 1)
     if (op > 0xFFFFFF)
         bank[ip + 3] = (op >> 24) & 0xFF;
 }
-void Insert(int op, size_t addr = 0)
+/// Insert a number in memory.
+void Insert(int op, size_t addr)
 {
     bank[addr] = op & 0xFF;
     if (op > 0xFF)
@@ -171,12 +171,13 @@ void Insert(int op, size_t addr = 0)
     if (op > 0xFFFFFF)
         bank[++addr] = (op >> 24) & 0xFF;
 }
-/// Directly overwrite data at CS:IP.
+/// Insert a string in memory.
 void Insert(string data, size_t addr = 0)
 {
     if (addr == 0) addr = GetIPAddress;
     foreach(b; data) bank[addr++] = b;
 }
+/// Insert a wide string in memory.
 void InsertW(wstring data, size_t addr = 0)
 {
     if (addr == 0) addr = GetIPAddress;
@@ -203,60 +204,56 @@ void FullReset()
     BP = SP = DI = SI = 0;
 }
 
+// TODO: Make EAX register the base instead of the lowest
+
+/// Get AX
 @property ushort AX() {
     return (AH << 8) | AL;
 }
-@property void AX(ushort v) {
-    AH = (v >> 8) & 0xFF;
-    AL = v & 0xFF;
-}
+/// Set AX
 @property void AX(int v) {
     AH = (v >> 8) & 0xFF;
     AL = v & 0xFF;
 }
 
+/// Get BX
 @property ushort BX() {
     return (BH << 8) | BL;
 }
-@property void BX(ushort v) {
-    BH = (v >> 8) & 0xFF;
-    BL = v & 0xFF;
-}
+/// Set BX
 @property void BX(int v) {
     BH = (v >> 8) & 0xFF;
     BL = v & 0xFF;
 }
 
+/// Get CX
 @property ushort CX() {
     return (CH << 8) | CL;
 }
-@property void CX(ushort v) {
-    CH = (v >> 8) & 0xFF;
-    CL = v & 0xFF;
-}
+/// Set CX
 @property void CX(int v) {
     CH = (v >> 8) & 0xFF;
     CL = v & 0xFF;
 }
 
+/// Get DX
 @property ushort DX() {
     return (DH << 8) | DL;
 }
-@property void DX(ushort v) {
-    DH = (v >> 8) & 0xFF;
-    DL = v & 0xFF;
-}
+/// Set DX
 @property void DX(int v) {
     DH = (v >> 8) & 0xFF;
     DL = v & 0xFF;
 }
 
+/// Push value into memory.
 void Push(ushort value)
 {
     SP -= 2;
     const uint addr = GetAddress(SS, SP);
     SetWord(addr, value);
 }
+/// Pop value from memory.
 ushort Pop()
 {
     const uint addr = GetAddress(SS, SP);
@@ -264,6 +261,7 @@ ushort Pop()
     return FetchWord(addr);
 }
 
+/// Get FLAG as WORD.
 @property ubyte FLAGB()
 {
     ubyte b;
@@ -275,6 +273,7 @@ ushort Pop()
     return b;
 }
 
+/// Set FLAG as BYTE.
 @property void FLAGB(ubyte flag)
 {
     SF = (flag & 0x80) != 0;
@@ -284,6 +283,7 @@ ushort Pop()
     CF = (flag & 1   ) != 0;
 }
 
+/// Get FLAG as WORD.
 @property ushort FLAGW()
 {
     ushort b = FLAGB;
@@ -294,6 +294,7 @@ ushort Pop()
     return b;
 }
 
+/// Set FLAG as WORD.
 @property void FLAGW(ushort flag)
 {
     OF = (flag & 0x800) != 0;
@@ -310,12 +311,13 @@ ushort Pop()
 // - Push -> VMPush
 // Etc.
 
+/// Initiate machine (memory, etc.)
 void Initiate()
 {
     bank = new ubyte[MAX_MEM]; CS = 0xFFFF;
 }
 
-/// Initiate the machine and run.
+/// Start!
 void Run()
 {
     if (Verbose)
@@ -656,7 +658,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
         ++IP;
         break;
     case 0x40: { // INC AX
-        int r = AX + 1;
+        const int r = AX + 1;
         ZF = r == 0;
         SF = (r & 0x8000) != 0;
         AF = (r & 0x10) != 0;
@@ -907,7 +909,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
         const ubyte rm = FetchImmByte;  // Get ModR/M byte
         const ushort im = FetchWord(GetIPAddress + 2); // 16-bit Immediate
         final switch (rm & 0b111_000) { // ModR/M's REG
-        case 0b000_000: // 000 - ADD
+        case 0: // 000 - ADD
 
             break;
         case 0b001_000: // 001 - OR

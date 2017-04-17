@@ -1,4 +1,4 @@
-module DD_DOSTests;
+module dd_dosTests;
 
 import Interpreter, std.stdio, dd_dos, std.file : exists;
 

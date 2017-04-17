@@ -37,9 +37,11 @@ private enum MZ_MAGIC = 0x5A4D;
 /// Load a file in virtual memory.
 void LoadFile(string path, string args = null, bool verbose = false)
 {
+    //TODO: args
     if (exists(path))
     {
-        import core.stdc.string, std.uni;
+        import core.stdc.string : memcpy;
+        import std.uni : toUpper;
         File f = File(path);
 
         const ulong fsize = f.size;
@@ -136,7 +138,7 @@ void LoadFile(string path, string args = null, bool verbose = false)
 
                             const int m = e_crlc * 2;
                             for (int i = 0; i < m; i += 2)
-                            {
+                            { //TODO: relocations
 
                             }
                         }
