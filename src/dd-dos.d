@@ -41,6 +41,20 @@ enum
     ARCHIVE = 32,
     SHAREABLE = 128;
 
+/*
+ * ANSI.txt@L160 :
+ * Parameter     Parameter Function
+ *    0            40 x 25 black and white
+ *    1            40 x 25 color
+ *    2            80 x 25 black and white
+ *    3            80 x 25 color
+ * 
+ *    4            320 x 200 color
+ *    5            320 x 200 black and white
+ *    6            640 x 200 black and white
+ *    7            wrap at end of line
+ */
+
 /// DOS Version
 ubyte MajorVersion = DOS_MAJOR_VERSION,
       MinorVersion = DOS_MINOR_VERSION;
@@ -541,7 +555,7 @@ void Raise(ubyte code, bool verbose = false)
             }
             else version (Posix)
             {
-                import core.sys.posix.time : time_t, time, localtime;
+                import core.sys.posix.time : time_t, time, localtime, tm;
                 time_t r;
                 time(&r);
                 const tm* s = localtime(&r);

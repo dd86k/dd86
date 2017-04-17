@@ -65,6 +65,7 @@ void LoadFile(string path, string args = null, bool verbose = false)
                     {
                         if (verbose)
                             writeln("[VMLE] COM file too large.");
+                        AL = LastErrorCode = 3;
                         return;
                     }
                     if (verbose) write("[VMLI] Loading COM... ");
@@ -72,8 +73,8 @@ void LoadFile(string path, string args = null, bool verbose = false)
                     ubyte[] buf = new ubyte[s];
                     f.rawRead(buf);
                     CS = 0; IP = 0x100;
-                    ubyte* o = &bank[0] + IP;
-                    memcpy(o, &buf[0], buf.length);
+                    ubyte* bankp = &bank[0] + IP;
+                    memcpy(bankp, &buf[0], buf.length);
 
                     //MakePSP(GetIPAddress - 0x100, "TEST");
                     if (verbose) writeln("loaded");
@@ -90,20 +91,17 @@ void LoadFile(string path, string args = null, bool verbose = false)
                     }
 
                     with (mzh) {
-                        if (e_lfanew)
+                        /*if (e_lfanew)
                         {
-                            /*char[2] sig;
+                            char[2] sig;
                             f.seek(e_lfanew);
                             f.rawRead(sig);
                             switch (sig)
                             {
                             //case "NE":
                             default:
-                                if (verbose)
-                                    writeln("Unsupported format : ", sig);
-                                return;
-                            }*/
-                        }
+                            }
+                        }*/
 
                         if (verbose)
                             writeln("[VMLI] Loading MZ");
@@ -121,16 +119,18 @@ void LoadFile(string path, string args = null, bool verbose = false)
                             writeln("[VMLI] LOW MEM");
                          }
                          
-                         uint headersize = e_cparh * 16;
+                         const uint headersize = e_cparh * 16;
                          uint imagesize = (e_cp * 512) - headersize;
-                         //if (e_cblp) imagesize -= 512 - e_cblp;
-                         if (headersize + imagesize < 512)
-                            imagesize = 512 - headersize;
-                         writeln("[VMLI] HDRSIZE: ", headersize);
-                         writeln("[VMLI] IMGSIZE: ", imagesize);
+                         if (e_cblp) imagesize -= 512 - e_cblp;
+                         /*if (headersize + imagesize < 512)
+                            imagesize = 512 - headersize;*/
+                         writeln("[VMLI] HDR_SIZE: ", headersize);
+                         writeln("[VMLI] IMG_SIZE: ", imagesize);
 
                         if (e_crlc)
                         {
+                            if (verbose)
+                                writeln("[VMLI] Relocating...");
                             f.seek(e_lfarlc);
                             // Relocation table
                             mz_rlc[] rlct = new mz_rlc[e_crlc];
@@ -142,7 +142,7 @@ void LoadFile(string path, string args = null, bool verbose = false)
 
                             }
                         }
-                        else
+                        else if (verbose)
                             writeln("[VMLI] No relocations");
 
                         /*uint minsize = imagesize + (e_minalloc << 4) + 256;
@@ -150,20 +150,20 @@ void LoadFile(string path, string args = null, bool verbose = false)
                             imagesize + (e_maxalloc << 4) + 256 :
                             0xFFFF;*/
 
-                        DS = ES = 0; // DS:ES
-                        
-                        //CS = e_cs;
-                        //IP = e_ip;
-                        CS = 0;
-                        IP = 0x100;
-                        SS = e_ss;
-                        SP = e_sp;
-                        //uint l = GetIPAddress;
-
                         ubyte[] t = new ubyte[imagesize];
                         f.seek(headersize);
                         f.rawRead(t);
                         Insert(t);
+
+                        DS = ES = 0; // DS:ES (??????)
+                        
+                        CS = e_cs;
+                        IP = e_ip;
+                        //CS = 0;
+                        //IP = 0x100;
+                        SS = e_ss;
+                        SP = e_sp;
+                        //uint l = GetIPAddress;
 
                         // Make PSP
                         MakePSP(GetIPAddress, "test");

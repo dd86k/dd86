@@ -9,6 +9,7 @@ dd-dos-test-library.exe
 dd-dos
 dd-dos-test-library
 docs
+dub.selections.json
 # Personal test folder with old executables
 t
 

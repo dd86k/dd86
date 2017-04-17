@@ -8,9 +8,9 @@ import dd_dos, std.stdio;
 import core.thread : Thread;
 import core.time : hnsecs, nsecs;
 
-version (X86)
+version (X86_64)
     version = X86_ANY;
-else version (X86_64)
+else version (X86)
     version = X86_ANY;
 
 /// Initial amount of memory.
