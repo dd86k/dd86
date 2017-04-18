@@ -122,6 +122,10 @@ void EnterVShell(bool verbose = false)
             verbose = !verbose;
             writeln("[VMSI] verbose turned ", verbose ? "on" : "off");
             break;
+        case "?dump":
+            toFile(bank, "MEMORY.DMP");
+            writeln("Memory dumped to MEMORY.DMP");
+            break;
         case "?r":
             writef(
                 "AX=%04X BX=%04X CX=%04X DX=%04X " ~
@@ -202,6 +206,7 @@ void Raise(ubyte code, bool verbose = false)
              *   DL (Column, 0 is top)
              */
             case 0x02:
+            //TODO: Figure out page
                 SetPos(DH, DL);
                 break;
             /*
@@ -246,8 +251,7 @@ void Raise(ubyte code, bool verbose = false)
         AX = ax;
         break;
     case 0x12: // BIOS - Get memory size
-        const size_t kbsize = bank.length / 1024;
-        AX = cast(ushort)kbsize;
+        AX = cast(int)(bank.length / 1024);
         break;
     case 0x13: // DISK operations
 
@@ -303,107 +307,108 @@ void Raise(ubyte code, bool verbose = false)
         switch (AH)
         {
         /*
-        * 00h - Terminate program.
-        * Input:
-        *   CS (PSP Segment)
-        *
-        * Notes: Microsoft recommends using INT 21/AH=4Ch for DOS 2+. This
-        * function sets the program's return code (ERRORLEVEL) to 00h. Execution
-        * continues at the address stored in INT 22 after DOS performs whatever
-        * cleanup it needs to do (restoring the INT 22,INT 23,INT 24 vectors
-        * from the PSP assumed to be located at offset 0000h in the segment
-        * indicated by the stack copy of CS, etc.). If the PSP is its own parent,
-        * the process's memory is not freed; if INT 22 additionally points into the
-        * terminating program, the process is effectively NOT terminated. Not
-        * supported by MS Windows 3.0 DOSX.EXE DOS extender.
-        */
+         * 00h - Terminate program.
+         * Input:
+         *   CS (PSP Segment)
+         *
+         * Notes: Microsoft recommends using INT 21/AH=4Ch for DOS 2+. This
+         * function sets the program's return code (ERRORLEVEL) to 00h. Execution
+         * continues at the address stored in INT 22 after DOS performs whatever
+         * cleanup it needs to do (restoring the INT 22,INT 23,INT 24 vectors
+         * from the PSP assumed to be located at offset 0000h in the segment
+         * indicated by the stack copy of CS, etc.). If the PSP is its own parent,
+         * the process's memory is not freed; if INT 22 additionally points into the
+         * terminating program, the process is effectively NOT terminated. Not
+         * supported by MS Windows 3.0 DOSX.EXE DOS extender.
+         */
         case 0:
 
             break;
         /*
-        * 01h - Read character from stdin with echo.
-        * Input: None
-        * Return: AL (Character)
-        * 
-        * Notes:
-        * - ^C and ^Break are checked.
-        * - ^P toggles the DOS-internal echo-to-printer flag.
-        * - ^Z is not interpreted.
-        */
+         * 01h - Read character from stdin with echo.
+         * Input: None
+         * Return: AL (Character)
+         * 
+         * Notes:
+         * - ^C and ^Break are checked.
+         * - ^P toggles the DOS-internal echo-to-printer flag.
+         * - ^Z is not interpreted.
+         */
         case 1:
             AL = cast(ubyte)ReadKey.keyCode;
 
             break;
         /*
-        * 02h - Write character to stdout.
-        * Input: DL (Character)
-        * Return: AL (Last character)
-        * 
-        * Notes:
-        * - ^C and ^Break are checked. (If true, INT 23)
-        * - If DL=09h on entry, in which case AL=20h is expended as blanks.
-        * - If stdout is redirected to a file, no error-checks are performed.
-        */
+         * 02h - Write character to stdout.
+         * Input: DL (Character)
+         * Return: AL (Last character)
+         * 
+         * Notes:
+         * - ^C and ^Break are checked. (If true, INT 23)
+         * - If DL=09h on entry, in which case AL=20h is expended as blanks.
+         * - If stdout is redirected to a file, no error-checks are performed.
+         */
         case 2:
-            write(cast(char)(AL = DL));
+            AL = DL;
+            write(cast(char)AL);
             break;
         /*
-        * 05h - Write character to printer.
-        * Input: DL (Character)
-        * Return: None
-        *
-        * Notes:
-        * - ^C and ^Break are checked. (Keyboard)
-        * - Usually STDPRN, may be redirected under DOS 2.0+.
-        * - If the printer is busy, this function will wait.
-        *
-        * Dev notes:
-        * - Virtually print to a PRN (text) file.
-        */
+         * 05h - Write character to printer.
+         * Input: DL (Character)
+         * Return: None
+         *
+         * Notes:
+         * - ^C and ^Break are checked. (Keyboard)
+         * - Usually STDPRN, may be redirected under DOS 2.0+.
+         * - If the printer is busy, this function will wait.
+         *
+         * Dev notes:
+         * - Virtually print to a PRN (text) file.
+         */
         case 5:
 
             break;
         /*
-        * 06h - Direct console input/output.
-        * Input:
-        *   Output: DL (Character, DL != FFh)
-        *   Input: DL (Character, DL == FFh)
-        * Return:
-        *   Ouput: AL (Character)
-        *   Input:
-        *     ZF set if no characters are available and AL == 00h
-        *     ZF clear if a character is available and AL != 00h
-        *
-        * Notes:
-        * - ^C and ^Break are checked. (Keyboard)
-        *
-        * Input notes:
-        * - If the returned character is 00h, the user pressed a key with an
-        *     extended keycode, which will be returned by the next call of
-        *     this function
-        */
+         * 06h - Direct console input/output.
+         * Input:
+         *   Output: DL (Character, DL != FFh)
+         *   Input: DL (Character, DL == FFh)
+         * Return:
+         *   Ouput: AL (Character)
+         *   Input:
+         *     ZF set if no characters are available and AL == 00h
+         *     ZF clear if a character is available and AL != 00h
+         *
+         * Notes:
+         * - ^C and ^Break are checked. (Keyboard)
+         *
+         * Input notes:
+         * - If the returned character is 00h, the user pressed a key with an
+         *     extended keycode, which will be returned by the next call of
+         *     this function
+         */
         case 6:
 
             break;
         /*
-            * 07h - Read character directly from stdin without echo.
-            * Input: None
-            * Return: AL (Character)
-            *
-            * Notes:
-            * - ^C/^Break are not checked.
-            */
+         * 07h - Read character directly from stdin without echo.
+         * Input: None
+         * Return: AL (Character)
+         *
+         * Notes:
+         * - ^C/^Break are not checked.
+         */
         case 7:
             AL = cast(ubyte)ReadKey.keyCode;
             break;
         /*
-        * 08h - Read character from stdin without echo.
-        * Input: None
-        * Return: AL (Character)
-        *
-        * Notes:
-        * - ^C/^Break are checked.
-        */
+         * 08h - Read character from stdin without echo.
+         * Input: None
+         * Return: AL (Character)
+         *
+         * Notes:
+         * - ^C/^Break are checked.
+         */
         case 8:
 
             break;
@@ -430,117 +435,117 @@ void Raise(ubyte code, bool verbose = false)
             AL = 0x24;
             break;
         /*
-        * 0Ah - Buffered input.
-        * Input: DS:DX (Pointer to BUFFER)
-        * Return: Buffer filled with used input.
-        *
-        * Notes:
-        * - ^C and ^Break are checked.
-        * - Reads from stdin.
-        *
-        * BUFFER:
-        * | Offset | Size | Description
-        * +--------+------+-----------------
-        * | 0      | 1    | Maximum characters buffer can hold
-        * | 1      | 1    | Chars actually read (except CR) (or from last input)
-        * | 2      | N    | Characters, including the final CR.
-        */
+         * 0Ah - Buffered input.
+         * Input: DS:DX (Pointer to BUFFER)
+         * Return: Buffer filled with used input.
+         *
+         * Notes:
+         * - ^C and ^Break are checked.
+         * - Reads from stdin.
+         *
+         * BUFFER:
+         * | Offset | Size | Description
+         * +--------+------+-----------------
+         * | 0      | 1    | Maximum characters buffer can hold
+         * | 1      | 1    | Chars actually read (except CR) (or from last input)
+         * | 2      | N    | Characters, including the final CR.
+         */
         case 0xA:
 
             break;
         /*
-        * 0Bh - Get stdin status.
-        * Input: None.
-        * Return:
-        *   AL = 00h if no characters are available.
-        *   AL = FFh if a character are available.
-        *
-        * Notes:
-        * - ^C and ^Break are checked.
-        */
+         * 0Bh - Get stdin status.
+         * Input: None.
+         * Return:
+         *   AL = 00h if no characters are available.
+         *   AL = FFh if a character are available.
+         *
+         * Notes:
+         * - ^C and ^Break are checked.
+         */
         case 0xB:
 
             break;
         /*
-            * 0Ch - Flush stdin buffer and read character.
-            * Input:
-            *   AL (STDIN input function to execute after flushing)
-            *   Other registers as appropriate for the input function.
-            * Return: As appropriate for the input function.
-            *
-            * Notes:
-            * - If AL is not 1h, 6h, 7h, 8h, or Ah, the buffer is flushed and
-            *     no input are attempted.
-            */
+         * 0Ch - Flush stdin buffer and read character.
+         * Input:
+         *   AL (STDIN input function to execute after flushing)
+         *   Other registers as appropriate for the input function.
+         * Return: As appropriate for the input function.
+         *
+         * Notes:
+         * - If AL is not 1h, 6h, 7h, 8h, or Ah, the buffer is flushed and
+         *     no input are attempted.
+         */
         case 0xC:
 
             break;
         /*
-            * 0Dh - Disk reset.
-            * Input: None.
-            * Return: None.
-            *
-            * Notes:
-            * - Write all buffers to disk without updating directory information.
-            */
+         * 0Dh - Disk reset.
+         * Input: None.
+         * Return: None.
+         *
+         * Notes:
+         * - Write all buffers to disk without updating directory information.
+         */
         case 0xD:
 
             break;
         /*
-        * 0Eh - Select default drive.
-        * Input: DL (incrementing from 0 for A:)
-        * Return: AL (number of potentially valid drive letters)
-        *
-        * Notes:
-        * - The return value is the highest drive present.
-        */
+         * 0Eh - Select default drive.
+         * Input: DL (incrementing from 0 for A:)
+         * Return: AL (number of potentially valid drive letters)
+         *
+         * Notes:
+         * - The return value is the highest drive present.
+         */
         case 0xE:
 
             break;
         /*
-        * 19h - Get default drive.
-        * Input: None.
-        * Return: AL (incrementing from 0 for A:)
-        */
+         * 19h - Get default drive.
+         * Input: None.
+         * Return: AL (incrementing from 0 for A:)
+         */
         case 0x19:
             AL = 2; // Temporary.
             break;
         /*
-        * 25h - Set interrupt vector.
-        * Input:
-        *   AL (Interrupt number)
-        *   DS:DX (New interrupt handler)
-        * Return: None.
-        *
-        * Notes:
-        * - Preferred over manually changing the interrupt vector table.
-        */
+         * 25h - Set interrupt vector.
+         * Input:
+         *   AL (Interrupt number)
+         *   DS:DX (New interrupt handler)
+         * Return: None.
+         *
+         * Notes:
+         * - Preferred over manually changing the interrupt vector table.
+         */
         case 0x25:
 
             break;
         /*
-            * 26h - Create PSP
-            * Input: DX (Segment to create PSP)
-            * Return: AL destroyed
-            *
-            * Notes:
-            * - New PSP is updated with memory size information; INTs 22h, 23h,
-            *     24h taken from interrupt vector table; the parent PSP field
-            *     is set to 0. (DOS 2+) DOS assumes that the caller's CS is the`
-            *     segment of the PSP to copy.
-            */
+         * 26h - Create PSP
+         * Input: DX (Segment to create PSP)
+         * Return: AL destroyed
+         *
+         * Notes:
+         * - New PSP is updated with memory size information; INTs 22h, 23h,
+         *     24h taken from interrupt vector table; the parent PSP field
+         *     is set to 0. (DOS 2+) DOS assumes that the caller's CS is the`
+         *     segment of the PSP to copy.
+         */
         case 0x26:
 
             break;
         /*
-            * 2Ah - Get system date.
-            * Input: None.
-            * Return:
-            *   CX (Year, 1980-2099)
-            *   DH (Month)
-            *   DL (Day)
-            *   AL (Day of the week, Sunday = 0)
-            */
+         * 2Ah - Get system date.
+         * Input: None.
+         * Return:
+         *   CX (Year, 1980-2099)
+         *   DH (Month)
+         *   DL (Day)
+         *   AL (Day of the week, Sunday = 0)
+         */
         case 0x2A:
             version (Windows)
             {
@@ -605,6 +610,8 @@ void Raise(ubyte code, bool verbose = false)
             else version (Posix)
             {
                 import core.sys.posix.time : tm, time_t, time, localtime;
+                import core.time : timeval, gettimeofday;
+                //TODO: Only use gettimeofday
                 time_t r; tm* s;
                 time(&r);
                 s = localtime(&r);
@@ -612,14 +619,9 @@ void Raise(ubyte code, bool verbose = false)
                 CH = cast(ubyte)s.tm_hour;
                 CL = cast(ubyte)s.tm_min;
                 DH = cast(ubyte)s.tm_sec;
-
-                version (COOL_CLUB)
-                {
-                    import core.sys.linux.sys.time : timeval, gettimeofday;
-                    timeval tv;
-                    gettimeofday(&tv, null);
-                    AL = cast(ubyte)tv.tv_usec;
-                }
+                timeval tv;
+                gettimeofday(&tv, null);
+                AL = cast(ubyte)tv.tv_usec;
             }
             else
             {

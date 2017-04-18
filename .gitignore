@@ -10,8 +10,10 @@ dd-dos
 dd-dos-test-library
 docs
 dub.selections.json
-# Personal test folder with old executables
+# Personal stuff
 t
+MEMDMP
+MEMORY.DMP
 
 # VSCode
 .vscode

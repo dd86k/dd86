@@ -1,10 +1,11 @@
 /*
- * Interpreter.d: Legacy machine code interpreter. Mimics an Intel 8086.
+ * Interpreter.d: Legacy machine code interpreter. An Intel i486/8086 hybrid.
  */
 
 module Interpreter;
 
 import dd_dos, std.stdio;
+import InterpreterUtils;
 import core.thread : Thread;
 import core.time : hnsecs, nsecs;
 
@@ -26,6 +27,48 @@ pragma(inline, true) void NSLEEP(int n) {
     Thread.sleep(nsecs(n));
 }
 
+//TODO: Rename and restructure (before implementing i486):
+// For VM8086 mode:
+// - Run -> VMRun
+// - Execute -> VMExecute
+// - Push -> VMPush
+// Etc.
+
+/// Initiate machine (memory, etc.)
+void Initiate()
+{
+    bank = new ubyte[MAX_MEM]; CS = 0xFFFF;
+
+    AXp = cast(ushort*)&EAX;
+    BXp = cast(ushort*)&EBX;
+    CXp = cast(ushort*)&ECX;
+    DXp = cast(ushort*)&EDX;
+
+    ALp = cast(ubyte*)AXp;
+    BLp = cast(ubyte*)BXp;
+    CLp = cast(ubyte*)CXp;
+    DLp = cast(ubyte*)DXp;
+
+    SIp = cast(ushort*)&ESI;
+    DIp = cast(ushort*)&EDI;
+    BPp = cast(ushort*)&EBP;
+    SPp = cast(ushort*)&ESP;
+}
+
+/// Start!
+void Run()
+{
+    if (Verbose)
+        writeln("[VMII] Running...");
+
+    while (Running)
+    {
+        Execute(bank[GetIPAddress]);
+        if (Sleep)
+            HSLEEP( 2 ); // Intel 8086 - 5 MHz
+    }
+}
+
 /// Is sleeping vcpu between cycles?
 bool Sleep = true;
 /// Is currently running?
@@ -35,26 +78,6 @@ bool Verbose;
 
 /// Main memory brank;
 ubyte[] bank;
-
-/// Generic register
-ubyte AH, AL, BH, BL, CH, CL, DH, DL;
-/// Index register
-ushort SI, DI, BP, SP;
-/// Segment register
-ushort CS, DS, ES, SS;
-/// Program Counter
-ushort IP;
-
-/// FLAG
-bool OF, // 11, Overflow Flag
-     DF, // 10, Direction Flag
-     IF, //  9, Interrupt Enable Flag
-     TF, //  8, Trap Flag
-     SF, //  7, Sign Flag
-     ZF, //  6, Zero Flag
-     AF, //  4, Auxiliary Carry Flag (aka Adjust Flag)
-     PF, //  2, Parity Flag
-     CF; //  0, Carry Flag
 
 /// Get physical address out of two segment/register values.
 uint GetAddress(int segment, int offset)
@@ -67,130 +90,11 @@ uint GetIPAddress()
     return GetAddress(CS, IP);
 }
 
-/// Fetch an immediate unsigned byte (ubyte).
-ubyte FetchImmByte() {
-    return bank[GetIPAddress + 1];
-}
-/// Fetch an immediate unsigned byte (ubyte) with offset.
-ubyte FetchImmByte(int offset) {
-    return bank[GetIPAddress + offset + 1];
-}
-/// Fetch an unsigned byte (ubyte).
-ubyte FetchByte(uint addr) {
-    return bank[addr];
-}
-/// Fetch an immediate byte (byte).
-byte FetchImmSByte() {
-    return cast(byte)bank[GetIPAddress + 1];
-}
-
-/// Fetch an immediate unsigned word (ushort).
-ushort FetchWord() {
-    version (X86_ANY)
-        return *(cast(ushort*)&bank[GetIPAddress + 1]);
-    else {
-        const uint addr = GetIPAddress + 1;
-        return cast(ushort)(bank[addr] | bank[addr + 1] << 8);
-    }
-}
-/// Fetch an unsigned word (ushort).
-ushort FetchWord(uint addr) {
-    version (X86_ANY)
-        return *(cast(ushort*)&bank[addr]);
-    else
-        return cast(ushort)(bank[addr] | bank[addr + 1] << 8);
-}
-/// Fetch an immediate unsigned word with optional offset.
-ushort FetchImmWord(uint offset = 0) {
-    version (X86_ANY)
-        return *(cast(ushort*)&bank[GetIPAddress + offset + 1]);
-    else {
-        const uint l = GetIPAddress + offset + 1;
-        return cast(ushort)(bank[l] | bank[l + 1] << 8);
-    }
-}
-/// Fetch an immediate word (short).
-short FetchSWord(uint addr) {
-    version (X86_ANY)
-        return *(cast(short*)&bank[addr]);
-    else {
-        const uint addr = GetIPAddress + 1;
-        return cast(short)(bank[addr] | bank[addr + 1] << 8);
-    }
-}
-short FetchImmSWord(uint offset = 0) {
-    version (X86_ANY)
-        return *(cast(short*)&bank[GetIPAddress + offset + 1]);
-    else {
-        const uint addr = GetIPAddress + offset + 1;
-        return cast(short)(bank[addr] | bank[addr + 1] << 8);
-    }
-}
-
-/// Set an unsigned word in memory.
-void SetWord(uint addr, ushort value) {
-    version (X86_ANY)
-        *(cast(ushort *)&bank[addr]) = value;
-    else {
-        bank[addr] = value & 0xFF;
-        bank[addr + 1] = value >> 8 & 0xFF;
-    }
-}
-
-/*
- * Insert functions
- */
-
-/// Directly overwrite instructions at CS:IP.
-void Insert(ubyte[] ops, size_t offset = 0)
-{
-    size_t i = GetIPAddress + offset;
-    foreach(b; ops) bank[i++] = b;
-}
-
-/// Insert number at CS:IP.
-void InsertImm(int op, size_t offset = 1)
-{
-    const size_t ip = GetIPAddress + offset;
-    bank[ip] = op & 0xFF;
-    if (op > 0xFF)
-        bank[ip + 1] = (op >> 8) & 0xFF;
-    if (op > 0xFFFF)
-        bank[ip + 2] = (op >> 16) & 0xFF;
-    if (op > 0xFFFFFF)
-        bank[ip + 3] = (op >> 24) & 0xFF;
-}
-/// Insert a number in memory.
-void Insert(int op, size_t addr)
-{
-    bank[addr] = op & 0xFF;
-    if (op > 0xFF)
-        bank[++addr] = (op >> 8) & 0xFF;
-    if (op > 0xFFFF)
-        bank[++addr] = (op >> 16) & 0xFF;
-    if (op > 0xFFFFFF)
-        bank[++addr] = (op >> 24) & 0xFF;
-}
-/// Insert a string in memory.
-void Insert(string data, size_t addr = 0)
-{
-    if (addr == 0) addr = GetIPAddress;
-    foreach(b; data) bank[addr++] = b;
-}
-/// Insert a wide string in memory.
-void InsertW(wstring data, size_t addr = 0)
-{
-    if (addr == 0) addr = GetIPAddress;
-    size_t l = data.length * 2;
-    ubyte* bp = &bank[addr], dp = cast(ubyte*)&data[0];
-    for (; l; --l) *bp++ = *dp++;
-}
-
 /// RESET instruction function
 void Reset()
 {
     OF = DF = IF = TF = SF =
-            ZF = AF = PF = CF = false;
+        ZF = AF = PF = CF = false;
     CS = 0xFFFF;
     IP = DS = SS = ES = 0;
     // Empty Queue Bus
@@ -199,65 +103,95 @@ void Reset()
 void FullReset()
 {
     Reset();
-    AL = AH = BL = BH =
-    CL = CH = DL = DH =
-    BP = SP = DI = SI = 0;
+    EAX = EBX = ECX = EDX =
+        EBP = ESP = EDI = ESI = 0;
 }
 
 // TODO: Make EAX register the base instead of the lowest
 
-/// Get AX
-@property ushort AX() {
-    return (AH << 8) | AL;
-}
-/// Set AX
-@property void AX(int v) {
-    AH = (v >> 8) & 0xFF;
-    AL = v & 0xFF;
-}
+/// Generic register
+uint EAX, EBX, ECX, EDX;
+ubyte* ALp, BLp, CLp, DLp;
+ushort* AXp, BXp, CXp, DXp;
 
-/// Get BX
-@property ushort BX() {
-    return (BH << 8) | BL;
-}
-/// Set BX
-@property void BX(int v) {
-    BH = (v >> 8) & 0xFF;
-    BL = v & 0xFF;
-}
+@property ushort AX() { return *AXp; }
+@property ubyte  AH() { return *(ALp + 1); }
+@property ubyte  AL() { return *ALp; }
+@property void AX(int v) { *AXp = v & 0xFFFF; }
+@property void AH(int v) { *(ALp + 1) = v & 0xFF; }
+@property void AL(int v) { *ALp = v & 0xFF; }
 
-/// Get CX
-@property ushort CX() {
-    return (CH << 8) | CL;
-}
-/// Set CX
-@property void CX(int v) {
-    CH = (v >> 8) & 0xFF;
-    CL = v & 0xFF;
-}
+@property ushort BX() { return *BXp; }
+@property ubyte  BH() { return *(BLp + 1); }
+@property ubyte  BL() { return *BLp; }
+@property void BX(int v) { *BXp = v & 0xFFFF; }
+@property void BH(int v) { *(BLp + 1) = v & 0xFF; }
+@property void BL(int v) { *BLp = v & 0xFF; }
 
-/// Get DX
-@property ushort DX() {
-    return (DH << 8) | DL;
-}
-/// Set DX
-@property void DX(int v) {
-    DH = (v >> 8) & 0xFF;
-    DL = v & 0xFF;
-}
+@property ushort CX() { return *CXp; }
+@property ubyte  CH() { return *(CLp + 1); }
+@property ubyte  CL() { return *CLp; }
+@property void CX(int v) { *CXp = v & 0xFFFF; }
+@property void CH(int v) { *(CLp + 1) = v & 0xFF; }
+@property void CL(int v) { *CLp = v & 0xFF; }
+
+@property ushort DX() { return *DXp; }
+@property ubyte  DH() { return *(DLp + 1); }
+@property ubyte  DL() { return *DLp; }
+@property void DX(int v) { *DXp = v & 0xFFFF; }
+@property void DH(int v) { *(DLp + 1) = v & 0xFF; }
+@property void DL(int v) { *DLp = v & 0xFF; }
+
+/// Index register
+uint ESI, EDI, EBP, ESP;
+ushort* SIp, DIp, BPp, SPp;
+
+@property ushort SI() { return *SIp; }
+@property ushort DI() { return *DIp; }
+@property ushort BP() { return *BPp; }
+@property ushort SP() { return *SPp; }
+@property void SI(int v) { *SIp = (v & 0xFFFF); }
+@property void DI(int v) { *DIp = (v & 0xFFFF); }
+@property void BP(int v) { *BPp = (v & 0xFFFF); }
+@property void SP(int v) { *SPp = (v & 0xFFFF); }
+
+/// Segment register
+ushort CS, SS, DS, ES,
+// Post-i386
+       FS, GS;
+
+/// Program Counter
+//uint EIP;
+ushort IP;
+//@property ushort IP() { return EIP & 0xFFFF; }
+//@property void IP(int v) { EIP |= v & 0xFFFF; }
+
+// FLAGS
+bool OF, /// Bit 11, Overflow Flag
+     DF, /// Bit 10, Direction Flag
+     IF, /// Bit  9, Interrupt Enable Flag
+     TF, /// Bit  8, Trap Flag
+     SF, /// Bit  7, Sign Flag
+     ZF, /// Bit  6, Zero Flag
+     AF, /// Bit  4, Auxiliary Carry Flag (aka Adjust Flag)
+     PF, /// Bit  2, Parity Flag
+     CF; /// Bit  0, Carry Flag
+
+
+
+//TODO: EPush/EPop
 
 /// Push value into memory.
 void Push(ushort value)
 {
-    SP -= 2;
-    const uint addr = GetAddress(SS, SP);
-    SetWord(addr, value);
+    SP = SP - 2;
+    SetWord(GetAddress(SS, SP), value);
 }
 /// Pop value from memory.
 ushort Pop()
 {
     const uint addr = GetAddress(SS, SP);
-    SP += 2;
+    SP = SP + 2;
     return FetchWord(addr);
 }
 
@@ -304,33 +238,6 @@ ushort Pop()
     FLAGB = flag & 0xFF;
 }
 
-//TODO: Rename and restructure (before i486):
-// For VM8086 mode:
-// - Run -> VMRun
-// - Execute -> VMExecute
-// - Push -> VMPush
-// Etc.
-
-/// Initiate machine (memory, etc.)
-void Initiate()
-{
-    bank = new ubyte[MAX_MEM]; CS = 0xFFFF;
-}
-
-/// Start!
-void Run()
-{
-    if (Verbose)
-        writeln("[VMII] Running...");
-
-    while (Running)
-    {
-        Execute(bank[GetIPAddress]);
-        if (Sleep)
-            HSLEEP( 2 ); // Intel 8086 - 5 MHz
-    }
-}
-
 /**
  * Execute an operation code, acts like the ALU from an Intel 8086.
  *
@@ -365,7 +272,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
         break;
     }
     case 0x04: // ADD AL, IMM8
-        AL += FetchImmByte;
+        AL = AL + FetchImmByte;
         IP += 2;
         SF = CF = (AL & 0x80) != 0;
         PF = (AL & 1) != 0;
@@ -375,7 +282,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
         break;
     case 0x05: // ADD AX, IMM16
         AX = AX + FetchWord;
-        IP += 3;
+        IP += 2;
         break;
     case 0x06: // PUSH ES
         Push(ES);
@@ -402,7 +309,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
         break;
     }
     case 0x0C: // OR AL, IMM8
-        AL |= FetchImmByte;
+        AL = AL | FetchImmByte;
         IP += 2;
         break;
     case 0x0D: // OR AX, IMM16
@@ -429,11 +336,13 @@ void Execute(ubyte op) // All instructions are 1-byte.
 
         break;
     }
-    case 0x14: // ADC AL, IMM8
-        AL += FetchImmByte;
-        if (CF) ++AL;
+    case 0x14: { // ADC AL, IMM8
+        int t = AL + FetchImmByte;
+        if (CF) ++t;
+        AL = t;
         IP += 2;
         break;
+    }
     case 0x15: { // ADC AX, IMM16
         int t = AX + FetchWord;
         if (CF) ++t;
@@ -462,8 +371,9 @@ void Execute(ubyte op) // All instructions are 1-byte.
 
         break;
     case 0x1C: { // SBB AL, IMM8
-        AL -= FetchImmByte - 1;
-        if (CF) --AL;
+        int t = AL - FetchImmByte;
+        if (CF) --t;
+        AL = t;
         IP += 2;
     }
         break;
@@ -495,7 +405,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
 
         break;
     case 0x24: // AND AL, IMM8
-        AL &= FetchImmByte;
+        AL = AL & FetchImmByte;
         IP += 2;
         break;
     case 0x25: // AND AX, IMM16
@@ -507,13 +417,13 @@ void Execute(ubyte op) // All instructions are 1-byte.
 
         break;
     case 0x27: { // DAA
-        const byte oldAL = AL;
+        const ubyte oldAL = AL;
         const bool oldCF = CF;
         CF = false;
 
         if (((oldAL & 0xF) > 9) || AF)
         {
-            AL += 6;
+            AL = AL + 6;
             CF = oldCF || (AL & 0x80);
             AF = true;
         }
@@ -521,7 +431,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
 
         if ((oldAL > 0x99) || oldCF)
         {
-            AL += 0x60;
+            AL = AL + 0x60;
             CF = true;
         }
         else CF = false;
@@ -541,7 +451,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
 
         break;
     case 0x2C: // SUB AL, IMM8
-        AL -= FetchImmByte;
+        AL = AL - FetchImmByte;
         IP += 2;
         break;
     case 0x2D: // SUB AX, IMM16
@@ -559,7 +469,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
 
         if (((oldAL & 0xF) > 9) || AF)
         {
-            AL -= 6;
+            AL = AL - 6;
             CF = oldCF || (AL & 0b10000000);
             AF = true;
         }
@@ -567,7 +477,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
 
         if ((oldAL > 0x99) || oldCF)
         {
-            AL -= 0x60;
+            AL = AL - 0x60;
             CF = true;
         }
         else CF = false;
@@ -587,7 +497,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
 
         break;
     case 0x34: // XOR AL, IMM8
-        AL ^= FetchImmByte;
+        AL = AL ^ FetchImmByte;
         IP += 2;
         break;
     case 0x35: // XOR AX, IMM16
@@ -604,7 +514,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
             AF = CF = true;
         }
         else AF = CF = false;
-        AL &= 0xF;
+        AL = AL & 0xF;
         ++IP;
         break;
     case 0x38: // CMP R/M8, REG8
@@ -647,14 +557,14 @@ void Execute(ubyte op) // All instructions are 1-byte.
         if (((AL & 0xF) > 9) || AF)
         {
             AX = AX - 6;
-            --AH;
+            AH = AH - 1;
             AF = CF = true;
         }
         else
         {
             AF = CF = false;
         }
-        AL &= 0xF;
+        AL = AL & 0xF;
         ++IP;
         break;
     case 0x40: { // INC AX
@@ -681,19 +591,19 @@ void Execute(ubyte op) // All instructions are 1-byte.
         ++IP;
         break;
     case 0x44: // INC SP
-        ++SP;
+        SP = SP + 1;
         ++IP;
         break;
     case 0x45: // INC BP
-        ++BP;
+        BP = BP + 1;
         ++IP;
         break;
     case 0x46: // INC SI
-        ++SI;
+        SI = SI + 1;
         ++IP;
         break;
     case 0x47: // INC DI
-        ++DI;
+        DI = DI + 1;
         ++IP;
         break;
     case 0x48: // DEC AX
@@ -713,19 +623,19 @@ void Execute(ubyte op) // All instructions are 1-byte.
         ++IP;
         break;
     case 0x4C: // DEC SP
-        --SP;
+        SP = SP - 1;
         ++IP;
         break;
     case 0x4D: // DEC BP
-        --BP;
+        BP = BP - 1;
         ++IP;
         break;
     case 0x4E: // DEC SI
-        --SI;
+        SI = SI - 1;
         ++IP;
         break;
     case 0x4F: // DEC DI
-        --DI;
+        DI = DI - 1;
         ++IP;
         break;
     case 0x50: // PUSH AX
@@ -850,28 +760,28 @@ void Execute(ubyte op) // All instructions are 1-byte.
                     final switch (rm & 0b111)
                     {
                     case 0:
-                        AL += im;
+                        AL = AL + im;
                         break;
                     case 0b001:
-                        CL += im;
+                        CL = CL + im;
                         break;
                     case 0b010:
-                        DL += im;
+                        DL = DL + im;
                         break;
                     case 0b011:
-                        BL += im;
+                        BL = BL + im;
                         break;
                     case 0b100:
-                        AH += im;
+                        AH = AH + im;
                         break;
                     case 0b101:
-                        CH += im;
+                        CH = CH + im;
                         break;
                     case 0b110:
-                        DH += im;
+                        DH = DH + im;
                         break;
                     case 0b111:
-                        BH += im;
+                        BH = BH + im;
                         break;
                     }
                     break;
@@ -3551,9 +3461,9 @@ void Execute(ubyte op) // All instructions are 1-byte.
         CF = SF = (temp & 0x80) != 0;
         OF = (temp < 0) || (temp > 0xFF);
         if (DF == 0) {
-            ++DI; ++SI;
+            DI = DI + 1; SI = SI + 1;
         } else {
-            --DI; --SI;
+            DI = DI - 1; SI = SI - 1;
         }
     }
         break;
@@ -3565,9 +3475,9 @@ void Execute(ubyte op) // All instructions are 1-byte.
         CF = SF = (temp & 0x80) != 0;
         OF = (temp < 0) || (temp > 0xFFFF);
         if (DF == 0) {
-            DI += 2; SI += 2;
+            DI = DI + 2; SI = SI + 2;
         } else {
-            DI -= 2; SI -= 2;
+            DI = DI - 2; SI = SI - 2;
         }
     }
         break;
@@ -3589,26 +3499,26 @@ void Execute(ubyte op) // All instructions are 1-byte.
         break;
     case 0xAA: // STOS DEST-STR8
         bank[GetAddress(ES, DI)] = AL;
-        if (DF == 0) ++DI;
-        else         --DI;
+        if (DF == 0) DI = DI + 1;
+        else         DI = DI - 1;
         ++IP;
         break;
     case 0xAB: // STOS DEST-STR16
         Insert(AX, GetAddress(ES, DI));
-        if (DF == 0) DI += 2;
-        else         DI -= 2;
+        if (DF == 0) DI = DI + 2;
+        else         DI = DI - 2;
         ++IP;
         break;
     case 0xAC: // LODS SRC-STR8
         AL = bank[GetAddress(DS, SI)];
-        if (DF == 0) ++SI;
-        else         --SI;
+        if (DF == 0) SI = SI + 1;
+        else         SI = SI - 1;
         ++IP;
         break;
     case 0xAD: // LODS SRC-STR16
         AX = FetchWord(GetAddress(DS, SI));
-        if (DF == 0) SI += 2;
-        else         SI -= 2;
+        if (DF == 0) SI = SI + 2;
+        else         SI = SI - 2;
         ++IP;
         break;
     case 0xAE: { // SCAS DEST-STR8
@@ -3617,8 +3527,8 @@ void Execute(ubyte op) // All instructions are 1-byte.
         ZF = r == 0;
         AF = (r & 0x10) != 0;
         CF = SF = (r & 0x80) != 0;
-        if (DF == 0) ++DI;
-        else         --DI;
+        if (DF == 0) DI = DI + 1;
+        else         DI = DI - 1;
         ++IP;
     }
         break;
@@ -3628,8 +3538,8 @@ void Execute(ubyte op) // All instructions are 1-byte.
         ZF = r == 0;
         AF = (r & 0x10) != 0;
         CF = SF = (r & 0x80) != 0;
-        if (DF == 0) DI += 2;
-        else         DI -= 2;
+        if (DF == 0) DI = DI + 2;
+        else         DI = DI - 2;
         ++IP;
     }
         break;
@@ -3722,7 +3632,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
     case 0xCA: // RET IMM16 (FAR)
         IP = Pop();
         CS = Pop();
-        SP += FetchWord;
+        SP = SP + FetchWord;
         // IP += 3; ?
         break;
     case 0xCB: // RET (FAR)

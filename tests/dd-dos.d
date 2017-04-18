@@ -1,6 +1,6 @@
 module dd_dosTests;
 
-import Interpreter, std.stdio, dd_dos, std.file : exists;
+import Interpreter, InterpreterUtils, std.stdio, dd_dos, std.file : exists;
 
 unittest
 {
@@ -8,14 +8,9 @@ unittest
 
     Verbose = true;
     Initiate;
-
-    /*
-     * First half is the hardware and generic software interrupts while
-     * the rest is the MS-DOS API (INT 21h).
-     */
     
-    /**
-     * HARDWARE/BIOS
+    /*
+     * Hardware (and/or BIOS)
      */
 
     // MEMORY SIZE
@@ -24,6 +19,10 @@ unittest
     Raise(0x12);
     assert(bank.length / 1024 == AX);
     writeln("OK -- ", AX, " KB | ", AX / 1024, " MB");
+
+    /*
+     * Software (Other)
+     */
 
     // FAST CONSOLE OUTPUT (DOS)
     
@@ -35,8 +34,8 @@ unittest
     AL = '\n';
     Raise(0x29);
 
-    /**
-     * MS-DOS SERVICES
+    /*
+     * MS-DOS Services
      */
 
     // FAST CONSOLE OUTPUT (MS-DOS)
