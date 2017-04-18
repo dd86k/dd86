@@ -7,9 +7,9 @@ unittest
     writeln("---------- Utilities");
 
     const uint pos = 10;
-    char[] c = new char[50];
-    const char[] s = "Hello it's me\0";
-    char* p = &c[pos];
+    ubyte[] c = new ubyte[50];
+    const char[] s = "Hello it's me";
+    ubyte* p = &c[pos];
     for (int i; i < s.length; ++i, ++p) *p = s[i];
 
     write("MemString(ubyte*, uint) : ");
