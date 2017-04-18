@@ -62,11 +62,11 @@ ubyte MajorVersion = DOS_MAJOR_VERSION,
 ubyte LastErrorCode;
 
 /// Enter internal shell
-void EnterVShell(bool verbose = false)
+void EnterVShell()
 {
     import std.array : split;
     import std.uni : toLower;
-    import std.file : getcwd;
+    //import std.file : getcwd;
 
     while (true) {
         //write(getcwd ~ '$');
@@ -93,9 +93,7 @@ void EnterVShell(bool verbose = false)
         case "mem":
             writeln("Not implemented.");
             break;
-        case "cls":
-            Clear();
-            break;
+        case "cls": Clear(); break;
         case "??":
             writeln("?run     Run the VM");
             writeln("?load    Load a file");
@@ -110,21 +108,20 @@ void EnterVShell(bool verbose = false)
             break;*/
         case "?load":
             if (s.length > 1) {
-                if (verbose)
-                    writeln("[VMSI] Loader initiated");
+                if (Verbose)
+                    writeln("[VMDI] Loader initiated");
                 LoadFile(s[1]);
-            }
+            } else if (Verbose)
+                writeln("[VMDI] No file provided");
             break;
-        case "?run":
-            Initiate();
-            break;
+        case "?run": Run(); break;
         case "?v":
-            verbose = !verbose;
-            writeln("[VMSI] verbose turned ", verbose ? "on" : "off");
+            Verbose = !Verbose;
+            writeln("[VMDI] Verbose mode now ", Verbose ? "on" : "off");
             break;
         case "?dump":
-            toFile(bank, "MEMORY.DMP");
-            writeln("Memory dumped to MEMORY.DMP");
+            toFile(bank, "MEMDUMP");
+            writeln("Memory dumped to MEMDUMP");
             break;
         case "?r":
             writef(
@@ -178,10 +175,10 @@ void MakePSP(uint location, string appname, string args = null)
 
 // Page 2-99 contains the interrupt message processor
 /// Raise interrupt.
-void Raise(ubyte code, bool verbose = false)
+void Raise(ubyte code)
 {
-    if (verbose)
-        writefln("[VMRI] INTERRUPT %X RAISED", code);
+    if (Verbose)
+        writefln("[VMDI] INTERRUPT %X RAISED", code);
 
     Push(FLAGW);
     IF = TF = 0;

@@ -3,6 +3,7 @@
  */
 
 //TODO: "Dynamic memory", allocate only what's necessary.
+//TODO: Log(string); (msg) (In Logger.d)
 
 module main;
 
@@ -24,7 +25,7 @@ void DisplayVersion()
     writeln("Copyright (c) 2017 dd86k, MIT license");
 	writeln("Project page: <https://github.com/dd86k/dd-dos>");
     writefln("Compiled %s using %s v%s", __FILE__, __VENDOR__, __VERSION__);
-    exit(0);
+    exit(0); // getopt hack
 }
 
 /// Display short help.
@@ -38,9 +39,9 @@ void DisplayHelp(string name = APP_NAME)
 int main(string[] args)
 {
     string init_file, init_args;
-    bool maxperf,
-         verbose,
-         smsg; // Startup message
+    bool smsg; // Startup message
+
+    debug Verbose = true;
 
     GetoptResult r;
 	try {
@@ -50,15 +51,15 @@ int main(string[] args)
             config.caseSensitive,
             "args|a", "Starting program's arguments.", &init_args,
             config.bundling, config.caseSensitive,
-            "perf|P", "Maximum performance(!)", &maxperf,
+            "perf|P", "Maximum performance(!)", &Sleep,
             config.bundling, config.caseSensitive,
             "nobootmsg|N", "No starting-up messages.", &smsg,
             config.bundling, config.caseSensitive,
-			"verbose|V", "Verbose mode.", &verbose,
+			"verbose|V", "Verbose mode.", &Verbose,
             config.caseSensitive,
             "version|v", "Print version screen.", &DisplayVersion);
 	} catch (GetOptException ex) {
-		stderr.writeln(ex.msg);
+		stderr.writeln("Error: ", ex.msg);
         return 1;
 	}
 
@@ -77,23 +78,21 @@ int main(string[] args)
         return 0;
 	}
 
-    debug verbose = true;
-
     if (!smsg) writeln("DD-DOS is starting...");
-    if (verbose) writeln("[VMMI] Verbose mode.");
-    if (verbose) writeln("[VMMI] Max perf: ", maxperf);
+    if (Verbose) writeln("[VMMI] Verbose mode is ON.");
+    if (Verbose) writeln("[VMMI] Max perf: ", !Sleep);
+
     InitConsole();
-    Sleep = !maxperf;
-    Verbose = verbose;
+    Initiate();
 
     if (init_file)
     {
-        LoadFile(init_file, init_args ? init_args : null, verbose);
-        Initiate();
+        LoadFile(init_file, init_args);
+        Run();
     }
     else
     {
-        EnterVShell(verbose);
+        EnterVShell();
     }
 
     return LastErrorCode;

@@ -35,7 +35,7 @@ private struct mz_rlc { // For AL=03h
 private enum MZ_MAGIC = 0x5A4D;
 
 /// Load a file in virtual memory.
-void LoadFile(string path, string args = null, bool verbose = false)
+void LoadFile(string path, string args = null)
 {
     //TODO: args
     if (exists(path))
@@ -46,12 +46,12 @@ void LoadFile(string path, string args = null, bool verbose = false)
 
         const ulong fsize = f.size;
 
-        if (verbose)
+        if (Verbose)
             writeln("[VMLI] File exists");
 
         if (fsize == 0)
         {
-            if (verbose)
+            if (Verbose)
                 writeln("[VMLE] File is zero length.");
             return;
         }
@@ -63,12 +63,12 @@ void LoadFile(string path, string args = null, bool verbose = false)
                 case ".COM": {
                     if (fsize > 0xFF00) // Size - PSP
                     {
-                        if (verbose)
+                        if (Verbose)
                             writeln("[VMLE] COM file too large.");
                         AL = LastErrorCode = 3;
                         return;
                     }
-                    if (verbose) write("[VMLI] Loading COM... ");
+                    if (Verbose) write("[VMLI] Loading COM... ");
                     uint s = cast(uint)fsize;
                     ubyte[] buf = new ubyte[s];
                     f.rawRead(buf);
@@ -77,12 +77,12 @@ void LoadFile(string path, string args = null, bool verbose = false)
                     memcpy(bankp, &buf[0], buf.length);
 
                     //MakePSP(GetIPAddress - 0x100, "TEST");
-                    if (verbose) writeln("loaded");
+                    if (Verbose) writeln("loaded");
                 }
                     break;
 
                 case ".EXE": { // Real party starts here
-                    if (verbose) write("[VMLI] Loading EXE... ");
+                    if (Verbose) write("[VMLI] Loading EXE... ");
                     mz_hdr mzh;
                     {
                         ubyte[mz_hdr.sizeof] buf;
@@ -103,7 +103,7 @@ void LoadFile(string path, string args = null, bool verbose = false)
                             }
                         }*/
 
-                        if (verbose)
+                        if (Verbose)
                             writeln("[VMLI] Loading MZ");
 
                         /*
@@ -129,7 +129,7 @@ void LoadFile(string path, string args = null, bool verbose = false)
 
                         if (e_crlc)
                         {
-                            if (verbose)
+                            if (Verbose)
                                 writeln("[VMLI] Relocating...");
                             f.seek(e_lfarlc);
                             // Relocation table
@@ -142,7 +142,7 @@ void LoadFile(string path, string args = null, bool verbose = false)
 
                             }
                         }
-                        else if (verbose)
+                        else if (Verbose)
                             writeln("[VMLI] No relocations");
 
                         /*uint minsize = imagesize + (e_minalloc << 4) + 256;
@@ -174,8 +174,8 @@ void LoadFile(string path, string args = null, bool verbose = false)
                 default: break; // null is included here.
             }
         }
-        else if (verbose) writeln("[VMLE] File is too big.");
+        else if (Verbose) writeln("[VMLE] File is too big.");
     }
-    else if (verbose)
+    else if (Verbose)
         writefln("[VMLE] File %s does not exist, skipping.", path);
 }
