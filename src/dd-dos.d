@@ -1,6 +1,7 @@
 module dd_dos;
 
-import Interpreter, std.stdio, Loader, Poshub, Utilities;
+import std.stdio;
+import Interpreter, Loader, Poshub, Utilities, Logger;
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
@@ -12,9 +13,9 @@ else version (OSX)
 else version (FreeBSD)
     version = COOL_CLUB;
 
-/// Application version
+/// Debug application version
 debug enum APP_VERSION = "0.0.0-debug"; else
-/// Application version
+/// Release application version
 enum APP_VERSION = "0.0.0";
 
 /// Application name
@@ -65,8 +66,8 @@ ubyte LastErrorCode;
 void EnterVShell()
 {
     import std.array : split;
-    import std.uni : toLower;
-    //import std.file : getcwd;
+    import std.uni : toUpper;
+    import std.file : getcwd, chdir, FileException;
 
     while (true) {
         //write(getcwd ~ '$');
@@ -76,54 +77,57 @@ void EnterVShell()
         string[] s = split(readln()[0..$-1], ' ');
 
         if (s.length > 0)
-        switch (toLower(s[0]))
+        switch (toUpper(s[0]))
         {
-        case "help":
+        case "HELP": //TODO: Complete HELP with /ALL
             writeln("CLS            Clear screen.");
             writeln("MEM            Show memory information.");
             writeln("VER            Show DOS version.");
             break;
-        case "ver":
+        case "VER":
             writeln;
             writeln("DD-DOS Version ", APP_VERSION);
-            writeln("MS-DOS Version ", DOS_MAJOR_VERSION,
-                ".", DOS_MINOR_VERSION);
+            writeln("MS-DOS Version ", MajorVersion, ".", MinorVersion);
             writeln;
             break;
-        case "mem":
+        case "MEM":
             writeln("Not implemented.");
             break;
-        case "cls": Clear(); break;
-        case "??":
-            writeln("?run     Run the VM");
-            writeln("?load    Load a file");
-            writeln("?r       Print register information");
-            writeln("?v       Toggle verbose mode");
+        case "CD":
+            if (s.length > 1)
+                try {
+                    chdir(s[1]);
+                } catch (FileException) {
+                    writeln("Invalid directory\n");
+                }
+            else
+                writeln(getcwd);
             break;
-        /*case "time":
+        case "CLS": Clear(); break;
+        case "EXIT": return;
+        /*case "TIME":
             writeln("Current time is   ");
             break;*/
-        /*case "date":
+        /*case "DATE":
             writeln("Current date is   ");
             break;*/
-        case "?load":
-            if (s.length > 1) {
-                if (Verbose)
-                    writeln("[VMDI] Loader initiated");
+
+        // DEBUGGING COMMANDS
+
+        case "?LOAD":
+            if (s.length > 1) // Is a file provided?
                 LoadFile(s[1]);
-            } else if (Verbose)
-                writeln("[VMDI] No file provided");
             break;
-        case "?run": Run(); break;
-        case "?v":
+        case "?RUN": Run(); break;
+        case "?V":
             Verbose = !Verbose;
-            writeln("[VMDI] Verbose mode now ", Verbose ? "on" : "off");
+            writeln("Verbose mode now ", Verbose ? "on" : "off");
             break;
-        case "?dump":
+        case "?DUMP":
             toFile(bank, "MEMDUMP");
             writeln("Memory dumped to MEMDUMP");
             break;
-        case "?r":
+        case "?R":
             writef(
                 "AX=%04X BX=%04X CX=%04X DX=%04X " ~
                 "SP=%04X BP=%04X SI=%04X DI=%04X\n" ~
@@ -132,7 +136,7 @@ void EnterVShell()
                 AX, BX, CX, DX, SP, BP, SI, DI,
                 CS, DS, ES, SS, IP
             );
-            write("FLAG: ");
+            write("FLAG= ");
             if (OF) write("OF ");
             if (DF) write("DF ");
             if (IF) write("IF ");
@@ -144,9 +148,14 @@ void EnterVShell()
             if (CF) write("CF ");
             writefln("(%Xh)", FLAGW);
             break;
-        case "exit": return;
+        case "??":
+            writeln("?run     Run the VM");
+            writeln("?load    Load a file");
+            writeln("?r       Print register information");
+            writeln("?v       Toggle verbose mode");
+            break;
         default:
-            writeln(s[0], ": Invalid command.");
+            writeln("Bad command or file name\n");
             break;
         }
     }
@@ -173,12 +182,15 @@ void MakePSP(uint location, string appname, string args = null)
     pbank[i] = '\0';
 }
 
+/*
+ * Interrupt handler (Hardware, BIOS, DOS, MS-DOS)
+ */
+
 // Page 2-99 contains the interrupt message processor
 /// Raise interrupt.
 void Raise(ubyte code)
 {
-    if (Verbose)
-        writefln("[VMDI] INTERRUPT %X RAISED", code);
+    if (Verbose) loghb("INTERRUPT : ", code);
 
     Push(FLAGW);
     IF = TF = 0;

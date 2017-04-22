@@ -3,13 +3,11 @@
  */
 
 //TODO: "Dynamic memory", allocate only what's necessary.
-//TODO: Log(string); (msg) (In Logger.d)
 
 module main;
 
-import std.stdio;
-import std.getopt;
-import dd_dos, Interpreter, Loader, Poshub;
+import std.stdio, std.getopt;
+import dd_dos, Interpreter, Loader, Poshub, Logger;
 
 debug { } else
 {
@@ -68,7 +66,7 @@ int main(string[] args)
         DisplayHelp;
         writeln("\nSwitches");
         foreach (it; r.options)
-        { // "custom" defaultGetoptPrinter
+        { // "custom" and nicer defaultGetoptPrinter
             writefln("%*s, %-*s%s%s",
                 4,  it.optShort,
                 12, it.optLong,
@@ -79,8 +77,8 @@ int main(string[] args)
 	}
 
     if (!smsg) writeln("DD-DOS is starting...");
-    if (Verbose) writeln("[VMMI] Verbose mode is ON.");
-    if (Verbose) writeln("[VMMI] Max perf: ", !Sleep);
+    if (Verbose) log("Verbose mode is ON");
+    if (Verbose) logs("Max performance is ", Sleep ? "OFF" : "ON");
 
     InitConsole();
     Initiate();

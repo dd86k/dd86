@@ -72,8 +72,6 @@ unittest
 
     writeln("[ Registers ]");
 
-    //TODO: Test FLAG, register properties, etc.
-
     AX = 0x0201;
     BX = 0x0201;
     CX = 0x0201;

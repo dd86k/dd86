@@ -5,7 +5,7 @@
 module Interpreter;
 
 import dd_dos, std.stdio;
-import InterpreterUtils;
+import InterpreterUtils, Logger;
 import core.thread : Thread;
 import core.time : hnsecs, nsecs;
 
@@ -59,7 +59,7 @@ void Initiate()
 void Run()
 {
     if (Verbose)
-        writeln("[VMII] Running...");
+        log("Running...");
 
     while (Running)
     {
@@ -4023,8 +4023,8 @@ CHECK_CX:
         break;
     default: // Illegal instruction
         if (Verbose)
-            writefln("[VMIE] Illegal instruction! (%Xh)", op);
-        // Raise vector
+            loghb("Illegal instruction : ", op, LogLevel.Error);
+        //TODO: Raise vector on illegal op
         
         ++IP;
         break;

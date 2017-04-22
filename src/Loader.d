@@ -4,7 +4,8 @@
 
 module Loader;
 
-import std.stdio, std.path, std.file, dd_dos, Interpreter, InterpreterUtils;
+import std.stdio, std.path, std.file;
+import dd_dos, Interpreter, InterpreterUtils, Logger;
 
 /// MS-DOS EXE header
 private struct mz_hdr {
