@@ -59,8 +59,6 @@ enum
 /// DOS Version
 ubyte MajorVersion = DOS_MAJOR_VERSION,
       MinorVersion = DOS_MINOR_VERSION;
-/// Last-define error-code for CLI.
-ubyte LastErrorCode;
 
 /// Enter internal shell
 void EnterVShell()
@@ -105,12 +103,26 @@ void EnterVShell()
             break;
         case "CLS": Clear(); break;
         case "EXIT": return;
-        /*case "TIME":
-            writeln("Current time is   ");
-            break;*/
-        /*case "DATE":
-            writeln("Current date is   ");
-            break;*/
+        case "TIME":
+            AH = 0x2C;
+            Raise(0x21);
+            writefln("Current time is   %02d:%02d:%02d,%02d\n", CH, CL, DH, DL);
+            break;
+        case "DATE":
+            AH = 0x2A;
+            Raise(0x21);
+            write("Current date is ");
+            final switch (AL) {
+                case 0, 7: write("Sun"); break;
+                case 1: write("Mon"); break;
+                case 2: write("Tue"); break;
+                case 3: write("Wed"); break;
+                case 4: write("Thu"); break;
+                case 5: write("Fri"); break;
+                case 6: write("Sat"); break;
+            }
+            writefln(" %d-%02d-%02d\n", CX, DH, DL);
+            break;
 
         // DEBUGGING COMMANDS
 
@@ -1082,7 +1094,6 @@ void Raise(ubyte code)
          */
         case 0x4C:
         //TODO: Level count
-            LastErrorCode = AL;
             Running = false;
             break;
         /*
@@ -1103,8 +1114,6 @@ void Raise(ubyte code)
          *     it executed as ERRORLEVEL.
          */
         case 0x4D:
-            
-            AL = LastErrorCode;
             break;
         /*
          * 54h - Get verify flag.

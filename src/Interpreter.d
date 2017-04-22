@@ -9,11 +9,6 @@ import InterpreterUtils, Logger;
 import core.thread : Thread;
 import core.time : hnsecs, nsecs;
 
-version (X86_64)
-    version = X86_ANY;
-else version (X86)
-    version = X86_ANY;
-
 /// Initial amount of memory.
 enum MAX_MEM = 0x10_0000; // 1 MB
 
@@ -107,8 +102,6 @@ void FullReset()
         EBP = ESP = EDI = ESI = 0;
 }
 
-// TODO: Make EAX register the base instead of the lowest
-
 /// Generic register
 uint EAX, EBX, ECX, EDX;
 ubyte* ALp, BLp, CLp, DLp;
@@ -176,10 +169,6 @@ bool OF, /// Bit 11, Overflow Flag
      AF, /// Bit  4, Auxiliary Carry Flag (aka Adjust Flag)
      PF, /// Bit  2, Parity Flag
      CF; /// Bit  0, Carry Flag
-
-
-
-//TODO: EPush/EPop
 
 /// Push value into memory.
 void Push(ushort value)
@@ -253,7 +242,6 @@ void Execute(ubyte op) // All instructions are 1-byte.
     // SEGREG - Segment register
     // 
     // The number represents bitness.
-    //TODO: Group instructions. -dd
     switch (op) {
     case 0x00: { // ADD R/M8, REG8
 

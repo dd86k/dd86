@@ -35,10 +35,9 @@ private struct mz_rlc { // For AL=03h
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;
 
-/// Load a file in virtual memory.
+/// Load a file in memory.
 void LoadFile(string path, string args = null)
 {
-    //TODO: args
     if (exists(path))
     {
         import core.stdc.string : memcpy;
@@ -47,13 +46,11 @@ void LoadFile(string path, string args = null)
 
         const ulong fsize = f.size;
 
-        if (Verbose)
-            writeln("[VMLI] File exists");
+        if (Verbose) log("File exists");
 
         if (fsize == 0)
         {
-            if (Verbose)
-                writeln("[VMLE] File is zero length.");
+            if (Verbose) log("File is zero length.", LogLevel.Error);
             return;
         }
 
@@ -64,12 +61,11 @@ void LoadFile(string path, string args = null)
                 case ".COM": {
                     if (fsize > 0xFF00) // Size - PSP
                     {
-                        if (Verbose)
-                            writeln("[VMLE] COM file too large.");
-                        AL = LastErrorCode = 3;
+                        if (Verbose) log("COM file too large", LogLevel.Error);
+                        AL = 3;
                         return;
                     }
-                    if (Verbose) write("[VMLI] Loading COM... ");
+                    if (Verbose) log("Loading COM... ");
                     uint s = cast(uint)fsize;
                     ubyte[] buf = new ubyte[s];
                     f.rawRead(buf);
@@ -78,17 +74,22 @@ void LoadFile(string path, string args = null)
                     memcpy(bankp, &buf[0], buf.length);
 
                     //MakePSP(GetIPAddress - 0x100, "TEST");
-                    if (Verbose) writeln("loaded");
                 }
                     break;
 
                 case ".EXE": { // Real party starts here
-                    if (Verbose) write("[VMLI] Loading EXE... ");
+                    if (Verbose) log("Loading EXE... ");
                     mz_hdr mzh;
                     {
                         ubyte[mz_hdr.sizeof] buf;
                         f.rawRead(buf);
                         memcpy(&mzh, &buf, mz_hdr.sizeof);
+                    }
+
+                    if (mzh.e_magic != MZ_MAGIC) {
+                        if (Verbose) log("EXEC failed magic test");
+                        AL = 3;
+                        return;
                     }
 
                     with (mzh) {
@@ -104,34 +105,29 @@ void LoadFile(string path, string args = null)
                             }
                         }*/
 
-                        if (Verbose)
-                            writeln("[VMLI] Loading MZ");
+                        if (Verbose) log("Type: MZ");
 
-                        /*
-                         * MZ File loader, temporary
-                         */
-                        
-                         if (e_minalloc && e_maxalloc) // High memory
-                         {
-                            writeln("[VMLI] HIGH MEM");
-                         }
-                         else // Low memory
-                         {
-                            writeln("[VMLI] LOW MEM");
-                         }
-                         
-                         const uint headersize = e_cparh * 16;
-                         uint imagesize = (e_cp * 512) - headersize;
-                         if (e_cblp) imagesize -= 512 - e_cblp;
-                         /*if (headersize + imagesize < 512)
-                            imagesize = 512 - headersize;*/
-                         writeln("[VMLI] HDR_SIZE: ", headersize);
-                         writeln("[VMLI] IMG_SIZE: ", imagesize);
+                        if (e_minalloc && e_maxalloc) // High memory
+                        {
+                            if (Verbose) log("HIGH MEM");
+                        }
+                        else // Low memory
+                        {
+                            if (Verbose) log("LOW MEM");
+                        }
+
+                        const uint headersize = e_cparh * 16;
+                        uint imagesize = (e_cp * 512) - headersize;
+                        if (e_cblp) imagesize -= 512 - e_cblp;
+                        /*if (headersize + imagesize < 512)
+                        imagesize = 512 - headersize;*/
+
+                        logd("HDR_SIZE: ", headersize);
+                        logd("IMG_SIZE: ", imagesize);
 
                         if (e_crlc)
                         {
-                            if (Verbose)
-                                writeln("[VMLI] Relocating...");
+                            if (Verbose) log("Relocating...");
                             f.seek(e_lfarlc);
                             // Relocation table
                             mz_rlc[] rlct = new mz_rlc[e_crlc];
@@ -143,18 +139,12 @@ void LoadFile(string path, string args = null)
 
                             }
                         }
-                        else if (Verbose)
-                            writeln("[VMLI] No relocations");
+                        else if (Verbose) log("No relocations");
 
                         /*uint minsize = imagesize + (e_minalloc << 4) + 256;
                         uint maxsize = e_maxalloc ?
                             imagesize + (e_maxalloc << 4) + 256 :
                             0xFFFF;*/
-
-                        ubyte[] t = new ubyte[imagesize];
-                        f.seek(headersize);
-                        f.rawRead(t);
-                        Insert(t);
 
                         DS = ES = 0; // DS:ES (??????)
                         
@@ -166,11 +156,16 @@ void LoadFile(string path, string args = null)
                         SP = e_sp;
                         //uint l = GetIPAddress;
 
+                        ubyte[] t = new ubyte[imagesize];
+                        f.seek(headersize);
+                        f.rawRead(t);
+                        Insert(t);
+
                         // Make PSP
-                        MakePSP(GetIPAddress, "test");
+                        //MakePSP(GetIPAddress, "test");
                     }
                 }
-                    break;
+                    break; // case ".EXE"
 
                 default: break; // null is included here.
             }

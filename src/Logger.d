@@ -8,6 +8,8 @@ enum LogLevel {
     Information = 1, Warning, Error, Critical
 }
 
+//TODO: Change format from [VMxx] to [NNNx] where NNN is source
+
 /// Log a simple message
 void log(string msg, int level = 1, string src = __FILE__)
 {
@@ -29,6 +31,13 @@ void loghb(string msg, ubyte op, int level = 1, string src = __FILE__)
 {
     import std.string : format;
     log(format("%s%02X", msg, op), level, src);
+}
+
+/// Log decimal
+void logd(string msg, long op, int level = 1, string src = __FILE__)
+{
+    import std.string : format;
+    log(format("%s%d", msg, op), level, src);
 }
 
 private char getLevel(int level)

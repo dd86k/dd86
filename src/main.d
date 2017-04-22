@@ -93,5 +93,5 @@ int main(string[] args)
         EnterVShell();
     }
 
-    return LastErrorCode;
+    return AL;
 }
