@@ -22,13 +22,6 @@ pragma(inline, true) void NSLEEP(int n) {
     Thread.sleep(nsecs(n));
 }
 
-//TODO: Rename and restructure (before implementing i486):
-// For VM8086 mode:
-// - Run -> VMRun
-// - Execute -> VMExecute
-// - Push -> VMPush
-// Etc.
-
 /// Initiate machine (memory, etc.)
 void Initiate()
 {
@@ -39,28 +32,26 @@ void Initiate()
     CXp = cast(ushort*)&ECX;
     DXp = cast(ushort*)&EDX;
 
-    ALp = cast(ubyte*)AXp;
-    BLp = cast(ubyte*)BXp;
-    CLp = cast(ubyte*)CXp;
-    DLp = cast(ubyte*)DXp;
-
     SIp = cast(ushort*)&ESI;
     DIp = cast(ushort*)&EDI;
     BPp = cast(ushort*)&EBP;
     SPp = cast(ushort*)&ESP;
+
+    ALp = cast(ubyte*)AXp;
+    BLp = cast(ubyte*)BXp;
+    CLp = cast(ubyte*)CXp;
+    DLp = cast(ubyte*)DXp;
 }
 
 /// Start!
 void Run()
 {
-    if (Verbose)
-        log("Running...");
+    if (Verbose) log("Running...");
 
     while (Running)
     {
         Execute(bank[GetIPAddress]);
-        if (Sleep)
-            HSLEEP( 2 ); // Intel 8086 - 5 MHz
+        if (Sleep) HSLEEP( 2 ); // Intel 8086 - 5 MHz
     }
 }
 
@@ -74,12 +65,21 @@ bool Verbose;
 /// Main memory brank;
 ubyte[] bank;
 
-/// Get physical address out of two segment/register values.
+/**
+ * Get memory address out of a segment and a register value.
+ * Params:
+ *   segment = Segment register value
+ *   offset  = Generic register value
+ * Returns: SEG:ADDR Location
+ */
 uint GetAddress(int segment, int offset)
 {
     return (segment << 4) + offset;
 }
-/// Get next instruction location
+/**
+ * Get next instruction location
+ * Returns: CS:IP address
+ */
 uint GetIPAddress()
 {
     return GetAddress(CS, IP);
@@ -95,6 +95,7 @@ void Reset()
     // Empty Queue Bus
 }
 
+/// Resets the entire vCPU, does not refer to the instruction.
 void FullReset()
 {
     Reset();
@@ -107,46 +108,100 @@ uint EAX, EBX, ECX, EDX;
 ubyte* ALp, BLp, CLp, DLp;
 ushort* AXp, BXp, CXp, DXp;
 
+/*
+ * Register properties, includes sanity check.
+ * Getters and setters, respectively.
+ */
+
+/// Get AX
+/// Returns: WORD
 @property ushort AX() { return *AXp; }
+/// Get AH
+/// Returns: BYTE
 @property ubyte  AH() { return *(ALp + 1); }
+/// Get AL
+/// Returns: BYTE
 @property ubyte  AL() { return *ALp; }
-@property void AX(int v) { *AXp = v & 0xFFFF; }
-@property void AH(int v) { *(ALp + 1) = v & 0xFF; }
-@property void AL(int v) { *ALp = v & 0xFF; }
+/// Set AX
+/// Params: v = WORD
+@property void   AX(int v) { *AXp = v & 0xFFFF; }
+/// Set AH
+/// Params: v = BYTE
+@property void   AH(int v) { *(ALp + 1) = v & 0xFF; }
+/// Set AL
+/// Params: v = BYTE
+@property void   AL(int v) { *ALp = v & 0xFF; }
 
+/// Get BX
+/// Returns: WORD
 @property ushort BX() { return *BXp; }
+/// Get BH
+/// Returns: BYTE
 @property ubyte  BH() { return *(BLp + 1); }
+/// Get BL
+/// Returns: BYTE
 @property ubyte  BL() { return *BLp; }
-@property void BX(int v) { *BXp = v & 0xFFFF; }
-@property void BH(int v) { *(BLp + 1) = v & 0xFF; }
-@property void BL(int v) { *BLp = v & 0xFF; }
+/// Set BX
+/// Params: v = WORD
+@property void   BX(int v) { *BXp = v & 0xFFFF; }
+/// Set BH
+/// Params: v = BYTE
+@property void   BH(int v) { *(BLp + 1) = v & 0xFF; }
+/// Set BL
+/// Params: v = BYTE
+@property void   BL(int v) { *BLp = v & 0xFF; }
 
+/// Get CX
+/// Returns: WORD
 @property ushort CX() { return *CXp; }
+/// Get CH
+/// Returns: BYTE
 @property ubyte  CH() { return *(CLp + 1); }
+/// Get CL
+/// Returns: BYTE
 @property ubyte  CL() { return *CLp; }
-@property void CX(int v) { *CXp = v & 0xFFFF; }
-@property void CH(int v) { *(CLp + 1) = v & 0xFF; }
-@property void CL(int v) { *CLp = v & 0xFF; }
+/// Set CX
+/// Params: v = WORD
+@property void   CX(int v) { *CXp = v & 0xFFFF; }
+/// Set CH
+/// Params: v = BYTE
+@property void   CH(int v) { *(CLp + 1) = v & 0xFF; }
+/// Set CL
+/// Params: v = BYTE
+@property void   CL(int v) { *CLp = v & 0xFF; }
 
+/// Get DX
+/// Returns: WORD
 @property ushort DX() { return *DXp; }
+/// Get DH
+/// Returns: BYTE
 @property ubyte  DH() { return *(DLp + 1); }
+/// Get CL
+/// Returns: BYTE
 @property ubyte  DL() { return *DLp; }
-@property void DX(int v) { *DXp = v & 0xFFFF; }
-@property void DH(int v) { *(DLp + 1) = v & 0xFF; }
-@property void DL(int v) { *DLp = v & 0xFF; }
+/// Set DX
+/// Params: v = WORD
+@property void   DX(int v) { *DXp = v & 0xFFFF; }
+/// Set DH
+/// Params: v = BYTE
+@property void   DH(int v) { *(DLp + 1) = v & 0xFF; }
+/// Set DL
+/// Params: v = BYTE
+@property void   DL(int v) { *DLp = v & 0xFF; }
 
 /// Index register
 uint ESI, EDI, EBP, ESP;
+/// Index register pointer
 ushort* SIp, DIp, BPp, SPp;
 
 @property ushort SI() { return *SIp; }
 @property ushort DI() { return *DIp; }
 @property ushort BP() { return *BPp; }
 @property ushort SP() { return *SPp; }
-@property void SI(int v) { *SIp = (v & 0xFFFF); }
-@property void DI(int v) { *DIp = (v & 0xFFFF); }
-@property void BP(int v) { *BPp = (v & 0xFFFF); }
-@property void SP(int v) { *SPp = (v & 0xFFFF); }
+@property void SI(int v) { *SIp = v & 0xFFFF; }
+@property void DI(int v) { *DIp = v & 0xFFFF; }
+@property void BP(int v) { *BPp = v & 0xFFFF; }
+@property void SP(int v) { *SPp = v & 0xFFFF; }
 
 /// Segment register
 ushort CS, SS, DS, ES,
@@ -159,7 +214,25 @@ ushort IP;
 //@property ushort IP() { return EIP & 0xFFFF; }
 //@property void IP(int v) { EIP |= v & 0xFFFF; }
 
-// FLAGS
+/*
+ * FLAGS
+ */
+
+/// Flag mask
+private enum {
+    MASK_CF = 1,
+    MASK_PF = 4,
+    MASK_AF = 0x10,
+    MASK_ZF = 0x40,
+    MASK_SF = 0x80,
+    MASK_TF = 0x100,
+    MASK_IF = 0x200,
+    MASK_DF = 0x400,
+    MASK_OF = 0x800,
+    // i386
+
+}
+
 bool OF, /// Bit 11, Overflow Flag
      DF, /// Bit 10, Direction Flag
      IF, /// Bit  9, Interrupt Enable Flag
@@ -170,13 +243,20 @@ bool OF, /// Bit 11, Overflow Flag
      PF, /// Bit  2, Parity Flag
      CF; /// Bit  0, Carry Flag
 
-/// Push value into memory.
+/**
+ * Push value into memory.
+ * Params:
+ *   value = WORD value to PUSH
+ */
 void Push(ushort value)
 {
     SP = SP - 2;
     SetWord(GetAddress(SS, SP), value);
 }
-/// Pop value from memory.
+/**
+ * Pop value from memory.
+ * Returns: POP'd WORD value
+ */
 ushort Pop()
 {
     const uint addr = GetAddress(SS, SP);
@@ -184,64 +264,81 @@ ushort Pop()
     return FetchWord(addr);
 }
 
-/// Get FLAG as WORD.
+/**
+ * Get FLAG as WORD.
+ * Returns: FLAG as byte
+ */
 @property ubyte FLAGB()
 {
     ubyte b;
-    if (SF) b |= 0x80;
-    if (ZF) b |= 0x40;
-    if (AF) b |= 0x10;
-    if (PF) b |= 4;
-    if (CF) b |= 1;
+    if (SF) b |= MASK_SF;
+    if (ZF) b |= MASK_ZF;
+    if (AF) b |= MASK_AF;
+    if (PF) b |= MASK_PF;
+    if (CF) b |= MASK_CF;
     return b;
 }
 
 /// Set FLAG as BYTE.
 @property void FLAGB(ubyte flag)
 {
-    SF = (flag & 0x80) != 0;
-    ZF = (flag & 0x40) != 0;
-    AF = (flag & 0x10) != 0;
-    PF = (flag & 0x4 ) != 0;
-    CF = (flag & 1   ) != 0;
+    SF = (flag & MASK_SF) != 0;
+    ZF = (flag & MASK_ZF) != 0;
+    AF = (flag & MASK_AF) != 0;
+    PF = (flag & MASK_PF) != 0;
+    CF = (flag & MASK_CF) != 0;
 }
 
-/// Get FLAG as WORD.
-@property ushort FLAGW()
+/**
+ * Get FLAG as WORD.
+ * Returns: FLAG (WORD)
+ */
+@property ushort FLAG()
 {
     ushort b = FLAGB;
-    if (OF) b |= 0x800;
-    if (DF) b |= 0x400;
-    if (IF) b |= 0x200;
-    if (TF) b |= 0x100;
+    if (OF) b |= MASK_OF;
+    if (DF) b |= MASK_DF;
+    if (IF) b |= MASK_IF;
+    if (TF) b |= MASK_TF;
     return b;
 }
 
 /// Set FLAG as WORD.
-@property void FLAGW(ushort flag)
+@property void FLAG(ushort flag)
 {
-    OF = (flag & 0x800) != 0;
-    DF = (flag & 0x400) != 0;
-    IF = (flag & 0x200) != 0;
-    TF = (flag & 0x100) != 0;
+    OF = (flag & MASK_OF) != 0;
+    DF = (flag & MASK_DF) != 0;
+    IF = (flag & MASK_IF) != 0;
+    TF = (flag & MASK_TF) != 0;
     FLAGB = flag & 0xFF;
 }
 
+// Rest of the source here is solely this function.
 /**
  * Execute an operation code, acts like the ALU from an Intel 8086.
- *
- * Rest of the source here is solely this function.
+ * Params:
+ *   op = Operation Code
  */
-void Execute(ubyte op) // All instructions are 1-byte.
+void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 {
-    // Legend:
-    // R/M - ModRegister/Memory byte
-    // IMM - Immediate value
-    // REG - Register
-    // MEM - Memory location
-    // SEGREG - Segment register
-    // 
-    // The number represents bitness.
+    //TODO: Seg (uint)
+    //      Seg will be used to get the default or segment overload prefix.
+    // Usage:
+    //      Default: Seg = DS (for ModR/M example)
+    //      Prefix : Seg = CS (for CS: example)
+    // Then the next instruction will use Seg (with GetAddress)
+    // There are a few instructions (opcodes) affected by this:
+    // (TODO: get those opcodes too)
+    /*
+     * Legend:
+     * R/M - Mod Register/Memory byte
+     * IMM - Immediate value
+     * REG - Register
+     * MEM - Memory location
+     * SEGREG - Segment register
+     * 
+     * The number represents bitness.
+     */
     switch (op) {
     case 0x00: { // ADD R/M8, REG8
 
@@ -3408,11 +3505,11 @@ void Execute(ubyte op) // All instructions are 1-byte.
         ++IP;
         break;
     case 0x9C: // PUSHF
-        Push(FLAGW);
+        Push(FLAG);
         ++IP;
         break;
     case 0x9D: // POPF
-        FLAGW = Pop();
+        FLAG = Pop();
         ++IP;
         break;
     case 0x9E: // SAHF (AH to Flags)
@@ -3643,7 +3740,7 @@ void Execute(ubyte op) // All instructions are 1-byte.
     case 0xCF: // IRET
         IP = Pop();
         CS = Pop();
-        FLAGW = Pop();
+        FLAG = Pop();
         ++IP;
         break;
     case 0xD0: // GRP2 R/M8, 1

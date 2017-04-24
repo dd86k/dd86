@@ -14,7 +14,10 @@ enum LogLevel {
 void log(string msg, int level = 1, string src = __FILE__)
 {
     //import std.string : format;
-    writefln("[VM%c%c] %s", src[4], getLevel(level), msg);
+    version (Have_dd_dos) // DUB with src\
+        writefln("[VM%c%c] %s", src[4], getLevel(level), msg);
+    else // Compiled manually
+        writefln("[VM%c%c] %s", src[0], getLevel(level), msg);
 
     //TODO: Logging in file
 }

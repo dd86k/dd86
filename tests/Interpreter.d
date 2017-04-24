@@ -10,7 +10,7 @@ unittest
     writeln("---------- Interpreter (i8086)");
 
     Sleep = false; // Maximum performance
-    Verbose = true;
+    //Verbose = true;
     CS = 0;
 
     Initiate;
@@ -105,16 +105,16 @@ unittest
     assert(DX == 0x0201);
     writeln("OK");
 
-    FLAGW = 0xFFFF;
+    FLAG = 0xFFFF;
     assert(SF); assert(ZF); assert(AF); assert(PF); assert(CF);
     assert(OF); assert(DF); assert(IF); assert(TF);
     assert(FLAGB == 0xD5);
-    assert(FLAGW == 0xFD5);
-    FLAGW = 0;
+    assert(FLAG == 0xFD5);
+    FLAG = 0;
     assert(!SF); assert(!ZF); assert(!AF); assert(!PF); assert(!CF);
     assert(!OF); assert(!DF); assert(!IF); assert(!TF);
     assert(FLAGB == 0);
-    assert(FLAGW == 0);
+    assert(FLAG == 0);
 
     FullReset; CS = 0;
 

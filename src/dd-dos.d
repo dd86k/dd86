@@ -158,7 +158,7 @@ void EnterVShell()
             if (AF) write("AF ");
             if (PF) write("PF ");
             if (CF) write("CF ");
-            writefln("(%Xh)", FLAGW);
+            writefln("(%Xh)", FLAG);
             break;
         case "??":
             writeln("?run     Run the VM");
@@ -204,7 +204,7 @@ void Raise(ubyte code)
 {
     if (Verbose) loghb("INTERRUPT : ", code);
 
-    Push(FLAGW);
+    Push(FLAG);
     IF = TF = 0;
     Push(CS);
     Push(IP);
@@ -227,7 +227,7 @@ void Raise(ubyte code)
              *   DL (Column, 0 is top)
              */
             case 0x02:
-            //TODO: Figure out page
+            //TODO: Figure out page (Buffer?)
                 SetPos(DH, DL);
                 break;
             /*
@@ -1182,5 +1182,5 @@ void Raise(ubyte code)
     IP = Pop();
     CS = Pop();
     IF = TF = 1;
-    FLAGW = Pop();
+    FLAG = Pop();
 }

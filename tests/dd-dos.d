@@ -6,8 +6,7 @@ unittest
 {
     writeln("---------- DD-DOS (MS-DOS, IBM PC)");
 
-    Verbose = true;
-    Initiate;
+    //Verbose = true;
     
     /*
      * Hardware (and/or BIOS)
