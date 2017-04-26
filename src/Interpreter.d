@@ -313,11 +313,16 @@ ushort Pop()
     FLAGB = flag & 0xFF;
 }
 
+/// Preferred Segment register
+private uint Seg;
+
+//TODO: Add(int v1, int v2)
+//      Would avoid setting flags all the time (with other functions)
+
 // Rest of the source here is solely this function.
 /**
  * Execute an operation code, acts like the ALU from an Intel 8086.
- * Params:
- *   op = Operation Code
+ * Params: op = Operation Code
  */
 void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 {
@@ -498,8 +503,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
         IP += 3;
         break;
     case 0x26: // ES: (Segment override prefix)
-        // e.g. mov	ax, [es:100h] ; Use ES as the segment
-
+        Seg = ES;
         break;
     case 0x27: { // DAA
         const ubyte oldAL = AL;
@@ -791,19 +795,19 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
         IP += OF ? FetchImmSByte : 2;
         break;
     case 0x71: // JNO           SHORT-LABEL
-        IP += OF == false ? FetchImmSByte : 2;
+        IP += OF ? 2 : FetchImmSByte;
         break;
     case 0x72: // JB/JNAE/JC    SHORT-LABEL
         IP += CF ? FetchImmSByte : 2;
         break;
     case 0x73: // JNB/JAE/JNC   SHORT-LABEL
-        IP += CF == false ? FetchImmSByte : 2;
+        IP += CF ? 2 : FetchImmSByte;
         break;
     case 0x74: // JE/JZ         SHORT-LABEL
         IP += ZF ? FetchImmSByte : 2;
         break;
     case 0x75: // JNE/JNZ       SHORT-LABEL
-        IP += ZF == false ? FetchImmSByte : 2;
+        IP += ZF ? 2 : FetchImmSByte;
         break;
     case 0x76: // JBE/JNA       SHORT-LABEL
         IP += (CF || ZF) ? FetchImmSByte : 2;
@@ -815,13 +819,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
         IP += SF ? FetchImmSByte : 2;
         break;
     case 0x79: // JNS           SHORT-LABEL
-        IP += SF == false ? FetchImmSByte : 2;
+        IP += SF ? 2 : FetchImmSByte;
         break;
     case 0x7A: // JP/JPE        SHORT-LABEL
         IP += PF ? FetchImmSByte : 2;
         break;
     case 0x7B: // JNP/JPO       SHORT-LABEL
-        IP += PF == false ? FetchImmSByte : 2;
+        IP += PF ? 2 : FetchImmSByte;
         break;
     case 0x7C: // JL/JNGE       SHORT-LABEL
         IP += SF != OF ? FetchImmSByte : 2;
@@ -902,7 +906,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
     }
     case 0x81: { // GRP1 R/M16, IMM16
         const ubyte rm = FetchImmByte;  // Get ModR/M byte
-        const ushort im = FetchWord(GetIPAddress + 2); // 16-bit Immediate
+        const ushort im = FetchImmWord(2); // 16-bit Immediate
         final switch (rm & 0b111_000) { // ModR/M's REG
         case 0: // 000 - ADD
 
@@ -959,7 +963,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
         break;
     case 0x83: // GRP2 R/M16, IMM16
         const ubyte rm = FetchImmByte; // Get ModR/M byte
-        const ushort im = FetchWord(GetIPAddress + 2);
+        const ushort im = FetchImmWord(2);
         switch (rm & 0b111_000) { // ModRM REG
         case 0b000_000: // 000 - ADD
 
@@ -999,8 +1003,8 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
         break;
     }
     case 0x89: { // MOV R/M16, REG16
-        const uint addr = GetIPAddress + 2;
         const ubyte rm = FetchImmByte;
+        //TODO: FIX MOV R/M16, REG16 ACCORDING TO DOCUMENTATION, VERIFY
         final switch (rm & 0b111) // R/M
         {
         case 0: // BX + SI
@@ -1012,14 +1016,14 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                 case 0: // 00
                     AX = FetchWord(BX + SI);
                     break;
-                case 0b01000000: // 01
-                    AX = FetchWord(BX + SI + FetchByte(addr));
+                case 0b01_000000: // 01
+                    AX = FetchWord(BX + SI + FetchImmByte(1));
                     break;
-                case 0b10000000: // 10
-                    AX = FetchWord(BX + SI + FetchWord(addr));
+                case 0b10_000000: // 10
+                    AX = FetchWord(BX + SI + FetchImmWord(1));
                     break;
-                case 0b11000000: // 11
-                    AX = FetchWord(FetchByte(addr));
+                case 0b11_000000: // 11
+                    AX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1030,13 +1034,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CX = FetchWord(BX + SI);
                     break;
                 case 0b01000000:
-                    CX = FetchWord(BX + SI + FetchByte(addr));
+                    CX = FetchWord(BX + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    CX = FetchWord(BX + SI + FetchWord(addr));
+                    CX = FetchWord(BX + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    CX = FetchWord(FetchByte(addr));
+                    CX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1047,13 +1051,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DX = FetchWord(BX + SI);
                     break;
                 case 0b01000000:
-                    DX = FetchWord(BX + SI + FetchByte(addr));
+                    DX = FetchWord(BX + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DX = FetchWord(BX + SI + FetchWord(addr));
+                    DX = FetchWord(BX + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DX = FetchWord(FetchByte(addr));
+                    DX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1064,13 +1068,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BX = FetchWord(BX + SI);
                     break;
                 case 0b01000000:
-                    BX = FetchWord(BX + SI + FetchByte(addr));
+                    BX = FetchWord(BX + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BX = FetchWord(BX + SI + FetchWord(addr));
+                    BX = FetchWord(BX + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BX = FetchWord(FetchByte(addr));
+                    BX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1081,13 +1085,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SP = FetchWord(BX + SI);
                     break;
                 case 0b01000000:
-                    SP = FetchWord(BX + SI + FetchByte(addr));
+                    SP = FetchWord(BX + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SP = FetchWord(BX + SI + FetchWord(addr));
+                    SP = FetchWord(BX + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SP = FetchWord(FetchByte(addr));
+                    SP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1098,13 +1102,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BP = FetchWord(BX + SI);
                     break;
                 case 0b01000000:
-                    BP = FetchWord(BX + SI + FetchByte(addr));
+                    BP = FetchWord(BX + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BP = FetchWord(BX + SI + FetchWord(addr));
+                    BP = FetchWord(BX + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BP = FetchWord(FetchByte(addr));
+                    BP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1115,13 +1119,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SI = FetchWord(BX + SI);
                     break;
                 case 0b01000000:
-                    SI = FetchWord(BX + SI + FetchByte(addr));
+                    SI = FetchWord(BX + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SI = FetchWord(BX + SI + FetchWord(addr));
+                    SI = FetchWord(BX + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SI = FetchWord(FetchByte(addr));
+                    SI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1132,13 +1136,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DI = FetchWord(BX + SI);
                     break;
                 case 0b01000000:
-                    DI = FetchWord(BX + SI + FetchByte(addr));
+                    DI = FetchWord(BX + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DI = FetchWord(BX + SI + FetchWord(addr));
+                    DI = FetchWord(BX + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DI = FetchWord(FetchByte(addr));
+                    DI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1154,13 +1158,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AX = FetchWord(BX + DI);
                     break;
                 case 0b01000000:
-                    AX = FetchWord(BX + DI + FetchByte(addr));
+                    AX = FetchWord(BX + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    AX = FetchWord(BX + DI + FetchWord(addr));
+                    AX = FetchWord(BX + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    AX = FetchWord(FetchByte(addr));
+                    AX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1171,13 +1175,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CX = FetchWord(BX + DI);
                     break;
                 case 0b01000000:
-                    CX = FetchWord(BX + DI + FetchByte(addr));
+                    CX = FetchWord(BX + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    CX = FetchWord(BX + DI + FetchWord(addr));
+                    CX = FetchWord(BX + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    CX = FetchWord(FetchByte(addr));
+                    CX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1188,13 +1192,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DX = FetchWord(BX + DI);
                     break;
                 case 0b01000000:
-                    DX = FetchWord(BX + DI + FetchByte(addr));
+                    DX = FetchWord(BX + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DX = FetchWord(BX + DI + FetchWord(addr));
+                    DX = FetchWord(BX + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DX = FetchWord(FetchByte(addr));
+                    DX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1205,13 +1209,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BX = FetchWord(BX + DI);
                     break;
                 case 0b01000000:
-                    BX = FetchWord(BX + DI + FetchByte(addr));
+                    BX = FetchWord(BX + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BX = FetchWord(BX + DI + FetchWord(addr));
+                    BX = FetchWord(BX + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BX = FetchWord(FetchByte(addr));
+                    BX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1222,13 +1226,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SP = FetchWord(BX + DI);
                     break;
                 case 0b01000000:
-                    SP = FetchWord(BX + DI + FetchByte(addr));
+                    SP = FetchWord(BX + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SP = FetchWord(BX + DI + FetchWord(addr));
+                    SP = FetchWord(BX + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SP = FetchWord(FetchByte(addr));
+                    SP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1239,13 +1243,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BP = FetchWord(BX + DI);
                     break;
                 case 0b01000000:
-                    BP = FetchWord(BX + DI + FetchByte(addr));
+                    BP = FetchWord(BX + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BP = FetchWord(BX + DI + FetchWord(addr));
+                    BP = FetchWord(BX + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BP = FetchWord(FetchByte(addr));
+                    BP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1256,13 +1260,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SI = FetchWord(BX + DI);
                     break;
                 case 0b01000000:
-                    SI = FetchWord(BX + DI + FetchByte(addr));
+                    SI = FetchWord(BX + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SI = FetchWord(BX + DI + FetchWord(addr));
+                    SI = FetchWord(BX + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SI = FetchWord(FetchByte(addr));
+                    SI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1273,13 +1277,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DI = FetchWord(BX + DI);
                     break;
                 case 0b01000000:
-                    DI = FetchWord(BX + DI + FetchByte(addr));
+                    DI = FetchWord(BX + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DI = FetchWord(BX + DI + FetchWord(addr));
+                    DI = FetchWord(BX + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DI = FetchWord(FetchByte(addr));
+                    DI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1295,13 +1299,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AX = FetchWord(BP + SI);
                     break;
                 case 0b01000000:
-                    AX = FetchWord(BP + SI + FetchByte(addr));
+                    AX = FetchWord(BP + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    AX = FetchWord(BP + SI + FetchWord(addr));
+                    AX = FetchWord(BP + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    AX = FetchWord(FetchByte(addr));
+                    AX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1312,13 +1316,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CX = FetchWord(BP + SI);
                     break;
                 case 0b01000000:
-                    CX = FetchWord(BP + SI + FetchByte(addr));
+                    CX = FetchWord(BP + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    CX = FetchWord(BP + SI + FetchWord(addr));
+                    CX = FetchWord(BP + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    CX = FetchWord(FetchByte(addr));
+                    CX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1329,13 +1333,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DX = FetchWord(BP + SI);
                     break;
                 case 0b01000000:
-                    DX = FetchWord(BP + SI + FetchByte(addr));
+                    DX = FetchWord(BP + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DX = FetchWord(BP + SI + FetchWord(addr));
+                    DX = FetchWord(BP + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DX = FetchWord(FetchByte(addr));
+                    DX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1346,13 +1350,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BX = FetchWord(BP + SI);
                     break;
                 case 0b01000000:
-                    BX = FetchWord(BP + SI + FetchByte(addr));
+                    BX = FetchWord(BP + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BX = FetchWord(BP + SI + FetchWord(addr));
+                    BX = FetchWord(BP + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BX = FetchWord(FetchByte(addr));
+                    BX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1363,13 +1367,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SP = FetchWord(BP + SI);
                     break;
                 case 0b01000000:
-                    SP = FetchWord(BP + SI + FetchByte(addr));
+                    SP = FetchWord(BP + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SP = FetchWord(BP + SI + FetchWord(addr));
+                    SP = FetchWord(BP + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SP = FetchWord(FetchByte(addr));
+                    SP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1380,13 +1384,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BP = FetchWord(BP + SI);
                     break;
                 case 0b01000000:
-                    BP = FetchWord(BP + SI + FetchByte(addr));
+                    BP = FetchWord(BP + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BP = FetchWord(BP + SI + FetchWord(addr));
+                    BP = FetchWord(BP + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BP = FetchWord(FetchByte(addr));
+                    BP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1397,13 +1401,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SI = FetchWord(BP + SI);
                     break;
                 case 0b01000000:
-                    SI = FetchWord(BP + SI + FetchByte(addr));
+                    SI = FetchWord(BP + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SI = FetchWord(BP + SI + FetchWord(addr));
+                    SI = FetchWord(BP + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SI = FetchWord(FetchByte(addr));
+                    SI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1414,13 +1418,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DI = FetchWord(BP + SI);
                     break;
                 case 0b01000000:
-                    DI = FetchWord(BP + SI + FetchByte(addr));
+                    DI = FetchWord(BP + SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DI = FetchWord(BP + SI + FetchWord(addr));
+                    DI = FetchWord(BP + SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DI = FetchWord(FetchByte(addr));
+                    DI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1436,13 +1440,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AX = FetchWord(BP + DI);
                     break;
                 case 0b01000000:
-                    AX = FetchWord(BP + DI + FetchByte(addr));
+                    AX = FetchWord(BP + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    AX = FetchWord(BP + DI + FetchWord(addr));
+                    AX = FetchWord(BP + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    AX = FetchWord(FetchByte(addr));
+                    AX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1453,13 +1457,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CX = FetchWord(BP + DI);
                     break;
                 case 0b01000000:
-                    CX = FetchWord(BP + DI + FetchByte(addr));
+                    CX = FetchWord(BP + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    CX = FetchWord(BP + DI + FetchWord(addr));
+                    CX = FetchWord(BP + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    CX = FetchWord(FetchByte(addr));
+                    CX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1470,13 +1474,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DX = FetchWord(BP + DI);
                     break;
                 case 0b01000000:
-                    DX = FetchWord(BP + DI + FetchByte(addr));
+                    DX = FetchWord(BP + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DX = FetchWord(BP + DI + FetchWord(addr));
+                    DX = FetchWord(BP + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DX = FetchWord(FetchByte(addr));
+                    DX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1487,13 +1491,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BX = FetchWord(BP + DI);
                     break;
                 case 0b01000000:
-                    BX = FetchWord(BP + DI + FetchByte(addr));
+                    BX = FetchWord(BP + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BX = FetchWord(BP + DI + FetchWord(addr));
+                    BX = FetchWord(BP + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BX = FetchWord(FetchByte(addr));
+                    BX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1504,13 +1508,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SP = FetchWord(BP + DI);
                     break;
                 case 0b01000000:
-                    SP = FetchWord(BP + DI + FetchByte(addr));
+                    SP = FetchWord(BP + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SP = FetchWord(BP + DI + FetchWord(addr));
+                    SP = FetchWord(BP + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SP = FetchWord(FetchByte(addr));
+                    SP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1521,13 +1525,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BP = FetchWord(BP + DI);
                     break;
                 case 0b01000000:
-                    BP = FetchWord(BP + DI + FetchByte(addr));
+                    BP = FetchWord(BP + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BP = FetchWord(BP + DI + FetchWord(addr));
+                    BP = FetchWord(BP + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BP = FetchWord(FetchByte(addr));
+                    BP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1538,13 +1542,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SI = FetchWord(BP + DI);
                     break;
                 case 0b01000000:
-                    SI = FetchWord(BP + DI + FetchByte(addr));
+                    SI = FetchWord(BP + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SI = FetchWord(BP + DI + FetchWord(addr));
+                    SI = FetchWord(BP + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SI = FetchWord(FetchByte(addr));
+                    SI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1555,13 +1559,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DI = FetchWord(BP + DI);
                     break;
                 case 0b01000000:
-                    DI = FetchWord(BP + DI + FetchByte(addr));
+                    DI = FetchWord(BP + DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DI = FetchWord(BP + DI + FetchWord(addr));
+                    DI = FetchWord(BP + DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DI = FetchWord(FetchByte(addr));
+                    DI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1577,13 +1581,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AX = FetchWord(SI);
                     break;
                 case 0b01000000:
-                    AX = FetchWord(SI + FetchByte(addr));
+                    AX = FetchWord(SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    AX = FetchWord(SI + FetchWord(addr));
+                    AX = FetchWord(SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    AX = FetchWord(FetchByte(addr));
+                    AX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1594,13 +1598,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CX = FetchWord(SI);
                     break;
                 case 0b01000000:
-                    CX = FetchWord(SI + FetchByte(addr));
+                    CX = FetchWord(SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    CX = FetchWord(SI + FetchWord(addr));
+                    CX = FetchWord(SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    CX = FetchWord(FetchByte(addr));
+                    CX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1611,13 +1615,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DX = FetchWord(SI);
                     break;
                 case 0b01000000:
-                    DX = FetchWord(SI + FetchByte(addr));
+                    DX = FetchWord(SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DX = FetchWord(SI + FetchWord(addr));
+                    DX = FetchWord(SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DX = FetchWord(FetchByte(addr));
+                    DX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1628,13 +1632,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BX = FetchWord(SI);
                     break;
                 case 0b01000000:
-                    BX = FetchWord(SI + FetchByte(addr));
+                    BX = FetchWord(SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BX = FetchWord(SI + FetchWord(addr));
+                    BX = FetchWord(SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BX = FetchWord(FetchByte(addr));
+                    BX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1645,13 +1649,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SP = FetchWord(SI);
                     break;
                 case 0b01000000:
-                    SP = FetchWord(SI + FetchByte(addr));
+                    SP = FetchWord(SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SP = FetchWord(SI + FetchWord(addr));
+                    SP = FetchWord(SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SP = FetchWord(FetchByte(addr));
+                    SP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1662,13 +1666,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BP = FetchWord(SI);
                     break;
                 case 0b01000000:
-                    BP = FetchWord(SI + FetchByte(addr));
+                    BP = FetchWord(SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BP = FetchWord(SI + FetchWord(addr));
+                    BP = FetchWord(SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BP = FetchWord(FetchByte(addr));
+                    BP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1679,13 +1683,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SI = FetchWord(SI);
                     break;
                 case 0b01000000:
-                    SI = FetchWord(SI + FetchByte(addr));
+                    SI = FetchWord(SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SI = FetchWord(SI + FetchWord(addr));
+                    SI = FetchWord(SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SI = FetchWord(FetchByte(addr));
+                    SI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1696,13 +1700,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DI = FetchWord(SI);
                     break;
                 case 0b01000000:
-                    DI = FetchWord(SI + FetchByte(addr));
+                    DI = FetchWord(SI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DI = FetchWord(SI + FetchWord(addr));
+                    DI = FetchWord(SI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DI = FetchWord(FetchByte(addr));
+                    DI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1718,13 +1722,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AX = FetchWord(DI);
                     break;
                 case 0b01000000:
-                    AX = FetchWord(DI + FetchByte(addr));
+                    AX = FetchWord(DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    AX = FetchWord(DI + FetchWord(addr));
+                    AX = FetchWord(DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    AX = FetchWord(FetchByte(addr));
+                    AX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1735,13 +1739,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CX = FetchWord(DI);
                     break;
                 case 0b01000000:
-                    CX = FetchWord(DI + FetchByte(addr));
+                    CX = FetchWord(DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    CX = FetchWord(DI + FetchWord(addr));
+                    CX = FetchWord(DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    CX = FetchWord(FetchByte(addr));
+                    CX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1752,13 +1756,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DX = FetchWord(DI);
                     break;
                 case 0b01000000:
-                    DX = FetchWord(DI + FetchByte(addr));
+                    DX = FetchWord(DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DX = FetchWord(DI + FetchWord(addr));
+                    DX = FetchWord(DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DX = FetchWord(FetchByte(addr));
+                    DX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1769,13 +1773,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BX = FetchWord(DI);
                     break;
                 case 0b01000000:
-                    BX = FetchWord(DI + FetchByte(addr));
+                    BX = FetchWord(DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BX = FetchWord(DI + FetchWord(addr));
+                    BX = FetchWord(DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BX = FetchWord(FetchByte(addr));
+                    BX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1786,13 +1790,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SP = FetchWord(DI);
                     break;
                 case 0b01000000:
-                    SP = FetchWord(DI + FetchByte(addr));
+                    SP = FetchWord(DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SP = FetchWord(DI + FetchWord(addr));
+                    SP = FetchWord(DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SP = FetchWord(FetchByte(addr));
+                    SP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1803,13 +1807,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BP = FetchWord(DI);
                     break;
                 case 0b01000000:
-                    BP = FetchWord(DI + FetchByte(addr));
+                    BP = FetchWord(DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BP = FetchWord(DI + FetchWord(addr));
+                    BP = FetchWord(DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BP = FetchWord(FetchByte(addr));
+                    BP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1820,13 +1824,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SI = FetchWord(DI);
                     break;
                 case 0b01000000:
-                    SI = FetchWord(DI + FetchByte(addr));
+                    SI = FetchWord(DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SI = FetchWord(DI + FetchWord(addr));
+                    SI = FetchWord(DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SI = FetchWord(FetchByte(addr));
+                    SI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1837,13 +1841,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DI = FetchWord(DI);
                     break;
                 case 0b01000000:
-                    DI = FetchWord(DI + FetchByte(addr));
+                    DI = FetchWord(DI + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DI = FetchWord(DI + FetchWord(addr));
+                    DI = FetchWord(DI + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DI = FetchWord(FetchByte(addr));
+                    DI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1859,13 +1863,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AX = FetchWord(BP); // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    AX = FetchWord(BP + FetchByte(addr));
+                    AX = FetchWord(BP + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    AX = FetchWord(BP + FetchWord(addr));
+                    AX = FetchWord(BP + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    AX = FetchWord(FetchByte(addr));
+                    AX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1876,13 +1880,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CX = FetchWord(BP); // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    CX = FetchWord(BP + FetchByte(addr));
+                    CX = FetchWord(BP + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    CX = FetchWord(BP + FetchWord(addr));
+                    CX = FetchWord(BP + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    CX = FetchWord(FetchByte(addr));
+                    CX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1893,13 +1897,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DX = FetchWord(BP); // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    DX = FetchWord(BP + FetchByte(addr));
+                    DX = FetchWord(BP + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DX = FetchWord(BP + FetchWord(addr));
+                    DX = FetchWord(BP + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DX = FetchWord(FetchByte(addr));
+                    DX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1910,13 +1914,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BX = FetchWord(BP); // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    BX = FetchWord(BP + FetchByte(addr));
+                    BX = FetchWord(BP + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BX = FetchWord(BP + FetchWord(addr));
+                    BX = FetchWord(BP + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BX = FetchWord(FetchByte(addr));
+                    BX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1927,13 +1931,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SP = FetchWord(BP); // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    SP = FetchWord(BP + FetchByte(addr));
+                    SP = FetchWord(BP + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SP = FetchWord(BP + FetchWord(addr));
+                    SP = FetchWord(BP + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SP = FetchWord(FetchByte(addr));
+                    SP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1944,13 +1948,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BP = FetchWord(BP); // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    BP = FetchWord(BP + FetchByte(addr));
+                    BP = FetchWord(BP + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BP = FetchWord(BP + FetchWord(addr));
+                    BP = FetchWord(BP + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BP = FetchWord(FetchByte(addr));
+                    BP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1961,13 +1965,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SI = FetchWord(BP); // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    SI = FetchWord(BP + FetchByte(addr));
+                    SI = FetchWord(BP + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    SI = FetchWord(BP + FetchWord(addr));
+                    SI = FetchWord(BP + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    SI = FetchWord(FetchByte(addr));
+                    SI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -1978,13 +1982,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DI = FetchWord(BP); // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    DI = FetchWord(BP + FetchByte(addr));
+                    DI = FetchWord(BP + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DI = FetchWord(BP + FetchWord(addr));
+                    DI = FetchWord(BP + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DI = FetchWord(FetchByte(addr));
+                    DI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -2000,13 +2004,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AX = FetchWord(BX);
                     break;
                 case 0b01000000:
-                    AX = FetchWord(BX + FetchByte(addr));
+                    AX = FetchWord(BX + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    AX = FetchWord(BX + FetchWord(addr));
+                    AX = FetchWord(BX + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    AX = FetchWord(FetchByte(addr));
+                    AX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -2017,13 +2021,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CX = FetchWord(BX);
                     break;
                 case 0b01000000:
-                    CX = FetchWord(BX + FetchByte(addr));
+                    CX = FetchWord(BX + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    CX = FetchWord(BX + FetchWord(addr));
+                    CX = FetchWord(BX + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    CX = FetchWord(FetchByte(addr));
+                    CX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -2034,13 +2038,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DX = FetchWord(BX);
                     break;
                 case 0b01000000:
-                    DX = FetchWord(BX + FetchByte(addr));
+                    DX = FetchWord(BX + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    DX = FetchWord(BX + FetchWord(addr));
+                    DX = FetchWord(BX + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    DX = FetchWord(FetchByte(addr));
+                    DX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -2051,13 +2055,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BX = FetchWord(BX);
                     break;
                 case 0b01000000:
-                    BX = FetchWord(BX + FetchByte(addr));
+                    BX = FetchWord(BX + FetchImmByte(1));
                     break;
                 case 0b10000000:
-                    BX = FetchWord(BX + FetchWord(addr));
+                    BX = FetchWord(BX + FetchImmWord(1));
                     break;
                 case 0b11000000:
-                    BX = FetchWord(FetchByte(addr));
+                    BX = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -2068,13 +2072,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SP = FetchWord(BX);
                     break;
                 case 0b01000000:
-                    SP = FetchWord(BX + FetchByte(addr));
+                    SP = FetchWord(BX + FetchImmByte(1));
                     break;
                 case 0b10000000:
                     SP = FetchWord(BX + FetchWord(IP + 2));
                     break;
                 case 0b11000000:
-                    SP = FetchWord(FetchByte(addr));
+                    SP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -2085,13 +2089,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BP = FetchWord(BX); // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    BP = FetchWord(BX + FetchByte(addr));
+                    BP = FetchWord(BX + FetchImmByte(1));
                     break;
                 case 0b10000000:
                     BP = FetchWord(BX + FetchWord(IP + 2));
                     break;
                 case 0b11000000:
-                    BP = FetchWord(FetchByte(addr));
+                    BP = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -2102,13 +2106,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     SI = FetchWord(BX);
                     break;
                 case 0b01000000:
-                    SI = FetchWord(BX + FetchByte(addr));
+                    SI = FetchWord(BX + FetchImmByte(1));
                     break;
                 case 0b10000000:
                     SI = FetchWord(BX + FetchWord(IP + 2));
                     break;
                 case 0b11000000:
-                    SI = FetchWord(FetchByte(addr));
+                    SI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -2119,13 +2123,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DI = FetchWord(BX); // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    DI = FetchWord(BX + FetchByte(addr));
+                    DI = FetchWord(BX + FetchImmByte(1));
                     break;
                 case 0b10000000:
                     DI = FetchWord(BX + FetchWord(IP + 2));
                     break;
                 case 0b11000000:
-                    DI = FetchWord(FetchByte(addr));
+                    DI = FetchWord(FetchImmByte(1));
                     break;
                 }
                 break;
@@ -2136,7 +2140,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
     }
     case 0x8A: { // MOV REG8, R/M8
         const uint addr = GetIPAddress + 2;
-        const ubyte rm = FetchImmByte;
+        const ubyte rm = FetchImmByte(1);
         final switch (rm & 0b111) // R/M
         {
         case 0: // BX + SI
@@ -2149,13 +2153,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AL = bank[BX + SI];
                     break;
                 case 0b01000000: // 01
-                    AL = bank[BX + SI + FetchByte(addr)];
+                    AL = bank[BX + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000: // 10
-                    AL = bank[BX + SI + FetchWord(addr)];
+                    AL = bank[BX + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000: // 11
-                    AL = bank[FetchByte(addr)];
+                    AL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2166,13 +2170,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CL = bank[BX + SI];
                     break;
                 case 0b01000000:
-                    CL = bank[BX + SI + FetchByte(addr)];
+                    CL = bank[BX + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CL = bank[BX + SI + FetchWord(addr)];
+                    CL = bank[BX + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CL = bank[FetchByte(addr)];
+                    CL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2183,13 +2187,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DL = bank[BX + SI];
                     break;
                 case 0b01000000:
-                    DL = bank[BX + SI + FetchByte(addr)];
+                    DL = bank[BX + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DL = bank[BX + SI + FetchWord(addr)];
+                    DL = bank[BX + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DL = bank[FetchByte(addr)];
+                    DL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2200,13 +2204,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BL = bank[BX + SI];
                     break;
                 case 0b01000000:
-                    BL = bank[BX + SI + FetchByte(addr)];
+                    BL = bank[BX + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BL = bank[BX + SI + FetchWord(addr)];
+                    BL = bank[BX + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BL = bank[FetchByte(addr)];
+                    BL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2217,13 +2221,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AH = bank[BX + SI];
                     break;
                 case 0b01000000:
-                    AH = bank[BX + SI + FetchByte(addr)];
+                    AH = bank[BX + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AH = bank[BX + SI + FetchWord(addr)];
+                    AH = bank[BX + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AH = bank[FetchByte(addr)];
+                    AH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2234,13 +2238,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CH = bank[BX + SI];
                     break;
                 case 0b01000000:
-                    CH = bank[BX + SI + FetchByte(addr)];
+                    CH = bank[BX + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CH = bank[BX + SI + FetchWord(addr)];
+                    CH = bank[BX + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CH = bank[FetchByte(addr)];
+                    CH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2251,13 +2255,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DH = bank[BX + SI];
                     break;
                 case 0b01000000:
-                    DH = bank[BX + SI + FetchByte(addr)];
+                    DH = bank[BX + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DH = bank[BX + SI + FetchWord(addr)];
+                    DH = bank[BX + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DH = bank[FetchByte(addr)];
+                    DH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2268,13 +2272,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BH = bank[BX + SI];
                     break;
                 case 0b01000000:
-                    BH = bank[BX + SI + FetchByte(addr)];
+                    BH = bank[BX + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BH = bank[BX + SI + FetchWord(addr)];
+                    BH = bank[BX + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BH = bank[FetchByte(addr)];
+                    BH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2290,13 +2294,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AL = bank[BX + DI];
                     break;
                 case 0b01000000:
-                    AL = bank[BX + DI + FetchByte(addr)];
+                    AL = bank[BX + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AL = bank[BX + DI + FetchWord(addr)];
+                    AL = bank[BX + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AL = bank[FetchByte(addr)];
+                    AL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2307,13 +2311,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CL = bank[BX + DI];
                     break;
                 case 0b01000000:
-                    CL = bank[BX + DI + FetchByte(addr)];
+                    CL = bank[BX + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CL = bank[BX + DI + FetchWord(addr)];
+                    CL = bank[BX + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CL = bank[FetchByte(addr)];
+                    CL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2324,13 +2328,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DL = bank[BX + DI];
                     break;
                 case 0b01000000:
-                    DL = bank[BX + DI + FetchByte(addr)];
+                    DL = bank[BX + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DL = bank[BX + DI + FetchWord(addr)];
+                    DL = bank[BX + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DL = bank[FetchByte(addr)];
+                    DL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2341,13 +2345,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BL = bank[BX + DI];
                     break;
                 case 0b01000000:
-                    BL = bank[BX + DI + FetchByte(addr)];
+                    BL = bank[BX + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BL = bank[BX + DI + FetchWord(addr)];
+                    BL = bank[BX + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BL = bank[FetchByte(addr)];
+                    BL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2358,13 +2362,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AH = bank[BX + DI];
                     break;
                 case 0b01000000:
-                    AH = bank[BX + DI + FetchByte(addr)];
+                    AH = bank[BX + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AH = bank[BX + DI + FetchWord(addr)];
+                    AH = bank[BX + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AH = bank[FetchByte(addr)];
+                    AH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2375,13 +2379,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CH = bank[BX + DI];
                     break;
                 case 0b01000000:
-                    CH = bank[BX + DI + FetchByte(addr)];
+                    CH = bank[BX + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CH = bank[BX + DI + FetchWord(addr)];
+                    CH = bank[BX + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CH = bank[FetchByte(addr)];
+                    CH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2392,13 +2396,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DH = bank[BX + DI];
                     break;
                 case 0b01000000:
-                    DH = bank[BX + DI + FetchByte(addr)];
+                    DH = bank[BX + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DH = bank[BX + DI + FetchWord(addr)];
+                    DH = bank[BX + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DH = bank[FetchByte(addr)];
+                    DH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2409,13 +2413,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BH = bank[BX + DI];
                     break;
                 case 0b01000000:
-                    BH = bank[BX + DI + FetchByte(addr)];
+                    BH = bank[BX + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BH = bank[BX + DI + FetchWord(addr)];
+                    BH = bank[BX + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BH = bank[FetchByte(addr)];
+                    BH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2431,13 +2435,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AL = bank[BP + SI];
                     break;
                 case 0b01000000:
-                    AL = bank[BP + SI + FetchByte(addr)];
+                    AL = bank[BP + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AL = bank[BP + SI + FetchWord(addr)];
+                    AL = bank[BP + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AL = bank[FetchByte(addr)];
+                    AL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2448,13 +2452,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CL = bank[BP + SI];
                     break;
                 case 0b01000000:
-                    CL = bank[BP + SI + FetchByte(addr)];
+                    CL = bank[BP + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CL = bank[BP + SI + FetchWord(addr)];
+                    CL = bank[BP + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CL = bank[FetchByte(addr)];
+                    CL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2465,13 +2469,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DL = bank[BP + SI];
                     break;
                 case 0b01000000:
-                    DL = bank[BP + SI + FetchByte(addr)];
+                    DL = bank[BP + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DL = bank[BP + SI + FetchWord(addr)];
+                    DL = bank[BP + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DL = bank[FetchByte(addr)];
+                    DL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2482,13 +2486,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BL = bank[BP + SI];
                     break;
                 case 0b01000000:
-                    BL = bank[BP + SI + FetchByte(addr)];
+                    BL = bank[BP + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BL = bank[BP + SI + FetchWord(addr)];
+                    BL = bank[BP + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BL = bank[FetchByte(addr)];
+                    BL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2499,13 +2503,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AH = bank[BP + SI];
                     break;
                 case 0b01000000:
-                    AH = bank[BP + SI + FetchByte(addr)];
+                    AH = bank[BP + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AH = bank[BP + SI + FetchWord(addr)];
+                    AH = bank[BP + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AH = bank[FetchByte(addr)];
+                    AH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2516,13 +2520,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CH = bank[BP + SI];
                     break;
                 case 0b01000000:
-                    CH = bank[BP + SI + FetchByte(addr)];
+                    CH = bank[BP + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CH = bank[BP + SI + FetchWord(addr)];
+                    CH = bank[BP + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CH = bank[FetchByte(addr)];
+                    CH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2533,13 +2537,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DH = bank[BP + SI];
                     break;
                 case 0b01000000:
-                    DH = bank[BP + SI + FetchByte(addr)];
+                    DH = bank[BP + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DH = bank[BP + SI + FetchWord(addr)];
+                    DH = bank[BP + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DH = bank[FetchByte(addr)];
+                    DH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2550,13 +2554,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BH = bank[BP + SI];
                     break;
                 case 0b01000000:
-                    BH = bank[BP + SI + FetchByte(addr)];
+                    BH = bank[BP + SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BH = bank[BP + SI + FetchWord(addr)];
+                    BH = bank[BP + SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BH = bank[FetchByte(addr)];
+                    BH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2572,13 +2576,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AL = bank[BP + DI];
                     break;
                 case 0b01000000:
-                    AL = bank[BP + DI + FetchByte(addr)];
+                    AL = bank[BP + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AL = bank[BP + DI + FetchWord(addr)];
+                    AL = bank[BP + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AL = bank[FetchByte(addr)];
+                    AL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2589,13 +2593,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CL = bank[BP + DI];
                     break;
                 case 0b01000000:
-                    CL = bank[BP + DI + FetchByte(addr)];
+                    CL = bank[BP + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CL = bank[BP + DI + FetchWord(addr)];
+                    CL = bank[BP + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CL = bank[FetchByte(addr)];
+                    CL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2606,13 +2610,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DL = bank[BP + DI];
                     break;
                 case 0b01000000:
-                    DL = bank[BP + DI + FetchByte(addr)];
+                    DL = bank[BP + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DL = bank[BP + DI + FetchWord(addr)];
+                    DL = bank[BP + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DL = bank[FetchByte(addr)];
+                    DL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2623,13 +2627,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BL = bank[BP + DI];
                     break;
                 case 0b01000000:
-                    BL = bank[BP + DI + FetchByte(addr)];
+                    BL = bank[BP + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BL = bank[BP + DI + FetchWord(addr)];
+                    BL = bank[BP + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BL = bank[FetchByte(addr)];
+                    BL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2640,13 +2644,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AH = bank[BP + DI];
                     break;
                 case 0b01000000:
-                    AH = bank[BP + DI + FetchByte(addr)];
+                    AH = bank[BP + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AH = bank[BP + DI + FetchWord(addr)];
+                    AH = bank[BP + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AH = bank[FetchByte(addr)];
+                    AH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2657,13 +2661,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CH = bank[BP + DI];
                     break;
                 case 0b01000000:
-                    CH = bank[BP + DI + FetchByte(addr)];
+                    CH = bank[BP + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CH = bank[BP + DI + FetchWord(addr)];
+                    CH = bank[BP + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CH = bank[FetchByte(addr)];
+                    CH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2674,13 +2678,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DH = bank[BP + DI];
                     break;
                 case 0b01000000:
-                    DH = bank[BP + DI + FetchByte(addr)];
+                    DH = bank[BP + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DH = bank[BP + DI + FetchWord(addr)];
+                    DH = bank[BP + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DH = bank[FetchByte(addr)];
+                    DH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2691,13 +2695,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BH = bank[BP + DI];
                     break;
                 case 0b01000000:
-                    BH = bank[BP + DI + FetchByte(addr)];
+                    BH = bank[BP + DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BH = bank[BP + DI + FetchWord(addr)];
+                    BH = bank[BP + DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BH = bank[FetchByte(addr)];
+                    BH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2713,13 +2717,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AL = bank[SI];
                     break;
                 case 0b01000000:
-                    AL = bank[SI + FetchByte(addr)];
+                    AL = bank[SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AL = bank[SI + FetchWord(addr)];
+                    AL = bank[SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AL = bank[FetchByte(addr)];
+                    AL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2730,13 +2734,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CL = bank[SI];
                     break;
                 case 0b01000000:
-                    CL = bank[SI + FetchByte(addr)];
+                    CL = bank[SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CL = bank[SI + FetchWord(addr)];
+                    CL = bank[SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CL = bank[FetchByte(addr)];
+                    CL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2747,13 +2751,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DL = bank[SI];
                     break;
                 case 0b01000000:
-                    DL = bank[SI + FetchByte(addr)];
+                    DL = bank[SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DL = bank[SI + FetchWord(addr)];
+                    DL = bank[SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DL = bank[FetchByte(addr)];
+                    DL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2764,13 +2768,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BL = bank[SI];
                     break;
                 case 0b01000000:
-                    BL = bank[SI + FetchByte(addr)];
+                    BL = bank[SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BL = bank[SI + FetchWord(addr)];
+                    BL = bank[SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BL = bank[FetchByte(addr)];
+                    BL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2781,13 +2785,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AH = bank[SI];
                     break;
                 case 0b01000000:
-                    AH = bank[SI + FetchByte(addr)];
+                    AH = bank[SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AH = bank[SI + FetchWord(addr)];
+                    AH = bank[SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AH = bank[FetchByte(addr)];
+                    AH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2798,13 +2802,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CH = bank[SI];
                     break;
                 case 0b01000000:
-                    CH = bank[SI + FetchByte(addr)];
+                    CH = bank[SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CH = bank[SI + FetchWord(addr)];
+                    CH = bank[SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CH = bank[FetchByte(addr)];
+                    CH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2815,13 +2819,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DH = bank[SI];
                     break;
                 case 0b01000000:
-                    DH = bank[SI + FetchByte(addr)];
+                    DH = bank[SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DH = bank[SI + FetchWord(addr)];
+                    DH = bank[SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DH = bank[FetchByte(addr)];
+                    DH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2832,13 +2836,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BH = bank[SI];
                     break;
                 case 0b01000000:
-                    BH = bank[SI + FetchByte(addr)];
+                    BH = bank[SI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BH = bank[SI + FetchWord(addr)];
+                    BH = bank[SI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BH = bank[FetchByte(addr)];
+                    BH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2854,13 +2858,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AL = bank[DI];
                     break;
                 case 0b01000000:
-                    AL = bank[DI + FetchByte(addr)];
+                    AL = bank[DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AL = bank[DI + FetchWord(addr)];
+                    AL = bank[DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AL = bank[FetchByte(addr)];
+                    AL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2871,13 +2875,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CL = bank[DI];
                     break;
                 case 0b01000000:
-                    CL = bank[DI + FetchByte(addr)];
+                    CL = bank[DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CL = bank[DI + FetchWord(addr)];
+                    CL = bank[DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CL = bank[FetchByte(addr)];
+                    CL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2888,13 +2892,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DL = bank[DI];
                     break;
                 case 0b01000000:
-                    DL = bank[DI + FetchByte(addr)];
+                    DL = bank[DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DL = bank[DI + FetchWord(addr)];
+                    DL = bank[DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DL = bank[FetchByte(addr)];
+                    DL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2905,13 +2909,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BL = bank[DI];
                     break;
                 case 0b01000000:
-                    BL = bank[DI + FetchByte(addr)];
+                    BL = bank[DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BL = bank[DI + FetchWord(addr)];
+                    BL = bank[DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BL = bank[FetchByte(addr)];
+                    BL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2922,13 +2926,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AH = bank[DI];
                     break;
                 case 0b01000000:
-                    AH = bank[DI + FetchByte(addr)];
+                    AH = bank[DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AH = bank[DI + FetchWord(addr)];
+                    AH = bank[DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AH = bank[FetchByte(addr)];
+                    AH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2939,13 +2943,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CH = bank[DI];
                     break;
                 case 0b01000000:
-                    CH = bank[DI + FetchByte(addr)];
+                    CH = bank[DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CH = bank[DI + FetchWord(addr)];
+                    CH = bank[DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CH = bank[FetchByte(addr)];
+                    CH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2956,13 +2960,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DH = bank[DI];
                     break;
                 case 0b01000000:
-                    DH = bank[DI + FetchByte(addr)];
+                    DH = bank[DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DH = bank[DI + FetchWord(addr)];
+                    DH = bank[DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DH = bank[FetchByte(addr)];
+                    DH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2973,13 +2977,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BH = bank[DI];
                     break;
                 case 0b01000000:
-                    BH = bank[DI + FetchByte(addr)];
+                    BH = bank[DI + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BH = bank[DI + FetchWord(addr)];
+                    BH = bank[DI + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BH = bank[FetchByte(addr)];
+                    BH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -2995,13 +2999,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AL = bank[BP]; // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    AL = bank[BP + FetchByte(addr)];
+                    AL = bank[BP + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AL = bank[BP + FetchWord(addr)];
+                    AL = bank[BP + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AL = bank[FetchByte(addr)];
+                    AL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3012,13 +3016,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CL = bank[BP]; // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    CL = bank[BP + FetchByte(addr)];
+                    CL = bank[BP + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CL = bank[BP + FetchWord(addr)];
+                    CL = bank[BP + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CL = bank[FetchByte(addr)];
+                    CL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3029,13 +3033,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DL = bank[BP]; // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    DL = bank[BP + FetchByte(addr)];
+                    DL = bank[BP + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DL = bank[BP + FetchWord(addr)];
+                    DL = bank[BP + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DL = bank[FetchByte(addr)];
+                    DL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3046,13 +3050,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BL = bank[BP]; // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    BL = bank[BP + FetchByte(addr)];
+                    BL = bank[BP + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BL = bank[BP + FetchWord(addr)];
+                    BL = bank[BP + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BL = bank[FetchByte(addr)];
+                    BL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3063,13 +3067,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AH = bank[BP]; // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    AH = bank[BP + FetchByte(addr)];
+                    AH = bank[BP + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AH = bank[BP + FetchWord(addr)];
+                    AH = bank[BP + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AH = bank[FetchByte(addr)];
+                    AH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3080,13 +3084,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CH = bank[BP]; // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    CH = bank[BP + FetchByte(addr)];
+                    CH = bank[BP + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CH = bank[BP + FetchWord(addr)];
+                    CH = bank[BP + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CH = bank[FetchByte(addr)];
+                    CH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3097,13 +3101,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DH = bank[BP]; // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    DH = bank[BP + FetchByte(addr)];
+                    DH = bank[BP + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DH = bank[BP + FetchWord(addr)];
+                    DH = bank[BP + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DH = bank[FetchByte(addr)];
+                    DH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3114,13 +3118,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BH = bank[BP]; // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    BH = bank[BP + FetchByte(addr)];
+                    BH = bank[BP + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BH = bank[BP + FetchWord(addr)];
+                    BH = bank[BP + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BH = bank[FetchByte(addr)];
+                    BH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3136,13 +3140,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AL = bank[BX];
                     break;
                 case 0b01000000:
-                    AL = bank[BX + FetchByte(addr)];
+                    AL = bank[BX + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    AL = bank[BX + FetchWord(addr)];
+                    AL = bank[BX + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    AL = bank[FetchByte(addr)];
+                    AL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3153,13 +3157,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CL = bank[BX];
                     break;
                 case 0b01000000:
-                    CL = bank[BX + FetchByte(addr)];
+                    CL = bank[BX + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    CL = bank[BX + FetchWord(addr)];
+                    CL = bank[BX + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    CL = bank[FetchByte(addr)];
+                    CL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3170,13 +3174,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DL = bank[BX];
                     break;
                 case 0b01000000:
-                    DL = bank[BX + FetchByte(addr)];
+                    DL = bank[BX + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    DL = bank[BX + FetchWord(addr)];
+                    DL = bank[BX + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    DL = bank[FetchByte(addr)];
+                    DL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3187,13 +3191,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BL = bank[BX];
                     break;
                 case 0b01000000:
-                    BL = bank[BX + FetchByte(addr)];
+                    BL = bank[BX + FetchImmByte(1)];
                     break;
                 case 0b10000000:
-                    BL = bank[BX + FetchWord(addr)];
+                    BL = bank[BX + FetchImmWord(1)];
                     break;
                 case 0b11000000:
-                    BL = bank[FetchByte(addr)];
+                    BL = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3204,13 +3208,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     AH = bank[BX];
                     break;
                 case 0b01000000:
-                    AH = bank[BX + FetchByte(addr)];
+                    AH = bank[BX + FetchImmByte(1)];
                     break;
                 case 0b10000000:
                     AH = bank[BX + FetchWord(IP + 2)];
                     break;
                 case 0b11000000:
-                    AH = bank[FetchByte(addr)];
+                    AH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3221,13 +3225,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     CH = bank[BX]; // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    CH = bank[BX + FetchByte(addr)];
+                    CH = bank[BX + FetchImmByte(1)];
                     break;
                 case 0b10000000:
                     CH = bank[BX + FetchWord(IP + 2)];
                     break;
                 case 0b11000000:
-                    CH = bank[FetchByte(addr)];
+                    CH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3238,13 +3242,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     DH = bank[BX];
                     break;
                 case 0b01000000:
-                    DH = bank[BX + FetchByte(addr)];
+                    DH = bank[BX + FetchImmByte(1)];
                     break;
                 case 0b10000000:
                     DH = bank[BX + FetchWord(IP + 2)];
                     break;
                 case 0b11000000:
-                    DH = bank[FetchByte(addr)];
+                    DH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;
@@ -3255,13 +3259,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
                     BH = bank[BX]; // DIRECT ADDRESS
                     break;
                 case 0b01000000:
-                    BH = bank[BX + FetchByte(addr)];
+                    BH = bank[BX + FetchImmByte(1)];
                     break;
                 case 0b10000000:
                     BH = bank[BX + FetchWord(IP + 2)];
                     break;
                 case 0b11000000:
-                    BH = bank[FetchByte(addr)];
+                    BH = bank[FetchImmByte(1)];
                     break;
                 }
                 break;

@@ -2,6 +2,8 @@
 
 DD-DOS aims to be a simple compatibility layer via total emulation, more than NTVDM, and for all systems.
 
+There is a reference manual available over the Wiki.
+
 ## Folder structure
 
 | Folder | Build type | Description |
