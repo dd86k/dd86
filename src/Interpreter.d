@@ -1005,22 +1005,18 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
     case 0x89: { // MOV R/M16, REG16
         const ubyte rm = FetchImmByte;
         
-        }
+        IP += 2;
         break;
     }
     case 0x8A: { // MOV REG8, R/M8
         
-        }
+        IP += 2;
         break;
     }
     case 0x8B: { // MOV REG16, R/M16
-        ubyte rm = FetchImmByte;
-        ushort reg = FetchImmWord(1);
-        /*final switch (rm & 0b11_000000)
-        {
-            case 
-        }*/
-        IP += 4;
+        const ubyte rm = FetchImmByte;
+        
+        IP += 2;
     }
         break;
     case 0x8C: // MOV R/M16, SEGREG
