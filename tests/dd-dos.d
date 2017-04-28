@@ -5,8 +5,6 @@ import Interpreter, InterpreterUtils, std.stdio, dd_dos, std.file : exists;
 unittest
 {
     writeln("---------- DD-DOS (MS-DOS, IBM PC)");
-
-    //Verbose = true;
     
     /*
      * Hardware (and/or BIOS)
