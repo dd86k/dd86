@@ -39,8 +39,6 @@ int main(string[] args)
     string init_file, init_args;
     bool smsg; // Startup message
 
-    debug Verbose = true;
-
     GetoptResult r;
 	try {
 		r = getopt(args,
@@ -61,6 +59,8 @@ int main(string[] args)
         return 1;
 	}
 
+    debug Verbose = !Verbose;
+
     if (r.helpWanted)
     {
         DisplayHelp;
@@ -76,9 +76,10 @@ int main(string[] args)
         return 0;
 	}
 
-    if (!smsg) writeln("DD-DOS is starting...");
     if (Verbose) log("Verbose mode is ON");
     if (Verbose) logs("Max performance is ", Sleep ? "OFF" : "ON");
+
+    if (!smsg) writeln("DD-DOS is starting...");
 
     InitConsole();
     Initiate();
