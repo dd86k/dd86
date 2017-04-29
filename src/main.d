@@ -1,5 +1,5 @@
 /*
- * main.d : Main application.
+ * main.d: Main application.
  */
 
 //TODO: "Dynamic memory", allocate only what's necessary.
@@ -7,7 +7,11 @@
 module main;
 
 import std.stdio, std.getopt;
-import dd_dos, Interpreter, Loader, Poshub, Logger;
+import dd_dos : APP_VERSION, APP_NAME, EnterVShell;
+import Interpreter : Initiate, Verbose, Sleep, Run;
+import Loader : LoadFile;
+import Logger;
+import Poshub : InitConsole;
 
 debug { } else
 {
@@ -15,25 +19,27 @@ debug { } else
         rt_envvars_enabled = false, rt_cmdline_enabled = false;
 }
 
-/// Display version.
-void DisplayVersion()
+private void DisplayVersion()
 {
     import core.stdc.stdlib : exit;
-	writefln("%s - v%s (%s)", APP_NAME, APP_VERSION, __TIMESTAMP__);
-    writeln("Copyright (c) 2017 dd86k, MIT license");
+	writefln("%s - v%s  (%s)", APP_NAME, APP_VERSION, __TIMESTAMP__);
+    writeln("Copyright (c) 2017 dd86k, using MIT license");
 	writeln("Project page: <https://github.com/dd86k/dd-dos>");
     writefln("Compiled %s using %s v%s", __FILE__, __VENDOR__, __VERSION__);
     exit(0); // getopt hack
 }
 
-/// Display short help.
-void DisplayHelp(string name = APP_NAME)
+private void DisplayHelp(string name = APP_NAME)
 {
     writefln("  %s  [-p <Program> [-a <Arguments>]] [-M] [-V]", name);
     writefln("  %s  {-h|--help|/?|-v|--version}", name);
 }
 
-/// Main entry point.
+/**
+ * Main entry point.
+ * Params: args = CLI Arguments
+ * Returns: Errorcode
+ */
 int main(string[] args)
 {
     string init_file, init_args;
@@ -64,7 +70,7 @@ int main(string[] args)
     if (r.helpWanted)
     {
         DisplayHelp;
-        writeln("\nSwitches");
+        writeln("\nSwitches (Default: Off)");
         foreach (it; r.options)
         { // "custom" and nicer defaultGetoptPrinter
             writefln("%*s, %-*s%s%s",
@@ -94,5 +100,5 @@ int main(string[] args)
         EnterVShell();
     }
 
-    return AL;
+    return 0;
 }

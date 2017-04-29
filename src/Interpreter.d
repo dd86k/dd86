@@ -1000,22 +1000,21 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
         break;
     case 0x88: { // MOV R/M8, REG8
 
+        IP += 2;
         break;
     }
     case 0x89: { // MOV R/M16, REG16
-        const ubyte rm = FetchImmByte;
-        
+
         IP += 2;
         break;
     }
     case 0x8A: { // MOV REG8, R/M8
-        
+        SetRegAddressByte(FetchImmByte);
         IP += 2;
         break;
     }
     case 0x8B: { // MOV REG16, R/M16
-        const ubyte rm = FetchImmByte;
-        
+        SetRegAddressWord(FetchImmByte);
         IP += 2;
     }
         break;
@@ -1028,6 +1027,8 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
         break;
     case 0x8E: // MOV SEGREG, R/M16
         // MOD 0SR R/M
+        // SR
+        // 00=ES, 01=CS, 10=SS, 11=DS
 
         break;
     case 0x8F: { // POP R/M16

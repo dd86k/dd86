@@ -4,7 +4,94 @@
 
 module InterpreterUtils;
 
-import Interpreter : bank, GetAddress, GetIPAddress;
+import Interpreter;
+
+/*
+ * Registers
+ */
+
+/**
+ * ModR/M byte handing.
+ * Params:
+ *   rm = ModR/M byte
+ */
+void SetRegAddressWord(const ubyte rm)
+{
+    //TODO: Figure out prefered segreg (when prefix override)
+    final switch (rm & 0b11_000000)
+    {
+    case 0, 0b01_000000: // MOD 00
+        final switch (rm & 0b111)
+        {
+        case 0:
+            SetRegRMWord(rm, GetAddress(SI, BX));
+        break; // R/M 000
+        case 0b001_000: 
+        break;
+        }
+    break; // MOD 00, 01
+    case 0b10_000000: // MOD 10
+
+    break; // MOD 10
+    case 0b11_000000: // MOD 11, Register Mode
+        final switch(rm &
+    break; // MOD 11
+    }
+}
+
+/**
+ * ModR/M byte handing.
+ * Params:
+ *   rm = ModR/M byte
+ */
+void SetRegAddressByte(const ubyte rm)
+{
+
+}
+
+/**
+ * Get a byte register with the ModR/M byte and its address.
+ * Used by SetRegAddressWord.
+ * Params:
+ *   rm = ModR/M byte
+ *   addr = Calculated address
+ */
+private void SetRegRMWord(const ubyte rm, uint addr)
+{
+    final switch (rm & 0b111_000)
+    {
+        case 0:     AX = FetchWord(addr); break;
+        case 0b001: CX = FetchWord(addr); break;
+        case 0b010: DX = FetchWord(addr); break;
+        case 0b011: BX = FetchWord(addr); break;
+        case 0b100: SP = FetchWord(addr); break;
+        case 0b101: BP = FetchWord(addr); break;
+        case 0b110: SI = FetchWord(addr); break;
+        case 0b111: DI = FetchWord(addr); break;
+    }
+}
+
+/**
+ * Get a byte register with the ModR/M byte and its address.
+ * Used by SetRegAddressByte.
+ * Params:
+ *   rm = ModR/M byte
+ *   addr = Calculated address
+ */
+private void SetRegRMByte(const ubyte rm, uint addr)
+{
+    final switch (rm & 0b111_000)
+    {
+        case 0:     AL = bank[addr]; break;
+        case 0b001: CL = bank[addr]; break;
+        case 0b010: DL = bank[addr]; break;
+        case 0b011: BL = bank[addr]; break;
+        case 0b100: AH = bank[addr]; break;
+        case 0b101: CH = bank[addr]; break;
+        case 0b110: DH = bank[addr]; break;
+        case 0b111: BH = bank[addr]; break;
+    }
+}
 
 /*
  * Memory sets
