@@ -1,5 +1,5 @@
 /*
- * InterpreterUtils.d : 
+ * InterpreterUtils.d : Interpreter utilities.
  */
 
 module InterpreterUtils;
@@ -10,43 +10,98 @@ import Interpreter;
  * Registers
  */
 
-/**
- * ModR/M byte handing.
- * Params:
- *   rm = ModR/M byte
- */
-void SetRegAddressWord(const ubyte rm)
+void HandleRMByte(const ubyte rm)
 {
-    //TODO: Figure out prefered segreg (when prefix override)
-    final switch (rm & 0b11_000000)
-    {
-    case 0, 0b01_000000: // MOD 00
-        final switch (rm & 0b111)
-        {
-        case 0:
-            SetRegRMWord(rm, GetAddress(SI, BX));
-        break; // R/M 000
-        case 0b001_000: 
-        break;
-        }
-    break; // MOD 00, 01
-    case 0b10_000000: // MOD 10
 
-    break; // MOD 10
-    case 0b11_000000: // MOD 11, Register Mode
-        final switch(rm &
-    break; // MOD 11
-    }
 }
 
 /**
  * ModR/M byte handing.
  * Params:
  *   rm = ModR/M byte
+ *   direction = If Direction bit is set (acts like an int)
  */
-void SetRegAddressByte(const ubyte rm)
+void HandleRMWord(const ubyte rm, const int direction)
 {
+    //TODO: Figure out prefered segreg (when prefix override)
+    final switch (rm & 0b11_000000)
+    {
+    case 0: // MOD 00, Memory Mode, no displacement
+        final switch (rm & 0b111_000)
+        {
+        case 0:
+            SetRegRMWord(rm, GetAddress(SI, BX));
+            break;
+        case 0b001_000:
 
+            break;
+        }
+        break; // MOD 00
+    case 0b01_000000: // MOD 01, Memory Mode, 8-bit displacement
+
+        IP += 1;
+        break; // MOD 01
+    case 0b10_000000: // MOD 10, Memory Mode, 16-bit displacement
+
+        IP += 2;
+        break; // MOD 10
+    case 0b11_000000: // MOD 11, Register Mode
+        if (direction)
+            final switch (rm & 0b111_000)
+            {
+            case 0: AX = getRMRegWord(rm); break;
+            case 0b001_000: CX = getRMRegWord(rm); break;
+            case 0b010_000: DX = getRMRegWord(rm); break;
+            case 0b011_000: BX = getRMRegWord(rm); break;
+            case 0b100_000: SP = getRMRegWord(rm); break;
+            case 0b101_000: BP = getRMRegWord(rm); break;
+            case 0b110_000: SI = getRMRegWord(rm); break;
+            case 0b111_000: DI = getRMRegWord(rm); break;
+            }
+        else // NO DIRECTION
+            final switch (rm & 0b111_000)
+            {
+            case 0: setRMRegWord(rm, AX); break;
+            case 0b001_000: setRMRegWord(rm, CX); break;
+            case 0b010_000: setRMRegWord(rm, DX); break;
+            case 0b011_000: setRMRegWord(rm, BX); break;
+            case 0b100_000: setRMRegWord(rm, SP); break;
+            case 0b101_000: setRMRegWord(rm, BP); break;
+            case 0b110_000: setRMRegWord(rm, SI); break;
+            case 0b111_000: setRMRegWord(rm, DI); break;
+            }
+        break; // MOD 11
+    }
+}
+
+private ushort getRMRegWord(const ubyte rm)
+{
+    final switch (rm & 0b111)
+    {
+    case 0: return AX;
+    case 1: return CX;
+    case 2: return DX;
+    case 3: return BX;
+    case 4: return SP;
+    case 5: return BP;
+    case 6: return SI;
+    case 7: return DI;
+    }
+}
+
+private void setRMRegWord(const ubyte rm, const ushort v)
+{
+    final switch (rm & 0b111)
+    {
+    case 0: AX = v; break;
+    case 1: CX = v; break;
+    case 2: DX = v; break;
+    case 3: BX = v; break;
+    case 4: SP = v; break;
+    case 5: BP = v; break;
+    case 6: SI = v; break;
+    case 7: DI = v; break;
+    }
 }
 
 /**
@@ -56,7 +111,7 @@ void SetRegAddressByte(const ubyte rm)
  *   rm = ModR/M byte
  *   addr = Calculated address
  */
-private void SetRegRMWord(const ubyte rm, uint addr)
+private void SetRegRMWord(const ubyte rm, const uint addr)
 {
     final switch (rm & 0b111_000)
     {
@@ -97,7 +152,12 @@ private void SetRegRMByte(const ubyte rm, uint addr)
  * Memory sets
  */
 
-/// Set an unsigned word in memory.
+/**
+ * Set an unsigned word in memory.
+ * Params:
+ *   addr = Physical address.
+ *   value = WORD v alue.
+ */
 void SetWord(uint addr, ushort value) {
     version (X86_ANY)
         *(cast(ushort *)&bank[addr]) = value;

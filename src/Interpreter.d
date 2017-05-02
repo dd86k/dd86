@@ -4,21 +4,24 @@
 
 module Interpreter;
 
-import dd_dos, std.stdio;
-import InterpreterUtils, Logger;
-import core.thread : Thread;
-import core.time : hnsecs, nsecs;
+import std.stdio;
+import dd_dos, InterpreterUtils, Logger;
 
 /// Initial amount of memory.
-enum MAX_MEM = 0x10_0000; // 1 MB
+enum MAX_MEM = 0xA_0000; // 640 KB
+//0x10_0000; // 1 MB
 
 /// Sleep for n hecto-nanoseconds
-pragma(inline, true) void HSLEEP(int n) {
+pragma(inline, true) private void HSLEEP(int n) {
+    import core.thread : Thread;
+    import core.time : hnsecs;
     Thread.sleep(hnsecs(n));
 }
 
 /// Sleep for n nanoseconds
-pragma(inline, true) void NSLEEP(int n) {
+pragma(inline, true) private void NSLEEP(int n) {
+    import core.thread : Thread;
+    import core.time : nsecs;
     Thread.sleep(nsecs(n));
 }
 
@@ -105,11 +108,11 @@ void FullReset()
 
 /// Generic register
 uint EAX, EBX, ECX, EDX;
-ubyte* ALp, BLp, CLp, DLp;
-ushort* AXp, BXp, CXp, DXp;
+private ubyte* ALp, BLp, CLp, DLp;
+private ushort* AXp, BXp, CXp, DXp;
 
 /*
- * Register properties, includes sanity check.
+ * Register properties.
  * Getters and setters, respectively.
  */
 
@@ -191,8 +194,7 @@ ushort* AXp, BXp, CXp, DXp;
 
 /// Index register
 uint ESI, EDI, EBP, ESP;
-/// Index register pointer
-ushort* SIp, DIp, BPp, SPp;
+private ushort* SIp, DIp, BPp, SPp;
 
 @property ushort SI() { return *SIp; }
 @property ushort DI() { return *DIp; }
@@ -210,9 +212,10 @@ ushort CS, SS, DS, ES,
 
 /// Program Counter
 //uint EIP;
+//private ushort* IPp;
 ushort IP;
-//@property ushort IP() { return EIP & 0xFFFF; }
-//@property void IP(int v) { EIP |= v & 0xFFFF; }
+//@property ushort IP() { return *IP; }
+//@property void IP(int v) { IP = v & 0xFFFF; }
 
 /*
  * FLAGS
@@ -254,7 +257,7 @@ void Push(ushort value)
     SetWord(GetAddress(SS, SP), value);
 }
 /**
- * Pop value from memory.
+ * Pop value from stack.
  * Returns: POP'd WORD value
  */
 ushort Pop()
@@ -263,6 +266,13 @@ ushort Pop()
     SP = SP + 2;
     return FetchWord(addr);
 }
+
+/*ushort Pop(ushort seg, ushort reg)
+{
+    const uint addr = GetAddress(SS, SP);
+    SP = SP + 2;
+    return FetchWord(addr);
+}*/
 
 /**
  * Get FLAG as WORD.
@@ -906,7 +916,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
     }
     case 0x81: { // GRP1 R/M16, IMM16
         const ubyte rm = FetchImmByte;  // Get ModR/M byte
-        const ushort im = FetchImmWord(2); // 16-bit Immediate
+        const ushort im = FetchImmWord(1); // 16-bit Immediate
         final switch (rm & 0b111_000) { // ModR/M's REG
         case 0: // 000 - ADD
 
@@ -1009,14 +1019,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
         break;
     }
     case 0x8A: { // MOV REG8, R/M8
-        SetRegAddressByte(FetchImmByte);
+        //HandleRMByte(FetchImmByte);
         IP += 2;
         break;
     }
-    case 0x8B: { // MOV REG16, R/M16
-        SetRegAddressWord(FetchImmByte);
+    case 0x8B: // MOV REG16, R/M16
+        HandleRMWord(FetchImmByte, op & 0b10);
         IP += 2;
-    }
         break;
     case 0x8C: // MOV R/M16, SEGREG
         // MOD 0SR R/M
@@ -1027,160 +1036,49 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
         break;
     case 0x8E: // MOV SEGREG, R/M16
         // MOD 0SR R/M
-        // SR
-        // 00=ES, 01=CS, 10=SS, 11=DS
+        // SR: 00=ES, 01=CS, 10=SS, 11=DS
 
         break;
     case 0x8F: { // POP R/M16
         const byte rm = FetchImmByte;
-        const ushort add = FetchWord(IP + 2);
+        const ushort add = FetchImmWord(1);
         if (rm & 0b00111000) // MOD 000 R/M only
         {
             // Raise illegal instruction
         }
         else
-        {
-            final switch (rm & 0b111)
+        { // REMINDER: REG = 000 and D is SET
+            //TODO: POP R/RM16
+            final switch (rm & 0b11_000000)
             {
-            case 0b000: // BX + SI
-                final switch (rm & 0b11000000)
-                {
-                case 0:
-                    SetWord(BX + SI, Pop());
+                case 0: // Memory
+
                     break;
-                case 0b01_000000:
-                    SetWord(BX + SI + (add >> 8), Pop());
+                case 0b01_000000: // Memory + D8
+
+                    IP += 1;
                     break;
-                case 0b10_000000:
-                    SetWord(BX + SI + add, Pop());
+                case 0b10_000000: // Memory + D16
+
+                    IP += 2;
                     break;
-                case 0b11_000000:
-                    SetWord(AX, Pop());
+                case 0b11_000000: // Register
+                    // Confusing.
+                    /*final switch (rm & 0b111)
+                    {
+                    case 0: AX = Pop(); break;
+                    case 1: AX = Pop(); break;
+                    case 2: AX = Pop(); break;
+                    case 3: AX = Pop(); break;
+                    case 4: AX = Pop(); break;
+                    case 5: AX = Pop(); break;
+                    case 6: AX = Pop(); break;
+                    case 7: AX = Pop(); break;
+                    }*/
                     break;
-                }
-                break;
-            case 0b001: // BX + DI
-                final switch (rm & 0b11000000)
-                {
-                case 0:
-                    SetWord(BX + DI, Pop());
-                    break;
-                case 0b01_000000:
-                    SetWord(BX + DI + (add >> 8), Pop());
-                    break;
-                case 0b10_000000:
-                    SetWord(BX + DI + add, Pop());
-                    break;
-                case 0b11_000000:
-                    SetWord(CX, Pop());
-                    break;
-                }
-                break;
-            case 0b010: // BP + SI
-                final switch (rm & 0b11000000)
-                {
-                case 0:
-                    SetWord(BP + SI, Pop());
-                    break;
-                case 0b01_000000:
-                    SetWord(BP + SI + (add >> 8), Pop());
-                    break;
-                case 0b10_000000:
-                    SetWord(BP + SI + add, Pop());
-                    break;
-                case 0b11_000000:
-                    SetWord(DX, Pop());
-                    break;
-                }
-                break;
-            case 0b011: // BP + DI
-                final switch (rm & 0b11000000)
-                {
-                case 0:
-                    SetWord(BP + DI, Pop());
-                    break;
-                case 0b01_000000:
-                    SetWord(BP + DI + (add >> 8), Pop());
-                    break;
-                case 0b10_000000:
-                    SetWord(BP + DI + add, Pop());
-                    break;
-                case 0b11_000000:
-                    SetWord(BX, Pop());
-                    break;
-                }
-                break;
-            case 0b100: // SI
-                final switch (rm & 0b11000000)
-                {
-                case 0:
-                    SetWord(SI, Pop());
-                    break;
-                case 0b01_000000:
-                    SetWord(SI + (add >> 8), Pop());
-                    break;
-                case 0b10_000000:
-                    SetWord(SI + add, Pop());
-                    break;
-                case 0b11_000000:
-                    SetWord(SP, Pop());
-                    break;
-                }
-                break;
-            case 0b101: // DI
-                final switch (rm & 0b11000000)
-                {
-                case 0:
-                    SetWord(DI, Pop());
-                    break;
-                case 0b01_000000:
-                    SetWord(DI + (add >> 8), Pop());
-                    break;
-                case 0b10_000000:
-                    SetWord(DI + add, Pop());
-                    break;
-                case 0b11_000000:
-                    SetWord(BP, Pop());
-                    break;
-                }
-                break;
-            case 0b110: // BP
-                final switch (rm & 0b11000000)
-                {
-                case 0:
-                    //SetWord(BP, Pop()); - DIRECT ACCESS
-                    break;
-                case 0b01_000000:
-                    SetWord(BP + (add >> 8), Pop());
-                    break;
-                case 0b10_000000:
-                    SetWord(BP + add, Pop());
-                    break;
-                case 0b11_000000:
-                    SetWord(SI, Pop());
-                    break;
-                }
-                break;
-            case 0b111: // BX
-                final switch (rm & 0b11000000)
-                {
-                case 0:
-                    SetWord(BX, Pop());
-                    break;
-                case 0b01_000000:
-                    SetWord(BX + (add >> 8), Pop());
-                    break;
-                case 0b10_000000:
-                    SetWord(BX + add, Pop());
-                    break;
-                case 0b11_000000:
-                    SetWord(DI, Pop());
-                    break;
-                }
-                break;
             }
         }
-        IP += 4;
+        IP += 2;
     }
         break;
     case 0x90: // NOP (aka XCHG AX, AX)
@@ -1261,16 +1159,18 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
         ++IP;
         break;
     case 0xA0: // MOV AL, MEM8
-
+        AL = bank[FetchImmByte];
+        IP += 2;
         break;
     case 0xA1: // MOV AX, MEM16
-
+        AX = FetchWord(FetchImmWord);
+        IP += 3;
         break;
     case 0xA2: // MOV MEM8, AL
-
+        bank[FetchImmByte] = AL;
         break;
     case 0xA3: // MOV MEM16, AX
-
+        SetWord(FetchImmWord, AX);
         break;
     case 0xA4: // MOVS DEST-STR8, SRC-STR8
 

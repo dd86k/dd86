@@ -2,18 +2,13 @@ module InterpreterTests;
 
 import Interpreter, InterpreterUtils, std.stdio, dd_dos;
 
-//extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
-
 unittest
 {
     import core.stdc.string : memset;
-    writeln("---------- Interpreter (i8086)");
-
-    Sleep = false; // Maximum performance
-    //Verbose = true;
-    CS = 0;
+    writeln("---------- Interpreter (vm8086)");
 
     Initiate;
+    CS = 0;
 
     writeln("[ Help functions ]");
 
