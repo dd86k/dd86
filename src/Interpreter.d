@@ -1179,12 +1179,12 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 
         break;
     case 0xA6: { // CMPS DEST-STR8, SRC-STR8
-        const int temp = bank[GetAddress(DS, SI)] - bank[GetAddress(ES, DI)];
+        const int t = bank[GetAddress(DS, SI)] - bank[GetAddress(ES, DI)];
         //TODO: CMPS PF
-        ZF = temp == 0;
-        AF = (temp & 0x10) != 0;
-        CF = SF = (temp & 0x80) != 0;
-        OF = (temp < 0) || (temp > 0xFF);
+        ZF = t == 0;
+        AF = (t & 0x10) != 0;
+        CF = SF = (t & 0x80) != 0;
+        OF = (t < 0) || (t > 0xFF);
         if (DF == 0) {
             DI = DI + 1; SI = SI + 1;
         } else {
@@ -1193,12 +1193,12 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
     }
         break;
     case 0xA7: { // CMPS DEST-STR16, SRC-STR16
-        const int temp = FetchWord(GetAddress(DS, SI)) - FetchWord(GetAddress(ES, DI));
+        const int t = FetchWord(GetAddress(DS, SI)) - FetchWord(GetAddress(ES, DI));
         //TODO: CMPS PF
-        ZF = temp == 0;
-        AF = (temp & 0x10) != 0;
-        CF = SF = (temp & 0x80) != 0;
-        OF = (temp < 0) || (temp > 0xFFFF);
+        ZF = t == 0;
+        AF = (t & 0x10) != 0;
+        CF = SF = (t & 0x80) != 0;
+        OF = (t < 0) || (t > 0xFFFF);
         if (DF == 0) {
             DI = DI + 2; SI = SI + 2;
         } else {
@@ -1499,17 +1499,15 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
         break;
         }*/
         break;
-    case 0xD4: { // AAM
+    case 0xD4: // AAM
         AH = cast(ubyte)(AL / 0xA);
         AL = cast(ubyte)(AL % 0xA);
         ++IP;
-    }
         break;
-    case 0xD5: { // AAD
+    case 0xD5: // AAD
         AL = (AL + (AH * 0xA)) & 0xFF;
         AH = 0;
         ++IP;
-    }
         break;
     case 0xD7: // XLAT SOURCE-TABLE
         AL = bank[GetAddress(DS, BX) + AL];
@@ -1526,30 +1524,22 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
         break;*/
     case 0xE0: // LOOPNE/LOOPNZ SHORT-LABEL
         CX = CX - 1;
-        if (CX && ZF == 0) // CX <> 0 AND ZF = 0
-            IP += FetchImmSByte;
-        else
-            IP += 2;
+        if (CX && ZF == 0) IP += FetchImmSByte;
+        else               IP += 2;
         break;
     case 0xE1: // LOOPE/LOOPZ   SHORT-LABEL
         CX = CX - 1;
-        if (CX && ZF) // CX <> 0 AND ZF = 1
-            IP += FetchImmSByte;
-        else
-            IP += 2;
+        if (CX && ZF) IP += FetchImmSByte;
+        else          IP += 2;
         break;
     case 0xE2: // LOOP  SHORT-LABEL
         CX = CX - 1;
-        if (CX) // CX <> 0
-            IP += FetchImmSByte;
-        else
-            IP += 2;
+        if (CX) IP += FetchImmSByte;
+        else    IP += 2;
         break;
     case 0xE3: // JCXZ  SHORT-LABEL
-        if (CX == 0)
-            IP += FetchImmSByte;
-        else
-            IP += 2;
+        if (CX == 0) IP += FetchImmSByte;
+        else         IP += 2;
         break;
     case 0xE4: // IN AL, IMM8
 
@@ -1601,7 +1591,6 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 CHECK_CX:
         if (CX)
         {
-            // (chain)
             //TODO: Finish REPNE/REPNZ properly
             Execute(0xA6);
             CX = CX - 1;

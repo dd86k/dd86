@@ -49,7 +49,6 @@ enum
  *    1            40 x 25 color
  *    2            80 x 25 black and white
  *    3            80 x 25 color
- * 
  *    4            320 x 200 color
  *    5            320 x 200 black and white
  *    6            640 x 200 black and white
@@ -69,6 +68,7 @@ void EnterVShell()
 
     while (true) {
         //write(getcwd ~ '$');
+        //TODO: Print POMPT
         write('$');
 
         // Read line from stdln and remove \n, then split arguments.
@@ -83,20 +83,53 @@ void EnterVShell()
             writeln("VER            Show DOS version.");
             break;
         case "VER":
-            writeln;
-            writeln("DD-DOS Version ", APP_VERSION);
-            writeln("MS-DOS Version ", MajorVersion, ".", MinorVersion);
-            writeln;
+            if (s.length > 1)
+            switch (toUpper(s[1]))
+            {
+                case "/?": break;
+                default:
+            }
+            else
+            {
+                writeln;
+                writeln("DD-DOS Version ", APP_VERSION);
+                writeln("MS-DOS Version ", MajorVersion, ".", MinorVersion);
+                writeln;
+            }
             break;
         case "MEM":
+            if (s.length > 1)
+            {
+                switch (toUpper(s[1]))
+                {
+                    case "/STATS":
+                        writeln("Fetching memory statistics...");
+                        int nz;
+                        const size_t bl = bank.length;
+                        for (int i; i < bl; ++i) if (bank[i]) ++nz;
+                        writeln("Memory statistics      Non-Zero");
+                        writeln("--------------------   --------");
+                        writefln("Total                  %*s", 8, formatsize(nz));
+                        continue;
+                    case "/DEBUG":
+
+                        break;
+                    case "/?":
+
+                        break;
+                    default: break; //TODO Show its help
+                }
+            }
             writeln("Not implemented.");
             break;
         case "CD":
             if (s.length > 1)
                 try {
-                    chdir(s[1]);
+                    if (s[1] == "/?") {
+
+                    } else chdir(s[1]);
                 } catch (FileException) {
-                    writeln("Invalid directory\n");
+                    writeln("Invalid directory");
                 }
             else
                 writeln(getcwd);
@@ -106,12 +139,12 @@ void EnterVShell()
         case "TIME":
             AH = 0x2C;
             Raise(0x21);
-            writefln("Current time is   %02d:%02d:%02d,%02d\n", CH, CL, DH, DL);
+            writefln("It is currently %02d:%02d:%02d,%02d", CH, CL, DH, DL);
             break;
         case "DATE":
             AH = 0x2A;
             Raise(0x21);
-            write("Current date is ");
+            write("It is currently ");
             final switch (AL) {
                 case 0, 7: write("Sun"); break;
                 case 1: write("Mon"); break;
@@ -121,7 +154,7 @@ void EnterVShell()
                 case 5: write("Fri"); break;
                 case 6: write("Sat"); break;
             }
-            writefln(" %d-%02d-%02d\n", CX, DH, DL);
+            writefln(" %d-%02d-%02d", CX, DH, DL);
             break;
 
         // DEBUGGING COMMANDS
@@ -163,11 +196,12 @@ void EnterVShell()
         case "??":
             writeln("?run     Run the VM");
             writeln("?load    Load a file");
+            writeln("?dump    Dump memory content to MEMDUMP");
             writeln("?r       Print register information");
             writeln("?v       Toggle verbose mode");
             break;
         default:
-            writeln("Bad command or file name\n");
+            writeln("Bad command or file name");
             break;
         }
     }

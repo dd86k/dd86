@@ -3,6 +3,7 @@
  */
 
 //TODO: "Dynamic memory", allocate only what's necessary.
+//TODO: -c "command" -- Executes a command on launch (ScriptHost.d)
 
 module main;
 
