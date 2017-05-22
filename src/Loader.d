@@ -35,7 +35,12 @@ private struct mz_rlc { // For AL=03h
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;
 
-/// Load a file in memory.
+/**
+ * Load a file in memory.
+ * Params:
+ *   path = Path to executable
+ *   args = Executable arguments
+ */
 void LoadFile(string path, string args = null)
 {
     if (exists(path))

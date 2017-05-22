@@ -207,7 +207,13 @@ void EnterVShell()
     }
 }
 
-/// Make the Program Segment Prefix in memory
+/**
+ * Make the Program Segment Prefix in memory
+ * Params:
+ *   location = Memory location
+ *   appname = Application name
+ *   args = Application arguments
+ */
 void MakePSP(uint location, string appname, string args = null)
 {
     alias l = location;
@@ -234,6 +240,7 @@ void MakePSP(uint location, string appname, string args = null)
 
 // Page 2-99 contains the interrupt message processor
 /// Raise interrupt.
+/// Params: code = Interrupt byte
 void Raise(ubyte code)
 {
     if (Verbose) loghb("INTERRUPT : ", code);
@@ -295,16 +302,18 @@ void Raise(ubyte code)
             default: break;
         }
         break;
-    case 0x11: // BIOS - Get equipement list
+    case 0x11: { // BIOS - Get equipement list
         // Number of 16K banks of RAM on motherboard (PC only).
         int ax = 0b10000; // VGA
-        /+if (FloppyDiskInstalled) {
+        /*if (FloppyDiskInstalled) {
             ax |= 1;
             // Bit 6-7 = Number of floppy drives
-        }+/
+            ax |= 0b10
+        }*/
         //if (PenInstalled) ax |= 0b100;
         AX = ax;
         break;
+    }
     case 0x12: // BIOS - Get memory size
         AX = cast(int)(bank.length / 1024);
         break;
@@ -903,10 +912,7 @@ void Raise(ubyte code)
                 import core.sys.posix.sys.stat; // (st_mode)
                 enum WRITE = S_IWUSR | S_IWGRP | S_IWOTH,
                      READ  = S_IRUSR | S_IRGRP | S_IROTH;
-                if (CL & READONLY)
-                    at |= READ;
-                else
-                    at |= READ | WRITE;
+                at = (CL & READONLY) ? READ : READ | WRITE;
             }
             toFile(EMPTY, path);
             setAttributes(path, at);
@@ -1011,14 +1017,16 @@ void Raise(ubyte code)
             {
                 remove(path);
                 CF = 0;
+                AX = 0;
+                //AL =
             }
             catch (FileException)
             {
                 CF = 1;
                 AX = 2;
             }
-        }
             break;
+        }
         /*
          * 42h - Set current file position.
          * Input:
@@ -1148,6 +1156,7 @@ void Raise(ubyte code)
          *     it executed as ERRORLEVEL.
          */
         case 0x4D:
+            
             break;
         /*
          * 54h - Get verify flag.
@@ -1159,7 +1168,7 @@ void Raise(ubyte code)
 
             break;
         /*
-         * 56h - Rename file.
+         * 56h - Rename file or directory.
          * Input:
          *   DS:DX (ASCIZ path)
          *   ES:DI (ASCIZ new name)

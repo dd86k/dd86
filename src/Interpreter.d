@@ -207,8 +207,7 @@ private ushort* SIp, DIp, BPp, SPp;
 
 /// Segment register
 ushort CS, SS, DS, ES,
-// Post-i386
-       FS, GS;
+       FS, GS; // i386
 
 /// Program Counter
 //uint EIP;

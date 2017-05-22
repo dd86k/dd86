@@ -18,6 +18,11 @@ string MemString(void* mem, uint pos) pure
     return cast(string)mem[pos..pos+len];
 }
 
+/**
+ * Return a formatted string.
+ * Params: size = Size in bytes.
+ * Returns: Formatted string.
+ */
 string formatsize(long size) //BUG: %f is unpure?
 {
     import std.format : format;
