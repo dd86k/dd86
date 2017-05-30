@@ -245,12 +245,20 @@ void Raise(ubyte code)
 {
     if (Verbose) loghb("INTERRUPT : ", code);
 
+    // REAL-MODE
+    const inum = code << 2;
+    /*
+    IF (inum + 3 > IDT limit)
+        #GP
+    IF stack not large enough for a 6-byte return information
+        #SS
+    */
     Push(FLAG);
     IF = TF = 0;
     Push(CS);
     Push(IP);
-    //CS ← IDT[Interrupt number * 4].selector;
-    //IP ← IDT[Interrupt number * 4].offset;
+    //CS ← IDT[inum].selector;
+    //IP ← IDT[inum].offset;
 
     // http://www.ctyme.com/intr/int.htm
     // http://www.shsu.edu/csc_tjm/spring2001/cs272/interrupt.html
@@ -283,8 +291,8 @@ void Raise(ubyte code)
              */
             case 0x03:
                 AX = 0;
-                //DH = cast(ubyte)CursorTop;
-                //DL = cast(ubyte)CursorLeft;
+                //DH = CursorTop  & 0xFF;
+                //DL = CursorLeft & 0xFF;
                 break;
             /*
              * VIDEO - Read light pen position
@@ -327,18 +335,17 @@ void Raise(ubyte code)
         switch (AH)
         {
             case 0, 1: { // Get/Check keystroke
-                const KeyInfo k = ReadKey;
+                /*const KeyInfo k = ReadKey;
                 AH = cast(ubyte)k.scanCode;
                 AL = cast(ubyte)k.keyCode;
-                if (AH) ZF = 0; // Keystroke available
+                if (AH) ZF = 0; // Keystroke available*/
             }
                 break;
 
             case 2: // SHIFT
-                // Bit | 7 | 6 | 5 | 4 | 3 | 2  | 1 | 0
-                // Des | I | C | N | S | A | Ct | L | R
-                // Insert, Capslock, Numlock, Scrolllock, Alt, Ctrl,
-                //   Left, Right
+                // Bit | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0
+                // Des | I | C | N | S | A | C | L | R
+                // Insert, Capslock, Numlock, Scrolllock, Alt, Ctrl, Left, Right
                 // AL = (flag)
                 break;
 
@@ -399,8 +406,7 @@ void Raise(ubyte code)
          * - ^Z is not interpreted.
          */
         case 1:
-            AL = cast(ubyte)ReadKey.keyCode;
-
+            AL = ReadKey.keyCode & 0xFF;
             break;
         /*
          * 02h - Write character to stdout.
@@ -425,9 +431,6 @@ void Raise(ubyte code)
          * - ^C and ^Break are checked. (Keyboard)
          * - Usually STDPRN, may be redirected under DOS 2.0+.
          * - If the printer is busy, this function will wait.
-         *
-         * Dev notes:
-         * - Virtually print to a PRN (text) file.
          */
         case 5:
 

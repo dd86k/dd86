@@ -39,3 +39,7 @@ Use `dub test`.
 Use `dub test -b bench`.
 
 Currently, only the utility functions are benchmarked.
+
+# Credits
+
+Original author -- dd86k
