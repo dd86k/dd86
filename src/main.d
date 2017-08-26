@@ -50,17 +50,17 @@ int main(string[] args)
 	try {
 		r = getopt(args,
             config.caseSensitive,
-            "program|p", "Run a program at boot.", &init_file,
+            "p|program", "Run a program at boot.", &init_file,
             config.caseSensitive,
-            "args|a", "Starting program's arguments.", &init_args,
+            "a|args", "Starting program's arguments.", &init_args,
             config.bundling, config.caseSensitive,
-            "perf|P", "Maximum performance(!)", &Sleep,
+            "P|perf", "Maximum performance(!)", &Sleep,
             config.bundling, config.caseSensitive,
-            "nobootmsg|N", "No starting-up messages.", &smsg,
+            "N|nobootmsg", "No starting-up messages.", &smsg,
             config.bundling, config.caseSensitive,
-			"verbose|V", "Verbose mode.", &Verbose,
+			"V|verbose", "Verbose mode.", &Verbose,
             config.caseSensitive,
-            "version|v", "Print version screen.", &DisplayVersion);
+            "v|version", "Print version screen.", &DisplayVersion);
 	} catch (GetOptException ex) {
 		stderr.writeln("Error: ", ex.msg);
         return 1;
@@ -89,7 +89,7 @@ int main(string[] args)
     if (!smsg) writeln("DD-DOS is starting...");
 
     InitConsole();
-    Initiate();
+    Initiate(); // dd-dos
 
     if (init_file)
     {

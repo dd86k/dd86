@@ -8,8 +8,7 @@ import std.stdio;
 import dd_dos, InterpreterUtils, Logger;
 
 /// Initial amount of memory.
-enum MAX_MEM = 0xA_0000; // 640 KB
-//0x10_0000; // 1 MB
+enum MAX_MEM = 0xA_0000; // 640 KB //0x10_0000; // 1 MB
 
 /// Sleep for n hecto-nanoseconds
 pragma(inline, true) private void HSLEEP(int n) {
@@ -58,7 +57,7 @@ void Run()
     }
 }
 
-/// Is sleeping vcpu between cycles?
+/// Is vcpu sleeping between cycles?
 bool Sleep = true;
 /// Is currently running?
 bool Running = true;
@@ -127,13 +126,13 @@ private ushort* AXp, BXp, CXp, DXp;
 @property ubyte  AL() { return *ALp; }
 /// Set AX
 /// Params: v = WORD
-@property void   AX(int v) { *AXp = v & 0xFFFF; }
+@property void   AX(int v) { *AXp = cast(ushort)v; }
 /// Set AH
 /// Params: v = BYTE
-@property void   AH(int v) { *(ALp + 1) = v & 0xFF; }
+@property void   AH(int v) { *(ALp + 1) = cast(ubyte)v; }
 /// Set AL
 /// Params: v = BYTE
-@property void   AL(int v) { *ALp = v & 0xFF; }
+@property void   AL(int v) { *ALp = cast(ubyte)v; }
 
 /// Get BX
 /// Returns: WORD
@@ -266,13 +265,6 @@ ushort Pop()
     return FetchWord(addr);
 }
 
-/*ushort Pop(ushort seg, ushort reg)
-{
-    const uint addr = GetAddress(SS, SP);
-    SP = SP + 2;
-    return FetchWord(addr);
-}*/
-
 /**
  * Get FLAG as WORD.
  * Returns: FLAG as byte
@@ -324,9 +316,6 @@ ushort Pop()
 
 /// Preferred Segment register
 private uint Seg;
-
-//TODO: Add(int v1, int v2)
-//      Would avoid setting flags all the time (with other functions)
 
 // Rest of the source here is solely this function.
 /**

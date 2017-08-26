@@ -6,23 +6,20 @@ import Interpreter, Loader, ddcon, Utilities, Logger;
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
-/// Debug application version
-debug enum APP_VERSION = "0.0.0-debug"; else
-/// Release application version
-enum APP_VERSION = "0.0.0";
-
-/// Application name
-enum APP_NAME = "dd-dos";
-
-/// Default Major DOS Version
-enum DOS_MAJOR_VERSION = 0,
-/// Default Minor DOS Version
-     DOS_MINOR_VERSION = 0;
+enum APP_VERSION = "0.0.0"; /// Application version
+enum APP_NAME = "dd-dos"; /// Application name
 
 /// OEM IDs
 enum OEM_ID { // Used for INT 21h AH=30 so far.
     IBM, Compaq, MSPackagedProduct, ATnT, ZDS
 }
+
+enum DOS_MAJOR_VERSION = 0, /// Default Major DOS Version
+     DOS_MINOR_VERSION = 0; /// Default Minor DOS Version
+
+/// DOS Version
+ubyte MajorVersion = DOS_MAJOR_VERSION,
+      MinorVersion = DOS_MINOR_VERSION;
 
 /// File/Folder attribute. See INT 21h AH=3Ch
 // Did you know Windows still use these values?
@@ -47,10 +44,6 @@ enum
  *    6            640 x 200 black and white
  *    7            wrap at end of line
  */
-
-/// DOS Version
-ubyte MajorVersion = DOS_MAJOR_VERSION,
-      MinorVersion = DOS_MINOR_VERSION;
 
 /// Enter internal shell
 void EnterVShell()
@@ -77,11 +70,10 @@ void EnterVShell()
             break;
         case "VER":
             if (s.length > 1)
-            switch (toUpper(s[1]))
-            {
+                switch (toUpper(s[1])) { //toUpper in-case of future sub commands
                 case "/?": break;
                 default:
-            }
+                }
             else
             {
                 writeln;
@@ -110,7 +102,7 @@ void EnterVShell()
                     case "/?":
 
                         break;
-                    default: break; //TODO Show its help
+                    default:
                 }
             }
             writeln("Not implemented.");
@@ -166,7 +158,7 @@ void EnterVShell()
             writeln("Memory dumped to MEMDUMP");
             break;
         case "?R":
-            writef(
+            printf(
                 "AX=%04X BX=%04X CX=%04X DX=%04X " ~
                 "SP=%04X BP=%04X SI=%04X DI=%04X\n" ~
                 "CS=%04X DS=%04X ES=%04X SS=%04X " ~
@@ -239,7 +231,7 @@ void Raise(ubyte code)
     if (Verbose) loghb("INTERRUPT : ", code);
 
     // REAL-MODE
-    const inum = code << 2;
+    //const inum = code << 2;
     /*
     IF (inum + 3 > IDT limit)
         #GP
@@ -256,51 +248,49 @@ void Raise(ubyte code)
     // http://www.ctyme.com/intr/int.htm
     // http://www.shsu.edu/csc_tjm/spring2001/cs272/interrupt.html
     // http://spike.scu.edu.au/~barry/interrupts.html
-    switch (code)
-    {
+    switch (code) {
     case 0x10: // VIDEO
-        switch (AH)
-        {
-            /*
-             * VIDEO - Set cursor position.
-             * Input:
-             *   BH (Page number)
-             *   DH (Row, 0 is top)
-             *   DL (Column, 0 is top)
-             */
-            case 0x02:
-            //TODO: Figure out page (Buffer?)
-                SetPos(DH, DL);
-                break;
-            /*
-             * VIDEO - Get cursor position and size.
-             * Input:
-             *   BH (Page number)
-             * Return:
-             *   CH (Start scan line)
-             *   CL (End scan line)
-             *   DH (Row)
-             *   DL (Column)
-             */
-            case 0x03:
-                AX = 0;
-                //DH = CursorTop  & 0xFF;
-                //DL = CursorLeft & 0xFF;
-                break;
-            /*
-             * VIDEO - Read light pen position
-             * Return:
-             *   AH (Trigger flag)
-             *   DH (Row)
-             *   DL (Column)
-             *   CH (Pixel row, modes 04h-06h)
-             *   CX (Pixel row, modes >200 rows)
-             *   BX (Pixel column)
-             */
-            case 0x04:
+        switch (AH) {
+        /*
+         * VIDEO - Set cursor position.
+         * Input:
+         *   BH (Page number)
+         *   DH (Row, 0 is top)
+         *   DL (Column, 0 is top)
+         */
+        case 0x02:
+        //TODO: Figure out page (Buffer?)
+            SetPos(DH, DL);
+            break;
+        /*
+         * VIDEO - Get cursor position and size.
+         * Input:
+         *   BH (Page number)
+         * Return:
+         *   CH (Start scan line)
+         *   CL (End scan line)
+         *   DH (Row)
+         *   DL (Column)
+         */
+        case 0x03:
+            AX = 0;
+            //DH = CursorTop  & 0xFF;
+            //DL = CursorLeft & 0xFF;
+            break;
+        /*
+         * VIDEO - Read light pen position
+         * Return:
+         *   AH (Trigger flag)
+         *   DH (Row)
+         *   DL (Column)
+         *   CH (Pixel row, modes 04h-06h)
+         *   CX (Pixel row, modes >200 rows)
+         *   BX (Pixel column)
+         */
+        case 0x04:
 
-                break;
-            default: break;
+            break;
+        default: break;
         }
         break;
     case 0x11: { // BIOS - Get equipement list
@@ -325,51 +315,48 @@ void Raise(ubyte code)
 
         break;
     case 0x16: // Keyboard
-        switch (AH)
-        {
-            case 0, 1: { // Get/Check keystroke
-                /*const KeyInfo k = ReadKey;
-                AH = cast(ubyte)k.scanCode;
-                AL = cast(ubyte)k.keyCode;
-                if (AH) ZF = 0; // Keystroke available*/
-            }
-                break;
+        switch (AH) {
+        case 0, 1: { // Get/Check keystroke
+            /*const KeyInfo k = ReadKey;
+            AH = cast(ubyte)k.scanCode;
+            AL = cast(ubyte)k.keyCode;
+            if (AH) ZF = 0; // Keystroke available*/
+        }
+            break;
 
-            case 2: // SHIFT
-                // Bit | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0
-                // Des | I | C | N | S | A | C | L | R
-                // Insert, Capslock, Numlock, Scrolllock, Alt, Ctrl, Left, Right
-                // AL = (flag)
-                break;
+        case 2: // SHIFT
+            // Bit | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0
+            // Des | I | C | N | S | A | C | L | R
+            // Insert, Capslock, Numlock, Scrolllock, Alt, Ctrl, Left, Right
+            // AL = (flag)
+            break;
 
-            default: break;
+        default: break;
         }
         break;
     case 0x17: // PRINTER
 
         break;
     case 0x1A: // TIME
-        switch (AH)
-        {
-            case 0: // Get system time
-            // CX:DX (Number of clock ticks since midnight)
-            // AL (Midnight flag)
+        switch (AH) {
+        case 0: // Get system time
+        // CX:DX (Number of clock ticks since midnight)
+        // AL (Midnight flag)
 
-                break;
+            break;
 
-            case 1: // Set system time
-            // CX:DX (Number of clock ticks since midnight)
-                break;
+        case 1: // Set system time
+        // CX:DX (Number of clock ticks since midnight)
+            break;
 
-            default: break;
+        default: break;
         }
         break;
     case 0x1B: // CTRL-BREAK handler
 
         break;
     case 0x21: // MS-DOS Services
-        switch (AH)
-        {
+        switch (AH) {
         /*
          * 00h - Terminate program.
          * Input:
