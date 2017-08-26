@@ -12,7 +12,7 @@ import dd_dos : APP_VERSION, APP_NAME, EnterVShell;
 import Interpreter : Initiate, Verbose, Sleep, Run;
 import Loader : LoadFile;
 import Logger;
-import Poshub : InitConsole;
+import ddcon : InitConsole;
 
 debug { } else
 {

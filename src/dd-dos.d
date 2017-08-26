@@ -1,17 +1,10 @@
 module dd_dos;
 
 import std.stdio;
-import Interpreter, Loader, Poshub, Utilities, Logger;
+import Interpreter, Loader, ddcon, Utilities, Logger;
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
-
-version (linux)
-    version = COOL_CLUB;
-else version (OSX)
-    version = COOL_CLUB;
-else version (FreeBSD)
-    version = COOL_CLUB;
 
 /// Debug application version
 debug enum APP_VERSION = "0.0.0-debug"; else

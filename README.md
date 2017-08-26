@@ -21,7 +21,7 @@ There is a reference manual available over the Wiki.
 | InterpreterUtils.d | Helper functions for the emulator |
 | Loader.d | Executable/file loader for dd-dos |
 | main.d | Command Line Interface |
-| Poshub.d | In-house console/terminal library |
+| ddcon.d | In-house console/terminal library |
 | Utilities.d | Generic utilities |
 
 ## Building
