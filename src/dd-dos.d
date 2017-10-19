@@ -94,7 +94,7 @@ void EnterVShell()
                         for (int i; i < bl; ++i) if (bank[i]) ++nz;
                         writeln("Memory statistics      Non-Zero");
                         writeln("--------------------   --------");
-                        writefln("Total                  %*s", 8, formatsize(nz));
+                        writefln("Total                  %*s KB", 8, nz * 1024);
                         continue;
                     case "/DEBUG":
 

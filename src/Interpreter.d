@@ -7,8 +7,10 @@ module Interpreter;
 import std.stdio;
 import dd_dos, InterpreterUtils, Logger;
 
+//TODO: Function that sets FLAGS (int num, int size (1/2/4/8))
+
 /// Initial amount of memory.
-enum MAX_MEM = 0xA_0000; // 640 KB //0x10_0000; // 1 MB
+enum MAX_MEM = 0xA_0000; // 640 KB, 0x10_0000 being 1 MB
 
 /// Sleep for n hecto-nanoseconds
 pragma(inline, true) private void HSLEEP(int n) {
@@ -145,13 +147,13 @@ private ushort* AXp, BXp, CXp, DXp;
 @property ubyte  BL() { return *BLp; }
 /// Set BX
 /// Params: v = WORD
-@property void   BX(int v) { *BXp = v & 0xFFFF; }
+@property void   BX(int v) { *BXp = cast(ushort)v; }
 /// Set BH
 /// Params: v = BYTE
-@property void   BH(int v) { *(BLp + 1) = v & 0xFF; }
+@property void   BH(int v) { *(BLp + 1) = cast(ubyte)v; }
 /// Set BL
 /// Params: v = BYTE
-@property void   BL(int v) { *BLp = v & 0xFF; }
+@property void   BL(int v) { *BLp = cast(ubyte)v; }
 
 /// Get CX
 /// Returns: WORD
@@ -164,13 +166,13 @@ private ushort* AXp, BXp, CXp, DXp;
 @property ubyte  CL() { return *CLp; }
 /// Set CX
 /// Params: v = WORD
-@property void   CX(int v) { *CXp = v & 0xFFFF; }
+@property void   CX(int v) { *CXp = cast(ushort)v; }
 /// Set CH
 /// Params: v = BYTE
-@property void   CH(int v) { *(CLp + 1) = v & 0xFF; }
+@property void   CH(int v) { *(CLp + 1) = cast(ubyte)v; }
 /// Set CL
 /// Params: v = BYTE
-@property void   CL(int v) { *CLp = v & 0xFF; }
+@property void   CL(int v) { *CLp = cast(ubyte)v; }
 
 /// Get DX
 /// Returns: WORD
@@ -183,25 +185,41 @@ private ushort* AXp, BXp, CXp, DXp;
 @property ubyte  DL() { return *DLp; }
 /// Set DX
 /// Params: v = WORD
-@property void   DX(int v) { *DXp = v & 0xFFFF; }
+@property void   DX(int v) { *DXp = cast(ushort)v; }
 /// Set DH
 /// Params: v = BYTE
-@property void   DH(int v) { *(DLp + 1) = v & 0xFF; }
+@property void   DH(int v) { *(DLp + 1) = cast(ubyte)v; }
 /// Set DL
 /// Params: v = BYTE
-@property void   DL(int v) { *DLp = v & 0xFF; }
+@property void   DL(int v) { *DLp = cast(ubyte)v; }
 
 /// Index register
 uint ESI, EDI, EBP, ESP;
 private ushort* SIp, DIp, BPp, SPp;
 
+/// Get SI register
+/// Returns: SI
 @property ushort SI() { return *SIp; }
+/// Get DI register
+/// Returns: DI
 @property ushort DI() { return *DIp; }
+/// Get BP register
+/// Returns: BP
 @property ushort BP() { return *BPp; }
+/// Get SP register
+/// Returns: SP
 @property ushort SP() { return *SPp; }
+/// Set SI register
+/// Params: v = Set SI value
 @property void SI(int v) { *SIp = v & 0xFFFF; }
+/// Set DI register
+/// Params: v = Set DI value
 @property void DI(int v) { *DIp = v & 0xFFFF; }
+/// Set BP register
+/// Params: v = Set BP value
 @property void BP(int v) { *BPp = v & 0xFFFF; }
+/// Set SP register
+/// Params: v = Set SP value
 @property void SP(int v) { *SPp = v & 0xFFFF; }
 
 /// Segment register
@@ -281,6 +299,7 @@ ushort Pop()
 }
 
 /// Set FLAG as BYTE.
+/// Params: flag = FLAG byte
 @property void FLAGB(ubyte flag)
 {
     SF = (flag & MASK_SF) != 0;
@@ -305,13 +324,14 @@ ushort Pop()
 }
 
 /// Set FLAG as WORD.
+/// Params: flag = FLAG word
 @property void FLAG(ushort flag)
 {
     OF = (flag & MASK_OF) != 0;
     DF = (flag & MASK_DF) != 0;
     IF = (flag & MASK_IF) != 0;
     TF = (flag & MASK_TF) != 0;
-    FLAGB = flag & 0xFF;
+    FLAGB = cast(ubyte)flag;
 }
 
 /// Preferred Segment register
