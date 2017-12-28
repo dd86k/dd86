@@ -10,6 +10,8 @@ _______ _______        _______  ______  _______
 
 DD-DOS aims to be a simple compatibility layer, like NTVDM.
 
+If you wish to build, or help develop dd-dos, the [Dev Space](https://github.com/dd86k/dd-dos/wiki/Dev-Space) will help you.
+
 There is a reference manual available over the [Wiki](https://github.com/dd86k/dd-dos/wiki).
 
 # Credits
