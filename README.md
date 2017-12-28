@@ -10,7 +10,7 @@ _______ _______        _______  ______  _______
 
 DD-DOS aims to be a simple compatibility layer, like NTVDM.
 
-There is a reference manual available over the Wiki.
+There is a reference manual available over the [Wiki](https://github.com/dd86k/dd-dos/wiki).
 
 ## Folder structure
 

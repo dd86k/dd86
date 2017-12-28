@@ -9,20 +9,18 @@ module main;
 
 import core.stdc.stdio;
 import std.getopt;
-import dd_dos : APP_VERSION, APP_NAME, SPLASH, EnterVShell;
+import dd_dos : APP_VERSION, APP_NAME, BANNER, EnterVShell;
 import Interpreter : Initiate, Verbose, Sleep, Run;
 import Loader : LoadFile;
 import Logger;
 import ddcon : InitConsole;
 
-debug { } else
-{
-    extern (C) __gshared bool
-        rt_envvars_enabled,
-		rt_cmdline_enabled;
+debug {} else {
+    extern (C) __gshared bool // Defaults to false anyway
+        rt_envvars_enabled, rt_cmdline_enabled;
 }
 
-extern(C)
+extern (C)
 private void DisplayVersion()
 {
     import core.stdc.stdlib : exit;
@@ -32,10 +30,11 @@ private void DisplayVersion()
 	puts("Project page: <https://github.com/dd86k/dd-dos>");
     printf("Compiled %s using %s v%d\n",
         cast(char*)__FILE__, cast(char*)__VENDOR__, __VERSION__);
-    exit(0); // getopt hack
+    exit(0); // getopt hack ;-)
 }
 
-private void DisplayHelp(string name = APP_NAME)
+extern (C)
+private void DisplayHelp()
 {
     puts("A mini DOS virtual machine.");
     puts("Usage:");
@@ -47,8 +46,8 @@ private void DisplayHelp(string name = APP_NAME)
  * Params: args = CLI Arguments
  * Returns: Errorcode
  */
-int main(string[] args)
-{
+int main(string[] args) {
+	//TODO: Deprecate init_args?
     string init_file, init_args;
     bool smsg; // Startup message
 
@@ -56,27 +55,27 @@ int main(string[] args)
 	try {
 		r = getopt(args,
             config.caseSensitive,
-            "p|program", "Run a program at boot.", &init_file,
+            "p|program", "Run a program directly", &init_file,
             config.caseSensitive,
-            "a|args", "Starting program's arguments.", &init_args,
+            "a|args", "Add arguments to -p", &init_args,
             config.bundling, config.caseSensitive,
-            "P|perf", "Maximum performance(!)", &Sleep,
+            "P|perf", "Do not sleep between cycles (!)", &Sleep,
             config.bundling, config.caseSensitive,
-            "N|nobootmsg", "No starting-up messages.", &smsg,
+            "N|nobanner", "Removes starting message and banner", &smsg,
             config.bundling, config.caseSensitive,
-			"V|verbose", "Verbose mode.", &Verbose,
+			"V|verbose", "Set verbose mode", &Verbose,
             config.caseSensitive,
-            "v|version", "Print version screen.", &DisplayVersion);
+            "v|version", "Print version", &DisplayVersion);
 	} catch (GetOptException ex) {
 		//stderr.writeln("Error: ", ex.msg);
         printf("ERROR: %s\n", cast(char*)ex.msg);
         return 1;
 	}
 
+	// Enabled by default for debug builds but can be toggled off
     debug Verbose = !Verbose;
 
-    if (r.helpWanted)
-    {
+    if (r.helpWanted) {
         DisplayHelp;
         puts("\nOPTIONS (All efaults: Off)");
         foreach (it; r.options)
@@ -97,23 +96,22 @@ int main(string[] args)
 			log("Maximum performance is ACTIVE");
 	}
 
-    InitConsole;
-
     if (!smsg) {
 		puts("DD-DOS is starting...");
-		puts(SPLASH); // Defined in dd_dos.d
 	}
 
-    Initiate; // dd-dos!
+    InitConsole; // Initiates console screen (ddcon)
+    Initiate; // Initiates vpcpu
 
-    if (init_file)
-    {
+    if (!smsg) {
+		puts(BANNER); // Defined in dd_dos.d
+	}
+
+    if (init_file) {
         LoadFile(init_file, init_args);
-        Run();
-    }
-    else
-    {
-        EnterVShell();
+        Run; // vcpu had been initiated a little earlier anyway
+    } else {
+        EnterVShell;
     }
 
     return 0;

@@ -1,6 +1,7 @@
 /*
  * Interpreter.d: Legacy machine code interpreter.
- *                Closest to an Intel i486 whenever possible.
+ *                Right now it's closest to an 8086.
+ *                I hope to make it closer to an i486 whenever possible.
  */
 
 module Interpreter;
@@ -8,7 +9,8 @@ module Interpreter;
 import dd_dos, InterpreterUtils, Logger;
 
 /// Initial and maximum amount of memory.
-enum MAX_MEM = 0xA_0000; // 640 KB, 0x10_0000 being 1 MB
+enum MAX_MEM = 0x10_0000; // 1 MB
+// 0xA_0000, 640 KB
 
 /// Sleep for n hecto-nanoseconds
 pragma(inline, true) extern (C)

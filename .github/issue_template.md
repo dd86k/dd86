@@ -1,11 +1,11 @@
-Hello! Feel free to use this template, and thank you for filling this issue.
+Thank you for filling out the Issue template!
 
 # What am I using?
 
-OS used:
-OS/Kernel version:
-DD-DOS version:
-Virtual DOS version:
+OS: 
+OS/Kernel version: 
+DD-DOS version: 
+Reporting MS-DOS version: 
 
 # What was I trying to do?
 

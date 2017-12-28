@@ -10,13 +10,13 @@ pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 enum APP_VERSION = "0.0.0"; /// Application version
 enum APP_NAME = "dd-dos"; /// Application name
 
-enum SPLASH = `
+enum BANNER = `
 _______ _______        _______  ______  _______
 |  __  \|  __  \  ___  |  __  \/  __  \/ _____/
 | |  \ || |  \ | |___| | |  \ || /  \ |\____ \
 | |__/ || |__/ |       | |__/ || \__/ |_____\ \
 |______/|______/       |______/\______/\______/
-`; /// Splash screen, fancy!
+`; /// Banner screen, fancy!
 
 /// OEM IDs
 enum OEM_ID { // Used for INT 21h AH=30 so far.

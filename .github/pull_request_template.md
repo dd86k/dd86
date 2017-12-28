@@ -1,8 +1,12 @@
-Thank you for doing a Pull Request! Feel free to use the template.
+Thank you for filling out this Pull Request template!
 
-# Why have I done this request?
+# Why have I done with this request?
 
 
 
 # What does this request affect?
+
+
+
+# What have I tested this Pull Request with?
 
