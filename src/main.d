@@ -77,7 +77,7 @@ int main(string[] args) {
 
     if (r.helpWanted) {
         DisplayHelp;
-        puts("\nOPTIONS (All efaults: Off)");
+        puts("\nOPTIONS (All defaults: Off)");
         foreach (it; r.options)
         { // "custom" and nicer defaultGetoptPrinter
             printf("%*s, %-*s%s%s\n",

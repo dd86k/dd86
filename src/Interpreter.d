@@ -9,8 +9,10 @@ module Interpreter;
 import dd_dos, InterpreterUtils, Logger;
 
 /// Initial and maximum amount of memory.
-enum MAX_MEM = 0x10_0000; // 1 MB
-// 0xA_0000, 640 KB
+enum MAX_MEM = 0xA_0000; // 640 KB
+// 0x4_0000   256 KB -- Minimal goal
+// 0xA_0000   640 KB
+// 0x10_0000    1 MB
 
 /// Sleep for n hecto-nanoseconds
 pragma(inline, true) extern (C)
