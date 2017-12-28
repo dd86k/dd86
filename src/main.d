@@ -9,7 +9,7 @@ module main;
 
 import core.stdc.stdio;
 import std.getopt;
-import dd_dos : APP_VERSION, APP_NAME, EnterVShell;
+import dd_dos : APP_VERSION, APP_NAME, SPLASH, EnterVShell;
 import Interpreter : Initiate, Verbose, Sleep, Run;
 import Loader : LoadFile;
 import Logger;
@@ -78,7 +78,7 @@ int main(string[] args)
     if (r.helpWanted)
     {
         DisplayHelp;
-        puts("\nSwitches (Default: Off)");
+        puts("\nOPTIONS (All efaults: Off)");
         foreach (it; r.options)
         { // "custom" and nicer defaultGetoptPrinter
             printf("%*s, %-*s%s%s\n",
@@ -90,16 +90,20 @@ int main(string[] args)
         return 0;
 	}
 
-    if (Verbose)
+    if (Verbose) {
         log("Verbose mode is ON");
-    if (Verbose)
-        logs("Max performance is ", Sleep ? "OFF" : "ON");
-
-    if (!smsg)
-		puts("DD-DOS is starting...");
+		if (!Sleep)
+			log("Maximum performance is ACTIVE");
+	}
 
     InitConsole;
-    Initiate; // dd-dos
+
+    if (!smsg) {
+		puts("DD-DOS is starting...");
+		puts(SPLASH); // Defined in dd_dos.d
+	}
+
+    Initiate; // dd-dos!
 
     if (init_file)
     {

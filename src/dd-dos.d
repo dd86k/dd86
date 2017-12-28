@@ -10,15 +10,24 @@ pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 enum APP_VERSION = "0.0.0"; /// Application version
 enum APP_NAME = "dd-dos"; /// Application name
 
+enum SPLASH = `
+_______  _______         _______    _____   _______
+|  __  \ |  __  \   ___  |  __  \  / ___ \ / _____/
+| |  \  || |  \  | |___| | |  \  || /   \ |\____ \
+| |__/  || |__/  |       | |__/  || \___/ |_____\ \
+|______/ |______/        |______/  \_____/ \______/
+`;
+
 /// OEM IDs
 enum OEM_ID { // Used for INT 21h AH=30 so far.
     IBM, Compaq, MSPackagedProduct, ATnT, ZDS
 }
 
-enum DOS_MAJOR_VERSION = 0, /// Default Major DOS Version
+enum DOS_MAJOR_VERSION = 5, /// Default Major DOS Version
      DOS_MINOR_VERSION = 0; /// Default Minor DOS Version
 
 /// DOS Version
+__gshared
 ubyte MajorVersion = DOS_MAJOR_VERSION,
       MinorVersion = DOS_MINOR_VERSION;
 
@@ -88,7 +97,7 @@ void EnterVShell()
                 case "/STATS":
                     puts("Fetching memory statistics...");
                     int nz;
-                    const size_t bl = bank.length;
+                    const size_t bl = banksize;
                     for (int i; i < bl; ++i) if (bank[i]) ++nz;
                     puts("Memory statistics      Non-Zero");
                     puts("--------------------   --------");
@@ -154,8 +163,9 @@ void EnterVShell()
                 puts("Verbose: OFF");
             break;
         case "?DUMP":
-            toFile(bank, "MEMDUMP");
-            puts("Memory dumped to MEMDUMP");
+            //toFile(bank, "MEMDUMP");
+            //puts("Memory dumped to MEMDUMP");
+            puts("TODO");
             break;
         case "?R":
             printf(
@@ -306,7 +316,7 @@ void Raise(ubyte code)
         break;
     }
     case 0x12: // BIOS - Get memory size
-        AX = cast(int)(bank.length / 1024);
+        AX = cast(int)(banksize / 1024);
         break;
     case 0x13: // DISK operations
 

@@ -30,7 +30,6 @@ private void NSLEEP(int n) {
 /// Initiate machine (memory, etc.)
 extern (C)
 void Initiate() {
-    bank = new ubyte[MAX_MEM];
     CS = 0xFFFF;
 
     AXp = cast(ushort*)&EAX;
@@ -70,7 +69,8 @@ __gshared bool Running = true;
 __gshared bool Verbose;
 
 /// Main memory brank;
-__gshared ubyte[] bank;
+__gshared ubyte[MAX_MEM] bank;
+__gshared size_t banksize;
 
 /**
  * Get memory address out of a segment and a register value.
