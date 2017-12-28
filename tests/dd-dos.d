@@ -14,7 +14,7 @@ unittest
     
     write("INT 12h: ");
     Raise(0x12);
-    assert(bank.length / 1024 == AX);
+    assert(banksize / 1024 == AX);
     writeln("OK -- ", AX, " KB | ", AX / 1024, " MB");
 
     /*
@@ -49,7 +49,8 @@ unittest
     // "HELLO WORLD"
     
     write("INT 21h->09_00h: ");
-    DS = CS = 0x400; DX = IP = 0x20;
+    DS = CS = 0x400;
+    DX = EIP = 0x20;
     Insert("OK\n$");
     AH = 9;
     Raise(0x21);
@@ -62,13 +63,13 @@ unittest
     Raise(0x21);
     write("(D/M/Y) ");
     final switch (AL) {
-        case 0, 7: write("Sunday"); break;
-        case 1: write("Monday"); break;
-        case 2: write("Tuesday"); break;
-        case 3: write("Wednesday"); break;
-        case 4: write("Thursday"); break;
-        case 5: write("Friday"); break;
-        case 6: write("Saturday"); break;
+    case 0, 7: write("Sunday"); break;
+    case 1: write("Monday"); break;
+    case 2: write("Tuesday"); break;
+    case 3: write("Wednesday"); break;
+    case 4: write("Thursday"); break;
+    case 5: write("Friday"); break;
+    case 6: write("Saturday"); break;
     }
     writefln(" %d/%d/%d", DL, DH, CX);
 

@@ -19,7 +19,7 @@ unittest
 
     write("MemString(ubyte*, uint) 1'000'000x : ");
     sw.start();
-    for (int i; i < 2_000_000; ++i) MemString(&c[0], pos);
+    for (int i; i < 2_000_000; ++i) MemString(cast(void*)c, pos);
     sw.stop();
     writeln(to!Duration(sw.peek));
 }

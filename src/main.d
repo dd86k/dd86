@@ -91,7 +91,8 @@ int main(string[] args)
 	}
 
     if (Verbose) {
-        log("Verbose mode is ON");
+        debug log("Debug mode is ON");
+		else log("Verbose mode is ON");
 		if (!Sleep)
 			log("Maximum performance is ACTIVE");
 	}

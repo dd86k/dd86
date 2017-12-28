@@ -13,6 +13,6 @@ unittest
     for (int i; i < s.length; ++i, ++p) *p = s[i];
 
     write("MemString(ubyte*, uint) : ");
-    assert(MemString(&c[0], pos) == "Hello it's me");
+    assert(MemString(cast(void*)c, pos) == "Hello it's me");
     writeln("OK");
 }

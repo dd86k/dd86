@@ -42,12 +42,11 @@ private enum MZ_MAGIC = 0x5A4D;
  *   path = Path to executable
  *   args = Executable arguments
  */
-void LoadFile(string path, string args = null)
-{
+void LoadFile(string path, string args = null) {
     if (exists(path)) {
-        import core.stdc.string : memcpy;
-        import std.uni : toUpper;
-        FILE* f = fopen(cast(char*)(path~'\0'), "rb");
+        if (Verbose)
+            log("File exists");
+        FILE* f = fopen(cast(char*)(path ~ '\0'), "rb");
         fseek(f, 0, SEEK_END);
         int fsize = ftell(f);
         if (Verbose)
@@ -62,9 +61,6 @@ void LoadFile(string path, string args = null)
                 log("File is zero length.", LogLevel.Error);
             return;
         }
-
-        if (Verbose)
-            log("File exists");
 
         switch (sig) {
         case "MZ": // Party time!
@@ -158,10 +154,9 @@ void LoadFile(string path, string args = null)
             }
             if (Verbose)
                 log("Loading COM... ");
-            CS = 0; IP = 0x100;
-            ubyte* bankp = cast(ubyte*)bank + IP;
+            CS = 0; EIP = 0x100;
             fseek(f, 0, SEEK_SET);
-            fread(bankp, fsize, 1, f);
+            fread(cast(ubyte*)bank + EIP, fsize, 1, f);
 
             //MakePSP(GetIPAddress - 0x100, "TEST");
             break;

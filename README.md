@@ -1,6 +1,14 @@
 # DD-DOS, A Small DOS Virtual Machine
 
-DD-DOS aims to be a simple compatibility layer via total emulation, more than NTVDM, and for all systems.
+```
+_______ _______        _______  ______  _______
+|  __  \|  __  \  ___  |  __  \/  __  \/ _____/
+| |  \ || |  \ | |___| | |  \ || /  \ |\____ \
+| |__/ || |__/ |       | |__/ || \__/ |_____\ \
+|______/|______/       |______/\______/\______/
+```
+
+DD-DOS aims to be a simple compatibility layer, like NTVDM.
 
 There is a reference manual available over the Wiki.
 

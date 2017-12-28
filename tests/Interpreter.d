@@ -4,6 +4,8 @@ import Interpreter, InterpreterUtils, std.stdio, dd_dos;
 
 unittest
 {
+    Initiate;
+
     import core.stdc.string : memset;
     writeln("---------- Interpreter (vm8086)");
 
@@ -45,7 +47,7 @@ unittest
     writeln("OK");
     
     write("InsertImm : ");
-    CS = 0; IP = 0x1050;
+    CS = 0; EIP = 0x1050;
     InsertImm(0xAABBCCFF);
     ip = GetIPAddress;
     assert(bank[ip + 1] == 0xFF);
@@ -71,6 +73,7 @@ unittest
     BX = 0x0201;
     CX = 0x0201;
     DX = 0x0201;
+    EIP = 0x0050;
     write("AL/AH : ");
     assert(AL == 1);
     assert(AH == 2);
@@ -98,6 +101,9 @@ unittest
     writeln("OK");
     write("DX : ");
     assert(DX == 0x0201);
+    writeln("OK");
+    write("IP : ");
+    assert(IP == 0x0050);
     writeln("OK");
 
     FLAG = 0xFFFF;
@@ -555,7 +561,7 @@ unittest
 
     write("SCASB : ");
 
-    CS = 0x600; ES = 0x600; IP = 0x22; DI = 0x22;
+    CS = 0x600; ES = 0x600; EIP = 0x22; DI = 0x22;
     Insert("Hello!");
     AL = 'H';
     Execute(0xAE);
@@ -568,7 +574,7 @@ unittest
 
     write("SCASW : ");
 
-    CS = 0x800; ES = 0x800; IP = 0x30; DI = 0x30;
+    CS = 0x800; ES = 0x800; EIP = 0x30; DI = 0x30;
     Insert(0xFE22, GetAddress(ES, DI));
     AX = 0xFE22;
     Execute(0xAF);
@@ -582,9 +588,9 @@ unittest
 
     write("CMPSB : ");
 
-    CS = 0xF00; ES = 0xF00; IP = 0x100; DI = 0x100;
+    CS = 0xF00; ES = 0xF00; EIP = 0x100; DI = 0x100;
     Insert("HELL");
-    CS = 0xF00; DS = 0xF00; IP = 0x110; SI = 0x110;
+    CS = 0xF00; DS = 0xF00; EIP = 0x110; SI = 0x110;
     Insert("HeLL");
     Execute(0xA6);
     assert(ZF);
@@ -599,9 +605,9 @@ unittest
 
     write("CMPSW : ");
 
-    CS = 0xF00; ES = 0xF00; IP = 0x100; DI = 0x100;
+    CS = 0xF00; ES = 0xF00; EIP = 0x100; DI = 0x100;
     InsertW("HELL"w);
-    CS = 0xF00; DS = 0xF00; IP = 0x110; SI = 0x110;
+    CS = 0xF00; DS = 0xF00; EIP = 0x110; SI = 0x110;
     InsertW("HeLL"w);
     Execute(0xA7);
     assert(ZF);

@@ -40,11 +40,11 @@ void HandleRMWord(const ubyte rm, const int direction)
         break; // MOD 00
     case 0b01_000000: // MOD 01, Memory Mode, 8-bit displacement
 
-        IP += 1;
+        EIP += 1;
         break; // MOD 01
     case 0b10_000000: // MOD 10, Memory Mode, 16-bit displacement
 
-        IP += 2;
+        EIP += 2;
         break; // MOD 10
     case 0b11_000000: // MOD 11, Register Mode
         if (direction)
@@ -164,12 +164,11 @@ private void SetRegRMByte(const ubyte rm, uint addr)
  */
 extern (C)
 void SetWord(uint addr, ushort value) {
-    version (X86_ANY)
-        *(cast(ushort *)&bank[addr]) = value;
-    else {
-        bank[addr] = value & 0xFF;
-        bank[addr + 1] = value >> 8 & 0xFF;
-    }
+    *(cast(ushort *)&bank[addr]) = value;
+}
+extern (C)
+void SetDWord(uint addr, uint value) {
+    *(cast(uint *)&bank[addr]) = value;
 }
 
 /*
@@ -223,11 +222,13 @@ void Insert(string data, size_t addr = 0)
     foreach(b; data) bank[addr++] = b;
 }
 /// Insert a wide string in memory.
-void InsertW(wstring data, size_t addr = 0)
+deprecated void InsertW(wstring data, size_t addr = 0)
 {
-    if (addr == 0) addr = GetIPAddress;
+    if (addr == 0)
+        addr = GetIPAddress;
     size_t l = data.length * 2;
-    ubyte* bp = &bank[addr], dp = cast(ubyte*)&data[0];
+    ubyte* bp = cast(ubyte*)bank + addr;
+    ubyte* dp = cast(ubyte*)data;
     for (; l; --l) *bp++ = *dp++;
 }
 
