@@ -1,6 +1,7 @@
 module dd_dos;
 
-import std.stdio;
+import core.stdc.stdio;
+import std.stdio : readln, toFile;
 import Interpreter, Loader, ddcon, Utilities, Logger;
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
@@ -55,18 +56,17 @@ void EnterVShell()
     while (true) {
         //write(getcwd ~ '$');
         //TODO: Print POMPT
-        write('$');
+        printf(">");
 
         // Read line from stdln and remove \n, then split arguments.
         string[] s = split(readln()[0..$-1], ' ');
 
         if (s.length > 0)
-        switch (toUpper(s[0]))
-        {
+        switch (toUpper(s[0])) {
         case "HELP": //TODO: Complete HELP with /ALL
-            writeln("CLS            Clear screen.");
-            writeln("MEM            Show memory information.");
-            writeln("VER            Show DOS version.");
+            puts("CLS            Clear screen.");
+            puts("MEM            Show memory information.");
+            puts("VER            Show DOS version.");
             break;
         case "VER":
             if (s.length > 1)
@@ -76,36 +76,33 @@ void EnterVShell()
                 }
             else
             {
-                writeln;
-                writeln("DD-DOS Version ", APP_VERSION);
-                writeln("MS-DOS Version ", MajorVersion, ".", MinorVersion);
-                writeln;
+                puts("");
+                printf("DD-DOS Version %s\n", cast(char*)APP_VERSION);
+                printf("MS-DOS Version %d.%d\n", MajorVersion, MinorVersion);
+                puts("");
             }
             break;
         case "MEM":
-            if (s.length > 1)
-            {
-                switch (toUpper(s[1]))
-                {
-                    case "/STATS":
-                        writeln("Fetching memory statistics...");
-                        int nz;
-                        const size_t bl = bank.length;
-                        for (int i; i < bl; ++i) if (bank[i]) ++nz;
-                        writeln("Memory statistics      Non-Zero");
-                        writeln("--------------------   --------");
-                        writefln("Total                  %*s KB", 8, nz * 1024);
-                        continue;
-                    case "/DEBUG":
-
-                        break;
-                    case "/?":
-
-                        break;
-                    default:
+            if (s.length > 1) {
+                switch (toUpper(s[1])) {
+                case "/STATS":
+                    puts("Fetching memory statistics...");
+                    int nz;
+                    const size_t bl = bank.length;
+                    for (int i; i < bl; ++i) if (bank[i]) ++nz;
+                    puts("Memory statistics      Non-Zero");
+                    puts("--------------------   --------");
+                    printf("Total                  %*s KB", 8, nz * 1024);
+                    continue;
+                case "/DEBUG":
+                    puts("Not implemented");
+                    break;
+                case "/?":
+                    puts("/STATS -- Memory statistics");
+                    break;
+                default:
                 }
             }
-            writeln("Not implemented.");
             break;
         case "CD":
             if (s.length > 1)
@@ -114,32 +111,32 @@ void EnterVShell()
 
                     } else chdir(s[1]);
                 } catch (FileException) {
-                    writeln("Invalid directory");
+                    puts("Invalid directory");
                 }
             else
-                writeln(getcwd);
+                puts(cast(char*)getcwd);
             break;
         case "CLS": Clear(); break;
         case "EXIT": return;
         case "TIME":
             AH = 0x2C;
             Raise(0x21);
-            writefln("It is currently %02d:%02d:%02d,%02d", CH, CL, DH, DL);
+            printf("It is currently %02d:%02d:%02d,%02d\n", CH, CL, DH, DL);
             break;
         case "DATE":
             AH = 0x2A;
             Raise(0x21);
-            write("It is currently ");
+            printf("It is currently ");
             final switch (AL) {
-                case 0, 7: write("Sun"); break;
-                case 1: write("Mon"); break;
-                case 2: write("Tue"); break;
-                case 3: write("Wed"); break;
-                case 4: write("Thu"); break;
-                case 5: write("Fri"); break;
-                case 6: write("Sat"); break;
+                case 0, 7: printf("Sun"); break;
+                case 1: printf("Mon"); break;
+                case 2: printf("Tue"); break;
+                case 3: printf("Wed"); break;
+                case 4: printf("Thu"); break;
+                case 5: printf("Fri"); break;
+                case 6: printf("Sat"); break;
             }
-            writefln(" %d-%02d-%02d", CX, DH, DL);
+            printf(" %d-%02d-%02d\n", CX, DH, DL);
             break;
 
         // DEBUGGING COMMANDS
@@ -151,11 +148,14 @@ void EnterVShell()
         case "?RUN": Run(); break;
         case "?V":
             Verbose = !Verbose;
-            writeln("Verbose mode now ", Verbose ? "on" : "off");
+            if (Verbose)
+                puts("Verbose: ON");
+            else
+                puts("Verbose: OFF");
             break;
         case "?DUMP":
             toFile(bank, "MEMDUMP");
-            writeln("Memory dumped to MEMDUMP");
+            puts("Memory dumped to MEMDUMP");
             break;
         case "?R":
             printf(
@@ -166,27 +166,27 @@ void EnterVShell()
                 AX, BX, CX, DX, SP, BP, SI, DI,
                 CS, DS, ES, SS, IP
             );
-            write("FLAG= ");
-            if (OF) write("OF ");
-            if (DF) write("DF ");
-            if (IF) write("IF ");
-            if (TF) write("TF ");
-            if (SF) write("SF ");
-            if (ZF) write("ZF ");
-            if (AF) write("AF ");
-            if (PF) write("PF ");
-            if (CF) write("CF ");
-            writefln("(%Xh)", FLAG);
+            printf("FLAG= ");
+            if (OF) printf("OF ");
+            if (DF) printf("DF ");
+            if (IF) printf("IF ");
+            if (TF) printf("TF ");
+            if (SF) printf("SF ");
+            if (ZF) printf("ZF ");
+            if (AF) printf("AF ");
+            if (PF) printf("PF ");
+            if (CF) printf("CF ");
+            printf("(%Xh)\n", FLAG);
             break;
         case "??":
-            writeln("?run     Run the VM");
-            writeln("?load    Load a file");
-            writeln("?dump    Dump memory content to MEMDUMP");
-            writeln("?r       Print register information");
-            writeln("?v       Toggle verbose mode");
+            puts("?run     Run the VM");
+            puts("?load    Load a file");
+            puts("?dump    Dump memory content to MEMDUMP");
+            puts("?r       Print register information");
+            puts("?v       Toggle verbose mode");
             break;
         default:
-            writeln("Bad command or file name");
+            puts("Bad command or file name");
             break;
         }
     }
@@ -400,7 +400,7 @@ void Raise(ubyte code)
          */
         case 2:
             AL = DL;
-            write(cast(char)AL);
+            printf("%c", AL);
             break;
         /*
          * 05h - Write character to printer.
@@ -473,10 +473,10 @@ void Raise(ubyte code)
             version (LittleEndian) {
                 char* p = cast(char*)&bank[0] + pd;
                 while (*p != '$')
-                    write(*p++);
+                    printf("%c", *p++);
             } else {
                 while (bank[pd] != '$')
-                    write(cast(char)bank[pd++]);
+                    printf("%c", bank[pd++]);
             }
 
             AL = 0x24;
@@ -1200,7 +1200,7 @@ void Raise(ubyte code)
 
         break;
     case 0x29: // FAST CONSOLE OUTPUT
-        write(cast(char)AL);
+        printf("%c", AL);
         break;
     default: break;
     }

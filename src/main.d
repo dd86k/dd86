@@ -7,7 +7,8 @@
 
 module main;
 
-import std.stdio, std.getopt;
+import core.stdc.stdio;
+import std.getopt;
 import dd_dos : APP_VERSION, APP_NAME, EnterVShell;
 import Interpreter : Initiate, Verbose, Sleep, Run;
 import Loader : LoadFile;
@@ -17,23 +18,28 @@ import ddcon : InitConsole;
 debug { } else
 {
     extern (C) __gshared bool
-        rt_envvars_enabled = false, rt_cmdline_enabled = false;
+        rt_envvars_enabled,
+		rt_cmdline_enabled;
 }
 
+extern(C)
 private void DisplayVersion()
 {
     import core.stdc.stdlib : exit;
-	writefln("%s - v%s  (%s)", APP_NAME, APP_VERSION, __TIMESTAMP__);
-    writeln("Copyright (c) 2017 dd86k, using MIT license");
-	writeln("Project page: <https://github.com/dd86k/dd-dos>");
-    writefln("Compiled %s using %s v%s", __FILE__, __VENDOR__, __VERSION__);
+	printf("%s v%s  (%s)\n",
+        cast(char*)APP_NAME, cast(char*)APP_VERSION, cast(char*)__TIMESTAMP__);
+    puts("Copyright (c) 2017 dd86k, using MIT license");
+	puts("Project page: <https://github.com/dd86k/dd-dos>");
+    printf("Compiled %s using %s v%d\n",
+        cast(char*)__FILE__, cast(char*)__VENDOR__, __VERSION__);
     exit(0); // getopt hack
 }
 
 private void DisplayHelp(string name = APP_NAME)
 {
-    writefln("  %s  [-p <Program> [-a <Arguments>]] [-M] [-V]", name);
-    writefln("  %s  {-h|--help|/?|-v|--version}", name);
+    puts("A mini DOS virtual machine.");
+    puts("Usage:");
+    puts("  dd-dos  [OPTIONS]");
 }
 
 /**
@@ -62,7 +68,8 @@ int main(string[] args)
             config.caseSensitive,
             "v|version", "Print version screen.", &DisplayVersion);
 	} catch (GetOptException ex) {
-		stderr.writeln("Error: ", ex.msg);
+		//stderr.writeln("Error: ", ex.msg);
+        printf("ERROR: %s\n", cast(char*)ex.msg);
         return 1;
 	}
 
@@ -71,25 +78,28 @@ int main(string[] args)
     if (r.helpWanted)
     {
         DisplayHelp;
-        writeln("\nSwitches (Default: Off)");
+        puts("\nSwitches (Default: Off)");
         foreach (it; r.options)
         { // "custom" and nicer defaultGetoptPrinter
-            writefln("%*s, %-*s%s%s",
-                4,  it.optShort,
-                12, it.optLong,
-                it.required ? "Required: " : " ",
-                it.help);
+            printf("%*s, %-*s%s%s\n",
+                4,  cast(char*)it.optShort,
+                12, cast(char*)it.optLong,
+                it.required ? "Required: " : cast(char*)" ",
+                cast(char*)it.help);
         }
         return 0;
 	}
 
-    if (Verbose) log("Verbose mode is ON");
-    if (Verbose) logs("Max performance is ", Sleep ? "OFF" : "ON");
+    if (Verbose)
+        log("Verbose mode is ON");
+    if (Verbose)
+        logs("Max performance is ", Sleep ? "OFF" : "ON");
 
-    if (!smsg) writeln("DD-DOS is starting...");
+    if (!smsg)
+		puts("DD-DOS is starting...");
 
-    InitConsole();
-    Initiate(); // dd-dos
+    InitConsole;
+    Initiate; // dd-dos
 
     if (init_file)
     {

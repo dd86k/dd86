@@ -4,7 +4,9 @@
 
 module Loader;
 
-import std.stdio, std.path, std.file;
+import core.stdc.stdio;
+import std.stdio : File;
+import std.path, std.file;
 import dd_dos, Interpreter, InterpreterUtils, Logger;
 
 /// MS-DOS EXE header
@@ -175,8 +177,10 @@ void LoadFile(string path, string args = null)
                 default: break; // null is included here.
             }
         }
-        else if (Verbose) writeln("[VMLE] File is too big.");
+        else if (Verbose)
+            puts("[VMLE] File is too big\n");
     }
     else if (Verbose)
-        writefln("[VMLE] File %s does not exist, skipping.", path);
+        printf("[VMLE] File %s does not exist, skipping\n",
+            cast(char*)path);
 }

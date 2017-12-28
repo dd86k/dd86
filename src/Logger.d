@@ -1,6 +1,7 @@
 module Logger;
 
-import std.stdio;
+import core.stdc.stdio;
+import std.string : format;
 
 bool Logging;
 
@@ -15,9 +16,9 @@ void log(string msg, int level = 1, string src = __FILE__)
 {
     //import std.string : format;
     version (Have_dd_dos) // DUB with src\
-        writefln("[VM%c%c] %s", src[4], getLevel(level), msg);
+        printf("[VM%c%c] %s\n", src[4], getLevel(level), cast(char*)msg);
     else // Compiled manually
-        writefln("[VM%c%c] %s", src[0], getLevel(level), msg);
+        printf("[VM%c%c] %s\n", src[0], getLevel(level), cast(char*)msg);
 
     //TODO: Logging in file
 }
@@ -32,25 +33,22 @@ void logs(string msg, string v, int level = 1, string src = __FILE__)
 /// Log hex byte
 void loghb(string msg, ubyte op, int level = 1, string src = __FILE__)
 {
-    import std.string : format;
     log(format("%s%02X", msg, op), level, src);
 }
 
 /// Log decimal
 void logd(string msg, long op, int level = 1, string src = __FILE__)
 {
-    import std.string : format;
     log(format("%s%d", msg, op), level, src);
 }
 
 private char getLevel(int level)
 {
-    switch (level)
-    {
-        case 1: return 'I';
-        case 2: return 'W';
-        case 3: return 'E';
-        case 4: return '!';
-        default:return '?';
+    switch (level) {
+    case 1: return 'I';
+    case 2: return 'W';
+    case 3: return 'E';
+    case 4: return '!';
+    default: return '?';
     }
 }

@@ -9,7 +9,8 @@
 
 module ddcon;
 
-private import std.stdio;
+//private import std.stdio;
+private import core.stdc.stdio;
 private alias sys = core.stdc.stdlib.system;
 
 version (Windows)
@@ -20,8 +21,8 @@ version (Windows)
     private enum DEFAULT_COLOR =
         FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
     /// Necessary handles.
-    private HANDLE hIn, hOut;
-    private USHORT defaultColor = DEFAULT_COLOR;
+    private __gshared HANDLE hIn, hOut;
+    private __gshared USHORT defaultColor = DEFAULT_COLOR;
 }
 else version (Posix)
 {
@@ -29,7 +30,7 @@ else version (Posix)
     private import core.sys.posix.unistd;
     private import core.sys.posix.termios;
     private enum TERM_ATTR = ~ICANON & ~ECHO;
-    private termios old_tio, new_tio;
+    private __gshared termios old_tio, new_tio;
 }
 
 /*******************************************************************
@@ -220,16 +221,16 @@ void InvertColor()
 {
     version (Windows)
         SetConsoleTextAttribute(hOut, COMMON_LVB_REVERSE_VIDEO | defaultColor);
-    else version (Posix)
-        write("\033[7m");
+    version (Posix)
+        printf("\033[7m");
 }
 
 void ResetColor()
 {
     version (Windows)
         SetConsoleTextAttribute(hOut, defaultColor);
-    else version (Posix)
-        write("\033[0m");
+    version (Posix)
+        printf("\033[0m");
 }
 
 /*******************************************************************
@@ -244,7 +245,7 @@ void Clear()
         CONSOLE_SCREEN_BUFFER_INFO csbi;
         COORD c;
         GetConsoleScreenBufferInfo(hOut, &csbi);
-        int size = csbi.dwSize.X * csbi.dwSize.Y;
+        const int size = csbi.dwSize.X * csbi.dwSize.Y;
         DWORD num = 0;
         if (FillConsoleOutputCharacterA(hOut, ' ', size, c, &num) == 0
             /*|| // .NET uses this but no idea why.
@@ -252,8 +253,8 @@ void Clear()
         {
             SetPos(0, 0);
         }
-        else // If that fails, run cls.
-            sys ("cls");
+        /*else // If that fails, run cls.
+            sys ("cls");*/
     }
     else version (Posix)
     { //TODO: Clear (Posix)
@@ -363,7 +364,7 @@ void SetPos(int x, int y)
     }
     else version (Posix)
     { // 1-based
-        write("\033[", y + 1, ";", x + 1, "H");
+        printf("\033[%d;%dH", y + 1, x + 1);
     }
 }
 
@@ -400,64 +401,6 @@ void SetPos(int x, int y)
 }*/
 
 /*******************************************************************
- * Titles
- *******************************************************************/
-
-/// Set session title
-/// Param: value = Title to set
-@property void Title(string value)
-{
-    version (Windows)
-    {
-        // Sanity check
-        if (value[$-1] != '\0') value ~= '\0';
-        SetConsoleTitleA(&value[0]);
-    }
-}
-
-/// Set session title
-/// Param: value = Title to set
-@property void Title(wstring value)
-{
-    version (Windows)
-    {
-        // Sanity check
-        if (value[$-1] != '\0') value ~= '\0';
-        SetConsoleTitleW(&value[0]);
-    }
-}
-
-/// Get session title
-/// Returns: Console title
-@property string Title()
-{
-    version (Windows)
-    {
-        char[255] buf;
-        return buf[0..GetConsoleTitleA(&buf[0], MAX_PATH)].idup;
-    }
-    else 
-    {
-        return null;
-    }
-}
-
-/// Get session title
-/// Returns: Console title
-@property wstring TitleW()
-{
-    version (Windows)
-    {
-        wchar[255] buf;
-        return buf[0..GetConsoleTitleW(&buf[0], MAX_PATH)].idup;
-    }
-    else 
-    {
-        return null;
-    }
-}
-
-/*******************************************************************
  * Input
  *******************************************************************/
 
@@ -485,7 +428,7 @@ KeyInfo ReadKey(bool echo = false)
                 k.keyCode  = ir.KeyEvent.wVirtualKeyCode;
                 k.scanCode = ir.KeyEvent.wVirtualScanCode;
  
-                if (echo) write(k.keyChar);
+                if (echo) printf("%c", k.keyChar);
             }
         }
     }
@@ -594,10 +537,10 @@ RawEvent ReadGlobal()
  * Handlers
  *******************************************************************/
 
-void SetCtrlHandler(void function() f)
+/*void SetCtrlHandler(void function() f)
 { //TODO: Ctrl handler
 
-}
+}*/
 
 /*******************************************************************
  * Emunerations

@@ -9,7 +9,7 @@ import Interpreter;
 /*
  * Registers
  */
-
+extern (C)
 void HandleRMByte(const ubyte rm)
 {
 
@@ -21,6 +21,7 @@ void HandleRMByte(const ubyte rm)
  *   rm = ModR/M byte
  *   direction = If Direction bit is set (acts like an int)
  */
+extern (C)
 void HandleRMWord(const ubyte rm, const int direction)
 {
     //TODO: Figure out prefered segreg (when prefix override)
@@ -74,6 +75,7 @@ void HandleRMWord(const ubyte rm, const int direction)
     }
 }
 
+extern (C)
 private ushort getRMRegWord(const ubyte rm)
 {
     final switch (rm & 0b111)
@@ -89,10 +91,10 @@ private ushort getRMRegWord(const ubyte rm)
     }
 }
 
+extern (C)
 private void setRMRegWord(const ubyte rm, const ushort v)
 {
-    final switch (rm & 0b111)
-    {
+    final switch (rm & 0b111) {
     case 0: AX = v; break;
     case 1: CX = v; break;
     case 2: DX = v; break;
@@ -111,6 +113,7 @@ private void setRMRegWord(const ubyte rm, const ushort v)
  *   rm = ModR/M byte
  *   addr = Calculated address
  */
+extern (C)
 private void SetRegRMWord(const ubyte rm, const uint addr)
 {
     final switch (rm & 0b111_000)
@@ -133,6 +136,7 @@ private void SetRegRMWord(const ubyte rm, const uint addr)
  *   rm = ModR/M byte
  *   addr = Calculated address
  */
+extern (C)
 private void SetRegRMByte(const ubyte rm, uint addr)
 {
     final switch (rm & 0b111_000)
@@ -158,6 +162,7 @@ private void SetRegRMByte(const ubyte rm, uint addr)
  *   addr = Physical address.
  *   value = WORD v alue.
  */
+extern (C)
 void SetWord(uint addr, ushort value) {
     version (X86_ANY)
         *(cast(ushort *)&bank[addr]) = value;
@@ -179,8 +184,10 @@ void Insert(ubyte[] ops, size_t offset = 0)
 }
 
 /// Insert number at CS:IP.
+extern (C)
 void InsertImm(uint op, size_t addr = 1)
 {
+    //TODO: Maybe re-write this part
     ubyte* bankp = cast(ubyte*)&op;
     addr += GetIPAddress;
     bank[addr] = *bankp;
@@ -193,7 +200,9 @@ void InsertImm(uint op, size_t addr = 1)
         }
     }
 }
+
 /// Insert a number in memory.
+extern (C)
 void Insert(int op, size_t addr)
 {
     ubyte* bankp = cast(ubyte*)&op;
@@ -234,10 +243,12 @@ ubyte FetchImmByte(int offset) {
     return bank[GetIPAddress + offset + 1];
 }
 /// Fetch an unsigned byte (ubyte).
+extern (C)
 ubyte FetchByte(uint addr) {
     return bank[addr];
 }
 /// Fetch an immediate byte (byte).
+extern (C)
 byte FetchImmSByte() {
     return cast(byte)bank[GetIPAddress + 1];
 }
@@ -259,6 +270,7 @@ ushort FetchWord(uint addr) {
         return cast(ushort)(bank[addr] | bank[addr + 1] << 8);
 }
 /// Fetch an immediate unsigned word with optional offset.
+extern (C)
 ushort FetchImmWord(uint offset = 0) {
     version (X86_ANY)
         return *(cast(ushort*)&bank[GetIPAddress + offset + 1]);
@@ -268,6 +280,7 @@ ushort FetchImmWord(uint offset = 0) {
     }
 }
 /// Fetch an immediate word (short).
+extern (C)
 short FetchSWord(uint addr) {
     version (X86_ANY)
         return *(cast(short*)&bank[addr]);
@@ -276,6 +289,7 @@ short FetchSWord(uint addr) {
         return cast(short)(bank[addr] | bank[addr + 1] << 8);
     }
 }
+extern (C)
 short FetchImmSWord(uint offset = 0) {
     version (X86_ANY)
         return *(cast(short*)&bank[GetIPAddress + offset + 1]);

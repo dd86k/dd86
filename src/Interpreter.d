@@ -4,32 +4,34 @@
 
 module Interpreter;
 
-import std.stdio;
 import dd_dos, InterpreterUtils, Logger;
 
 //TODO: Function that sets FLAGS (int num, int size (1/2/4/8))
 
-/// Initial amount of memory.
+/// Initial and maximum amount of memory.
 enum MAX_MEM = 0xA_0000; // 640 KB, 0x10_0000 being 1 MB
 
 /// Sleep for n hecto-nanoseconds
-pragma(inline, true) private void HSLEEP(int n) {
+pragma(inline, true) extern (C)
+private void HSLEEP(int n) {
     import core.thread : Thread;
     import core.time : hnsecs;
     Thread.sleep(hnsecs(n));
 }
 
 /// Sleep for n nanoseconds
-pragma(inline, true) private void NSLEEP(int n) {
+pragma(inline, true) extern (C)
+private void NSLEEP(int n) {
     import core.thread : Thread;
     import core.time : nsecs;
     Thread.sleep(nsecs(n));
 }
 
 /// Initiate machine (memory, etc.)
-void Initiate()
-{
-    bank = new ubyte[MAX_MEM]; CS = 0xFFFF;
+extern (C)
+void Initiate() {
+    bank = new ubyte[MAX_MEM];
+    CS = 0xFFFF;
 
     AXp = cast(ushort*)&EAX;
     BXp = cast(ushort*)&EBX;
@@ -48,6 +50,7 @@ void Initiate()
 }
 
 /// Start!
+extern (C)
 void Run()
 {
     if (Verbose) log("Running...");
@@ -60,14 +63,14 @@ void Run()
 }
 
 /// Is vcpu sleeping between cycles?
-bool Sleep = true;
+__gshared bool Sleep = true;
 /// Is currently running?
-bool Running = true;
+__gshared bool Running = true;
 /// Is verbose?
-bool Verbose;
+__gshared bool Verbose;
 
 /// Main memory brank;
-ubyte[] bank;
+__gshared ubyte[] bank;
 
 /**
  * Get memory address out of a segment and a register value.
@@ -76,6 +79,7 @@ ubyte[] bank;
  *   offset  = Generic register value
  * Returns: SEG:ADDR Location
  */
+extern (C)
 uint GetAddress(int segment, int offset)
 {
     return (segment << 4) + offset;
@@ -84,12 +88,14 @@ uint GetAddress(int segment, int offset)
  * Get next instruction location
  * Returns: CS:IP address
  */
+extern (C)
 uint GetIPAddress()
 {
     return GetAddress(CS, IP);
 }
 
 /// RESET instruction function
+extern (C)
 void Reset()
 {
     OF = DF = IF = TF = SF =
@@ -100,6 +106,7 @@ void Reset()
 }
 
 /// Resets the entire vCPU, does not refer to the instruction.
+extern (C)
 void FullReset()
 {
     Reset();
@@ -108,9 +115,9 @@ void FullReset()
 }
 
 /// Generic register
-uint EAX, EBX, ECX, EDX;
-private ubyte* ALp, BLp, CLp, DLp;
-private ushort* AXp, BXp, CXp, DXp;
+__gshared uint EAX, EBX, ECX, EDX;
+private __gshared ubyte* ALp, BLp, CLp, DLp;
+private __gshared ushort* AXp, BXp, CXp, DXp;
 
 /*
  * Register properties.
@@ -119,117 +126,149 @@ private ushort* AXp, BXp, CXp, DXp;
 
 /// Get AX
 /// Returns: WORD
-@property ushort AX() { return *AXp; }
+@property
+ushort AX() { return *AXp; }
 /// Get AH
 /// Returns: BYTE
-@property ubyte  AH() { return *(ALp + 1); }
+@property
+ubyte  AH() { return *(ALp + 1); }
 /// Get AL
 /// Returns: BYTE
-@property ubyte  AL() { return *ALp; }
+@property
+ubyte  AL() { return *ALp; }
 /// Set AX
 /// Params: v = WORD
-@property void   AX(int v) { *AXp = cast(ushort)v; }
+@property
+void   AX(int v) { *AXp = cast(ushort)v; }
 /// Set AH
 /// Params: v = BYTE
-@property void   AH(int v) { *(ALp + 1) = cast(ubyte)v; }
+@property
+void   AH(int v) { *(ALp + 1) = cast(ubyte)v; }
 /// Set AL
 /// Params: v = BYTE
-@property void   AL(int v) { *ALp = cast(ubyte)v; }
+@property
+void   AL(int v) { *ALp = cast(ubyte)v; }
 
 /// Get BX
 /// Returns: WORD
-@property ushort BX() { return *BXp; }
+@property
+ushort BX() { return *BXp; }
 /// Get BH
 /// Returns: BYTE
-@property ubyte  BH() { return *(BLp + 1); }
+@property
+ubyte  BH() { return *(BLp + 1); }
 /// Get BL
 /// Returns: BYTE
-@property ubyte  BL() { return *BLp; }
+@property
+ubyte  BL() { return *BLp; }
 /// Set BX
 /// Params: v = WORD
-@property void   BX(int v) { *BXp = cast(ushort)v; }
+@property
+void   BX(int v) { *BXp = cast(ushort)v; }
 /// Set BH
 /// Params: v = BYTE
-@property void   BH(int v) { *(BLp + 1) = cast(ubyte)v; }
+@property
+void   BH(int v) { *(BLp + 1) = cast(ubyte)v; }
 /// Set BL
 /// Params: v = BYTE
-@property void   BL(int v) { *BLp = cast(ubyte)v; }
+@property
+void   BL(int v) { *BLp = cast(ubyte)v; }
 
 /// Get CX
 /// Returns: WORD
-@property ushort CX() { return *CXp; }
+@property
+ushort CX() { return *CXp; }
 /// Get CH
 /// Returns: BYTE
-@property ubyte  CH() { return *(CLp + 1); }
+@property
+ubyte  CH() { return *(CLp + 1); }
 /// Get CL
 /// Returns: BYTE
-@property ubyte  CL() { return *CLp; }
+@property
+ubyte  CL() { return *CLp; }
 /// Set CX
 /// Params: v = WORD
-@property void   CX(int v) { *CXp = cast(ushort)v; }
+@property
+void   CX(int v) { *CXp = cast(ushort)v; }
 /// Set CH
 /// Params: v = BYTE
-@property void   CH(int v) { *(CLp + 1) = cast(ubyte)v; }
+@property
+void   CH(int v) { *(CLp + 1) = cast(ubyte)v; }
 /// Set CL
 /// Params: v = BYTE
-@property void   CL(int v) { *CLp = cast(ubyte)v; }
+@property
+void   CL(int v) { *CLp = cast(ubyte)v; }
 
 /// Get DX
 /// Returns: WORD
-@property ushort DX() { return *DXp; }
+@property
+ushort DX() { return *DXp; }
 /// Get DH
 /// Returns: BYTE
-@property ubyte  DH() { return *(DLp + 1); }
+@property
+ubyte  DH() { return *(DLp + 1); }
 /// Get CL
 /// Returns: BYTE
-@property ubyte  DL() { return *DLp; }
+@property
+ubyte  DL() { return *DLp; }
 /// Set DX
 /// Params: v = WORD
-@property void   DX(int v) { *DXp = cast(ushort)v; }
+@property
+void   DX(int v) { *DXp = cast(ushort)v; }
 /// Set DH
 /// Params: v = BYTE
-@property void   DH(int v) { *(DLp + 1) = cast(ubyte)v; }
+@property
+void   DH(int v) { *(DLp + 1) = cast(ubyte)v; }
 /// Set DL
 /// Params: v = BYTE
-@property void   DL(int v) { *DLp = cast(ubyte)v; }
+@property
+void   DL(int v) { *DLp = cast(ubyte)v; }
 
 /// Index register
-uint ESI, EDI, EBP, ESP;
-private ushort* SIp, DIp, BPp, SPp;
+__gshared uint ESI, EDI, EBP, ESP;
+private __gshared ushort* SIp, DIp, BPp, SPp;
 
 /// Get SI register
 /// Returns: SI
-@property ushort SI() { return *SIp; }
+@property
+ushort SI() { return *SIp; }
 /// Get DI register
 /// Returns: DI
-@property ushort DI() { return *DIp; }
+@property
+ushort DI() { return *DIp; }
 /// Get BP register
 /// Returns: BP
-@property ushort BP() { return *BPp; }
+@property
+ushort BP() { return *BPp; }
 /// Get SP register
 /// Returns: SP
-@property ushort SP() { return *SPp; }
+@property
+ushort SP() { return *SPp; }
 /// Set SI register
 /// Params: v = Set SI value
-@property void SI(int v) { *SIp = v & 0xFFFF; }
+@property
+void SI(int v) { *SIp = v & 0xFFFF; }
 /// Set DI register
 /// Params: v = Set DI value
-@property void DI(int v) { *DIp = v & 0xFFFF; }
+@property
+void DI(int v) { *DIp = v & 0xFFFF; }
 /// Set BP register
 /// Params: v = Set BP value
-@property void BP(int v) { *BPp = v & 0xFFFF; }
+@property
+void BP(int v) { *BPp = v & 0xFFFF; }
 /// Set SP register
 /// Params: v = Set SP value
-@property void SP(int v) { *SPp = v & 0xFFFF; }
+@property
+void SP(int v) { *SPp = v & 0xFFFF; }
 
 /// Segment register
-ushort CS, SS, DS, ES,
+__gshared ushort CS, SS, DS, ES,
        FS, GS; // i386
 
 /// Program Counter
 //uint EIP;
 //private ushort* IPp;
-ushort IP;
+__gshared ushort IP;
 //@property ushort IP() { return *IP; }
 //@property void IP(int v) { IP = v & 0xFFFF; }
 
@@ -252,6 +291,7 @@ private enum {
 
 }
 
+__gshared
 bool OF, /// Bit 11, Overflow Flag
      DF, /// Bit 10, Direction Flag
      IF, /// Bit  9, Interrupt Enable Flag
@@ -267,6 +307,7 @@ bool OF, /// Bit 11, Overflow Flag
  * Params:
  *   value = WORD value to PUSH
  */
+extern (C)
 void Push(ushort value)
 {
     SP = SP - 2;
@@ -276,6 +317,7 @@ void Push(ushort value)
  * Pop value from stack.
  * Returns: POP'd WORD value
  */
+extern (C)
 ushort Pop()
 {
     const uint addr = GetAddress(SS, SP);
@@ -335,13 +377,14 @@ ushort Pop()
 }
 
 /// Preferred Segment register
-private uint Seg;
+private __gshared uint Seg;
 
 // Rest of the source here is solely this function.
 /**
  * Execute an operation code, acts like the ALU from an Intel 8086.
  * Params: op = Operation Code
  */
+extern (C)
 void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 {
     //TODO: Seg (uint)
