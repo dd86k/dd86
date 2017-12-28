@@ -5,24 +5,24 @@ import Interpreter, InterpreterUtils, std.stdio, dd_dos, std.file : exists;
 unittest
 {
     writeln("---------- DD-DOS (MS-DOS, IBM PC)");
-    
+
     /*
      * Hardware (and/or BIOS)
      */
 
     // MEMORY SIZE
-    
+
     write("INT 12h: ");
     Raise(0x12);
     assert(banksize / 1024 == AX);
-    writeln("OK -- ", AX, " KB | ", AX / 1024, " MB");
+    writeln("OK  (", AX, " KB)");
 
     /*
      * Software (Other)
      */
 
     // FAST CONSOLE OUTPUT (DOS)
-    
+
     write("INT 29h: ");
     AL = 'O';
     Raise(0x29);
@@ -36,7 +36,7 @@ unittest
      */
 
     // FAST CONSOLE OUTPUT (MS-DOS)
-    
+
     write("INT 21h->02_00h: ");
     AH = 2;
     DL = 'O';
@@ -47,7 +47,7 @@ unittest
     Raise(0x21);
 
     // "HELLO WORLD"
-    
+
     write("INT 21h->09_00h: ");
     DS = CS = 0x400;
     DX = EIP = 0x20;
@@ -74,7 +74,7 @@ unittest
     writefln(" %d/%d/%d", DL, DH, CX);
 
     // GET TIME
-    
+
     write("INT 21h->2C_00h: ");
     AH = 0x2C;
     Raise(0x21);

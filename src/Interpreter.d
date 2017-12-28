@@ -59,6 +59,7 @@ void Run() {
 	if (Verbose)
 		log("Running...");
 
+	Running = true;
 	while (Running) {
 		Execute(bank[GetIPAddress]);
 		if (Sleep)
@@ -67,10 +68,10 @@ void Run() {
 }
 
 /// Is vcpu sleeping between cycles?
-__gshared bool Sleep = true;
-/// Is currently running?
-__gshared bool Running = true;
-/// Is verbose?
+__gshared bool Sleep;
+/// Is vcpu currently running?
+__gshared bool Running;
+/// Is Verbose mode set?
 __gshared bool Verbose;
 
 /// Main memory brank

@@ -7,7 +7,7 @@ unittest
     Initiate;
 
     import core.stdc.string : memset;
-    writeln("---------- Interpreter (vm8086)");
+    writeln("---------- Interpreter (8086/i486)");
 
     Initiate;
     CS = 0;

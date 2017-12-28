@@ -101,13 +101,18 @@ void EnterVShell()
 					for (int i; i < bl; ++i) if (bank[i]) ++nz;
 					puts("Memory statistics      Non-Zero");
 					puts("--------------------   --------");
-					printf("Total                  %*s KB", 8, nz * 1024);
-					continue;
+					printf("Total               %8d KB\n", nz / 1024);
+					break;
 				case "/DEBUG":
 					puts("Not implemented");
 					break;
 				case "/?":
-					puts("/STATS -- Memory statistics");
+					puts("Display memory statistics");
+					puts("  MEM [OPTIONS]");
+					puts("");
+					puts("OPTIONS");
+					puts("/DEBUG    Not implemented");
+					puts("/STATS    Scan memory and show statistics");
 					break;
 				default:
 				}

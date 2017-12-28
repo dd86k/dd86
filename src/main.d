@@ -72,22 +72,23 @@ int main(string[] args) {
         return 1;
 	}
 
-	// Enabled by default for debug builds but can be toggled off
-    debug Verbose = !Verbose;
+    Sleep = !Sleep;
 
     if (r.helpWanted) {
         DisplayHelp;
         puts("\nOPTIONS (All defaults: Off)");
-        foreach (it; r.options)
-        { // "custom" and nicer defaultGetoptPrinter
-            printf("%*s, %-*s%s%s\n",
+        foreach (it; r.options) {
+            // "custom" and nicer defaultGetoptPrinter
+            printf("%*s, %-*s %s\n",
                 4,  cast(char*)it.optShort,
                 12, cast(char*)it.optLong,
-                it.required ? "Required: " : cast(char*)" ",
                 cast(char*)it.help);
         }
         return 0;
 	}
+
+	// Enabled by default for debug builds but can be toggled off
+    debug Verbose = !Verbose;
 
     if (Verbose) {
         debug log("Debug mode is ON");
@@ -101,7 +102,7 @@ int main(string[] args) {
 	}
 
     InitConsole; // Initiates console screen (ddcon)
-    Initiate; // Initiates vpcpu
+    Initiate; // Initiates vcpu
 
     if (!smsg) {
 		puts(BANNER); // Defined in dd_dos.d
