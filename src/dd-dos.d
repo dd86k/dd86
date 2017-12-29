@@ -78,13 +78,13 @@ void EnterVShell()
 			puts("VER            Show DOS version.");
 			break;
 		case "VER":
-			if (s.length > 1)
+			if (s.length > 1) {
 				switch (toUpper(s[1])) { //toUpper in-case of future sub commands
-				case "/?": break;
+				case "/?":
+					break;
 				default:
 				}
-			else
-			{
+			} else {
 				puts("");
 				printf("DD-DOS Version %s\n", cast(char*)APP_VERSION);
 				printf("MS-DOS Version %d.%d\n", MajorVersion, MinorVersion);
@@ -96,9 +96,10 @@ void EnterVShell()
 				switch (toUpper(s[1])) {
 				case "/STATS":
 					puts("Fetching memory statistics...");
-					int nz;
-					const size_t bl = banksize;
-					for (int i; i < bl; ++i) if (bank[i]) ++nz;
+					int nz; // Non-zero
+					for (int i; i < banksize; ++i) {
+						if (bank[i]) ++nz;
+					}
 					puts("Memory statistics      Non-Zero");
 					puts("--------------------   --------");
 					printf("Total               %8d KB\n", nz / 1024);
@@ -106,10 +107,10 @@ void EnterVShell()
 				case "/DEBUG":
 					puts("Not implemented");
 					break;
+				//case "/FREE":
 				case "/?":
 					puts("Display memory statistics");
-					puts("  MEM [OPTIONS]");
-					puts("");
+					puts("  MEM [OPTIONS]\n");
 					puts("OPTIONS");
 					puts("/DEBUG    Not implemented");
 					puts("/STATS    Scan memory and show statistics");
@@ -130,7 +131,7 @@ void EnterVShell()
 			else
 				puts(cast(char*)getcwd);
 			break;
-		case "CLS": Clear(); break;
+		case "CLS": Clear; break;
 		case "EXIT": return;
 		case "TIME":
 			AH = 0x2C;
@@ -157,9 +158,9 @@ void EnterVShell()
 
 		case "?LOAD":
 			if (s.length > 1) // Is a file provided?
-				LoadFile(s[1]);
+				LoadExec(s[1]);
 			break;
-		case "?RUN": Run(); break;
+		case "?RUN": Run; break;
 		case "?V":
 			Verbose = !Verbose;
 			if (Verbose)
@@ -243,7 +244,8 @@ void MakePSP(uint location, string appname, string args = null)
 /// Params: code = Interrupt byte
 void Raise(ubyte code)
 {
-	if (Verbose) loghb("INTERRUPT: 0x", code);
+	if (Verbose)
+		loghb("INTERRUPT: 0x", code);
 
 	// REAL-MODE
 	//const inum = code << 2;
@@ -289,8 +291,8 @@ void Raise(ubyte code)
 		 */
 		case 0x03:
 			AX = 0;
-			//DH = CursorTop  & 0xFF;
-			//DL = CursorLeft & 0xFF;
+			//DH = cast(ubyte)CursorTop;
+			//DL = cast(ubyte)CursorLeft;
 			break;
 		/*
 		 * VIDEO - Read light pen position
@@ -359,7 +361,6 @@ void Raise(ubyte code)
 		// AL (Midnight flag)
 
 			break;
-
 		case 1: // Set system time
 		// CX:DX (Number of clock ticks since midnight)
 			break;
@@ -401,7 +402,7 @@ void Raise(ubyte code)
 		 * - ^Z is not interpreted.
 		 */
 		case 1:
-			AL = ReadKey.keyCode & 0xFF;
+			AL = cast(ubyte)ReadKey.keyCode;
 			break;
 		/*
 		 * 02h - Write character to stdout.

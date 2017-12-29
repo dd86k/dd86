@@ -11,7 +11,7 @@ import core.stdc.stdio;
 import std.getopt;
 import dd_dos : APP_VERSION, APP_NAME, BANNER, EnterVShell;
 import Interpreter : Initiate, Verbose, Sleep, Run;
-import Loader : LoadFile;
+import Loader : LoadExec;
 import Logger;
 import ddcon : InitConsole;
 
@@ -72,8 +72,6 @@ int main(string[] args) {
         return 1;
 	}
 
-    Sleep = !Sleep;
-
     if (r.helpWanted) {
         DisplayHelp;
         puts("\nOPTIONS (All defaults: Off)");
@@ -87,7 +85,8 @@ int main(string[] args) {
         return 0;
 	}
 
-	// Enabled by default for debug builds but can be toggled off
+    // The "blame getopt for only doing off to on switches" section
+    Sleep = !Sleep;
     debug Verbose = !Verbose;
 
     if (Verbose) {
@@ -97,20 +96,18 @@ int main(string[] args) {
 			log("Maximum performance is ACTIVE");
 	}
 
-    if (!smsg) {
+    if (!smsg)
 		puts("DD-DOS is starting...");
-	}
 
     InitConsole; // Initiates console screen (ddcon)
     Initiate; // Initiates vcpu
 
-    if (!smsg) {
+    if (!smsg)
 		puts(BANNER); // Defined in dd_dos.d
-	}
 
     if (init_file) {
-        LoadFile(init_file, init_args);
-        Run; // vcpu had been initiated a little earlier anyway
+        LoadExec(init_file, init_args);
+        Run; // vcpu already initiated
     } else {
         EnterVShell;
     }

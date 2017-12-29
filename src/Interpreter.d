@@ -9,7 +9,8 @@ module Interpreter;
 import dd_dos, InterpreterUtils, Logger;
 
 /// Initial and maximum amount of memory.
-enum MAX_MEM = 0xA_0000; // 640 KB
+enum MAX_MEM = 0x10_0000;
+// Some memory configurations
 // 0x4_0000   256 KB -- Minimal goal
 // 0xA_0000   640 KB
 // 0x10_0000    1 MB
@@ -276,7 +277,11 @@ __gshared ushort CS, SS, DS, ES,
 /// Program Counter
 __gshared uint EIP;
 private __gshared ushort* IPp;
+/// Get Instruction Pointer
+/// Returns: IP
 @property ushort IP() { return *IPp; }
+/// Set Instruction Pointer
+/// Params: v = Set IP value
 @property void IP(int v) { *IPp = cast(ushort)v; }
 
 /*
@@ -387,8 +392,7 @@ uint EPop()
 
 /// Set FLAG as WORD.
 /// Params: flag = FLAG word
-@property void FLAG(ushort flag)
-{
+@property void FLAG(ushort flag) {
 	OF = (flag & MASK_OF) != 0;
 	DF = (flag & MASK_DF) != 0;
 	IF = (flag & MASK_IF) != 0;
@@ -724,14 +728,11 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 
 		break;
 	case 0x3F: // AAS
-		if (((AL & 0xF) > 9) || AF)
-		{
+		if (((AL & 0xF) > 9) || AF) {
 			AX = AX - 6;
 			AH = AH - 1;
 			AF = CF = true;
-		}
-		else
-		{
+		} else {
 			AF = CF = false;
 		}
 		AL = AL & 0xF;
@@ -1576,7 +1577,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		++EIP;
 		break;
 	case 0xD5: // AAD
-		AL = (AL + (AH * 0xA)) & 0xFF;
+		AL = cast(ubyte)(AL + (AH * 0xA));
 		AH = 0;
 		++EIP;
 		break;
@@ -1660,15 +1661,13 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		break;
 	case 0xF2: // REPNE/REPNZ
 CHECK_CX:
-		if (CX)
-		{
-			//TODO: Finish REPNE/REPNZ properly
+		if (CX) {
+			//TODO: Finish REPNE/REPNZ properly?
 			Execute(0xA6);
 			CX = CX - 1;
 			if (ZF == 0)
 				goto CHECK_CX;
-		}
-		else ++EIP;
+		} else ++EIP;
 		break;
 	case 0xF3: // REP/REPE/REPNZ
 
@@ -1740,27 +1739,27 @@ CHECK_CX:
 		}*/
 		break;
 	case 0xF8: // CLC
-		CF = false;
+		CF = 0;
 		++EIP;
 		break;
 	case 0xF9: // STC
-		CF = true;
+		CF = 1;
 		++EIP;
 		break;
 	case 0xFA: // CLI
-		IF = false;
+		IF = 0;
 		++EIP;
 		break;
 	case 0xFB: // STI
-		IF = true;
+		IF = 1;
 		++EIP;
 		break;
 	case 0xFC: // CLD
-		DF = false;
+		DF = 0;
 		++EIP;
 		break;
 	case 0xFD: // STD
-		DF = true;
+		DF = 1;
 		++EIP;
 		break;
 	case 0xFE: // GRP4 R/M8
@@ -1808,10 +1807,10 @@ CHECK_CX:
 		break;
 	default: // Illegal instruction
 		if (Verbose)
-			loghb("Illegal instruction : ", op, LogLevel.Error);
+			loghb("ILLEGAL: ", op, LogLevel.Error);
 		//TODO: Raise vector on illegal op
 		
-		++EIP;
+		++EIP; // ??
 		break;
 	}
 }

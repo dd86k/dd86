@@ -64,7 +64,7 @@ void InitConsole()
                 &n
             ) != 0)
         {
-            defaultColor = val & 0xFFFF;
+            defaultColor = cast(ushort)val;
         }*/
 
         /*if (SetConsoleCP(65001) == 0) {
@@ -205,11 +205,11 @@ void SetColor(int n)
 {
     version (Windows)
     {
-        SetConsoleTextAttribute(hOut, n & 0xFFFF);
+        SetConsoleTextAttribute(hOut, cast(ushort)n);
     }
     else version (Posix)
     { // Foreground and background
-        printf("\033[38;5;%dm\033[48;5;%dm", n & 0xff, (n >> 8) & 0xff);
+        printf("\033[38;5;%dm\033[48;5;%dm", cast(ubyte)n, cast(ubyte)(n >> 8));
     }
     else
     {
@@ -481,7 +481,7 @@ KeyInfo ReadKey(bool echo = false)
             break;
         //TODO: The rest
         default:
-            k.keyCode = c & 0xFFFF;
+            k.keyCode = cast(ushort)c;
             break;
         }
 

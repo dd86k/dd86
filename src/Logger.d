@@ -39,11 +39,11 @@ void logs(string msg, string v, int level = 1, string src = __FILE__)
 /// Log hex byte
 void loghb(string msg, ubyte op, int level = 1, string src = __FILE__)
 {
-    log(format("%s%02X", msg, op), level, src);
+    log(format("%s%02X\0", msg, op), level, src);
 }
 
 /// Log decimal
 void logd(string msg, long op, int level = 1, string src = __FILE__)
 {
-    log(format("%s%d", msg, op), level, src);
+    log(format("%s%d\0", msg, op), level, src);
 }
