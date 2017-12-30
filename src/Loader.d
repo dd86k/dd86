@@ -1,5 +1,5 @@
 /*
- * Loader.d : File loader.
+ * Loader.d : Executable file loader.
  */
 
 module Loader;
@@ -37,6 +37,11 @@ private struct mz_rlc { // For AL=03h
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;
 
+private enum {
+	PARAGRAPH = 16,
+	PAGE = 512
+}
+
 /**
  * Load an executable file in memory.
  * Params:
@@ -48,7 +53,7 @@ void LoadExec(string path, string args = null) {
 		if (Verbose)
 			log("File exists");
 
-		FILE* f = fopen(cast(char*)(path ~ '\0'), "rb");
+		FILE* f = fopen(cast(char*)(path ~ '\0'), "rb"); // A little sad, I know
 		fseek(f, 0, SEEK_END);
 		int fsize = ftell(f);
 
@@ -99,11 +104,11 @@ void LoadExec(string path, string args = null) {
 				if (Verbose)
 					log("LOAD IN LOW MEM");
 			}
-			const uint headersize = mzh.e_cparh * 16;
-			uint codesize = (mzh.e_cp * 512) - headersize;
+			const uint headersize = mzh.e_cparh * PARAGRAPH;
+			uint codesize = (mzh.e_cp * PAGE) - headersize;
 			if (mzh.e_cblp) // Adjust codesize for last bytes in page
 				codesize -= 512 - mzh.e_cblp;
-			/*if (headersize + codesize < 512) // Rare case
+			/*if (headersize + codesize < 512)
 				codesize = 512 - headersize;*/
 			if (Verbose) {
 				debug logd("STRUCT_SIZE: ", mzh.sizeof);
@@ -145,7 +150,7 @@ void LoadExec(string path, string args = null) {
 	http://www.fileformat.info/format/exe/corion-mz.htm
 */
 				uint ca = GetIPAddress; // current address
-				ubyte* cap = cast(ubyte*)bank + ca;
+				ubyte* cap = cast(ubyte*)MEMORY + ca;
 				for (int i; i < rn; ++i) { //TODO: relocations
 					uint s = (rlct[i].segment << 4) + rlct[i].offset;
 					//*(cap + s) = idk
@@ -187,7 +192,7 @@ void LoadExec(string path, string args = null) {
 				log("LOAD COM");
 			CS = 0; EIP = 0x100;
 			fseek(f, 0, SEEK_SET);
-			ubyte* _comp = cast(ubyte*)bank + GetIPAddress;
+			ubyte* _comp = cast(ubyte*)MEMORY + GetIPAddress;
 			fread(_comp, fsize, 1, f);
 
 			//MakePSP(_comp - 0x100, "TEST");

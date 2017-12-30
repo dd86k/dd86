@@ -141,14 +141,14 @@ private void SetRegRMByte(const ubyte rm, uint addr)
 {
     final switch (rm & 0b111_000)
     {
-        case 0:     AL = bank[addr]; break;
-        case 0b001: CL = bank[addr]; break;
-        case 0b010: DL = bank[addr]; break;
-        case 0b011: BL = bank[addr]; break;
-        case 0b100: AH = bank[addr]; break;
-        case 0b101: CH = bank[addr]; break;
-        case 0b110: DH = bank[addr]; break;
-        case 0b111: BH = bank[addr]; break;
+        case 0:     AL = MEMORY[addr]; break;
+        case 0b001: CL = MEMORY[addr]; break;
+        case 0b010: DL = MEMORY[addr]; break;
+        case 0b011: BL = MEMORY[addr]; break;
+        case 0b100: AH = MEMORY[addr]; break;
+        case 0b101: CH = MEMORY[addr]; break;
+        case 0b110: DH = MEMORY[addr]; break;
+        case 0b111: BH = MEMORY[addr]; break;
     }
 }
 
@@ -164,11 +164,11 @@ private void SetRegRMByte(const ubyte rm, uint addr)
  */
 extern (C)
 void SetWord(uint addr, ushort value) {
-    *(cast(ushort *)&bank[addr]) = value;
+    *(cast(ushort *)&MEMORY[addr]) = value;
 }
 extern (C)
 void SetDWord(uint addr, uint value) {
-    *(cast(uint *)&bank[addr]) = value;
+    *(cast(uint *)&MEMORY[addr]) = value;
 }
 
 /*
@@ -179,7 +179,7 @@ void SetDWord(uint addr, uint value) {
 void Insert(ubyte[] ops, size_t offset = 0)
 {
     size_t i = GetIPAddress + offset;
-    foreach(b; ops) bank[i++] = b;
+    foreach(b; ops) MEMORY[i++] = b;
 }
 
 /// Insert number at CS:IP.
@@ -189,13 +189,13 @@ void InsertImm(uint op, size_t addr = 1)
     //TODO: Maybe re-write this part
     ubyte* bankp = cast(ubyte*)&op;
     addr += GetIPAddress;
-    bank[addr] = *bankp;
+    MEMORY[addr] = *bankp;
     if (op > 0xFF) {
-        bank[++addr] = *++bankp;
+        MEMORY[++addr] = *++bankp;
         if (op > 0xFFFF) {
-            bank[++addr] = *++bankp;
+            MEMORY[++addr] = *++bankp;
             if (op > 0xFFFFFF)
-                bank[++addr] = *++bankp;
+                MEMORY[++addr] = *++bankp;
         }
     }
 }
@@ -205,13 +205,13 @@ extern (C)
 void Insert(int op, size_t addr)
 {
     ubyte* bankp = cast(ubyte*)&op;
-    bank[addr] = *bankp;
+    MEMORY[addr] = *bankp;
     if (op > 0xFF) {
-        bank[++addr] = *++bankp;
+        MEMORY[++addr] = *++bankp;
         if (op > 0xFFFF) {
-            bank[++addr] = *++bankp;
+            MEMORY[++addr] = *++bankp;
             if (op > 0xFFFFFF)
-                bank[++addr] = *++bankp;
+                MEMORY[++addr] = *++bankp;
         }
     }
 }
@@ -219,7 +219,7 @@ void Insert(int op, size_t addr)
 void Insert(string data, size_t addr = 0)
 {
     if (addr == 0) addr = GetIPAddress;
-    foreach(b; data) bank[addr++] = b;
+    foreach(b; data) MEMORY[addr++] = b;
 }
 /// Insert a wide string in memory.
 deprecated void InsertW(wstring data, size_t addr = 0)
@@ -227,7 +227,7 @@ deprecated void InsertW(wstring data, size_t addr = 0)
     if (addr == 0)
         addr = GetIPAddress;
     size_t l = data.length * 2;
-    ubyte* bp = cast(ubyte*)bank + addr;
+    ubyte* bp = cast(ubyte*)MEMORY + addr;
     ubyte* dp = cast(ubyte*)data;
     for (; l; --l) *bp++ = *dp++;
 }
@@ -237,65 +237,65 @@ deprecated void InsertW(wstring data, size_t addr = 0)
  */
 
 ubyte FetchImmByte() {
-    return bank[GetIPAddress + 1];
+    return MEMORY[GetIPAddress + 1];
 }
 /// Fetch an immediate unsigned byte (ubyte) with offset.
 ubyte FetchImmByte(int offset) {
-    return bank[GetIPAddress + offset + 1];
+    return MEMORY[GetIPAddress + offset + 1];
 }
 /// Fetch an unsigned byte (ubyte).
 extern (C)
 ubyte FetchByte(uint addr) {
-    return bank[addr];
+    return MEMORY[addr];
 }
 /// Fetch an immediate byte (byte).
 extern (C)
 byte FetchImmSByte() {
-    return cast(byte)bank[GetIPAddress + 1];
+    return cast(byte)MEMORY[GetIPAddress + 1];
 }
 
 /// Fetch an immediate unsigned word (ushort).
 ushort FetchWord() {
     version (X86_ANY)
-        return *(cast(ushort*)&bank[GetIPAddress + 1]);
+        return *(cast(ushort*)&MEMORY[GetIPAddress + 1]);
     else {
         const uint addr = GetIPAddress + 1;
-        return cast(ushort)(bank[addr] | bank[addr + 1] << 8);
+        return cast(ushort)(MEMORY[addr] | MEMORY[addr + 1] << 8);
     }
 }
 /// Fetch an unsigned word (ushort).
 ushort FetchWord(uint addr) {
     version (X86_ANY)
-        return *(cast(ushort*)&bank[addr]);
+        return *(cast(ushort*)&MEMORY[addr]);
     else
-        return cast(ushort)(bank[addr] | bank[addr + 1] << 8);
+        return cast(ushort)(MEMORY[addr] | MEMORY[addr + 1] << 8);
 }
 /// Fetch an immediate unsigned word with optional offset.
 extern (C)
 ushort FetchImmWord(uint offset = 0) {
     version (X86_ANY)
-        return *(cast(ushort*)&bank[GetIPAddress + offset + 1]);
+        return *(cast(ushort*)&MEMORY[GetIPAddress + offset + 1]);
     else {
         const uint l = GetIPAddress + offset + 1;
-        return cast(ushort)(bank[l] | bank[l + 1] << 8);
+        return cast(ushort)(MEMORY[l] | MEMORY[l + 1] << 8);
     }
 }
 /// Fetch an immediate word (short).
 extern (C)
 short FetchSWord(uint addr) {
     version (X86_ANY)
-        return *(cast(short*)&bank[addr]);
+        return *(cast(short*)&MEMORY[addr]);
     else {
         if (addr == 0) addr = GetIPAddress + 1;
-        return cast(short)(bank[addr] | bank[addr + 1] << 8);
+        return cast(short)(MEMORY[addr] | MEMORY[addr + 1] << 8);
     }
 }
 extern (C)
 short FetchImmSWord(uint offset = 0) {
     version (X86_ANY)
-        return *(cast(short*)&bank[GetIPAddress + offset + 1]);
+        return *(cast(short*)&MEMORY[GetIPAddress + offset + 1]);
     else {
         const uint addr = GetIPAddress + offset + 1;
-        return cast(short)(bank[addr] | bank[addr + 1] << 8);
+        return cast(short)(MEMORY[addr] | MEMORY[addr + 1] << 8);
     }
 }

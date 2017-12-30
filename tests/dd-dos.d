@@ -14,7 +14,7 @@ unittest
 
     write("INT 12h: ");
     Raise(0x12);
-    assert(banksize / 1024 == AX);
+    assert(MEMORYSIZE / 1024 == AX);
     writeln("OK  (", AX, " KB)");
 
     /*

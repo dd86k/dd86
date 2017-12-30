@@ -97,8 +97,8 @@ void EnterVShell()
 				case "/STATS":
 					puts("Fetching memory statistics...");
 					int nz; // Non-zero
-					for (int i; i < banksize; ++i) {
-						if (bank[i]) ++nz;
+					for (int i; i < MEMORYSIZE; ++i) {
+						if (MEMORY[i]) ++nz;
 					}
 					puts("Memory statistics      Non-Zero");
 					puts("--------------------   --------");
@@ -169,7 +169,7 @@ void EnterVShell()
 				puts("Verbose: OFF");
 			break;
 		case "?DUMP":
-			//toFile(bank, "MEMDUMP");
+			//toFile(MEMORY, "MEMDUMP");
 			//puts("Memory dumped to MEMDUMP");
 			puts("TODO");
 			break;
@@ -218,13 +218,13 @@ void EnterVShell()
 void MakePSP(uint location, string appname, string args = null)
 {
 	alias l = location;
-	bank[l + 0x40] = MajorVersion;
-	bank[l + 0x41] = MinorVersion;
+	MEMORY[l + 0x40] = MajorVersion;
+	MEMORY[l + 0x41] = MinorVersion;
 	size_t len = appname.length;
 	if (args)
 		len += args.length + 1;
-	bank[l + 0x80] = len > 0xFF ? 0xFF : cast(ubyte)len;
-	ubyte* pbank = &bank[l] + 0x81;
+	MEMORY[l + 0x80] = len > 0xFF ? 0xFF : cast(ubyte)len;
+	ubyte* pbank = &MEMORY[l] + 0x81;
 	size_t i;
 	foreach (b; appname) pbank[i++] = b;
 	if (args)
@@ -323,7 +323,7 @@ void Raise(ubyte code)
 		break;
 	}
 	case 0x12: // BIOS - Get memory size
-		AX = cast(int)(banksize / 1024);
+		AX = cast(int)(MEMORYSIZE / 1024);
 		break;
 	case 0x13: // DISK operations
 
@@ -487,12 +487,12 @@ void Raise(ubyte code)
 			uint pd = GetAddress(DS, DX);
 
 			version (LittleEndian) {
-				char* p = cast(char*)bank + pd;
+				char* p = cast(char*)MEMORY + pd;
 				while (*p != '$')
 					printf("%c", *p++);
 			} else {
-				while (bank[pd] != '$')
-					printf("%c", bank[pd++]);
+				while (MEMORY[pd] != '$')
+					printf("%c", MEMORY[pd++]);
 			}
 
 			AL = 0x24;
@@ -796,7 +796,7 @@ void Raise(ubyte code)
 		 */
 		case 0x39: {
 			import std.file : mkdir;
-			string path = MemString(cast(void*)bank, GetAddress(DS, DX));
+			string path = MemString(cast(void*)MEMORY, GetAddress(DS, DX));
 			version (Windows)
 			{
 				import std.windows.syserror : WindowsException;
@@ -833,7 +833,7 @@ void Raise(ubyte code)
 		 */
 		case 0x3A: {
 			import std.file : rmdir;
-			string path = MemString(cast(void*)bank, GetAddress(DS, DX));
+			string path = MemString(cast(void*)MEMORY, GetAddress(DS, DX));
 			version (Windows)
 			{
 				import std.windows.syserror : WindowsException;
@@ -897,7 +897,7 @@ void Raise(ubyte code)
 			import std.stdio : toFile;
 			import std.file : setAttributes;
 			enum EMPTY = cast(ubyte[])null;
-			string path = MemString(cast(void*)bank, GetAddress(DS, DX));
+			string path = MemString(cast(void*)MEMORY, GetAddress(DS, DX));
 			uint at; // VOLLABEL and DIRECTORY are ignored here
 			version (Windows) // 1:1 MS-DOS<->Windows
 			{ // https://msdn.microsoft.com/en-us/library/gg258117(v=vs.85).aspx
@@ -1011,7 +1011,7 @@ void Raise(ubyte code)
 		 */
 		case 0x41: {
 			import std.file : remove, FileException;
-			string path = MemString(cast(void*)bank, GetAddress(DS, DX));
+			string path = MemString(cast(void*)MEMORY, GetAddress(DS, DX));
 			try
 			{
 				remove(path);
@@ -1120,7 +1120,7 @@ void Raise(ubyte code)
 		 */
 		case 0x4B: {
 		//TODO: (Load/Execute) INT 21h AH=4Bh
-			//string path = MemString(cast(void*)bank, GetAddress(DS, DX));
+			//string path = MemString(cast(void*)MEMORY, GetAddress(DS, DX));
 			//LoadFile(path);
 		}
 			break;

@@ -62,7 +62,7 @@ void Run() {
 
 	Running = true;
 	while (Running) {
-		Execute(bank[GetIPAddress]);
+		Execute(MEMORY[GetIPAddress]);
 		if (Sleep)
 			HSLEEP( 2 ); // Intel 8086 - 5 MHz
 	}
@@ -76,9 +76,9 @@ __gshared bool Running;
 __gshared bool Verbose;
 
 /// Main memory brank
-__gshared ubyte[MAX_MEM] bank;
-/// Current memory bank size
-__gshared size_t banksize = MAX_MEM;
+__gshared ubyte[MAX_MEM] MEMORY;
+/// Current memory MEMORY size
+__gshared size_t MEMORYSIZE = MAX_MEM;
 
 /**
  * Get memory address out of a segment and a register value.
@@ -403,6 +403,8 @@ uint EPop()
 /// Preferred Segment register
 private __gshared uint Seg;
 
+private __gshared bool UseCS;
+
 // Rest of the source here is solely this function.
 /**
  * Execute an operation code, acts like the ALU from an Intel 8086.
@@ -633,7 +635,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		EIP += 3;
 		break;
 	case 0x2E: // CS:
-		//TODO: CS:
+		UseCS = 1;
 		++EIP;
 		break;
 	case 0x2F: { // DAS
@@ -1231,7 +1233,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		++EIP;
 		break;
 	case 0xA0: // MOV AL, MEM8
-		AL = bank[FetchImmByte];
+		AL = MEMORY[FetchImmByte];
 		EIP += 2;
 		break;
 	case 0xA1: // MOV AX, MEM16
@@ -1239,7 +1241,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		EIP += 3;
 		break;
 	case 0xA2: // MOV MEM8, AL
-		bank[FetchImmByte] = AL;
+		MEMORY[FetchImmByte] = AL;
 		break;
 	case 0xA3: // MOV MEM16, AX
 		SetWord(FetchImmWord, AX);
@@ -1251,7 +1253,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 
 		break;
 	case 0xA6: { // CMPS DEST-STR8, SRC-STR8
-		const int t = bank[GetAddress(DS, SI)] - bank[GetAddress(ES, DI)];
+		const int t = MEMORY[GetAddress(DS, SI)] - MEMORY[GetAddress(ES, DI)];
 		//TODO: CMPS PF
 		ZF = t == 0;
 		AF = (t & 0x10) != 0;
@@ -1295,7 +1297,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 	}
 		break;
 	case 0xAA: // STOS DEST-STR8
-		bank[GetAddress(ES, DI)] = AL;
+		MEMORY[GetAddress(ES, DI)] = AL;
 		if (DF == 0) DI = DI + 1;
 		else         DI = DI - 1;
 		++EIP;
@@ -1307,7 +1309,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		++EIP;
 		break;
 	case 0xAC: // LODS SRC-STR8
-		AL = bank[GetAddress(DS, SI)];
+		AL = MEMORY[GetAddress(DS, SI)];
 		if (DF == 0) SI = SI + 1;
 		else         SI = SI - 1;
 		++EIP;
@@ -1319,7 +1321,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		++EIP;
 		break;
 	case 0xAE: { // SCAS DEST-STR8
-		const int r = AL - bank[GetAddress(ES, DI)];
+		const int r = AL - MEMORY[GetAddress(ES, DI)];
 		//TODO: SCAS OF, PF
 		ZF = r == 0;
 		AF = (r & 0x10) != 0;
@@ -1582,7 +1584,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		++EIP;
 		break;
 	case 0xD7: // XLAT SOURCE-TABLE
-		AL = bank[GetAddress(DS, BX) + AL];
+		AL = MEMORY[GetAddress(DS, BX) + AL];
 		break;
 	/*case 0xD8: // ESC OPCODE, SOURCE
 	case 0xD9: // 1101 1XXX - MOD YYY R/M

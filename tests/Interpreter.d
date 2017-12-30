@@ -18,31 +18,31 @@ unittest
 
     uint ip = GetIPAddress;
     Insert(0xFF, ip);
-    assert(bank[ip]     == 0xFF);
-    assert(bank[ip + 1] == 0);
+    assert(MEMORY[ip]     == 0xFF);
+    assert(MEMORY[ip + 1] == 0);
     Insert(0x100, ip);
-    assert(bank[ip]     == 0);
-    assert(bank[ip + 1] == 1);
+    assert(MEMORY[ip]     == 0);
+    assert(MEMORY[ip + 1] == 1);
     Insert(0x12, ip + 2);
-    assert(bank[ip + 2] == 0x12);
+    assert(MEMORY[ip + 2] == 0x12);
     Insert(0xABCD, ip);
-    assert(bank[ip]     == 0xCD);
-    assert(bank[ip + 1] == 0xAB);
+    assert(MEMORY[ip]     == 0xCD);
+    assert(MEMORY[ip + 1] == 0xAB);
     Insert(0x5678, 4);
-    assert(bank[4] == 0x78);
-    assert(bank[5] == 0x56);
+    assert(MEMORY[4] == 0x78);
+    assert(MEMORY[5] == 0x56);
     Insert("AB$");
-    assert(bank[ip .. ip + 3] == "AB$");
+    assert(MEMORY[ip .. ip + 3] == "AB$");
     Insert("QWERTY", ip + 10);
-    assert(bank[ip + 10 .. ip + 16] == "QWERTY");
+    assert(MEMORY[ip + 10 .. ip + 16] == "QWERTY");
     InsertW("Heck"w);
-    assert(bank[ip     .. ip + 1] == "H"w);
-    assert(bank[ip + 2 .. ip + 3] == "e"w);
-    assert(bank[ip + 4 .. ip + 5] == "c"w);
-    assert(bank[ip + 6 .. ip + 7] == "k"w);
+    assert(MEMORY[ip     .. ip + 1] == "H"w);
+    assert(MEMORY[ip + 2 .. ip + 3] == "e"w);
+    assert(MEMORY[ip + 4 .. ip + 5] == "c"w);
+    assert(MEMORY[ip + 6 .. ip + 7] == "k"w);
     ubyte[] ar = [ 0xAA, 0xBB ];
     Insert(ar, 2);
-    assert(bank[ip + 2 .. ip + 4] == [ 0xAA, 0xBB ]);
+    assert(MEMORY[ip + 2 .. ip + 4] == [ 0xAA, 0xBB ]);
 
     writeln("OK");
     
@@ -50,10 +50,10 @@ unittest
     CS = 0; EIP = 0x1050;
     InsertImm(0xAABBCCFF);
     ip = GetIPAddress;
-    assert(bank[ip + 1] == 0xFF);
-    assert(bank[ip + 2] == 0xCC);
-    assert(bank[ip + 3] == 0xBB);
-    assert(bank[ip + 4] == 0xAA);
+    assert(MEMORY[ip + 1] == 0xFF);
+    assert(MEMORY[ip + 2] == 0xCC);
+    assert(MEMORY[ip + 3] == 0xBB);
+    assert(MEMORY[ip + 4] == 0xAA);
 
     writeln("OK");
 
@@ -516,7 +516,7 @@ unittest
     ES = 0x20; DI = 0x20;        
     AL = 'Q';
     Execute(0xAA);
-    assert(bank[GetAddress(ES, DI - 1)] == 'Q');
+    assert(MEMORY[GetAddress(ES, DI - 1)] == 'Q');
 
     writeln("OK");
 
@@ -535,10 +535,10 @@ unittest
 
     AL = 0;
     DS = 0xA0; SI = 0x200;
-    bank[GetAddress(DS, SI)] = 'H';
+    MEMORY[GetAddress(DS, SI)] = 'H';
     Execute(0xAC);
     assert(AL == 'H');
-    bank[GetAddress(DS, SI)] = 'e';
+    MEMORY[GetAddress(DS, SI)] = 'e';
     Execute(0xAC);
     assert(AL == 'e');
 
