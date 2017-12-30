@@ -23,13 +23,11 @@ enum OEM_ID { // Used for INT 21h AH=30 so far.
 	IBM, Compaq, MSPackagedProduct, ATnT, ZDS
 }
 
-enum DOS_MAJOR_VERSION = 5, /// Default Major DOS Version
-	 DOS_MINOR_VERSION = 0; /// Default Minor DOS Version
+enum DOS_MAJOR_VERSION = 5, /// Default reported major DOS version
+	 DOS_MINOR_VERSION = 0; /// Default reported minor DOS version
 
-/// DOS Version
-__gshared
-ubyte MajorVersion = DOS_MAJOR_VERSION,
-	  MinorVersion = DOS_MINOR_VERSION;
+__gshared ubyte MajorVersion = DOS_MAJOR_VERSION; /// Alterable reported major version
+__gshared ubyte MinorVersion = DOS_MINOR_VERSION; /// Alterable reported minor version
 
 /// File/Folder attribute. See INT 21h AH=3Ch
 // Did you know Windows still use these values?

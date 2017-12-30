@@ -12,7 +12,7 @@ unittest
     Initiate;
     CS = 0;
 
-    writeln("[ Help functions ]");
+    writeln("-- [ Help functions ]");
 
     write("Insert : ");
 
@@ -67,7 +67,7 @@ unittest
 
     writeln("OK");
 
-    writeln("[ Registers ]");
+    writeln("-- [ Registers ]");
 
     AX = 0x0201;
     BX = 0x0201;
@@ -119,7 +119,7 @@ unittest
 
     FullReset; CS = 0;
 
-    writeln("[ General instructions ]");
+    writeln("-- [ General instructions ]");
 
     // MOV
 
@@ -507,7 +507,7 @@ unittest
 
     // -- STRING INSTRUCTIONS --
     
-    writeln("[ String instructions ]");
+    writeln("-- [ String instructions ]");
 
     // STOS
 
