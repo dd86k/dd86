@@ -56,156 +56,265 @@ enum
  */
 
 /// Enter internal shell
-void EnterVShell()
-{
+void EnterVShell() {
 	import std.array : split;
 	import std.uni : toUpper;
 	import std.file : getcwd, chdir, FileException;
 
-	while (true) {
-		//write(getcwd ~ '$');
-		//TODO: Print POMPT
-		printf(">");
+_S:
+	//write(getcwd ~ '$');
+	//TODO: Print POMPT
+	printf(">");
 
-		// Read line from stdln and remove \n, then split arguments.
-		string[] s = split(readln()[0..$-1], ' ');
+	// Read line from stdln and remove \n, then split arguments.
+	string[] argv = split(readln()[0..$-1], ' ');
+	const size_t argc = argv.length;
 
-		if (s.length > 0)
-		switch (toUpper(s[0])) {
-		case "HELP": //TODO: Complete HELP with /ALL
-			puts("CLS            Clear screen.");
-			puts("MEM            Show memory information.");
-			puts("VER            Show DOS version.");
-			break;
-		case "VER":
-			if (s.length > 1) {
-				switch (toUpper(s[1])) { //toUpper in-case of future sub commands
-				case "/?":
-					break;
-				default:
-				}
-			} else {
-				puts("");
-				printf("DD-DOS Version %s\n", cast(char*)APP_VERSION);
-				printf("MS-DOS Version %d.%d\n", MajorVersion, MinorVersion);
-				puts("");
+	if (argc > 0)
+	switch (toUpper(argv[0])) {
+	case "HELP": //TODO: Complete HELP with /ALL
+		puts("CLS            Clear screen.");
+		puts("MEM            Show memory information.");
+		puts("VER            Show DOS version.");
+		break;
+	case "VER":
+		if (argc > 1) {
+			switch (toUpper(argv[1])) { //toUpper in-case of future sub commands
+			case "/?":
+				break;
+			default:
 			}
-			break;
-		case "MEM":
-			if (s.length > 1) {
-				switch (toUpper(s[1])) {
-				case "/STATS":
-					puts("Fetching memory statistics...");
-					int nz; // Non-zero
-					for (int i; i < MEMORYSIZE; ++i) {
-						if (MEMORY[i]) ++nz;
-					}
-					puts("Memory statistics      Non-Zero");
-					puts("--------------------   --------");
-					printf("Total               %8d KB\n", nz / 1024);
-					break;
-				case "/DEBUG":
-					puts("Not implemented");
-					break;
-				//case "/FREE":
-				case "/?":
-					puts("Display memory statistics");
-					puts("  MEM [OPTIONS]\n");
-					puts("OPTIONS");
-					puts("/DEBUG    Not implemented");
-					puts("/STATS    Scan memory and show statistics");
-					break;
-				default:
-				}
-			}
-			break;
-		case "CD":
-			if (s.length > 1)
-				try {
-					if (s[1] == "/?") {
-
-					} else chdir(s[1]);
-				} catch (FileException) {
-					puts("Invalid directory");
-				}
-			else
-				puts(cast(char*)getcwd);
-			break;
-		case "CLS": Clear; break;
-		case "EXIT": return;
-		case "TIME":
-			AH = 0x2C;
-			Raise(0x21);
-			printf("It is currently %02d:%02d:%02d,%02d\n", CH, CL, DH, DL);
-			break;
-		case "DATE":
-			AH = 0x2A;
-			Raise(0x21);
-			printf("It is currently ");
-			final switch (AL) {
-				case 0, 7: printf("Sun"); break;
-				case 1: printf("Mon"); break;
-				case 2: printf("Tue"); break;
-				case 3: printf("Wed"); break;
-				case 4: printf("Thu"); break;
-				case 5: printf("Fri"); break;
-				case 6: printf("Sat"); break;
-			}
-			printf(" %d-%02d-%02d\n", CX, DH, DL);
-			break;
-
-		// DEBUGGING COMMANDS
-
-		case "?LOAD":
-			if (s.length > 1) // Is a file provided?
-				LoadExec(s[1]);
-			break;
-		case "?RUN": Run; break;
-		case "?V":
-			Verbose = !Verbose;
-			if (Verbose)
-				puts("Verbose: ON");
-			else
-				puts("Verbose: OFF");
-			break;
-		case "?DUMP":
-			//toFile(MEMORY, "MEMDUMP");
-			//puts("Memory dumped to MEMDUMP");
-			puts("TODO");
-			break;
-		case "?R":
-			printf(
-				"AX=%04X BX=%04X CX=%04X DX=%04X " ~
-				"SP=%04X BP=%04X SI=%04X DI=%04X\n" ~
-				"CS=%04X DS=%04X ES=%04X SS=%04X " ~
-				"IP=%04X\n",
-				AX, BX, CX, DX, SP, BP, SI, DI,
-				CS, DS, ES, SS, IP
-			);
-			printf("FLAG= ");
-			if (OF) printf("OF ");
-			if (DF) printf("DF ");
-			if (IF) printf("IF ");
-			if (TF) printf("TF ");
-			if (SF) printf("SF ");
-			if (ZF) printf("ZF ");
-			if (AF) printf("AF ");
-			if (PF) printf("PF ");
-			if (CF) printf("CF ");
-			printf("(%Xh)\n", FLAG);
-			break;
-		case "??":
-			puts("?run     Run the VM");
-			puts("?load    Load a file");
-			puts("?dump    Dump memory content to MEMDUMP");
-			puts("?r       Print register information");
-			puts("?v       Toggle verbose mode");
-			break;
-		default:
-			puts("Bad command or file name");
-			break;
+		} else {
+			puts("");
+			printf("DD-DOS Version %argv\n", cast(char*)APP_VERSION);
+			printf("MS-DOS Version %d.%d\n", MajorVersion, MinorVersion);
+			puts("");
 		}
+		break;
+	case "MEM":
+		if (argc > 1) {
+			switch (toUpper(argv[1])) {
+			case "/STATS":
+				puts("Fetching memory statistics...");
+
+				const bool ext = MEMORYSIZE > 0xA_0000; // extended?
+				const size_t ct = ext ? 0xA_0000 : MEMORYSIZE;
+				const size_t tt = MEMORYSIZE - ct;
+
+				int nzt; // Non-zero (total/excluded from conventional in some cases)
+				int nzc; // Convential (<640K) non-zero
+				for (int i; i < 0xA_0000; ++i) {
+					if (i < 0xA_0000) {
+						if (MEMORY[i]) ++nzc;
+					} else if (MEMORY[i]) ++nzt;
+				}
+				puts("Memory type          Zero'd  +   NZero  =  Total");
+				puts("-------------------  -------   -------   -------");
+				printf("Conventional         %6dK   %6dK   %6dK\n",
+					(ct - nzc) / 1024,
+					nzc / 1024,
+					ct / 1024);
+				printf("Extended (DD-DOS)    %6dK   %6dK   %6dK\n",
+					(tt - nzt) / 1024,
+					nzt / 1024,
+					tt / 1024);
+				puts("-------------------  -------   -------   -------");
+				printf("Total                %6dK   %6dK   %6dK\n",
+					(MEMORYSIZE - nzt) / 1024,
+					(nzt + nzc) / 1024,
+					MEMORYSIZE / 1024);
+				break;
+			case "/DEBUG":
+				puts("Not implemented");
+				break;
+			//case "/FREE":
+			case "/?":
+				puts("Display memory statistics");
+				puts("  MEM [OPTIONS]\n");
+				puts("OPTIONS");
+				puts("/DEBUG    Not implemented");
+				puts("/FREE     Not implemented");
+				puts("/STATS    Scan memory and show statistics");
+				break;
+			default:
+
+				break;
+			}
+		}
+		break;
+	case "CHDIR", "CD":
+		if (argc > 1)
+			try {
+				if (argv[1] == "/?") {
+					puts("Display or set current working directory.");
+				} else chdir(argv[1]);
+			} catch (FileException) {
+				puts("Invalid directory");
+			}
+		else
+			puts(cast(char*)(getcwd~'\0'));
+		break;
+	case "DIR": { //TODO: with folder arguemnt
+		import std.file : exists, isDir, dirEntries, SpanMode;
+		string dir;
+		if (argc > 1) {
+			switch (argv[1]) {
+			case "/?":
+				puts("List files and directories");
+				break;
+			default:
+				if (exists(argv[1])) {
+					if (isDir(argv[1]))
+						dir = argv[1];
+					else {
+						puts("ERROR: Invalid path");
+						AL = 2;
+						goto _S;
+					}
+				} else {
+					puts("ERROR: Invalid path");
+					AL = 1;
+					goto _S;
+				}
+				break;
+			}
+		}
+		int c;
+		foreach (string name; dirEntries("", SpanMode.shallow)) {
+			++c;
+			if (isDir(name))
+				printf("%*s <DIR>\n", -32, cast(char*)(name~'\0'));
+			else
+				puts(cast(char*)(name~'\0'));
+		}
+		printf("        %d file(s)\n", c);
+		break;
 	}
+	case "TIME":
+		AH = 0x2C;
+		Raise(0x21);
+		printf("It is currently %02d:%02d:%02d,%02d\n", CH, CL, DH, DL);
+		break;
+	case "DATE":
+		AH = 0x2A;
+		Raise(0x21);
+		printf("It is currently ");
+		final switch (AL) {
+			case 0, 7: printf("Sun"); break;
+			case 1: printf("Mon"); break;
+			case 2: printf("Tue"); break;
+			case 3: printf("Wed"); break;
+			case 4: printf("Thu"); break;
+			case 5: printf("Fri"); break;
+			case 6: printf("Sat"); break;
+		}
+		printf(" %d-%02d-%02d\n", CX, DH, DL);
+		break;
+	case "TREE": {
+		import std.file : exists, isDir, dirEntries, SpanMode;
+		string dir;
+		if (argc > 1) {
+			switch (argv[1]) {
+			case "/?":
+				puts("Displays a graphical representation of a folder recursively");
+				puts("Usage:");
+				puts("  TREE [OPTIONS]");
+				return;
+			default:
+				if (exists(argv[1])) {
+					if (isDir(argv[1]))
+						dir = argv[1];
+					else {
+						puts("ERROR: Invalid path");
+						AL = 2;
+						goto _S;
+					}
+				} else {
+					puts("ERROR: Invalid path");
+					AL = 1;
+					goto _S;
+				}
+				break;
+			}
+		}
+
+		void printlevel(int l) {
+			do {
+				printf("+--");
+			} while (--l);
+		}
+
+		int j = 1;
+		puts(".");
+		void tree(string d) { // C: goto+var
+			foreach (string name; dirEntries(d, SpanMode.shallow)) {
+				printlevel(j);
+				puts(cast(char*)(name~'\0'));
+				if (isDir(name)) {
+					++j;
+					tree(name);
+				}
+			}
+			--j;
+		}
+		tree(dir); // cd
+		break;
+	}
+	case "CLS": Clear; break;
+	case "EXIT": return;
+
+	// DEBUGGING COMMANDS
+
+	case "?LOAD":
+		if (argc > 1) // Is a file provided?
+			LoadExec(argv[1]);
+		break;
+	case "?RUN": Run; break;
+	case "?V":
+		Verbose = !Verbose;
+		if (Verbose)
+			puts("Verbose: ON");
+		else
+			puts("Verbose: OFF");
+		break;
+	case "?DUMP":
+		//toFile(MEMORY, "MEMDUMP");
+		//puts("Memory dumped to MEMDUMP");
+		puts("TODO");
+		break;
+	case "?R":
+		printf(
+			"AX=%04X BX=%04X CX=%04X DX=%04X " ~
+			"SP=%04X BP=%04X SI=%04X DI=%04X\n" ~
+			"CS=%04X DS=%04X ES=%04X SS=%04X " ~
+			"IP=%04X\n",
+			AX, BX, CX, DX, SP, BP, SI, DI,
+			CS, DS, ES, SS, IP
+		);
+		printf("FLAG= ");
+		if (OF) printf("OF ");
+		if (DF) printf("DF ");
+		if (IF) printf("IF ");
+		if (TF) printf("TF ");
+		if (SF) printf("SF ");
+		if (ZF) printf("ZF ");
+		if (AF) printf("AF ");
+		if (PF) printf("PF ");
+		if (CF) printf("CF ");
+		printf("(%Xh)\n", FLAG);
+		break;
+	case "??":
+		puts("?run     Run the VM");
+		puts("?load    Load a file");
+		puts("?dump    Dump memory content to MEMDUMP");
+		puts("?r       Print register information");
+		puts("?v       Toggle verbose mode");
+		break;
+	default:
+		puts("Bad command or file name");
+		break;
+	}
+	goto _S;
 }
 
 /**
@@ -659,8 +768,7 @@ void Raise(ubyte code)
 		 *   DL (1/100 seconds)
 		 */
 		case 0x2C:
-			version (Windows)
-			{
+			version (Windows) {
 				import core.sys.windows.windows : SYSTEMTIME, GetLocalTime;
 				SYSTEMTIME s;
 				GetLocalTime(&s);
@@ -669,9 +777,7 @@ void Raise(ubyte code)
 				CL = cast(ubyte)s.wMinute;
 				DH = cast(ubyte)s.wSecond;
 				DL = cast(ubyte)s.wMilliseconds;
-			}
-			else version (Posix)
-			{
+			} else version (Posix) {
 				import core.sys.posix.time : tm, time_t, time, localtime;
 				import core.time : timeval, gettimeofday;
 				//TODO: Only use gettimeofday
@@ -685,9 +791,7 @@ void Raise(ubyte code)
 				timeval tv;
 				gettimeofday(&tv, null);
 				AL = cast(ubyte)tv.tv_usec;
-			}
-			else
-			{
+			} else {
 				static assert(0, "Implement INT 21h AH=2Ch");
 			}
 			break;

@@ -54,13 +54,13 @@ void Initiate() {
 	DLp = cast(ubyte*)DXp;
 }
 
-/// Starts the emulator at CS:IP (usually 0000h:0100h)
+/// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
 void Run() {
 	if (Verbose)
 		log("Running...");
 
-	Running = true;
+	Running = 1;
 	while (Running) {
 		Execute(MEMORY[GetIPAddress]);
 		if (Sleep)
@@ -400,10 +400,15 @@ uint EPop()
 	FLAGB = cast(ubyte)flag;
 }
 
-/// Preferred Segment register
-private __gshared uint Seg;
+enum { // Segment override (for Seg)
+	SEG_CS = 1, /// CS
+	SEG_DS, /// DS
+	SEG_ES, /// ES
+	SEG_SS  /// SS
+}
 
-private __gshared bool UseCS;
+/// Preferred Segment register
+__gshared uint Seg; // See above enumeration
 
 // Rest of the source here is solely this function.
 /**
@@ -411,8 +416,7 @@ private __gshared bool UseCS;
  * Params: op = Operation Code
  */
 extern (C)
-void Execute(ubyte op) // All instructions are 1-byte for the 8086.
-{
+void Execute(ubyte op) {
 	//TODO: Seg (uint)
 	//      Seg will be used to get the default or segment overload prefix.
 	// Usage:
@@ -434,19 +438,19 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 	switch (op) {
 	case 0x00: { // ADD R/M8, REG8
 
-		break;
+		return;
 	}
 	case 0x01: { // ADD R/M16, REG16
 
-		break;
+		return;
 	}
 	case 0x02: { // ADD REG8, R/M8
 
-		break;
+		return;
 	}
 	case 0x03: { // ADD REG16, R/M16
 
-		break;
+		return;
 	}
 	case 0x04: // ADD AL, IMM8
 		AL = AL + FetchImmByte;
@@ -456,69 +460,69 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		AF = (AL & 0x10) != 0;
 		ZF = AL == 0;
 		//OF = 
-		break;
+		return;
 	case 0x05: // ADD AX, IMM16
 		AX = AX + FetchWord;
 		EIP += 2;
-		break;
+		return;
 	case 0x06: // PUSH ES
 		Push(ES);
 		++EIP;
-		break;
+		return;
 	case 0x07: // POP ES
 		ES = Pop();
 		++EIP;
-		break;
+		return;
 	case 0x08: { // OR R/M8, REG8
 
-		break;
+		return;
 	}
 	case 0x09: { // OR R/M16, REG16
 
-		break;
+		return;
 	}
 	case 0x0A: { // OR REG8, R/M8
 	
-		break;
+		return;
 	}
 	case 0x0B: { // OR REG16, R/M16
 
-		break;
+		return;
 	}
 	case 0x0C: // OR AL, IMM8
 		AL = AL | FetchImmByte;
 		EIP += 2;
-		break;
+		return;
 	case 0x0D: // OR AX, IMM16
 		AX = AX | FetchWord;
 		EIP += 3;
-		break;
+		return;
 	case 0x0E: // PUSH CS
 		Push(CS);
 		++EIP;
-		break;
+		return;
 	case 0x10: { // ADC R/M8, REG8
 
-		break;
+		return;
 	}
 	case 0x11: { // ADC R/M16, REG16
 
-		break;
+		return;
 	}
 	case 0x12: { // ADC REG8, R/M8
 
-		break;
+		return;
 	}
 	case 0x13: { // ADC REG16, R/M16
 
-		break;
+		return;
 	}
 	case 0x14: { // ADC AL, IMM8
 		int t = AL + FetchImmByte;
 		if (CF) ++t;
 		AL = t;
 		EIP += 2;
-		break;
+		return;
 	}
 	case 0x15: { // ADC AX, IMM16
 		int t = AX + FetchWord;
@@ -526,72 +530,73 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		AX = t;
 		EIP += 3;
 	}
-		break;
+		return;
 	case 0x16: // PUSH SS
 		Push(SS);
 		++EIP;
-		break;
+		return;
 	case 0x17: // POP SS
 		SS = Pop();
 		++EIP;
-		break;
+		return;
 	case 0x18: // SBB R/M8, REG8
 
-		break;
+		return;
 	case 0x19: // SBB R/M16, REG16
 
-		break;
+		return;
 	case 0x1A: // SBB REG8, R/M16
 
-		break;
+		return;
 	case 0x1B: // SBB REG16, R/M16
 
-		break;
+		return;
 	case 0x1C: { // SBB AL, IMM8
 		int t = AL - FetchImmByte;
 		if (CF) --t;
 		AL = t;
 		EIP += 2;
 	}
-		break;
+		return;
 	case 0x1D: { // SBB AX, IMM16
 		int t = AX - FetchImmByte;
 		if (CF) --t;
 		AX = t;
 		EIP += 3;
 	}
-		break;
+		return;
 	case 0x1E: // PUSH DS
 		Push(DS);
 		++EIP;
-		break;
+		return;
 	case 0x1F: // POP DS
 		DS = Pop();
 		++EIP;
-		break;
+		return;
 	case 0x20: // AND R/M8, REG8
 
-		break;
+		return;
 	case 0x21: // AND R/M16, REG16
 
-		break;
+		return;
 	case 0x22: // AND REG8, R/M8
 
-		break;
+		return;
 	case 0x23: // AND REG16, R/M16
 
-		break;
+		return;
 	case 0x24: // AND AL, IMM8
 		AL = AL & FetchImmByte;
 		EIP += 2;
-		break;
+		return;
 	case 0x25: // AND AX, IMM16
 		AX = AX & FetchWord;
 		EIP += 3;
-		break;
+		return;
 	case 0x26: // ES: (Segment override prefix)
-		Seg = ES;
-		break;
+		Seg = SEG_ES;
+		++EIP;
+		return;
 	case 0x27: { // DAA
 		const ubyte oldAL = AL;
 		const bool oldCF = CF;
@@ -613,31 +618,31 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		else CF = false;
 		++EIP;
 	}
-		break;
+		return;
 	case 0x28: // SUB R/M8, REG8
 
-		break;
+		return;
 	case 0x29: // SUB R/M16, REG16
 
-		break;
+		return;
 	case 0x2A: // SUB REG8, R/M8
 	
-		break;
+		return;
 	case 0x2B: // SUB REG16, R/M16
 
-		break;
+		return;
 	case 0x2C: // SUB AL, IMM8
 		AL = AL - FetchImmByte;
 		EIP += 2;
-		break;
+		return;
 	case 0x2D: // SUB AX, IMM16
 		AX = AX - FetchWord;
 		EIP += 3;
-		break;
+		return;
 	case 0x2E: // CS:
-		UseCS = 1;
+		Seg = SEG_CS;
 		++EIP;
-		break;
+		return;
 	case 0x2F: { // DAS
 		const ubyte oldAL = AL;
 		const bool oldCF = CF;
@@ -659,30 +664,31 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		else CF = false;
 		++EIP;
 	}
-		break;
+		return;
 	case 0x30: // XOR R/M8, REG8
 
-		break;
+		return;
 	case 0x31: // XOR R/M16, REG16
 
-		break;
+		return;
 	case 0x32: // XOR REG8, R/M8
 
-		break;
+		return;
 	case 0x33: // XOR REG16, R/M16
 
-		break;
+		return;
 	case 0x34: // XOR AL, IMM8
 		AL = AL ^ FetchImmByte;
 		EIP += 2;
-		break;
+		return;
 	case 0x35: // XOR AX, IMM16
 		AX = AX ^ FetchWord;
 		EIP += 3;
-		break;
+		return;
 	case 0x36: // SS:
-
-		break;
+		Seg = SEG_SS;
+		++EIP;
+		return;
 	case 0x37: // AAA
 		if (((AL & 0xF) > 9) || AF)
 		{
@@ -692,19 +698,19 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		else AF = CF = false;
 		AL = AL & 0xF;
 		++EIP;
-		break;
+		return;
 	case 0x38: // CMP R/M8, REG8
 
-		break;
+		return;
 	case 0x39: // CMP R/M16, REG16
 
-		break;
+		return;
 	case 0x3A: // CMP REG8, R/M8
 
-		break;
+		return;
 	case 0x3B: // CMP REG16, R/M16
 
-		break;
+		return;
 	case 0x3C: // CMP AL, IMM8
 		const ubyte b = FetchImmByte;
 		const int r = AL - b;
@@ -714,7 +720,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		AF = (r & 0x10) != 0; //((AL & 0b1000) - (b & 0b1000)) < 0;
 		//PF =
 		EIP += 2;
-		break;
+		return;
 	case 0x3D: // CMP AX, IMM16
 		const ushort w = FetchWord;
 		const int r = AL - w;
@@ -725,10 +731,11 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		//PF =
 		//CF =
 		EIP += 3;
-		break;
+		return;
 	case 0x3E: // DS:
-
-		break;
+		Seg = SEG_DS;
+		++EIP;
+		return;
 	case 0x3F: // AAS
 		if (((AL & 0xF) > 9) || AF) {
 			AX = AX - 6;
@@ -739,7 +746,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		}
 		AL = AL & 0xF;
 		++EIP;
-		break;
+		return;
 	case 0x40: { // INC AX
 		const int r = AX + 1;
 		ZF = r == 0;
@@ -750,179 +757,179 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		AX = r;
 		++EIP;
 	}
-		break;
+		return;
 	case 0x41: // INC CX
 		CX = CX + 1;
 		++EIP;
-		break;
+		return;
 	case 0x42: // INC DX
 		DX = DX + 1;
 		++EIP;
-		break;
+		return;
 	case 0x43: // INC BX
 		BX = BX + 1;
 		++EIP;
-		break;
+		return;
 	case 0x44: // INC SP
 		SP = SP + 1;
 		++EIP;
-		break;
+		return;
 	case 0x45: // INC BP
 		BP = BP + 1;
 		++EIP;
-		break;
+		return;
 	case 0x46: // INC SI
 		SI = SI + 1;
 		++EIP;
-		break;
+		return;
 	case 0x47: // INC DI
 		DI = DI + 1;
 		++EIP;
-		break;
+		return;
 	case 0x48: // DEC AX
 		AX = AX - 1;
 		++EIP;
-		break;
+		return;
 	case 0x49: // DEC CX
 		CX = CX - 1;
 		++EIP;
-		break;
+		return;
 	case 0x4A: // DEC DX
 		DX = DX - 1;
 		++EIP;
-		break;
+		return;
 	case 0x4B: // DEC BX
 		BX = BX - 1;
 		++EIP;
-		break;
+		return;
 	case 0x4C: // DEC SP
 		SP = SP - 1;
 		++EIP;
-		break;
+		return;
 	case 0x4D: // DEC BP
 		BP = BP - 1;
 		++EIP;
-		break;
+		return;
 	case 0x4E: // DEC SI
 		SI = SI - 1;
 		++EIP;
-		break;
+		return;
 	case 0x4F: // DEC DI
 		DI = DI - 1;
 		++EIP;
-		break;
+		return;
 	case 0x50: // PUSH AX
 		Push(AX);
 		++EIP;
-		break;
+		return;
 	case 0x51: // PUSH CX
 		Push(CX);
 		++EIP;
-		break;
+		return;
 	case 0x52: // PUSH DX
 		Push(DX);
 		++EIP;
-		break;
+		return;
 	case 0x53: // PUSH BX
 		Push(BX);
 		++EIP;
-		break;
+		return;
 	case 0x54: // PUSH SP
 		Push(SP);
 		++EIP;
-		break;
+		return;
 	case 0x55: // PUSH BP
 		Push(BP);
 		++EIP;
-		break;
+		return;
 	case 0x56: // PUSH SI
 		Push(SI);
 		++EIP;
-		break;
+		return;
 	case 0x57: // PUSH DI
 		Push(DI);
 		++EIP;
-		break;
+		return;
 	case 0x58: // POP AX
 		AX = Pop();
 		++EIP;
-		break;
+		return;
 	case 0x59: // POP CX
 		CX = Pop();
 		++EIP;
-		break;
+		return;
 	case 0x5A: // POP DX
 		DX = Pop();
 		++EIP;
-		break;
+		return;
 	case 0x5B: // POP BX
 		BX = Pop();
 		++EIP;
-		break;
+		return;
 	case 0x5C: // POP SP
 		SP = Pop();
 		++EIP;
-		break;
+		return;
 	case 0x5D: // POP BP
 		BP = Pop();
 		++EIP;
-		break;
+		return;
 	case 0x5E: // POP SI
 		SI = Pop();
 		++EIP;
-		break;
+		return;
 	case 0x5F: // POP DI
 		DI = Pop();
 		++EIP;
-		break;
+		return;
 	case 0x70: // JO            SHORT-LABEL
 		EIP += OF ? FetchImmSByte : 2;
-		break;
+		return;
 	case 0x71: // JNO           SHORT-LABEL
 		EIP += OF ? 2 : FetchImmSByte;
-		break;
+		return;
 	case 0x72: // JB/JNAE/JC    SHORT-LABEL
 		EIP += CF ? FetchImmSByte : 2;
-		break;
+		return;
 	case 0x73: // JNB/JAE/JNC   SHORT-LABEL
 		EIP += CF ? 2 : FetchImmSByte;
-		break;
+		return;
 	case 0x74: // JE/JZ         SHORT-LABEL
 		EIP += ZF ? FetchImmSByte : 2;
-		break;
+		return;
 	case 0x75: // JNE/JNZ       SHORT-LABEL
 		EIP += ZF ? 2 : FetchImmSByte;
-		break;
+		return;
 	case 0x76: // JBE/JNA       SHORT-LABEL
 		EIP += (CF || ZF) ? FetchImmSByte : 2;
-		break;
+		return;
 	case 0x77: // JNBE/JA       SHORT-LABEL
 		EIP += CF == false && ZF == false ? FetchImmSByte : 2;
-		break;
+		return;
 	case 0x78: // JS            SHORT-LABEL
 		EIP += SF ? FetchImmSByte : 2;
-		break;
+		return;
 	case 0x79: // JNS           SHORT-LABEL
 		EIP += SF ? 2 : FetchImmSByte;
-		break;
+		return;
 	case 0x7A: // JP/JPE        SHORT-LABEL
 		EIP += PF ? FetchImmSByte : 2;
-		break;
+		return;
 	case 0x7B: // JNP/JPO       SHORT-LABEL
 		EIP += PF ? 2 : FetchImmSByte;
-		break;
+		return;
 	case 0x7C: // JL/JNGE       SHORT-LABEL
 		EIP += SF != OF ? FetchImmSByte : 2;
-		break;
+		return;
 	case 0x7D: // JNL/JGE       SHORT-LABEL
 		EIP += SF == OF ? FetchImmSByte : 2;
-		break;
+		return;
 	case 0x7E: // JLE/JNG       SHORT-LABEL
 		EIP += SF != OF || ZF ? FetchImmSByte : 2;
-		break;
+		return;
 	case 0x7F: // JNLE/JG       SHORT-LABEL
 		EIP += SF == OF && ZF == false ? FetchImmSByte : 2;
-		break;
+		return;
 	case 0x80: { // GRP1 R/M8, IMM8
 		const ubyte rm = FetchImmByte; // Get ModR/M byte
 		const ubyte im = FetchImmByte(2); // 8-bit Immediate
@@ -986,7 +993,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 				break; // case 01
 		}
 		EIP += 3;
-		break;
+		return;
 	}
 	case 0x81: { // GRP1 R/M16, IMM16
 		const ubyte rm = FetchImmByte;  // Get ModR/M byte
@@ -1018,7 +1025,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 			break;
 		}
 		EIP += 4;
-		break;
+		return;
 	}
 	case 0x82: // GRP2 R/M8, IMM8
 		const ubyte rm = FetchImmByte; // Get ModR/M byte
@@ -1044,7 +1051,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 			break;
 		}
 		EIP += 3;
-		break;
+		return;
 	case 0x83: // GRP2 R/M16, IMM16
 		const ubyte rm = FetchImmByte; // Get ModR/M byte
 		const ushort im = FetchImmWord(2);
@@ -1069,59 +1076,56 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 			break;
 		}
 		EIP += 4;
-		break;
+		return;
 	case 0x84: // TEST R/M8, REG8
 
-		break;
+		return;
 	case 0x85: // TEST R/M16, REG16
 
-		break;
+		return;
 	case 0x86: // XCHG REG8, R/M8
 
-		break;
+		return;
 	case 0x87: // XCHG REG16, R/M16
 
-		break;
+		return;
 	case 0x88: { // MOV R/M8, REG8
 
 		EIP += 2;
-		break;
+		return;
 	}
 	case 0x89: { // MOV R/M16, REG16
-
+		HandleRMWordRM16(FetchImmByte);
 		EIP += 2;
-		break;
+		return;
 	}
 	case 0x8A: { // MOV REG8, R/M8
 		//HandleRMByte(FetchImmByte);
 		EIP += 2;
-		break;
+		return;
 	}
 	case 0x8B: // MOV REG16, R/M16
-		HandleRMWord(FetchImmByte, op & 0b10);
+		HandleRMWordReg(FetchImmByte);
 		EIP += 2;
-		break;
+		return;
 	case 0x8C: // MOV R/M16, SEGREG
 		// MOD 0SR R/M
 
-		break;
+		return;
 	case 0x8D: // LEA REG16, MEM16
 
-		break;
+		return;
 	case 0x8E: // MOV SEGREG, R/M16
 		// MOD 0SR R/M
 		// SR: 00=ES, 01=CS, 10=SS, 11=DS
 
-		break;
+		return;
 	case 0x8F: { // POP R/M16
 		const byte rm = FetchImmByte;
 		const ushort add = FetchImmWord(1);
-		if (rm & 0b00111000) // MOD 000 R/M only
-		{
+		if (rm & 0b00111000) { // MOD 000 R/M only
 			// Raise illegal instruction
-		}
-		else
-		{ // REMINDER: REG = 000 and D is SET
+		} else { // REMINDER: REG = 000 and D is SET
 			//TODO: POP R/RM16
 			final switch (rm & 0b11_000000)
 			{
@@ -1154,104 +1158,104 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		}
 		EIP += 2;
 	}
-		break;
+		return;
 	case 0x90: // NOP (aka XCHG AX, AX)
 		++EIP;
-		break;
+		return;
 	case 0x91: { // XCHG AX, CX
 		const ushort ax = AX;
 		AX = CX;
 		CX = ax;
 	}
-		break;
+		return;
 	case 0x92: { // XCHG AX, DX
 		const ushort ax = AX;
 		AX = DX;
 		DX = ax;
 	}
-		break;
+		return;
 	case 0x93: { // XCHG AX, BX
 		const ushort ax = AX;
 		AX = BX;
 		BX = ax;
 	}
-		break;
+		return;
 	case 0x94: { // XCHG AX, SP
 		const ushort ax = AX;
 		AX = SP;
 		SP = ax;
 	}
-		break;
+		return;
 	case 0x95: { // XCHG AX, BP
 		const ushort ax = AX;
 		AX = BP;
 		BP = ax;
 	}
-		break;
+		return;
 	case 0x96: { // XCHG AX, SI
 		const ushort ax = AX;
 		AX = SI;
 		SI = ax;
 	}
-		break;
+		return;
 	case 0x97: { // XCHG AX, DI
 		const ushort ax = AX;
 		AX = DI;
 		DI = ax;
 	}
-		break;
+		return;
 	case 0x98: // CBW
 		AH = AL & 0x80 ? 0xFF : 0;
 		++EIP;
-		break;
+		return;
 	case 0x99: // CWD
 		DX = AX & 0x8000 ? 0xFFFF : 0;
 		++EIP;
-		break;
+		return;
 	case 0x9A: // CALL FAR_PROC
 		Push(CS);
 		Push(IP);
-		break;
+		return;
 	case 0x9B: // WAIT
 	//TODO: WAIT ???
 		++EIP;
-		break;
+		return;
 	case 0x9C: // PUSHF
 		Push(FLAG);
 		++EIP;
-		break;
+		return;
 	case 0x9D: // POPF
 		FLAG = Pop();
 		++EIP;
-		break;
+		return;
 	case 0x9E: // SAHF (AH to Flags)
 		FLAGB = AH;
 		++EIP;
-		break;
+		return;
 	case 0x9F: // LAHF (Flags to AH)
 		AH = FLAGB;
 		++EIP;
-		break;
+		return;
 	case 0xA0: // MOV AL, MEM8
 		AL = MEMORY[FetchImmByte];
 		EIP += 2;
-		break;
+		return;
 	case 0xA1: // MOV AX, MEM16
 		AX = FetchWord(FetchImmWord);
 		EIP += 3;
-		break;
+		return;
 	case 0xA2: // MOV MEM8, AL
 		MEMORY[FetchImmByte] = AL;
-		break;
+		return;
 	case 0xA3: // MOV MEM16, AX
 		SetWord(FetchImmWord, AX);
-		break;
+		return;
 	case 0xA4: // MOVS DEST-STR8, SRC-STR8
 
-		break;
+		return;
 	case 0xA5: // MOVS DEST-STR16, SRC-STR16
 
-		break;
+		return;
 	case 0xA6: { // CMPS DEST-STR8, SRC-STR8
 		const int t = MEMORY[GetAddress(DS, SI)] - MEMORY[GetAddress(ES, DI)];
 		//TODO: CMPS PF
@@ -1265,7 +1269,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 			DI = DI - 1; SI = SI - 1;
 		}
 	}
-		break;
+		return;
 	case 0xA7: { // CMPS DEST-STR16, SRC-STR16
 		const int t = FetchWord(GetAddress(DS, SI)) - FetchWord(GetAddress(ES, DI));
 		//TODO: CMPS PF
@@ -1279,7 +1283,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 			DI = DI - 2; SI = SI - 2;
 		}
 	}
-		break;
+		return;
 	case 0xA8: { // TEST AL, IMM8
 		const int r = AL & FetchImmByte;
 		//TODO: TEST ZF SF PF
@@ -1287,7 +1291,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		CF = OF = 0;
 		EIP += 2;
 	}
-		break;
+		return;
 	case 0xA9: { // TEST AX, IMM16
 		const int r = AX & FetchImmWord;
 		//TODO: TEST ZF SF PF
@@ -1295,31 +1299,31 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		CF = OF = 0;
 		EIP += 3;
 	}
-		break;
+		return;
 	case 0xAA: // STOS DEST-STR8
 		MEMORY[GetAddress(ES, DI)] = AL;
 		if (DF == 0) DI = DI + 1;
 		else         DI = DI - 1;
 		++EIP;
-		break;
+		return;
 	case 0xAB: // STOS DEST-STR16
 		Insert(AX, GetAddress(ES, DI));
 		if (DF == 0) DI = DI + 2;
 		else         DI = DI - 2;
 		++EIP;
-		break;
+		return;
 	case 0xAC: // LODS SRC-STR8
 		AL = MEMORY[GetAddress(DS, SI)];
 		if (DF == 0) SI = SI + 1;
 		else         SI = SI - 1;
 		++EIP;
-		break;
+		return;
 	case 0xAD: // LODS SRC-STR16
 		AX = FetchWord(GetAddress(DS, SI));
 		if (DF == 0) SI = SI + 2;
 		else         SI = SI - 2;
 		++EIP;
-		break;
+		return;
 	case 0xAE: { // SCAS DEST-STR8
 		const int r = AL - MEMORY[GetAddress(ES, DI)];
 		//TODO: SCAS OF, PF
@@ -1330,7 +1334,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		else         DI = DI - 1;
 		++EIP;
 	}
-		break;
+		return;
 	case 0xAF: { // SCAS DEST-STR16
 		const int r = AX - FetchWord(GetAddress(ES, DI));
 		//TODO: SCAS OF, PF
@@ -1341,122 +1345,122 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		else         DI = DI - 2;
 		++EIP;
 	}
-		break;
+		return;
 	case 0xB0: // MOV AL, IMM8
 		AL = FetchImmByte;
 		EIP += 2;
-		break;
+		return;
 	case 0xB1: // MOV CL, IMM8
 		CL = FetchImmByte;
 		EIP += 2;
-		break;
+		return;
 	case 0xB2: // MOV DL, IMM8
 		DL = FetchImmByte;
 		EIP += 2;
-		break;
+		return;
 	case 0xB3: // MOV BL, IMM8
 		BL = FetchImmByte;
 		EIP += 2;
-		break;
+		return;
 	case 0xB4: // MOV AH, IMM8
 		AH = FetchImmByte;
 		EIP += 2;
-		break;
+		return;
 	case 0xB5: // MOV CH, IMM8
 		CH = FetchImmByte;
 		EIP += 2;
-		break;
+		return;
 	case 0xB6: // MOV DH, IMM8  
 		DH = FetchImmByte;
 		EIP += 2;
-		break;
+		return;
 	case 0xB7: // MOV BH, IMM8
 		BH = FetchImmByte;
 		EIP += 2;
-		break;
+		return;
 	case 0xB8: // MOV AX, IMM16
-		AX = FetchWord();
+		AX = FetchWord;
 		EIP += 3;
-		break;
+		return;
 	case 0xB9: // MOV CX, IMM16
-		CX = FetchWord();
+		CX = FetchWord;
 		EIP += 3;
-		break;
+		return;
 	case 0xBA: // MOV DX, IMM16
-		DX = FetchWord();
+		DX = FetchWord;
 		EIP += 3;
-		break;
+		return;
 	case 0xBB: // MOV BX, IMM16
-		BX = FetchWord();
+		BX = FetchWord;
 		EIP += 3;
-		break;
+		return;
 	case 0xBC: // MOV SP, IMM16
-		SP = FetchWord();
+		SP = FetchWord;
 		EIP += 3;
-		break;
+		return;
 	case 0xBD: // MOV BP, IMM16
-		BP = FetchWord();
+		BP = FetchWord;
 		EIP += 3;
-		break;
+		return;
 	case 0xBE: // MOV SI, IMM16
-		SI = FetchWord();
+		SI = FetchWord;
 		EIP += 3;
-		break;
+		return;
 	case 0xBF: // MOV DI, IMM16
-		DI = FetchWord();
+		DI = FetchWord;
 		EIP += 3;
-		break;
+		return;
 	case 0xC2: // RET IMM16 (NEAR)
 		IP = Pop();
 		SP = cast(ushort)(SP + FetchWord());
 		//EIP += 3; ?
-		break;
+		return;
 	case 0xC3: // RET (NEAR)
 		IP = Pop();
-		break;
+		return;
 	case 0xC4: // LES REG16, MEM16
 // Load into REG and ES
 		
-		break;
+		return;
 	case 0xC5: // LDS REG16, MEM16
 // Load into REG and DS
 
-		break;
+		return;
 	case 0xC6: // MOV MEM8, IMM8
 		// MOD 000 R/M only
-		break;
+		return;
 	case 0xC7: // MOV MEM16, IMM16
 		// MOD 000 R/M only
-		break;
+		return;
 	case 0xCA: // RET IMM16 (FAR)
 		IP = Pop();
 		CS = Pop();
 		SP = SP + FetchWord;
 		// EIP += 3; ?
-		break;
+		return;
 	case 0xCB: // RET (FAR)
 		IP = Pop();
 		CS = Pop();
 		//++EIP; ?
-		break;
+		return;
 	case 0xCC: // INT 3
 		Raise(3);
 		++EIP;
-		break;
+		return;
 	case 0xCD: // INT IMM8
 		Raise(FetchImmByte);
 		EIP += 2;
-		break;
+		return;
 	case 0xCE: // INTO
 		if (CF) Raise(4);
 		++EIP;
-		break;
+		return;
 	case 0xCF: // IRET
 		IP = Pop();
 		CS = Pop();
 		FLAG = Pop();
 		++EIP;
-		break;
+		return;
 	case 0xD0: // GRP2 R/M8, 1
 		/*byte rm; // Get ModR/M byte
 		switch (rm & 0b00111000) {
@@ -1485,7 +1489,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 			
 			break;
 		}*/
-		break;
+		return;
 	case 0xD1: // GRP2 R/M16, 1
 		/*byte rm; // Get ModR/M byte
 		switch (rm & 0b00111000) {
@@ -1514,7 +1518,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 
 		break;
 		}*/
-		break;
+		return;
 	case 0xD2: // GRP2 R/M8, CL
 		/*byte rm; // Get ModR/M byte
 		switch (rm & 0b00111000) {
@@ -1543,7 +1547,7 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 
 		break;
 		}*/
-		break;
+		return;
 	case 0xD3: // GRP2 R/M16, CL
 		/*byte rm; // Get ModR/M byte
 		switch (rm & 0b00111000) {
@@ -1572,17 +1576,17 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 
 		break;
 		}*/
-		break;
+		return;
 	case 0xD4: // AAM
 		AH = cast(ubyte)(AL / 0xA);
 		AL = cast(ubyte)(AL % 0xA);
 		++EIP;
-		break;
+		return;
 	case 0xD5: // AAD
 		AL = cast(ubyte)(AL + (AH * 0xA));
 		AH = 0;
 		++EIP;
-		break;
+		return;
 	case 0xD7: // XLAT SOURCE-TABLE
 		AL = MEMORY[GetAddress(DS, BX) + AL];
 		break;
@@ -1600,40 +1604,40 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		CX = CX - 1;
 		if (CX && ZF == 0) EIP += FetchImmSByte;
 		else               EIP += 2;
-		break;
+		return;
 	case 0xE1: // LOOPE/LOOPZ   SHORT-LABEL
 		CX = CX - 1;
 		if (CX && ZF) EIP += FetchImmSByte;
 		else          EIP += 2;
-		break;
+		return;
 	case 0xE2: // LOOP  SHORT-LABEL
 		CX = CX - 1;
 		if (CX) EIP += FetchImmSByte;
 		else    EIP += 2;
-		break;
+		return;
 	case 0xE3: // JCXZ  SHORT-LABEL
 		if (CX == 0) EIP += FetchImmSByte;
 		else         EIP += 2;
-		break;
+		return;
 	case 0xE4: // IN AL, IMM8
 
-		break;
+		return;
 	case 0xE5: // IN AX, IMM8
 
-		break;
+		return;
 	case 0xE6: // OUT AL, IMM8
 
-		break;
+		return;
 	case 0xE7: // OUT AX, IMM8
 
-		break;
+		return;
 	case 0xE8: // CALL NEAR-PROC
 		Push(IP);
 		EIP += FetchImmSWord; // Direct within segment
-		break;
+		return;
 	case 0xE9: // JMP    NEAR-LABEL
 		EIP += FetchImmSWord; // ±32 KB
-		break;
+		return;
 	case 0xEA: { // JMP  FAR-LABEL
 		// Any segment, any fragment, 5 byte instruction.
 		// EAh (LO-IP) (HI-IP) (LO-CS) (HI-CS)
@@ -1641,26 +1645,26 @@ void Execute(ubyte op) // All instructions are 1-byte for the 8086.
 		IP = FetchWord(ip);
 		CS = FetchWord(ip + 2);
 	}
-		break;
+		return;
 	case 0xEB: // JMP  SHORT-LABEL
 		EIP += FetchImmSByte; // ±128 B
-		break;
+		return;
 	case 0xEC: // IN AL, DX
 
-		break;
+		return;
 	case 0xED: // IN AX, DX
 
-		break;
+		return;
 	case 0xEE: // OUT AL, DX
 
-		break;
+		return;
 	case 0xEF: // OUT AX, DX
 
-		break;
+		return;
 	case 0xF0: // LOCK (prefix)
 // http://qcd.phys.cmu.edu/QCDcluster/intel/vtune/reference/vc160.htm
 
-		break;
+		return;
 	case 0xF2: // REPNE/REPNZ
 CHECK_CX:
 		if (CX) {
@@ -1670,18 +1674,18 @@ CHECK_CX:
 			if (ZF == 0)
 				goto CHECK_CX;
 		} else ++EIP;
-		break;
+		return;
 	case 0xF3: // REP/REPE/REPNZ
 
-		break;
+		return;
 	case 0xF4: // HLT
 	//TODO: HLT
 		++EIP;
-		break;
+		return;
 	case 0xF5: // CMC
 		CF = !CF;
 		++EIP;
-		break;
+		return;
 	case 0xF6: // GRP3a R/M8, IMM8
 		/*byte rm; // Get ModR/M byte
 		switch (rm & 0b00111000) {
@@ -1710,7 +1714,7 @@ CHECK_CX:
 
 		break;
 		}*/
-		break;
+		return;
 	case 0xF7: // GRP3b R/M16, IMM16
 		/*byte rm; // Get ModR/M byte
 		switch (rm & 0b00111000) {
@@ -1739,31 +1743,31 @@ CHECK_CX:
 
 		break;
 		}*/
-		break;
+		return;
 	case 0xF8: // CLC
 		CF = 0;
 		++EIP;
-		break;
+		return;
 	case 0xF9: // STC
 		CF = 1;
 		++EIP;
-		break;
+		return;
 	case 0xFA: // CLI
 		IF = 0;
 		++EIP;
-		break;
+		return;
 	case 0xFB: // STI
 		IF = 1;
 		++EIP;
-		break;
+		return;
 	case 0xFC: // CLD
 		DF = 0;
 		++EIP;
-		break;
+		return;
 	case 0xFD: // STD
 		DF = 1;
 		++EIP;
-		break;
+		return;
 	case 0xFE: // GRP4 R/M8
 		/*byte rm; // Get ModR/M byte
 		switch (rm & 0b00111000) {
@@ -1777,7 +1781,7 @@ CHECK_CX:
 
 			break;
 		}*/
-		break;
+		return;
 	case 0xFF: // GRP5 R/M16
 		/*byte rm; // Get ModR/M byte
 		switch (rm & 0b00111000) {
@@ -1813,6 +1817,6 @@ CHECK_CX:
 		//TODO: Raise vector on illegal op
 		
 		++EIP; // ??
-		break;
+		return;
 	}
 }

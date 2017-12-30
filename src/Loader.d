@@ -55,7 +55,7 @@ void LoadExec(string path, string args = null) {
 
 		FILE* f = fopen(cast(char*)(path ~ '\0'), "rb"); // A little sad, I know
 		fseek(f, 0, SEEK_END);
-		int fsize = ftell(f);
+		size_t fsize = ftell(f);
 
 		if (Verbose)
 			logd("File size: ", fsize);
