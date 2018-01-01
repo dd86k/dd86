@@ -1,5 +1,5 @@
 /*
- * main.d: Main application.
+ * main.d: CLI entry point
  */
 
 //TODO: "Dynamic memory", allocate only what's necessary.
@@ -106,8 +106,7 @@ int main(string[] args) {
 		puts(BANNER); // Defined in dd_dos.d
 
     if (init_file) {
-        LoadExec(init_file, init_args);
-        Run; // vcpu already initiated
+        if (LoadExec(init_file, init_args)) Run; // vcpu already initiated
     } else {
         EnterVShell;
     }

@@ -1,19 +1,22 @@
 /*
  * Interpreter.d: Legacy machine code interpreter.
- *                Right now it's closest to an 8086.
- *                I hope to make it closer to an i486 whenever possible.
+ * 
+ * Right now it's closest to an 8086.
+ * I hope to make it closer to an i486 whenever possible.
  */
 
 module Interpreter;
 
+import core.stdc.stdlib : exit; // Temporary
 import dd_dos, InterpreterUtils, Logger;
 
-/// Initial and maximum amount of memory.
+/// Initial and maximum amount of memory if not specified in settings.
 enum MAX_MEM = 0x10_0000;
 // Some memory configurations
-// 0x4_0000   256 KB -- Minimal goal
+// 0x4_0000   256 KB -- Minimal goal, apparently MS-DOS can run with tihs
 // 0xA_0000   640 KB
 // 0x10_0000    1 MB
+// 0x20_0000    2 MB
 
 /// Sleep for n hecto-nanoseconds
 pragma(inline, true) extern (C)
@@ -52,72 +55,65 @@ void Initiate() {
 	BLp = cast(ubyte*)BXp;
 	CLp = cast(ubyte*)CXp;
 	DLp = cast(ubyte*)DXp;
+
+	//TODO: Probably a FAR JMP to "BIOS"
 }
 
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
 void Run() {
 	if (Verbose)
-		log("Running...");
+		log("Running interpreter");
 
 	Running = 1;
 	while (Running) {
+		debug logexec("  vm:", GetIPAddress, MEMORY[GetIPAddress]);
 		Execute(MEMORY[GetIPAddress]);
 		if (Sleep)
 			HSLEEP( 2 ); // Intel 8086 - 5 MHz
 	}
 }
 
-/// Is vcpu sleeping between cycles?
-__gshared bool Sleep;
-/// Is vcpu currently running?
-__gshared bool Running;
-/// Is Verbose mode set?
-__gshared bool Verbose;
+__gshared bool Sleep; /// Is vcpu sleeping between cycles?
+__gshared bool Running; /// Is vcpu currently running?
+__gshared bool Verbose; /// Is Verbose mode set?
 
-/// Main memory brank
-__gshared ubyte[MAX_MEM] MEMORY;
-/// Current memory MEMORY size
-__gshared size_t MEMORYSIZE = MAX_MEM;
+__gshared ubyte[MAX_MEM] MEMORY; /// Main memory brank
+__gshared size_t MEMORYSIZE = MAX_MEM; /// Current memory MEMORY size. Default: MAX_MEM
 
 /**
  * Get memory address out of a segment and a register value.
  * Params:
- *   segment = Segment register value
- *   offset  = Generic register value
+ *   s = Segment register value
+ *   o  = Generic register value
  * Returns: SEG:ADDR Location
  */
 extern (C)
-uint GetAddress(int segment, int offset)
-{
-	return (segment << 4) + offset;
+uint GetAddress(int s, int o) {
+	return (s << 4) + o;
 }
 /**
  * Get next instruction location
- * Returns: CS:IP address
+ * Returns: CS:IP effective address
  */
 extern (C)
-uint GetIPAddress()
-{
-	return GetAddress(CS, EIP);
+uint GetIPAddress() {
+	return GetAddress(CS, IP);
 }
 
 /// RESET instruction function
 extern (C)
-void Reset()
-{
+void Reset() {
 	OF = DF = IF = TF = SF =
-		ZF = AF = PF = CF = false;
+		ZF = AF = PF = CF = 0;
 	CS = 0xFFFF;
 	EIP = DS = SS = ES = 0;
 	// Empty Queue Bus
 }
 
-/// Resets the entire vcpu, does not refer to the RESET instruction.
-/// Think of it as a cold reboot.
+/// Resets the entire vcpu. Does not refer to the RESET instruction!
 extern (C)
-void FullReset()
-{
+void FullReset() {
 	Reset();
 	EAX = EBX = ECX = EDX =
 	EBP = ESP = EDI = ESI = 0;
@@ -320,14 +316,12 @@ bool OF, /// Bit 11, Overflow Flag
  *   value = WORD value to PUSH
  */
 extern (C)
-void Push(ushort value)
-{
+void Push(ushort value) {
 	SP = SP - 2;
 	SetWord(GetAddress(SS, SP), value);
 }
 extern (C)
-void EPush(uint value)
-{
+void EPush(uint value) {
 	SP = SP - 2;
 	SetDWord(GetAddress(SS, SP), value);
 }
@@ -336,8 +330,7 @@ void EPush(uint value)
  * Returns: POP'd WORD value
  */
 extern (C)
-ushort Pop()
-{
+ushort Pop() {
 	const uint addr = GetAddress(SS, SP);
 	SP = SP + 2;
 	return FetchWord(addr);
@@ -354,8 +347,7 @@ uint EPop()
  * Get FLAG as WORD.
  * Returns: FLAG as byte
  */
-@property ubyte FLAGB()
-{
+@property ubyte FLAGB() {
 	ubyte b;
 	if (SF) b |= MASK_SF;
 	if (ZF) b |= MASK_ZF;
@@ -367,8 +359,7 @@ uint EPop()
 
 /// Set FLAG as BYTE.
 /// Params: flag = FLAG byte
-@property void FLAGB(ubyte flag)
-{
+@property void FLAGB(ubyte flag) {
 	SF = (flag & MASK_SF) != 0;
 	ZF = (flag & MASK_ZF) != 0;
 	AF = (flag & MASK_AF) != 0;
@@ -400,8 +391,27 @@ uint EPop()
 	FLAGB = cast(ubyte)flag;
 }
 
+enum {
+	RM_MOD_00 = 0,   /// MOD 00, Memory Mode, no displacement
+	RM_MOD_01 = 64,  /// MOD 01, Memory Mode, 8-bit displacement
+	RM_MOD_10 = 128, /// MOD 10, Memory Mode, 16-bit displacement
+	RM_MOD_11 = 192, /// MOD 11, Register Mode
+	RM_MOD = 192, /// Used for masking the MOD bits
+
+	RM_REG_000 = 0,  /// AX
+	RM_REG_001 = 8,  /// CX
+	RM_REG_010 = 16, /// DX
+	RM_REG_011 = 24, /// BX
+	RM_REG_100 = 32, /// SP
+	RM_REG_101 = 40, /// BP
+	RM_REG_110 = 48, /// SI
+	RM_REG_111 = 56, /// DI
+	RM_REG = 56, /// Used for masking the REG bits
+}
+
 enum { // Segment override (for Seg)
-	SEG_CS = 1, /// CS
+	SEG_NONE,
+	SEG_CS, /// CS
 	SEG_DS, /// DS
 	SEG_ES, /// ES
 	SEG_SS  /// SS
@@ -417,14 +427,6 @@ __gshared uint Seg; // See above enumeration
  */
 extern (C)
 void Execute(ubyte op) {
-	//TODO: Seg (uint)
-	//      Seg will be used to get the default or segment overload prefix.
-	// Usage:
-	//      Default: Seg = DS (for ModR/M example)
-	//      Prefix : Seg = CS (for CS: example)
-	// Then the next instruction will use Seg (with GetAddress)
-	// There are a few instructions (opcodes) affected by this:
-	// (TODO: get those opcodes too)
 	/*
 	 * Legend:
 	 * R/M - Mod Register/Memory byte
@@ -441,7 +443,51 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x01: { // ADD R/M16, REG16
+		const ubyte rm = FetchImmByte;
+		const uint addr = GetEA(rm);
+		final switch (rm & RM_MOD) {
+		case RM_MOD_00:
+			final switch (rm & RM_REG) {
+			case RM_REG_000: // AX
+				SetWord(addr, FetchWord(addr) + AX);
+				break;
+			case RM_REG_001: // CX
+				SetWord(addr, FetchWord(addr) + CX);
+				break;
+			case RM_REG_010: // DX
+				SetWord(addr, FetchWord(addr) + DX);
+				break;
+			case RM_REG_011: // BX
+				SetWord(addr, FetchWord(addr) + BX);
+				break;
+			case RM_REG_100: // SP
+				SetWord(addr, FetchWord(addr) + SP);
+				break;
+			case RM_REG_101: // BP
+				SetWord(addr, FetchWord(addr) + BP);
+				break;
+			case RM_REG_110: // SI
+				SetWord(addr, FetchWord(addr) + SI);
+				break;
+			case RM_REG_111: // DI
+				SetWord(addr, FetchWord(addr) + DI);
+				break;
+			}
+			break; // MOD 00
+		case RM_MOD_01:
 
+			EIP += 1;
+			break; // MOD 01
+		case RM_MOD_10:
+
+			EIP += 2;
+			break; // MOD 10
+		case RM_MOD_11:
+			final switch (rm & RM_REG) {
+			}
+			break; // MOD 11
+		}
+		EIP += 2;
 		return;
 	}
 	case 0x02: { // ADD REG8, R/M8
@@ -1095,7 +1141,65 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x89: { // MOV R/M16, REG16
-		HandleRMWordRM16(FetchImmByte);
+		const ubyte rm = FetchImmByte;
+		final switch (rm & 0b1100_0000) {
+		case RM_MOD_00:
+			final switch (rm & 0b111_000) {
+			case RM_REG_000: // AX
+				SetWord(GetEA(rm), AX);
+				break;
+			case RM_REG_001: // CX
+				SetWord(GetEA(rm), CX);
+				break;
+			case RM_REG_010: // DX
+				SetWord(GetEA(rm), DX);
+				break;
+			case RM_REG_011: // BX
+				SetWord(GetEA(rm), BX);
+				break;
+			case RM_REG_100: // SP
+				SetWord(GetEA(rm), SP);
+				break;
+			case RM_REG_101: // BP
+				SetWord(GetEA(rm), BP);
+				break;
+			case RM_REG_110: // SI
+				SetWord(GetEA(rm), SI);
+				break;
+			case RM_REG_111: // DI
+				SetWord(GetEA(rm), DI);
+				break;
+			}
+			break; // MOD 00
+		case RM_MOD_01:
+
+			EIP += 1;
+			break; // MOD 01
+		case RM_MOD_10:
+
+			EIP += 2;
+			break; // MOD 10
+		case RM_MOD_11:
+			final switch (rm & 0b111_000) {
+			/*case 0: AX =  break;
+			case 0b00_1000: CX =  break;
+			case 0b01_0000: DX =  break;
+			case 0b01_1000: BX =  break;
+			case 0b10_0000: SP =  break;
+			case 0b10_1000: BP =  break;
+			case 0b11_0000: SI =  break;
+			case 0b11_1000: DI =  break;*/
+			/*case 0: AX = getRMRegWord(rm); break;
+			case 0b00_1000: CX = getRMRegWord(rm); break;
+			case 0b01_0000: DX = getRMRegWord(rm); break;
+			case 0b01_1000: BX = getRMRegWord(rm); break;
+			case 0b10_0000: SP = getRMRegWord(rm); break;
+			case 0b10_1000: BP = getRMRegWord(rm); break;
+			case 0b11_0000: SI = getRMRegWord(rm); break;
+			case 0b11_1000: DI = getRMRegWord(rm); break;*/
+			}
+			break; // MOD 11
+		}
 		EIP += 2;
 		return;
 	}
@@ -1105,7 +1209,7 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x8B: // MOV REG16, R/M16
-		HandleRMWordReg(FetchImmByte);
+
 		EIP += 2;
 		return;
 	case 0x8C: // MOV R/M16, SEGREG
@@ -1813,10 +1917,12 @@ CHECK_CX:
 		break;
 	default: // Illegal instruction
 		if (Verbose)
-			loghb("ILLEGAL: ", op, LogLevel.Error);
+			loghb("ILLEGAL: ", op, Log.Error);
 		//TODO: Raise vector on illegal op
 		
 		++EIP; // ??
+
+		exit(0); // Temporary
 		return;
 	}
 }

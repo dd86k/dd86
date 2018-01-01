@@ -1,5 +1,5 @@
 /*
- * Loader.d : Executable file loader.
+ * Loader.d: Executable file loader. Should somewhat be like EXEC.
  */
 
 module Loader;
@@ -7,6 +7,8 @@ module Loader;
 import core.stdc.stdio;
 import std.path, std.file;
 import dd_dos, Interpreter, InterpreterUtils, Logger;
+
+private enum ERESWDS = 16; /// RESERVED WORDS
 
 /// MS-DOS EXE header
 private struct mz_hdr { align(1):
@@ -27,9 +29,8 @@ private struct mz_hdr { align(1):
 	//ushort[ERESWDS] e_res; /* Reserved words */
 	//uint   e_lfanew;       /* File address of new exe header */
 }
-private enum ERESWDS = 16;
 
-private struct mz_rlc { // For AL=03h
+private struct mz_rlc { align(1): // For AL=03h
 	ushort offset; /// Offset within segment
 	ushort segment; // Segment of relocation
 }
@@ -38,8 +39,8 @@ private struct mz_rlc { // For AL=03h
 private enum MZ_MAGIC = 0x5A4D;
 
 private enum {
-	PARAGRAPH = 16,
-	PAGE = 512
+	PARAGRAPH = 16, /// Size of a paragraph
+	PAGE = 512, /// Size of a page
 }
 
 /**
@@ -48,12 +49,12 @@ private enum {
  *   path = Path to executable
  *   args = Executable arguments
  */
-void LoadExec(string path, string args = null) {
+bool LoadExec(string path, string args = null) {
 	if (exists(path)) {
 		if (Verbose)
 			log("File exists");
 
-		FILE* f = fopen(cast(char*)(path ~ '\0'), "rb"); // A little sad, I know
+		FILE* f = fopen(cast(char*)(path~'\0'), "rb"); // A little sad, I know
 		fseek(f, 0, SEEK_END);
 		size_t fsize = ftell(f);
 
@@ -66,9 +67,9 @@ void LoadExec(string path, string args = null) {
 
 		if (fsize == 0) {
 			if (Verbose)
-				log("File is zero length.", LogLevel.Error);
+				log("File is zero length.", Log.Information);
 			AL = 2; // Non-official
-			return;
+			return false;
 		}
 
 		switch (sig) {
@@ -180,13 +181,13 @@ void LoadExec(string path, string args = null) {
 
 			// Make PSP
 			//MakePSP(GetIPAddress, "test");
-			break; // case MZ
+			return true; // case MZ
 		default:
 			if (fsize > 0xFF00) { // Size - PSP
 				if (Verbose)
-					log("COM file too large", LogLevel.Error);
-				AL = 3;
-				return;
+					log("COM file too large", Log.Error);
+				AL = 3; // Non-official
+				return false;
 			}
 			if (Verbose)
 				log("LOAD COM");
@@ -196,10 +197,11 @@ void LoadExec(string path, string args = null) {
 			fread(_comp, fsize, 1, f);
 
 			//MakePSP(_comp - 0x100, "TEST");
-			break; // case COM
+			return true; // case COM
 		}
 	}
 	else if (Verbose)
-		printf("[VMLE] File %s does not exist, skipping\n",
-			cast(char*)path);
+		logs("File does not exist: \n", path, Log.Information);
+	
+	return false;
 }

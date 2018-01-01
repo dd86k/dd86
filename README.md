@@ -8,7 +8,9 @@ _______ _______        _______  ______  _______
 |______/|______/       |______/\______/\______/
 ```
 
-DD-DOS aims to be a simple compatibility layer, like NTVDM.
+DD-DOS aims to be a simple compatibility layer and replace NTVDM.
+
+Interested? Check the [roadmap](https://github.com/dd86k/dd-dos/wiki/Roadmap).
 
 If you wish to build, or help develop dd-dos, the [Dev Space](https://github.com/dd86k/dd-dos/wiki/Dev-Space) will help you.
 

@@ -7,124 +7,9 @@ module InterpreterUtils;
 import Interpreter;
 import Logger;
 
-/*
- * Registers
- */
-/*extern (C)
-void HandleRMByte(const ubyte rm) {
-
-}*/
-
 /**
- * A REG16 to ModR/M16 handler. (MOV R/M16, REG16)
- * Params:
- *   rm = ModR/M BYTE
- */
-extern (C)
-void HandleRMWordRM16(const ubyte rm) {
-	final switch (rm & 0b1100_0000) {
-	case 0: // MOD 00, Memory Mode, no displacement
-		final switch (rm & 0b111_000) {
-		case 0: // AX
-			log("AX");
-			break;
-		case 0b001_000: // CX
-			log("CX");
-			break;
-		case 0b010_000: // DX
-			SetWord(GetEA(rm), DX);
-			break;
-		case 0b011_000: // BX
-			log("BX");
-			break;
-		case 0b100_000: // SP
-			log("SP");
-			break;
-		case 0b101_000: // BP
-			log("BP");
-			break;
-		case 0b110_000: // SI
-			log("SI");
-			break;
-		case 0b111_000: // DI
-			log("DI");
-			break;
-		}
-		break; // MOD 00
-	case 0b0100_0000: // MOD 01, Memory Mode, 8-bit displacement
-
-		EIP += 1;
-		break; // MOD 01
-	case 0b1000_0000: // MOD 10, Memory Mode, 16-bit displacement
-
-		EIP += 2;
-		break; // MOD 10
-	case 0b1100_0000: // MOD 11, Register Mode
-		final switch (rm & 0b111_000) {
-		/*case 0: AX =  break;
-		case 0b00_1000: CX =  break;
-		case 0b01_0000: DX =  break;
-		case 0b01_1000: BX =  break;
-		case 0b10_0000: SP =  break;
-		case 0b10_1000: BP =  break;
-		case 0b11_0000: SI =  break;
-		case 0b11_1000: DI =  break;*/
-		/*case 0: AX = getRMRegWord(rm); break;
-		case 0b00_1000: CX = getRMRegWord(rm); break;
-		case 0b01_0000: DX = getRMRegWord(rm); break;
-		case 0b01_1000: BX = getRMRegWord(rm); break;
-		case 0b10_0000: SP = getRMRegWord(rm); break;
-		case 0b10_1000: BP = getRMRegWord(rm); break;
-		case 0b11_0000: SI = getRMRegWord(rm); break;
-		case 0b11_1000: DI = getRMRegWord(rm); break;*/
-		}
-		break; // MOD 11
-	}
-}
-
-/**
- * A ModR/M16 to REG16 handler. (MOV REG16, R/M16)
- * Params:
- *   rm = ModR/M BYTE
- */
-extern (C)
-void HandleRMWordReg(const ubyte rm) {
-	/*final switch (rm & 0b1100_0000) {
-	case 0: // MOD 00, Memory Mode, no displacement
-		final switch (rm & 0b111_000) {
-		case 0:
-			SetRegRMWord(rm, GetAddress(SI, BX));
-			break;
-		case 0b001_000:
-
-			break;
-		}
-		break; // MOD 00
-	case 0b0100_0000: // MOD 01, Memory Mode, 8-bit displacement
-
-		EIP += 1;
-		break; // MOD 01
-	case 0b1000_0000: // MOD 10, Memory Mode, 16-bit displacement
-
-		EIP += 2;
-		break; // MOD 10
-	case 0b1100_0000: // MOD 11, Register Mode
-		final switch (rm & 0b111_000) { //TODO: Fix this wrong code!
-		case 0: setRMRegWord(rm, AX); break;
-		case 0b001_000: setRMRegWord(rm, CX); break;
-		case 0b010_000: setRMRegWord(rm, DX); break;
-		case 0b011_000: setRMRegWord(rm, BX); break;
-		case 0b100_000: setRMRegWord(rm, SP); break;
-		case 0b101_000: setRMRegWord(rm, BP); break;
-		case 0b110_000: setRMRegWord(rm, SI); break;
-		case 0b111_000: setRMRegWord(rm, DI); break;
-		}
-		break; // MOD 11
-	}*/
-}
-
-/**
- * Get (calculated) effective address
+ * Get (calculated) effective address, mostly usefull for R/M bits.
+ * Takes account of the preferred segment register.
  * Params: rm = R/M BYTE
  * Returns: Effective Address
  */
@@ -138,25 +23,42 @@ uint GetEA(ubyte rm) {
 		case SEG_SS:*/
 		default:
 			final switch (rm & 0b111) { // R/M
-			case 0: return SI + BX;
-			case 0b001: return DI + BX;
-			case 0b010: return SI + BP;
-			case 0b011: return DI + BP;
-			case 0b100: return SI;
-			case 0b101: return DI;
-			case 0b110: return FetchImmWord(1); // DIRECT ADDRESS
-			case 0b111: return BX;
+			case 0:
+				debug log("EA:0:0", Log.Debug);
+				return SI + BX;
+			case 0b001:
+				debug log("EA:0:1", Log.Debug);
+				return DI + BX;
+			case 0b010:
+				debug log("EA:0:2", Log.Debug);
+				return SI + BP;
+			case 0b011:
+				debug log("EA:0:3", Log.Debug);
+				return DI + BP;
+			case 0b100:
+				debug log("EA:0:4", Log.Debug);
+				return SI;
+			case 0b101:
+				debug log("EA:0:5", Log.Debug);
+				return DI;
+			case 0b110:
+				debug log("EA:0:6", Log.Debug);
+				return FetchImmWord(1); // DIRECT ADDRESS
+			case 0b111:
+				debug log("EA:0:7", Log.Debug);
+				return BX;
 			}
 		} // MOD 00
 	case 0b0100_0000: // MOD 01, Memory Mode, 8-bit displacement follows
-
+		log("EA:1:_", Log.Debug);
 		EIP += 1;
 		break; // MOD 01
 	case 0b1000_0000: // MOD 10, Memory Mode, 16-bit displacement follows
-
+		log("EA:2:_", Log.Debug);
 		EIP += 2;
 		break; // MOD 10
 	case 0b1100_0000: // MOD 11, Register Mode
+		log("EA:3:_", Log.Debug);
 		/*final switch (rm & 0b111_000) {
 		case 0: 
 			switch (Seg) {
@@ -179,8 +81,8 @@ uint GetEA(ubyte rm) {
 	return -1; // Temporary
 }
 
-extern (C)
-private ushort getRMRegWord(const ubyte rm) {
+extern (C) private
+deprecated ushort getRMRegWord(const ubyte rm) {
 	final switch (rm & 0b111) {
 	case 0: return AX;
 	case 1: return CX;
@@ -193,8 +95,8 @@ private ushort getRMRegWord(const ubyte rm) {
 	}
 }
 
-extern (C)
-private void setRMRegWord(const ubyte rm, const ushort v) {
+extern (C) private
+deprecated void setRMRegWord(const ubyte rm, const ushort v) {
 	final switch (rm & 0b111) {
 	case 0: AX = v; break;
 	case 1: CX = v; break;
@@ -204,48 +106,6 @@ private void setRMRegWord(const ubyte rm, const ushort v) {
 	case 5: BP = v; break;
 	case 6: SI = v; break;
 	case 7: DI = v; break;
-	}
-}
-
-/**
- * Get a byte register with the ModR/M byte and its address.
- * Used by SetRegAddressWord.
- * Params:
- *   rm = ModR/M byte
- *   addr = Calculated address
- */
-extern (C)
-private void SetRegRMWord(const ubyte rm, const uint addr) {
-	final switch (rm & 0b111_000) {
-	case 0:     AX = FetchWord(addr); break;
-	case 0b001: CX = FetchWord(addr); break;
-	case 0b010: DX = FetchWord(addr); break;
-	case 0b011: BX = FetchWord(addr); break;
-	case 0b100: SP = FetchWord(addr); break;
-	case 0b101: BP = FetchWord(addr); break;
-	case 0b110: SI = FetchWord(addr); break;
-	case 0b111: DI = FetchWord(addr); break;
-	}
-}
-
-/**
- * Get a byte register with the ModR/M byte and its address.
- * Used by SetRegAddressByte.
- * Params:
- *   rm = ModR/M byte
- *   addr = Calculated address
- */
-extern (C)
-private void SetRegRMByte(const ubyte rm, uint addr) {
-	final switch (rm & 0b111_000) {
-	case 0:     AL = MEMORY[addr]; break;
-	case 0b001: CL = MEMORY[addr]; break;
-	case 0b010: DL = MEMORY[addr]; break;
-	case 0b011: BL = MEMORY[addr]; break;
-	case 0b100: AH = MEMORY[addr]; break;
-	case 0b101: CH = MEMORY[addr]; break;
-	case 0b110: DH = MEMORY[addr]; break;
-	case 0b111: BH = MEMORY[addr]; break;
 	}
 }
 
@@ -260,12 +120,12 @@ private void SetRegRMByte(const ubyte rm, uint addr) {
  *   value = WORD v alue.
  */
 extern (C)
-void SetWord(uint addr, ushort value) {
-	*(cast(ushort *)&MEMORY[addr]) = value;
+void SetWord(uint addr, int value) {
+	*(cast(ushort*)&MEMORY[addr]) = cast(ushort)value;
 }
 extern (C)
 void SetDWord(uint addr, uint value) {
-	*(cast(uint *)&MEMORY[addr]) = value;
+	*(cast(uint*)&MEMORY[addr]) = value;
 }
 
 /*

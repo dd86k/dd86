@@ -13,19 +13,17 @@ module ddcon;
 private import core.stdc.stdio;
 private alias sys = core.stdc.stdlib.system;
 
-version (Windows)
-{
+version (Windows) {
     private import core.sys.windows.windows;
     private enum ALT_PRESSED =  RIGHT_ALT_PRESSED  | LEFT_ALT_PRESSED;
     private enum CTRL_PRESSED = RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED;
     private enum DEFAULT_COLOR =
         FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
     /// Necessary handles.
-    private __gshared HANDLE hIn, hOut;
+    private __gshared HANDLE hIn, hOut; //TODO: Check if stdin from stdio.h works
     private __gshared USHORT defaultColor = DEFAULT_COLOR;
 }
-else version (Posix)
-{
+version (Posix) {
     private import core.sys.posix.sys.ioctl;
     private import core.sys.posix.unistd;
     private import core.sys.posix.termios;
@@ -37,11 +35,10 @@ else version (Posix)
  * Initiation
  *******************************************************************/
 
-/// Initiate poshub
-void InitConsole()
-{
-    version (Windows)
-    {
+/// Initiate ddcon
+extern (C)
+void InitConsole() {
+    version (Windows) {
         hOut = GetStdHandle(STD_OUTPUT_HANDLE);
         hIn  = GetStdHandle(STD_INPUT_HANDLE);
         /*HKEY key;
@@ -78,8 +75,7 @@ void InitConsole()
  *******************************************************************/
 
 //TODO: Complete colors and stuff
-version (Windows)
-{
+version (Windows) {
 /*
 0 = Black       8 = Gray
 1 = Blue        9 = Light Blue
@@ -91,8 +87,7 @@ version (Windows)
 7 = White       F = Bright White
 */
 //https://msdn.microsoft.com/en-us/library/windows/desktop/ms682088(v=vs.85).aspx#_win32_character_attributes
-    enum FgColor
-    {
+    enum FgColor {
         Black = 0,
         Red    = FOREGROUND_RED,
         Green  = FOREGROUND_GREEN,
@@ -111,8 +106,7 @@ version (Windows)
         //LightYellow = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN,
         White       = FOREGROUND_INTENSITY | Gray
     }
-    enum BgColor
-    {
+    enum BgColor {
         Black = 0,
         Red    = BACKGROUND_RED,
         Green  = BACKGROUND_GREEN,
@@ -132,8 +126,7 @@ version (Windows)
         White       = BACKGROUND_INTENSITY | Gray
     }
 }
-else version (Posix)
-{
+version (Posix) {
 /*
 Black       0;30     Dark Gray     1;30
 Blue        0;34     Light Blue    1;34
@@ -145,8 +138,7 @@ Brown       0;33     Yellow        1;33
 Light Gray  0;37     White         1;37
 */
     enum INTENSIFY = 0x100;
-    enum FgColor
-    {
+    enum FgColor {
         /*Black = 30,
         Red = 31,
         Blue = 34,
@@ -180,8 +172,7 @@ Light Gray  0;37     White         1;37
         LightCyan,
         White
     }
-    enum BgColor
-    {
+    enum BgColor {
         Black = FgColor.Black << 8,
         Blue = FgColor.Blue << 8,
         Green = FgColor.Green << 8,
@@ -201,30 +192,27 @@ Light Gray  0;37     White         1;37
     }
 }
 
-void SetColor(int n)
-{
-    version (Windows)
-    {
+extern (C)
+void SetColor(int n) {
+    version (Windows) {
         SetConsoleTextAttribute(hOut, cast(ushort)n);
     }
-    else version (Posix)
-    { // Foreground and background
+    else version (Posix) { // Foreground and background
         printf("\033[38;5;%dm\033[48;5;%dm", cast(ubyte)n, cast(ubyte)(n >> 8));
-    }
-    else
-    {
+    } else {
 
     }
 }
 
-void InvertColor()
-{
+extern (C)
+void InvertColor() {
     version (Windows)
         SetConsoleTextAttribute(hOut, COMMON_LVB_REVERSE_VIDEO | defaultColor);
     version (Posix)
         printf("\033[7m");
 }
 
+extern (C)
 void ResetColor()
 {
     version (Windows)
@@ -238,10 +226,9 @@ void ResetColor()
  *******************************************************************/
 
 /// Clear screen
-void Clear()
-{
-    version (Windows)
-    {
+extern (C)
+void Clear() {
+    version (Windows) {
         CONSOLE_SCREEN_BUFFER_INFO csbi;
         COORD c;
         GetConsoleScreenBufferInfo(hOut, &csbi);
@@ -249,15 +236,12 @@ void Clear()
         DWORD num = 0;
         if (FillConsoleOutputCharacterA(hOut, ' ', size, c, &num) == 0
             /*|| // .NET uses this but no idea why.
-            FillConsoleOutputAttribute(hOut, csbi.wAttributes, size, c, &num) == 0*/)
-        {
+            FillConsoleOutputAttribute(hOut, csbi.wAttributes, size, c, &num) == 0*/) {
             SetPos(0, 0);
         }
         /*else // If that fails, run cls.
             sys ("cls");*/
-    }
-    else version (Posix)
-    { //TODO: Clear (Posix)
+    } else version (Posix) { //TODO: Clear (Posix)
         sys ("clear");
     }
     else static assert(0, "Clear: Not implemented");
@@ -270,81 +254,57 @@ void Clear()
 // Note: A COORD uses SHORT (short) and Linux uses unsigned shorts.
 
 /// Window width
-@property ushort WindowWidth()
-{
-    version (Windows)
-    {
+@property ushort WindowWidth() {
+    version (Windows) {
         CONSOLE_SCREEN_BUFFER_INFO c;
         GetConsoleScreenBufferInfo(hOut, &c);
         return cast(ushort)(c.srWindow.Right - c.srWindow.Left + 1);
-    }
-    else version (Posix)
-    {
+    } else version (Posix) {
         winsize ws;
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
         return ws.ws_col;
-    }
-    else
-    {
+    } else {
         static assert(0, "WindowWidth : Not implemented");
     }
 }
 
 /// Window width
-@property void WindowWidth(int w)
-{
-    version (Windows)
-    {
+@property void WindowWidth(int w) {
+    version (Windows) {
         COORD c = { cast(SHORT)w, cast(SHORT)WindowWidth };
         SetConsoleScreenBufferSize(hOut, c);
-    }
-    else version (Posix)
-    {
+    } else version (Posix) {
         winsize ws = { cast(ushort)w, WindowWidth };
         ioctl(STDOUT_FILENO, TIOCSWINSZ, &ws);
-    }
-    else
-    {
+    } else {
         static assert(0, "WindowWidth : Not implemented");
     }
 }
 
 /// Window height
-@property ushort WindowHeight()
-{
-    version (Windows)
-    {
+@property ushort WindowHeight() {
+    version (Windows) {
         CONSOLE_SCREEN_BUFFER_INFO c;
         GetConsoleScreenBufferInfo(hOut, &c);
         return cast(ushort)(c.srWindow.Bottom - c.srWindow.Top + 1);
-    }
-    else version (Posix)
-    {
+    } else version (Posix) {
         winsize ws;
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
         return ws.ws_row;
-    }
-    else
-    {
+    } else {
         static assert(0, "WindowHeight : Not implemented");
     }
 }
 
 /// Window height
-@property void WindowHeight(int h)
-{
-    version (Windows)
-    {
+@property void WindowHeight(int h) {
+    version (Windows) {
         COORD c = { cast(SHORT)WindowWidth, cast(SHORT)h };
         SetConsoleScreenBufferSize(hOut, c);
-    }
-    else version (Posix)
-    {
+    } else version (Posix) {
         winsize ws = { WindowWidth, cast(ushort)h, 0, 0 };
         ioctl(STDOUT_FILENO, TIOCSWINSZ, &ws);
-    }
-    else
-    {
+    } else {
         static assert(0, "WindowHeight : Not implemented");
     }
 }
@@ -353,17 +313,19 @@ void Clear()
  * Cursor management
  *******************************************************************/
 
-/// Set cursor position x and y position respectively from the
-/// top left corner, 0-based.
-void SetPos(int x, int y)
-{
-    version (Windows)
-    { // 0-based
+/**
+ * Set cursor position x and y position respectively from the top left corner,
+ * 0-based.
+ * Params:
+ *   x = X position (horizontal)
+ *   y = Y position (vertical)
+ */
+extern (C)
+void SetPos(int x, int y) {
+    version (Windows) { // 0-based
         COORD c = { cast(SHORT)x, cast(SHORT)y };
         SetConsoleCursorPosition(hOut, c);
-    }
-    else version (Posix)
-    { // 1-based
+    } else version (Posix) { // 1-based
         printf("\033[%d;%dH", y + 1, x + 1);
     }
 }
@@ -409,17 +371,14 @@ void SetPos(int x, int y)
  * Params: echo = Echo character to output.
  * Returns: A KeyInfo structure.
  */
-KeyInfo ReadKey(bool echo = false)
-{
+extern (C)
+KeyInfo ReadKey(bool echo = false) {
     KeyInfo k;
-    version (Windows)
-    { // Sort of is like .NET's ReadKey
+    version (Windows) { // Sort of is like .NET's ReadKey
         INPUT_RECORD ir;
         DWORD num = 0;
-        if (ReadConsoleInput(hIn, &ir, 1, &num))
-        {
-            if (ir.KeyEvent.bKeyDown && ir.EventType == KEY_EVENT)
-            {
+        if (ReadConsoleInput(hIn, &ir, 1, &num)) {
+            if (ir.KeyEvent.bKeyDown && ir.EventType == KEY_EVENT) {
                 DWORD state = ir.KeyEvent.dwControlKeyState;
                 k.alt   = (state & ALT_PRESSED)   != 0;
                 k.ctrl  = (state & CTRL_PRESSED)  != 0;
@@ -431,9 +390,7 @@ KeyInfo ReadKey(bool echo = false)
                 if (echo) printf("%c", k.keyChar);
             }
         }
-    }
-    else version (Posix)
-    {
+    } else version (Posix) {
         //TODO: Get modifier keys states
 
         // Commenting this section will echo the character
@@ -443,17 +400,14 @@ KeyInfo ReadKey(bool echo = false)
         new_tio.c_lflag &= TERM_ATTR;
         tcsetattr(STDIN_FILENO,TCSANOW, &new_tio);
 
-        uint c = getchar();
+        uint c = getchar;
 
-        with (k)
-        switch (c)
-        {
+        with (k) switch (c) {
         case '\n': // \n (ENTER)
             keyCode = Key.Enter;
             break;
         case 27: // ESC
-            switch (c = getchar())
-            {
+            switch (c = getchar()) {
             case '[':
                 switch (c = getchar())
                 {
@@ -486,10 +440,10 @@ KeyInfo ReadKey(bool echo = false)
         }
 
         tcsetattr(STDIN_FILENO,TCSANOW, &old_tio);
-    }
+    } // version posix
     return k;
 }
-
+/*
 RawEvent ReadGlobal()
 {
     version (Windows)
@@ -532,7 +486,7 @@ RawEvent ReadGlobal()
         return r;
     }
 }
-
+*/
 /*******************************************************************
  * Handlers
  *******************************************************************/
@@ -545,7 +499,7 @@ RawEvent ReadGlobal()
 /*******************************************************************
  * Emunerations
  *******************************************************************/
-
+/*
 enum EventType : ushort {
     Key = 1, Mouse = 2, Resize = 4
 }
@@ -563,7 +517,7 @@ enum MouseState : ushort { // Windows compilant
 enum MouseEventType { // Windows compilant
     Moved = 1, DoubleClick = 2, Wheel = 4, HorizontalWheel = 8
 }
-
+*/
 /// Key codes mapping.
 enum Key : ushort {
     Backspace = 8,
@@ -715,7 +669,7 @@ enum Key : ushort {
 /*******************************************************************
  * Structs
  *******************************************************************/
-
+/*
 struct RawEvent
 {
     EventType Type;
@@ -723,7 +677,7 @@ struct RawEvent
     MouseInfo Mouse;
     WindowSize Size;
 }
-
+*/
 /// Key information structure
 // ala C#
 struct KeyInfo
@@ -741,7 +695,7 @@ struct KeyInfo
     /// If SHIFT was held down.
     bool shift;
 }
-
+/*
 struct MouseInfo
 {
     struct ScreenLocation { ushort X, Y; }
@@ -750,7 +704,7 @@ struct MouseInfo
     ushort State;
     ushort Type;
 }
-
+*/
 struct WindowSize
 {
     ushort Width, Height;

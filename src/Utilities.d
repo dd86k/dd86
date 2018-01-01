@@ -1,5 +1,5 @@
 /**
- * Utilities.d : Generic utilities
+ * Utilities.d: Generic utilities
  */
 
 module Utilities;
@@ -11,8 +11,7 @@ module Utilities;
  *   pos = Starting position
  * Returns: String
  */
-string MemString(void* mem, uint pos) pure
-{
+string MemString(void* mem, uint pos) pure {
     import core.stdc.string : strlen;
     const size_t len = strlen(cast(char*)(mem + pos));
     return cast(string)mem[pos..pos+len];

@@ -1,3 +1,7 @@
+/*
+ * dd-dos.d: Operating system, shell, system and hardware interrupts handler
+ */
+
 module dd_dos;
 
 import core.stdc.stdio;
@@ -54,6 +58,7 @@ enum
  */
 
 /// Enter internal shell
+extern (C)
 void EnterVShell() {
 	import std.array : split;
 	import std.uni : toUpper;
@@ -70,10 +75,17 @@ _S:
 
 	if (argc > 0)
 	switch (toUpper(argv[0])) {
-	case "HELP": //TODO: Complete HELP with /ALL
-		puts("CLS            Clear screen.");
-		puts("MEM            Show memory information.");
-		puts("VER            Show DOS version.");
+	case "HELP": //TODO: /ALL should print info for "??"
+		puts("CD        Change working directory");
+		puts("CLS       Clear screen");
+		puts("DATE      Get current date");
+		puts("DIR       Show directory content");
+		puts("EXIT      Exit DD-DOS or script");
+		puts("TREE      Show directory structure");
+		puts("TIME      Get current time");
+		puts("MEM       Show memory information");
+		puts("VER       Show DOS version");
+		puts("\n??  Print debugger help screen");
 		break;
 	case "VER":
 		if (argc > 1) {
@@ -83,10 +95,8 @@ _S:
 			default:
 			}
 		} else {
-			puts("");
-			printf("DD-DOS Version %argv\n", cast(char*)APP_VERSION);
-			printf("MS-DOS Version %d.%d\n", MajorVersion, MinorVersion);
-			puts("");
+			printf("\nDD-DOS Version %s\n", cast(char*)APP_VERSION);
+			printf("MS-DOS Version %d.%d\n\n", MajorVersion, MinorVersion);
 		}
 		break;
 	case "MEM":
@@ -109,18 +119,12 @@ _S:
 				puts("Memory type          Zero'd  +   NZero  =  Total");
 				puts("-------------------  -------   -------   -------");
 				printf("Conventional         %6dK   %6dK   %6dK\n",
-					(ct - nzc) / 1024,
-					nzc / 1024,
-					ct / 1024);
+					(ct - nzc) / 1024, nzc / 1024, ct / 1024);
 				printf("Extended (DD-DOS)    %6dK   %6dK   %6dK\n",
-					(tt - nzt) / 1024,
-					nzt / 1024,
-					tt / 1024);
+					(tt - nzt) / 1024, nzt / 1024, tt / 1024);
 				puts("-------------------  -------   -------   -------");
 				printf("Total                %6dK   %6dK   %6dK\n",
-					(MEMORYSIZE - nzt) / 1024,
-					(nzt + nzc) / 1024,
-					MEMORYSIZE / 1024);
+					(MEMORYSIZE - nzt) / 1024, (nzt + nzc) / 1024, MEMORYSIZE / 1024);
 				break;
 			case "/DEBUG":
 				puts("Not implemented");
@@ -178,7 +182,7 @@ _S:
 			}
 		}
 		int c;
-		foreach (string name; dirEntries("", SpanMode.shallow)) {
+		foreach (string name; dirEntries(dir, SpanMode.shallow)) {
 			++c;
 			if (isDir(name))
 				printf("%*s <DIR>\n", -32, cast(char*)(name~'\0'));
@@ -198,13 +202,13 @@ _S:
 		Raise(0x21);
 		printf("It is currently ");
 		final switch (AL) {
-			case 0, 7: printf("Sun"); break;
-			case 1: printf("Mon"); break;
-			case 2: printf("Tue"); break;
-			case 3: printf("Wed"); break;
-			case 4: printf("Thu"); break;
-			case 5: printf("Fri"); break;
-			case 6: printf("Sat"); break;
+		case 0, 7: printf("Sun"); break;
+		case 1: printf("Mon"); break;
+		case 2: printf("Tue"); break;
+		case 3: printf("Wed"); break;
+		case 4: printf("Thu"); break;
+		case 5: printf("Fri"); break;
+		case 6: printf("Sat"); break;
 		}
 		printf(" %d-%02d-%02d\n", CX, DH, DL);
 		break;
@@ -270,43 +274,46 @@ _S:
 	case "?RUN": Run; break;
 	case "?V":
 		Verbose = !Verbose;
-		if (Verbose)
-			puts("Verbose: ON");
-		else
-			puts("Verbose: OFF");
+		printf("Verbose?: %s\n", Verbose ? "ON" : cast(char*)"OFF");
 		break;
-	case "?DUMP":
+	case "?p":
+		Sleep = !Sleep;
+		printf("Sleep?: %s\n", Sleep ? "ON" : cast(char*)"OFF");
+		break;
+	/*case "?DUMP":
 		//toFile(MEMORY, "MEMDUMP");
 		//puts("Memory dumped to MEMDUMP");
 		puts("TODO");
-		break;
+		break;*/
 	case "?R":
 		printf(
-			"AX=%04X BX=%04X CX=%04X DX=%04X " ~
-			"SP=%04X BP=%04X SI=%04X DI=%04X\n" ~
-			"CS=%04X DS=%04X ES=%04X SS=%04X " ~
-			"IP=%04X\n",
-			AX, BX, CX, DX, SP, BP, SI, DI,
-			CS, DS, ES, SS, IP
+`EIP=%08X  (%04X:%04X)
+EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X
+SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  SS=%04X
+`,
+			EIP, CS, IP,
+			EAX, EBX, ECX, EDX,
+			SP, BP, SI, DI, CS, DS, ES, SS
 		);
-		printf("FLAG= ");
-		if (OF) printf("OF ");
-		if (DF) printf("DF ");
-		if (IF) printf("IF ");
-		if (TF) printf("TF ");
-		if (SF) printf("SF ");
-		if (ZF) printf("ZF ");
-		if (AF) printf("AF ");
-		if (PF) printf("PF ");
-		if (CF) printf("CF ");
-		printf("(%Xh)\n", FLAG);
+		printf("FLAG=");
+		if (OF) printf(" OF");
+		if (DF) printf(" DF");
+		if (IF) printf(" IF");
+		if (TF) printf(" TF");
+		if (SF) printf(" SF");
+		if (ZF) printf(" ZF");
+		if (AF) printf(" AF");
+		if (PF) printf(" PF");
+		if (CF) printf(" CF");
+		printf(" (%Xh)\n", FLAG);
 		break;
 	case "??":
-		puts("?run     Run the VM");
-		puts("?load    Load a file");
-		puts("?dump    Dump memory content to MEMDUMP");
-		puts("?r       Print register information");
-		puts("?v       Toggle verbose mode");
+		puts("?run        Start the interpreter");
+		puts("?load FILE  Load an executable file");
+		//puts("?dump    Dump memory content to MEMDUMP");
+		puts("?r          Print vm register information");
+		puts("?p          Toggle performance mode");
+		puts("?v          Toggle verbose mode");
 		break;
 	default:
 		puts("Bad command or file name");
@@ -318,13 +325,11 @@ _S:
 /**
  * Make the Program Segment Prefix in memory
  * Params:
- *   location = Memory location
+ *   l = Memory location
  *   appname = Application name
  *   args = Application arguments
  */
-void MakePSP(uint location, string appname, string args = null)
-{
-	alias l = location;
+void MakePSP(uint l, string appname, string args = null) {
 	MEMORY[l + 0x40] = MajorVersion;
 	MEMORY[l + 0x41] = MinorVersion;
 	size_t len = appname.length;
@@ -334,8 +339,7 @@ void MakePSP(uint location, string appname, string args = null)
 	ubyte* pbank = &MEMORY[l] + 0x81;
 	size_t i;
 	foreach (b; appname) pbank[i++] = b;
-	if (args)
-	{
+	if (args) {
 		pbank[i++] = ' '; // Space
 		foreach (b; args) pbank[i++] = b;
 	}
@@ -346,13 +350,11 @@ void MakePSP(uint location, string appname, string args = null)
  * Interrupt handler (Hardware, BIOS, DOS, MS-DOS)
  */
 
-// Page 2-99 contains the interrupt message processor
 /// Raise interrupt.
 /// Params: code = Interrupt byte
-void Raise(ubyte code)
-{
-	if (Verbose)
-		loghb("INTERRUPT: 0x", code);
+extern (C)
+void Raise(ubyte code) { // Rest of this source is this function
+	debug loghb("INTERRUPT: 0x", code, Log.Debug);
 
 	// REAL-MODE
 	//const inum = code << 2;
