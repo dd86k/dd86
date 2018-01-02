@@ -6,6 +6,7 @@ module InterpreterUtils;
 
 import Interpreter;
 import Logger;
+import core.stdc.string : memcpy;
 
 /**
  * Get (calculated) effective address, mostly usefull for R/M bits.
@@ -133,10 +134,13 @@ void SetDWord(uint addr, uint value) {
  */
 
 /// Directly overwrite instructions at CS:IP.
-void Insert(ubyte[] ops, size_t offset = 0)
-{
+void Insert(ubyte[] ops, size_t offset = 0) {
 	size_t i = GetIPAddress + offset;
 	foreach(b; ops) MEMORY[i++] = b;
+}
+/// Directly overwrite instructions at CS:IP.
+void Insert(void* ops, size_t size, size_t offset = 0) {
+	memcpy(cast(void*)MEMORY + GetIPAddress + offset, ops, size);
 }
 
 /// Insert number at CS:IP.

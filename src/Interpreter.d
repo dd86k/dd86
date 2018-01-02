@@ -1,7 +1,7 @@
 /*
  * Interpreter.d: Legacy machine code interpreter.
  * 
- * Right now it's closest to an 8086.
+ * Right now it's closest to an 8086 (REAL-MODE)
  * I hope to make it closer to an i486 whenever possible.
  */
 
@@ -56,7 +56,7 @@ void Initiate() {
 	CLp = cast(ubyte*)CXp;
 	DLp = cast(ubyte*)DXp;
 
-	//TODO: Probably a FAR JMP to "BIOS"
+	//TODO: Probably a FAR JMP to "BIOS" or something else
 }
 
 /// Start the emulator at CS:IP (usually 0000h:0100h)
@@ -67,16 +67,18 @@ void Run() {
 
 	Running = 1;
 	while (Running) {
-		debug logexec("  vm:", GetIPAddress, MEMORY[GetIPAddress]);
+		debug logexec("(vm):", GetIPAddress, MEMORY[GetIPAddress]);
 		Execute(MEMORY[GetIPAddress]);
+		Seg = SEG_NONE; // Reset SEG after instruction
 		if (Sleep)
 			HSLEEP( 2 ); // Intel 8086 - 5 MHz
 	}
 }
 
-__gshared bool Sleep; /// Is vcpu sleeping between cycles?
-__gshared bool Running; /// Is vcpu currently running?
-__gshared bool Verbose; /// Is Verbose mode set?
+__gshared bool
+Sleep, /// Is vcpu sleeping between cycles?
+Running, /// Is vcpu currently running?
+Verbose; /// Is Verbose mode set?
 
 __gshared ubyte[MAX_MEM] MEMORY; /// Main memory brank
 __gshared size_t MEMORYSIZE = MAX_MEM; /// Current memory MEMORY size. Default: MAX_MEM
@@ -285,7 +287,7 @@ private __gshared ushort* IPp;
  */
 
 /// Flag mask
-private enum {
+private enum
 	MASK_CF = 1,
 	MASK_PF = 4,
 	MASK_AF = 0x10,
@@ -294,22 +296,55 @@ private enum {
 	MASK_TF = 0x100,
 	MASK_IF = 0x200,
 	MASK_DF = 0x400,
-	MASK_OF = 0x800,
+	MASK_OF = 0x800;
 	// i386
 
+__gshared bool
+OF, /// Bit 11, Overflow Flag
+DF, /// Bit 10, Direction Flag
+IF, /// Bit  9, Interrupt Enable Flag
+TF, /// Bit  8, Trap Flag
+SF, /// Bit  7, Sign Flag
+ZF, /// Bit  6, Zero Flag
+AF, /// Bit  4, Auxiliary Carry Flag (aka Adjust Flag)
+PF, /// Bit  2, Parity Flag
+CF; /// Bit  0, Carry Flag
+
+enum {
+	RM_MOD_00 = 0,   /// MOD 00, Memory Mode, no displacement
+	RM_MOD_01 = 64,  /// MOD 01, Memory Mode, 8-bit displacement
+	RM_MOD_10 = 128, /// MOD 10, Memory Mode, 16-bit displacement
+	RM_MOD_11 = 192, /// MOD 11, Register Mode
+	RM_MOD = 192, /// Used for masking the MOD bits
+
+	RM_REG_000 = 0,  /// AX
+	RM_REG_001 = 8,  /// CX
+	RM_REG_010 = 16, /// DX
+	RM_REG_011 = 24, /// BX
+	RM_REG_100 = 32, /// SP
+	RM_REG_101 = 40, /// BP
+	RM_REG_110 = 48, /// SI
+	RM_REG_111 = 56, /// DI
+	RM_REG = 56, /// Used for masking the REG bits
+
+	RM_RM_000 = 0, /// R/M 000 bits
+	RM_RM_001 = 1, /// R/M 001 bits
+	RM_RM_010 = 2, /// R/M 010 bits
+	RM_RM_011 = 3, /// R/M 011 bits
+	RM_RM_100 = 4, /// R/M 100 bits
+	RM_RM_101 = 5, /// R/M 101 bits
+	RM_RM_110 = 6, /// R/M 110 bits
+	RM_RM_111 = 7, /// R/M 111 bits
+	RM_RM = 7, /// Used for masking the R/M bits
 }
 
-__gshared
-bool OF, /// Bit 11, Overflow Flag
-	 DF, /// Bit 10, Direction Flag
-	 IF, /// Bit  9, Interrupt Enable Flag
-	 TF, /// Bit  8, Trap Flag
-	 SF, /// Bit  7, Sign Flag
-	 ZF, /// Bit  6, Zero Flag
-	 AF, /// Bit  4, Auxiliary Carry Flag (aka Adjust Flag)
-	 PF, /// Bit  2, Parity Flag
-	 CF; /// Bit  0, Carry Flag
-
+enum { // Segment override (for Seg)
+	SEG_NONE, /// Default, only exists to "reset" the preference.
+	SEG_CS, /// CS
+	SEG_DS, /// DS
+	SEG_ES, /// ES
+	SEG_SS  /// SS
+}
 /**
  * Push value into memory.
  * Params:
@@ -389,32 +424,6 @@ uint EPop()
 	IF = (flag & MASK_IF) != 0;
 	TF = (flag & MASK_TF) != 0;
 	FLAGB = cast(ubyte)flag;
-}
-
-enum {
-	RM_MOD_00 = 0,   /// MOD 00, Memory Mode, no displacement
-	RM_MOD_01 = 64,  /// MOD 01, Memory Mode, 8-bit displacement
-	RM_MOD_10 = 128, /// MOD 10, Memory Mode, 16-bit displacement
-	RM_MOD_11 = 192, /// MOD 11, Register Mode
-	RM_MOD = 192, /// Used for masking the MOD bits
-
-	RM_REG_000 = 0,  /// AX
-	RM_REG_001 = 8,  /// CX
-	RM_REG_010 = 16, /// DX
-	RM_REG_011 = 24, /// BX
-	RM_REG_100 = 32, /// SP
-	RM_REG_101 = 40, /// BP
-	RM_REG_110 = 48, /// SI
-	RM_REG_111 = 56, /// DI
-	RM_REG = 56, /// Used for masking the REG bits
-}
-
-enum { // Segment override (for Seg)
-	SEG_NONE,
-	SEG_CS, /// CS
-	SEG_DS, /// DS
-	SEG_ES, /// ES
-	SEG_SS  /// SS
 }
 
 /// Preferred Segment register
@@ -978,63 +987,62 @@ void Execute(ubyte op) {
 		return;
 	case 0x80: { // GRP1 R/M8, IMM8
 		const ubyte rm = FetchImmByte; // Get ModR/M byte
-		const ubyte im = FetchImmByte(2); // 8-bit Immediate
-		final switch (rm & 0b11_000000) {
-			case 0: // No displacement
-				final switch (rm & 0b111_000) { // REG
-				case 0: // 000 - ADD
-					final switch (rm & 0b111)
-					{
-					case 0:
+		const ubyte im = FetchImmByte(2); // 8-bit Immediate after modr/m
+		final switch (rm & RM_MOD) {
+			case RM_MOD_00: // No displacement
+				final switch (rm & RM_REG) { // REG
+				case RM_REG_000: // 000 - ADD
+					final switch (rm & RM_RM) {
+					case RM_RM_000:
 						AL = AL + im;
 						break;
-					case 0b001:
+					case RM_RM_001:
 						CL = CL + im;
 						break;
-					case 0b010:
+					case RM_RM_010:
 						DL = DL + im;
 						break;
-					case 0b011:
+					case RM_RM_011:
 						BL = BL + im;
 						break;
-					case 0b100:
+					case RM_RM_100:
 						AH = AH + im;
 						break;
-					case 0b101:
+					case RM_RM_101:
 						CH = CH + im;
 						break;
-					case 0b110:
+					case RM_RM_110:
 						DH = DH + im;
 						break;
-					case 0b111:
+					case RM_RM_111:
 						BH = BH + im;
 						break;
 					}
 					break;
-				case 0b001_000: // 001 - OR
+				case RM_REG_001: // 001 - OR
 
 					break;
-				case 0b010_000: // 010 - ADC
+				case RM_REG_010: // 010 - ADC
 
 					break;
-				case 0b011_000: // 011 - SBB
+				case RM_REG_011: // 011 - SBB
 
 					break;
-				case 0b100_000: // 100 - AND
+				case RM_REG_100: // 100 - AND
 
 					break;
-				case 0b101_000: // 101 - SUB
+				case RM_REG_101: // 101 - SUB
 
 					break;
-				case 0b110_000: // 110 - XOR
+				case RM_REG_110: // 110 - XOR
 
 					break;
-				case 0b111_000: // 111 - CMP
+				case RM_REG_111: // 111 - CMP
 
 					break;
 				}
 				break; // case 0
-			case 0b01_000000: // 8-bit displacement
+			case RM_MOD_01: // 8-bit displacement
 
 				break; // case 01
 		}
@@ -1204,7 +1212,7 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x8A: { // MOV REG8, R/M8
-		//HandleRMByte(FetchImmByte);
+
 		EIP += 2;
 		return;
 	}
@@ -1261,53 +1269,53 @@ void Execute(ubyte op) {
 			}
 		}
 		EIP += 2;
-	}
 		return;
+	}
 	case 0x90: // NOP (aka XCHG AX, AX)
 		++EIP;
 		return;
 	case 0x91: { // XCHG AX, CX
-		const ushort ax = AX;
+		const ushort t = AX;
 		AX = CX;
-		CX = ax;
-	}
+		CX = t;
 		return;
+	}
 	case 0x92: { // XCHG AX, DX
-		const ushort ax = AX;
+		const ushort t = AX;
 		AX = DX;
-		DX = ax;
-	}
+		DX = t;
 		return;
+	}
 	case 0x93: { // XCHG AX, BX
-		const ushort ax = AX;
+		const ushort t = AX;
 		AX = BX;
-		BX = ax;
-	}
+		BX = t;
 		return;
+	}
 	case 0x94: { // XCHG AX, SP
-		const ushort ax = AX;
+		const ushort t = AX;
 		AX = SP;
-		SP = ax;
-	}
+		SP = t;
 		return;
+	}
 	case 0x95: { // XCHG AX, BP
-		const ushort ax = AX;
+		const ushort t = AX;
 		AX = BP;
-		BP = ax;
-	}
+		BP = t;
 		return;
+	}
 	case 0x96: { // XCHG AX, SI
-		const ushort ax = AX;
+		const ushort t = AX;
 		AX = SI;
-		SI = ax;
-	}
+		SI = t;
 		return;
+	}
 	case 0x97: { // XCHG AX, DI
-		const ushort ax = AX;
+		const ushort t = AX;
 		AX = DI;
-		DI = ax;
-	}
+		DI = t;
 		return;
+	}
 	case 0x98: // CBW
 		AH = AL & 0x80 ? 0xFF : 0;
 		++EIP;
@@ -1723,7 +1731,7 @@ void Execute(ubyte op) {
 		if (CX == 0) EIP += FetchImmSByte;
 		else         EIP += 2;
 		return;
-	case 0xE4: // IN AL, IMM8
+	/*case 0xE4: // IN AL, IMM8
 
 		return;
 	case 0xE5: // IN AX, IMM8
@@ -1734,7 +1742,7 @@ void Execute(ubyte op) {
 		return;
 	case 0xE7: // OUT AX, IMM8
 
-		return;
+		return;*/
 	case 0xE8: // CALL NEAR-PROC
 		Push(IP);
 		EIP += FetchImmSWord; // Direct within segment
@@ -1753,7 +1761,7 @@ void Execute(ubyte op) {
 	case 0xEB: // JMP  SHORT-LABEL
 		EIP += FetchImmSByte; // ±128 B
 		return;
-	case 0xEC: // IN AL, DX
+	/*case 0xEC: // IN AL, DX
 
 		return;
 	case 0xED: // IN AX, DX
@@ -1768,24 +1776,23 @@ void Execute(ubyte op) {
 	case 0xF0: // LOCK (prefix)
 // http://qcd.phys.cmu.edu/QCDcluster/intel/vtune/reference/vc160.htm
 
-		return;
+		return;*/
 	case 0xF2: // REPNE/REPNZ
-CHECK_CX:
+_F2_CX:
 		if (CX) {
 			//TODO: Finish REPNE/REPNZ properly?
 			Execute(0xA6);
 			CX = CX - 1;
-			if (ZF == 0)
-				goto CHECK_CX;
+			if (ZF == 0) goto _F2_CX;
 		} else ++EIP;
 		return;
-	case 0xF3: // REP/REPE/REPNZ
+	/*case 0xF3: // REP/REPE/REPNZ
 
 		return;
 	case 0xF4: // HLT
 	//TODO: HLT
 		++EIP;
-		return;
+		return;*/
 	case 0xF5: // CMC
 		CF = !CF;
 		++EIP;

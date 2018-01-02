@@ -5,6 +5,7 @@
 module Loader;
 
 import core.stdc.stdio;
+import core.stdc.stdlib : malloc;
 import std.path, std.file;
 import dd_dos, Interpreter, InterpreterUtils, Logger;
 
@@ -48,6 +49,7 @@ private enum {
  * Params:
  *   path = Path to executable
  *   args = Executable arguments
+ * Returns: State is successfully loaded
  */
 bool LoadExec(string path, string args = null) {
 	if (exists(path)) {
@@ -92,8 +94,8 @@ bool LoadExec(string path, string args = null) {
 			mz_hdr mzh;
 			fread(&mzh, mzh.sizeof, 1, f);
 			CS = 0; IP = 0x100; // Temporary
-			//CS = mzh.e_cs;
-			//IP = mzh.e_ip;
+			//CS = mzh.e_cs; // Relative
+			//IP = mzh.e_ip; // Relative
 			SS = mzh.e_ss;
 			SP = mzh.e_sp;
 
@@ -109,8 +111,8 @@ bool LoadExec(string path, string args = null) {
 			uint codesize = (mzh.e_cp * PAGE) - headersize;
 			if (mzh.e_cblp) // Adjust codesize for last bytes in page
 				codesize -= 512 - mzh.e_cblp;
-			/*if (headersize + codesize < 512)
-				codesize = 512 - headersize;*/
+			if (headersize + codesize < 512)
+				codesize = 512 - headersize;
 			if (Verbose) {
 				debug logd("STRUCT_SIZE: ", mzh.sizeof);
 				debug logd("HEADER_SIZE: ", headersize);
@@ -121,25 +123,27 @@ bool LoadExec(string path, string args = null) {
 				logd("SP:", SP);
 			}
 			//TODO: Move to malloc and add an Insert(ubyte*,size_t) function
-			//ubyte* t = cast(ubyte*)malloc(codesize);
-			ubyte[] t = new ubyte[codesize];
+			ubyte* t = cast(ubyte*)malloc(codesize);
+			//ubyte[] t = new ubyte[codesize];
 			fseek(f, headersize, SEEK_SET);
-			fread(&t[0], codesize, 1, f);
-			Insert(t); // Insert at CS:IP
+			fread(t, codesize, 1, f);
+			//Insert(t);
+			Insert(t, codesize); // Insert at CS:IP
 
 			// ** Read relocation table and adjust far pointers in memory
 			if (mzh.e_crlc) {
 				uint ra = headersize + mzh.e_lfarlc; // relocation file address
 				uint rn = mzh.e_crlc; // number of relocations
-				uint rs = rn * 2; // relocation table size
+				const uint rs = rn * 2; // relocation table size
 				if (Verbose) {
 					logd("Relocating at ", ra);
 					logd("Relocations to do: ", rn);
 				}
 				fseek(f, headersize, SEEK_SET);
 				// Relocation table
-				mz_rlc[] rlct = new mz_rlc[mzh.e_crlc];
-				fread(&rlct[0], rs, 1, f);
+				//mz_rlc[] rlct = new mz_rlc[mzh.e_crlc];
+				mz_rlc* rlct = cast(mz_rlc*)malloc(rs);
+				fread(rlct, rs, 1, f);
 /*
 	To get the position of the relocation within the file, you have to compute the
 	physical adress from the segment:offset pair, which is done by multiplying the
