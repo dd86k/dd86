@@ -3,8 +3,6 @@ module Logger;
 import core.stdc.stdio;
 import std.string : format;
 
-//TODO: Consider "coredump" of somekind for critical messages (and exit(0))
-
 /// Log levels, see documentation for more details.
 enum Log {
 	Debug,       /// Debugging information
@@ -13,30 +11,6 @@ enum Log {
 	Error,       /// Errors
 	Critical     /// Critical messages (could not continue)
 }
-
-//TODO: Better logging module
-/+
-extern (C)
-void _log()
-
-extern (C)
-void log_TEST(
-	string f, int t = null, int level = Log.Information, char* src = cast(char*)__MODULE__) {
-	/*import core.stdc.stdarg;
-	va_list args;
-	va_start(args, level);
-	size_t i;
-	if (_arguments[i] == typeid(double)) {
-
-	}*/
-	//vsprintf(
-
-	debug printf("%s::", src);
-	/*char[256] b;
-	vsprintf(cast(char*)b, f, args);*/
-
-	//va_end(args);
-}+/
 
 /// Log a simple message
 void log(string msg, int level = Log.Information, char* src = cast(char*)__MODULE__)

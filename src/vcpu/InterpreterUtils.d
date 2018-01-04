@@ -177,14 +177,13 @@ void Insert(int op, size_t addr)
 	}
 }
 /// Insert a string in memory.
-void Insert(string data, size_t addr = 0)
-{
+void Insert(string data, size_t addr = 0) {
 	if (addr == 0) addr = GetIPAddress;
 	foreach(b; data) MEMORY[addr++] = b;
 }
 /// Insert a wide string in memory.
-void InsertW(wstring data, size_t addr = 0)
-{
+void InsertW(wstring data, size_t addr = 0) {
+	//TODO: Re-write this to _actually_ do "wide"-string support
 	if (addr == 0)
 		addr = GetIPAddress;
 	size_t l = data.length * 2;

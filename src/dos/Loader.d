@@ -6,7 +6,6 @@ module Loader;
 
 import core.stdc.stdio;
 import core.stdc.stdlib : malloc;
-import std.path, std.file;
 import dd_dos, Interpreter, InterpreterUtils, Logger;
 
 private enum ERESWDS = 16; /// RESERVED WORDS
@@ -51,14 +50,7 @@ private enum {
  *   args = Executable arguments
  * Returns: State is successfully loaded
  */
-bool LoadExec(string path, string args = null) {
-	if (!exists(path))
-		if (Verbose)
-			logs("File does not exist: \n", path, Log.Information);
-
-	if (Verbose)
-		log("File exists");
-
+bool ExecLoad(string path, string args = null) {
 	FILE* f = fopen(cast(char*)(path~'\0'), "rb"); // A little sad, I know
 	fseek(f, 0, SEEK_END);
 	size_t fsize = ftell(f);
@@ -72,7 +64,7 @@ bool LoadExec(string path, string args = null) {
 
 	if (fsize == 0) {
 		if (Verbose)
-			log("File is zero length.", Log.Information);
+			log("File is zero length.");
 		AL = 2; // Non-official
 		return false;
 	}
@@ -125,12 +117,9 @@ bool LoadExec(string path, string args = null) {
 			logd("SS:", SS);
 			logd("SP:", SP);
 		}
-		//TODO: Move to malloc and add an Insert(ubyte*,size_t) function
 		ubyte* t = cast(ubyte*)malloc(codesize);
-		//ubyte[] t = new ubyte[codesize];
 		fseek(f, headersize, SEEK_SET);
 		fread(t, codesize, 1, f);
-		//Insert(t);
 		Insert(t, codesize); // Insert at CS:IP
 
 		// ** Read relocation table and adjust far pointers in memory
@@ -206,6 +195,4 @@ http://www.fileformat.info/format/exe/corion-mz.htm
 		//MakePSP(_comp - 0x100, "TEST");
 		return true; // case COM
 	}
-	
-	return true;
 }

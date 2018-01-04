@@ -6,13 +6,20 @@ module dd_dos;
 
 import core.stdc.stdio;
 import std.stdio : readln, toFile;
+import std.file : exists;
 import Interpreter, Loader, ddcon, Utilities, Logger;
+import codes;
 
+pragma(msg, BANNER);
+debug pragma(msg, `
++-------------+
+| DEBUG BUILD |
++-------------+
+`);
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
 enum APP_VERSION = "0.0.0"; /// Application version
-enum APP_NAME = "dd-dos"; /// Application name
 
 enum BANNER = `
 _______ _______        _______  ______  _______
@@ -27,7 +34,7 @@ enum OEM_ID { // Used for INT 21h AH=30 so far.
 	IBM, Compaq, MSPackagedProduct, ATnT, ZDS
 }
 
-enum DOS_MAJOR_VERSION = 5, /// Default reported major DOS version
+enum DOS_MAJOR_VERSION = 2, /// Default reported major DOS version
 	 DOS_MINOR_VERSION = 0; /// Default reported minor DOS version
 
 __gshared ubyte MajorVersion = DOS_MAJOR_VERSION; /// Alterable reported major version
@@ -59,18 +66,17 @@ enum
 
 /// Enter internal shell
 extern (C)
-void EnterVShell() {
+void EnterShell() {
 	import std.array : split;
 	import std.uni : toUpper;
 	import std.file : getcwd, chdir, FileException;
-
 _S:
-	//write(getcwd ~ '$');
 	//TODO: Print POMPT
-	printf(">");
+	// getcwd uses system functions that are null-terminated
+	printf("%s%% ", cast(char*)getcwd);
 
 	// Read line from stdln and remove \n, then split arguments.
-	string[] argv = split(readln()[0..$-1], ' ');
+	string[] argv = split(readln()[0..$-1], ' '); //TODO: Better splitter
 	const size_t argc = argv.length;
 
 	if (argc > 0)
@@ -91,6 +97,7 @@ _S:
 		if (argc > 1) {
 			switch (toUpper(argv[1])) { //toUpper in-case of future sub commands
 			case "/?":
+
 				break;
 			default:
 			}
@@ -116,7 +123,7 @@ _S:
 						if (MEMORY[i]) ++nzc;
 					} else if (MEMORY[i]) ++nzt;
 				}
-				puts("Memory type          Zero'd  +   NZero  =  Total");
+				puts("Memory type           Zero'd +   NZero =   Total");
 				puts("-------------------  -------   -------   -------");
 				printf("Conventional         %6dK   %6dK   %6dK\n",
 					(ct - nzc) / 1024, nzc / 1024, ct / 1024);
@@ -154,7 +161,7 @@ _S:
 				puts("Invalid directory");
 			}
 		else
-			puts(cast(char*)(getcwd~'\0'));
+			puts(cast(char*)getcwd);
 		break;
 	case "DIR": { //TODO: with folder arguemnt
 		import std.file : exists, isDir, dirEntries, SpanMode;
@@ -187,7 +194,7 @@ _S:
 			if (isDir(name))
 				printf("%*s <DIR>\n", -32, cast(char*)(name~'\0'));
 			else
-				puts(cast(char*)(name~'\0'));
+				puts(cast(char*)name);
 		}
 		printf("        %d file(s)\n", c);
 		break;
@@ -269,7 +276,7 @@ _S:
 
 	case "?LOAD":
 		if (argc > 1) // Is a file provided?
-			LoadExec(argv[1]);
+			ExecLoad(argv[1]);
 		break;
 	case "?RUN": Run; break;
 	case "?V":
@@ -309,7 +316,7 @@ SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  SS=%04X
 		break;
 	case "??":
 		puts("?run        Start the interpreter");
-		puts("?load FILE  Load an executable file");
+		puts("?load FILE  Load an executable file into memory");
 		//puts("?dump    Dump memory content to MEMDUMP");
 		puts("?r          Print vm register information");
 		puts("?p          Toggle performance mode");
@@ -1219,13 +1226,34 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 *   CX (Mode, only for AL=04h)
 		 * Return:
 		 *   CF set on error, or cleared
-		 *   AX (error code (01h,02h,05h,08h,0Ah,0Bh))
+		 *   AX (error code (See codes.d))
 		 *   BX and DX destroyed
 		 */
 		case 0x4B: {
-		//TODO: (Load/Execute) INT 21h AH=4Bh
-			//string path = MemString(cast(void*)MEMORY, GetAddress(DS, DX));
-			//LoadFile(path);
+			switch (AL) {
+			case 0: // Load and execute the program.
+				string p = MemString(cast(void*)MEMORY, GetAddress(DS, DX));
+				if (exists(p)) {
+					CF = 0;
+					ExecLoad(p);
+					return;
+				}
+				AX = exec_file_not_found;
+				CF = 1;
+				break;
+			case 1: // Load, create the program header but do not begin execution.
+
+				CF = 1;
+				break;
+			case 3: // Load overlay. No header created.
+
+				CF = 1;
+				break;
+			default:
+				AX = exec_invalid_function;
+				CF = 1;
+				break;
+			}
 		}
 			break;
 		/*

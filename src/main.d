@@ -2,33 +2,28 @@
  * main.d: CLI entry point
  */
 
-//TODO: "Dynamic memory", allocate only what's necessary.
-//TODO: -c "command" -- Executes a command on launch (ScriptHost.d)
-
-module main;
-
 import core.stdc.stdio;
+import core.stdc.stdlib : exit;
 import std.getopt;
-import dd_dos : APP_VERSION, APP_NAME, BANNER, EnterVShell;
+import dd_dos : APP_VERSION, BANNER, EnterShell;
 import Interpreter : Initiate, Verbose, Sleep, Run;
-import Loader : LoadExec;
+import Loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;
+import std.file : exists;
 
 debug {} else {
-	extern (C) __gshared bool // Defaults to false anyway
-		rt_envvars_enabled, rt_cmdline_enabled;
+	extern (C) __gshared bool // Defaults to false (.init)!
+		rt_envvars_enabled, /// Disable runtime environment variables
+		rt_cmdline_enabled; /// Disable runtime command-line (--DRT-gcopt)
 }
 
 extern (C)
 private void DisplayVersion() {
-	import core.stdc.stdlib : exit;
-	printf("%s v%s  (%s)\n",
-		cast(char*)APP_NAME, cast(char*)APP_VERSION, cast(char*)__TIMESTAMP__);
+	printf("dd-dos v%s  (%s)\n", cast(char*)APP_VERSION, cast(char*)__TIMESTAMP__);
 	puts("Copyright (c) 2017 dd86k, using MIT license");
 	puts("Project page: <https://github.com/dd86k/dd-dos>");
-	printf("Compiled %s using %s v%d\n",
-		cast(char*)__FILE__, cast(char*)__VENDOR__, __VERSION__);
+	printf("Compiler: %s v%d\n", cast(char*)__VENDOR__, __VERSION__);
 	exit(0); // getopt hack ;-)
 }
 
@@ -64,9 +59,10 @@ int main(string[] args) {
 		printf("ERROR: %s\n", cast(char*)ex.msg);
 		return 1;
 	}
+
 	if (r.helpWanted) {
 		DisplayHelp;
-		puts("\nOPTIONS (All defaults: Off or unset)");
+		puts("\nOPTIONS");
 		foreach (it; r.options) {
 			// "custom" and nicer defaultGetoptPrinter
 			printf("%*s, %*s %s\n",
@@ -78,6 +74,7 @@ int main(string[] args) {
 	}
 
 	// The "blame getopt for only doing off->on switches" section
+	//TODO: Find a better getopt alternative, or make our own
 	Sleep = !Sleep;
 	debug Verbose = !Verbose;
 
@@ -98,9 +95,14 @@ int main(string[] args) {
 		puts(BANNER); // Defined in dd_dos.d
 
 	if (init_file) {
-		if (LoadExec(init_file, init_args)) Run;
+		if (exists(init_file)) {
+			if (ExecLoad(init_file, init_args))
+				Run;
+		} else {
+			puts("ERROR: File not found");
+		}
 	} else {
-		EnterVShell;
+		EnterShell;
 	}
 
 	return 0;
