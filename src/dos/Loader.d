@@ -5,34 +5,35 @@
 module Loader;
 
 import core.stdc.stdio;
-import core.stdc.stdlib : malloc;
+import core.stdc.stdlib : malloc, free;
 import dd_dos, Interpreter, InterpreterUtils, Logger;
+import codes;
 
 private enum ERESWDS = 16; /// RESERVED WORDS
 
 /// MS-DOS EXE header
-private struct mz_hdr { align(1):
-	//ushort e_magic;        /* Magic number, "MZ" */
-	ushort e_cblp;         /* Bytes on last page of file */
-	ushort e_cp;           /* Pages in file */
-	ushort e_crlc;         /* Number of relocation entries */
-	ushort e_cparh;        /* Size of header in paragraphs */
-	ushort e_minalloc;     /* Minimum extra paragraphs needed */
-	ushort e_maxalloc;     /* Maximum extra paragraphs needed */
-	ushort e_ss;           /* Initial (relative) SS value */
-	ushort e_sp;           /* Initial SP value */
-	ushort e_csum;         /* Checksum, ignored */
-	ushort e_ip;           /* Initial IP value */
-	ushort e_cs;           /* Initial (relative) CS value */
-	ushort e_lfarlc;       /* File address (byte offset) of relocation table */
-	ushort e_ovno;         /* Overlay number */
-	//ushort[ERESWDS] e_res; /* Reserved words */
-	//uint   e_lfanew;       /* File address of new exe header */
+private struct mz_hdr { align(1): // Necessary fields included
+//	ushort e_magic;        /// Magic number, "MZ"
+	ushort e_cblp;         /// Bytes on last page of file (extra bytes)
+	ushort e_cp;           /// Pages in file
+	ushort e_crlc;         /// Number of relocation entries
+	ushort e_cparh;        /// Size of header in paragraphs
+	ushort e_minalloc;     /// Minimum extra paragraphs needed
+	ushort e_maxalloc;     /// Maximum extra paragraphs needed
+	ushort e_ss;           /// Initial (relative) SS value
+	ushort e_sp;           /// Initial SP value
+	ushort e_csum;         /// Checksum, ignored
+	ushort e_ip;           /// Initial IP value
+	ushort e_cs;           /// Initial (relative) CS value
+	ushort e_lfarlc;       /// File address (byte offset) of relocation table
+	ushort e_ovno;         /// Overlay number
+//	ushort[ERESWDS] e_res; /// Reserved words
+//	uint   e_lfanew;       /// File address of new exe header
 }
 
 private struct mz_rlc { align(1): // For AL=03h
-	ushort offset; /// Offset within segment
-	ushort segment; // Segment of relocation
+	ushort off; /// Offset
+	ushort seg; /// Segment of relocation
 }
 
 /// MZ file magic
@@ -53,7 +54,7 @@ private enum {
 bool ExecLoad(string path, string args = null) {
 	FILE* f = fopen(cast(char*)(path~'\0'), "rb"); // A little sad, I know
 	fseek(f, 0, SEEK_END);
-	size_t fsize = ftell(f);
+	size_t fsize = ftell(f); // who the hell would have a >2G exec to run in DOS
 
 	if (Verbose)
 		logd("File size: ", fsize);
@@ -84,76 +85,65 @@ bool ExecLoad(string path, string args = null) {
 
 		if (Verbose)
 			log("LOAD MZ");
-		
+
 		// ** Header is read for initial register values
 		mz_hdr mzh;
 		fread(&mzh, mzh.sizeof, 1, f);
 		CS = 0; IP = 0x100; // Temporary
-		//CS = mzh.e_cs; // Relative
-		//IP = mzh.e_ip; // Relative
-		SS = mzh.e_ss;
-		SP = mzh.e_sp;
+		//CS = CS + mzh.e_cs; // Relative
+		//IP = IP + mzh.e_ip;
+		//SS = mzh.e_ss; // Relative
+		//SP = mzh.e_sp;
 
 		// ** Copy code section from exe into memory
 		if (mzh.e_minalloc && mzh.e_maxalloc) { // High memory
 			if (Verbose)
-				log("LOAD IN HIGH MEM");
+				log("LOAD HIGH MEM");
 		} else { // Low memory
 			if (Verbose)
-				log("LOAD IN LOW MEM");
+				log("LOAD LOW MEM");
 		}
-		const uint headersize = mzh.e_cparh * PARAGRAPH;
-		uint codesize = (mzh.e_cp * PAGE) - headersize;
-		if (mzh.e_cblp) // Adjust codesize for last bytes in page
-			codesize -= 512 - mzh.e_cblp;
-		if (headersize + codesize < 512)
-			codesize = 512 - headersize;
-		if (Verbose) {
-			debug logd("STRUCT_SIZE: ", mzh.sizeof);
-			debug logd("HEADER_SIZE: ", headersize);
-			debug logd("IMAGE_SIZE : ", codesize);
-			logd("CS:", CS);
-			logd("IP:", IP);
-			logd("SS:", SS);
-			logd("SP:", SP);
+		const uint _h = mzh.e_cparh * PARAGRAPH; // Header size
+		const uint _l = _h + (mz_rlc.sizeof * mzh.e_crlc); // image code offset
+		uint _s = (mzh.e_cp * PAGE) - _h; // image code size
+		if (mzh.e_cblp) // Adjust _s for last bytes in page
+			_s -= PAGE - mzh.e_cblp;
+		if (_h + _s < PAGE) // This snippet was found in DOSBox
+			_s = PAGE - _h;
+		debug {
+			logd("STRUCT_SIZE: ", mzh.sizeof);
+			logd("HEADER_SIZE: ", _h);
+			logd("IMAGE_SIZE : ", _s);
+			logd("CS: ", CS);
+			logd("IP: ", IP);
+			logd("SS: ", SS);
+			logd("SP: ", SP);
 		}
-		ubyte* t = cast(ubyte*)malloc(codesize);
-		fseek(f, headersize, SEEK_SET);
-		fread(t, codesize, 1, f);
-		Insert(t, codesize); // Insert at CS:IP
+		fseek(f, _l, SEEK_SET);
+		ubyte* t = cast(ubyte*)malloc(_s);
+		fread(t, _s, 1, f);
+		Insert(t, _s); // Insert at CS:IP
 
 		// ** Read relocation table and adjust far pointers in memory
 		if (mzh.e_crlc) {
-			uint ra = headersize + mzh.e_lfarlc; // relocation file address
-			uint rn = mzh.e_crlc; // number of relocations
-			const uint rs = rn * 2; // relocation table size
-			if (Verbose) {
-				logd("Relocating at ", ra);
-				logd("Relocations to do: ", rn);
+			if (Verbose)
+				logd("Relocation: ", mzh.e_crlc);
+			fseek(f, mzh.e_lfarlc, SEEK_SET);
+			const int rs = mzh.e_crlc * mz_rlc.sizeof; // Relocation table size
+			mz_rlc* r = cast(mz_rlc*)malloc(rs); // Relocation table
+			fread(cast(void*)r, rs, 1, f); // Read it full
+			if (Verbose)
+				puts(" #   seg: off -> data");
+			const uint ip = GetIPAddress;
+			for (int i; i < mzh.e_crlc; ++i) {
+				const ushort data = FetchWord(ip + (r[i].seg << 4) + r[i].off);
+				if (Verbose)
+					printf("%2d  %04X:%04X -> %04X\n", i, r[i].seg, r[i].off, data);
+				//SetWord((r[i].seg << 4) + r[i].off, r[i].refseg);
 			}
-			fseek(f, headersize, SEEK_SET);
-			// Relocation table
-			//mz_rlc[] rlct = new mz_rlc[mzh.e_crlc];
-			mz_rlc* rlct = cast(mz_rlc*)malloc(rs);
-			fread(rlct, rs, 1, f);
-/*
-To get the position of the relocation within the file, you have to compute the
-physical adress from the segment:offset pair, which is done by multiplying the
-segment by 16 and adding the offset and then adding the offset of the binary
-start. Note that the raw binary code starts on a paragraph boundary within the
-executable file. All segments are relative to the start of the executable in
-memory, and this value must be added to every segment if relocation is done
-manually.
-http://www.fileformat.info/format/exe/corion-mz.htm
-*/
-			uint ca = GetIPAddress; // current address
-			ubyte* cap = cast(ubyte*)MEMORY + ca;
-			for (int i; i < rn; ++i) { //TODO: relocations
-				uint s = (rlct[i].segment << 4) + rlct[i].offset;
-				//*(cap + s) = idk
-			}
-		}
-		else if (Verbose) log("No relocations");
+			free(r);
+		} else if (Verbose)
+			log("No relocations");
 
 		// ** Setup registers
 		// AL      drive letter
@@ -168,9 +158,9 @@ http://www.fileformat.info/format/exe/corion-mz.htm
 
 
 
-		/*uint minsize = codesize + (e_minalloc << 4) + 256;
+		/*uint minsize = _s + (e_minalloc << 4) + 256;
 		uint maxsize = e_maxalloc ?
-			codesize + (e_maxalloc << 4) + 256 :
+			_s + (e_maxalloc << 4) + 256 :
 			0xFFFF;*/
 
 		//DS = ES = 0; // DS:ES (??????)
@@ -182,17 +172,18 @@ http://www.fileformat.info/format/exe/corion-mz.htm
 		if (fsize > 0xFF00) { // Size - PSP
 			if (Verbose)
 				log("COM file too large", Log.Error);
-			AL = 3; // Non-official
+			AL = exec_bad_format;
 			return false;
 		}
 		if (Verbose)
 			log("LOAD COM");
-		CS = 0; EIP = 0x100;
+		CS = 0; EIP = 0x100; // Temporary
 		fseek(f, 0, SEEK_SET);
 		ubyte* _comp = cast(ubyte*)MEMORY + GetIPAddress;
 		fread(_comp, fsize, 1, f);
 
 		//MakePSP(_comp - 0x100, "TEST");
+		AL = 0;
 		return true; // case COM
 	}
 }

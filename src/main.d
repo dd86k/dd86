@@ -20,18 +20,25 @@ debug {} else {
 
 extern (C)
 private void DisplayVersion() {
-	printf("dd-dos v%s  (%s)\n", cast(char*)APP_VERSION, cast(char*)__TIMESTAMP__);
-	puts("Copyright (c) 2017 dd86k, using MIT license");
-	puts("Project page: <https://github.com/dd86k/dd-dos>");
-	printf("Compiler: %s v%d\n", cast(char*)__VENDOR__, __VERSION__);
+	printf(
+`dd-dos v%s  (%s)
+Copyright (c) 2017 dd86k, using MIT license
+Project page: <https://github.com/dd86k/dd-dos>
+Compiler: %s v%d
+`,
+	 cast(char*)APP_VERSION, cast(char*)__TIMESTAMP__,
+	 cast(char*)__VENDOR__, __VERSION__
+	);
 	exit(0); // getopt hack ;-)
 }
 
 extern (C)
 private void DisplayHelp() {
-	puts("A DOS virtual machine.");
-	puts("Usage:");
-	puts("  dd-dos [OPTIONS]");
+	puts(
+`A DOS virtual machine.");
+Usage:");
+  dd-dos [OPTIONS]`
+	);
 }
 
 private

@@ -10,7 +10,6 @@ import std.file : exists;
 import Interpreter, Loader, ddcon, Utilities, Logger;
 import codes;
 
-pragma(msg, BANNER);
 debug pragma(msg, `
 +-------------+
 | DEBUG BUILD |
@@ -41,7 +40,7 @@ __gshared ubyte MajorVersion = DOS_MAJOR_VERSION; /// Alterable reported major v
 __gshared ubyte MinorVersion = DOS_MINOR_VERSION; /// Alterable reported minor version
 
 /// File/Folder attribute. See INT 21h AH=3Ch
-// Did you know Windows still use these values?
+// Trivia: Did you know Windows still use these values?
 enum
 	READONLY = 1,
 	HIDDEN = 2,
@@ -72,7 +71,7 @@ void EnterShell() {
 	import std.file : getcwd, chdir, FileException;
 _S:
 	//TODO: Print POMPT
-	// getcwd uses system functions that are null-terminated
+	// getcwd uses system functions that are null-terminated (windows+linux tested)
 	printf("%s%% ", cast(char*)getcwd);
 
 	// Read line from stdln and remove \n, then split arguments.
@@ -82,16 +81,19 @@ _S:
 	if (argc > 0)
 	switch (toUpper(argv[0])) {
 	case "HELP": //TODO: /ALL should print info for "??"
-		puts("CD        Change working directory");
-		puts("CLS       Clear screen");
-		puts("DATE      Get current date");
-		puts("DIR       Show directory content");
-		puts("EXIT      Exit DD-DOS or script");
-		puts("TREE      Show directory structure");
-		puts("TIME      Get current time");
-		puts("MEM       Show memory information");
-		puts("VER       Show DOS version");
-		puts("\n??  Print debugger help screen");
+		puts(
+`CD        Change working directory
+CLS       Clear screen
+DATE      Get current date
+DIR       Show directory content
+EXIT      Exit DD-DOS or script
+TREE      Show directory structure
+TIME      Get current time
+MEM       Show memory information
+VER       Show DOS version
+
+??        Print debugger help screen`
+		);
 		break;
 	case "VER":
 		if (argc > 1) {
@@ -102,8 +104,8 @@ _S:
 			default:
 			}
 		} else {
-			printf("\nDD-DOS Version %s\n", cast(char*)APP_VERSION);
-			printf("MS-DOS Version %d.%d\n\n", MajorVersion, MinorVersion);
+			printf("\nDD-DOS Version %s\nMS-DOS Version %d.%d\n\n",
+				cast(char*)APP_VERSION, MajorVersion, MinorVersion);
 		}
 		break;
 	case "MEM":
@@ -138,12 +140,15 @@ _S:
 				break;
 			//case "/FREE":
 			case "/?":
-				puts("Display memory statistics");
-				puts("  MEM [OPTIONS]\n");
-				puts("OPTIONS");
-				puts("/DEBUG    Not implemented");
-				puts("/FREE     Not implemented");
-				puts("/STATS    Scan memory and show statistics");
+				puts(
+`Display memory statistics
+  MEM [OPTIONS]
+
+OPTIONS
+/DEBUG    Not implemented
+/FREE     Not implemented
+/STATS    Scan memory and show statistics`
+				);
 				break;
 			default:
 
@@ -225,9 +230,11 @@ _S:
 		if (argc > 1) {
 			switch (argv[1]) {
 			case "/?":
-				puts("Displays a graphical representation of a folder recursively");
-				puts("Usage:");
-				puts("  TREE [OPTIONS]");
+				puts(
+`Displays a graphical representation of a folder recursively
+  Usage:
+    TREE [OPTIONS]`
+				);
 				return;
 			default:
 				if (exists(argv[1])) {
@@ -275,15 +282,19 @@ _S:
 	// DEBUGGING COMMANDS
 
 	case "?LOAD":
-		if (argc > 1) // Is a file provided?
-			ExecLoad(argv[1]);
+		if (argc > 1) { // Is a file provided?
+			if (exists(argv[1]))
+				ExecLoad(argv[1]);
+			else
+				puts("File not found");
+		}
 		break;
 	case "?RUN": Run; break;
 	case "?V":
 		Verbose = !Verbose;
 		printf("Verbose?: %s\n", Verbose ? "ON" : cast(char*)"OFF");
 		break;
-	case "?p":
+	case "?P":
 		Sleep = !Sleep;
 		printf("Sleep?: %s\n", Sleep ? "ON" : cast(char*)"OFF");
 		break;
@@ -315,12 +326,13 @@ SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  SS=%04X
 		printf(" (%Xh)\n", FLAG);
 		break;
 	case "??":
-		puts("?run        Start the interpreter");
-		puts("?load FILE  Load an executable file into memory");
-		//puts("?dump    Dump memory content to MEMDUMP");
-		puts("?r          Print vm register information");
-		puts("?p          Toggle performance mode");
-		puts("?v          Toggle verbose mode");
+		puts(
+`?run        Start the interpreter
+?load FILE  Load an executable file into memory
+?r          Print vm register information
+?p          Toggle performance mode
+?v          Toggle verbose mode`
+		);
 		break;
 	default:
 		puts("Bad command or file name");
