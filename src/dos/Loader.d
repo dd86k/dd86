@@ -123,6 +123,7 @@ bool ExecLoad(string path, string args = null) {
 		ubyte* t = cast(ubyte*)malloc(_s);
 		fread(t, _s, 1, f);
 		Insert(t, _s); // Insert at CS:IP
+		free(t);
 
 		// ** Read relocation table and adjust far pointers in memory
 		if (mzh.e_crlc) {
@@ -154,7 +155,7 @@ bool ExecLoad(string path, string args = null) {
 		AL = 3;
 		AH = 0;
 
-		// Jump to CS:IP, relative to start of program
+		// Jump to CS:IP+0x0100, relative to start of program
 
 		// Make PSP
 		//MakePSP(GetIPAddress, "test");
