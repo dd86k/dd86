@@ -91,8 +91,8 @@ bool ExecLoad(string path, string args = null) {
 		fread(&mzh, mzh.sizeof, 1, f);
 		CS = 0; IP = 0x100; // Temporary
 		//CS = CS + mzh.e_cs; // Relative
-		//IP = IP + mzh.e_ip;
-		//SS = mzh.e_ss; // Relative
+		//IP = mzh.e_ip;
+		//SS = SS + mzh.e_ss; // Relative
 		//SP = mzh.e_sp;
 
 		// ** Copy code section from exe into memory
@@ -151,19 +151,10 @@ bool ExecLoad(string path, string args = null) {
 		// DS:ES   Points to PSP
 		// SS:SP   Stack pointer (from EXE header)
 
+		AL = 3;
+		AH = 0;
+
 		// Jump to CS:IP, relative to start of program
-
-		/*Push(SS);
-		ushort j = Pop();*/
-
-
-
-		/*uint minsize = _s + (e_minalloc << 4) + 256;
-		uint maxsize = e_maxalloc ?
-			_s + (e_maxalloc << 4) + 256 :
-			0xFFFF;*/
-
-		//DS = ES = 0; // DS:ES (??????)
 
 		// Make PSP
 		//MakePSP(GetIPAddress, "test");
