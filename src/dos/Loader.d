@@ -130,9 +130,9 @@ bool ExecLoad(string path, string args = null) {
 			if (Verbose)
 				logd("Relocation: ", mzh.e_crlc);
 			fseek(f, mzh.e_lfarlc, SEEK_SET);
-			const int rs = mzh.e_crlc * mz_rlc.sizeof; // Relocation table size
-			mz_rlc* r = cast(mz_rlc*)malloc(rs); // Relocation table
-			fread(cast(void*)r, rs, 1, f); // Read it full
+			const int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
+			mz_rlc* r = cast(mz_rlc*)malloc(rs); /// Relocation table
+			fread(cast(void*)r, rs, 1, f); // Read whole table
 			if (Verbose)
 				puts(" #   seg: off -> data");
 			const uint ip = GetIPAddress;
@@ -155,10 +155,11 @@ bool ExecLoad(string path, string args = null) {
 		AL = 3;
 		AH = 0;
 
-		// Jump to CS:IP+0x0100, relative to start of program
-
-		// Make PSP
+		// ** Make PSP
 		//MakePSP(GetIPAddress, "test");
+
+		// ** Jump to CS:IP+0x0100, relative to start of program
+		EIP += 0x100;
 		return true; // case MZ
 	default:
 		if (fsize > 0xFF00) { // Size - PSP
@@ -176,6 +177,6 @@ bool ExecLoad(string path, string args = null) {
 
 		//MakePSP(_comp - 0x100, "TEST");
 		AL = 0;
-		return true; // case COM
+		return true; // default (COM)
 	}
 }

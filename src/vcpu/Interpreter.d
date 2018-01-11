@@ -67,7 +67,7 @@ void Run() {
 
 	Running = 1;
 	while (Running) {
-		debug logexec("(vm):", GetIPAddress, MEMORY[GetIPAddress]);
+		debug logexec("(vm):", CS, IP, MEMORY[GetIPAddress]);
 		Execute(MEMORY[GetIPAddress]);
 		Seg = SEG_NONE; // Reset SEG after instruction
 		if (Sleep)
@@ -1216,14 +1216,32 @@ void Execute(ubyte op) {
 		EIP += 2;
 		return;
 	}
-	case 0x8B: // MOV REG16, R/M16
+	case 0x8B: { // MOV REG16, R/M16
 
 		EIP += 2;
 		return;
-	case 0x8C: // MOV R/M16, SEGREG
+	}
+	case 0x8C: { // MOV R/M16, SEGREG
 		// MOD 0SR R/M
+		// SR: 00=ES, 01=CS, 10=SS, 11=DS
+		const byte rm = FetchImmByte;
+		final switch (rm & RM_MOD) {
+		case RM_MOD_00:
 
+			break;
+		case RM_MOD_01:
+
+			break;
+		case RM_MOD_10:
+
+			break;
+		case RM_MOD_11:
+
+			break;
+		}
+		EIP += 2;
 		return;
+	}
 	case 0x8D: // LEA REG16, MEM16
 
 		return;

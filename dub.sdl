@@ -2,7 +2,7 @@ name "dd-dos"
 version "0.0.0"
 description "Small DOS Virtual Machine"
 authors "dd86k"
-copyright "Copyright © dd86k 2017"
+copyright "Copyright © dd86k 2017-2018"
 license "MIT"
 homepage "https://github.com/dd86k/dd-dos"
 
@@ -10,8 +10,7 @@ buildType "unittest" {
   targetName "tests"
   targetType "executable"
   buildOptions "unittests"
-  
-  //targetPath "tests"
+
   excludedSourceFiles "src/main.d"
   sourcePaths "tests/"
   importPaths "tests/"
@@ -21,14 +20,13 @@ buildType "bench" {
   targetName "bench"
   targetType "executable"
   buildOptions "unittests"
-  
-  //targetPath "bench"
+
   excludedSourceFiles "src/main.d"
   sourcePaths "bench/"
   importPaths "bench/"
 }
 
-buildType "release" {
-  targetName "bench"
-  buildOptions "releaseMode" "stackStomping"
+# like release-nobounds but no inlining
+buildType "super" {
+  buildOptions "releaseMode" "noBoundsCheck" "optimize"
 }

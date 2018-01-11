@@ -4,7 +4,7 @@ import core.stdc.stdio;
 import std.string : format;
 
 /// Log levels, see documentation for more details.
-enum Log {
+enum Log : ubyte {
 	Debug,       /// Debugging information
 	Information, /// Informational
 	Warning,     /// Warnings
@@ -13,51 +13,57 @@ enum Log {
 }
 
 /// Log a simple message
-void log(string msg, int level = Log.Information, char* src = cast(char*)__MODULE__)
-{
-	debug printf("%s:", src);
+void log(string msg, int level = Log.Information, ...) {
+	import core.vararg;
+	const size_t al = _arguments.length;
+	immutable char* _p = cast(immutable char*)msg;
 
-	final switch (level) {
-	case Log.Debug:
-		printf("[ ~~ ] %s\n", cast(char*)msg);
-		break;
-	case Log.Information:
-		printf("[INFO] %s\n", cast(char*)msg);
-		break;
-	case Log.Warning:
-		printf("[WARN] %s\n", cast(char*)msg);
-		break;
-	case Log.Error:
-		printf("[ERR ] %s\n", cast(char*)msg);
-		break;
-	case Log.Critical:
-		printf("[ !! ] %s\n", cast(char*)msg);
-		break;
-	}
+    for (size_t i; i < al; ++i) {
+		final switch (level) {
+		case Log.Debug:
+			printf("[ ~~ ] %s", _p);
+			break;
+		case Log.Information:
+			printf("[INFO] %s", _p);
+			break;
+		case Log.Warning:
+			printf("[WARN] %s", _p);
+			break;
+		case Log.Error:
+			printf("[ERR ] %s", _p);
+			break;
+		case Log.Critical:
+			printf("[ !! ] %s", _p);
+			break;
+		}
+
+        if (_arguments[i] == typeid(int)) {
+            const int j = va_arg!(int)(_argptr);
+            printf("%d", j);
+        } else if (_arguments[i] == typeid(long)) {
+            const long j = va_arg!(long)(_argptr);
+            printf("%d", j);
+        } else if (_arguments[i] == typeid(string)) {
+            const char* j = va_arg!(char*)(_argptr);
+            printf("%s", j);
+        } else printf("?");
+    }
+
+	puts("");
 
 	//TODO: Log in file when enabled
 }
 
-/// Log string
-void logs(string msg, string v, int level = Log.Information, char* src = cast(char*)__MODULE__)
-{
-	// As much as I would of liked avoiding using the GC..
-	log(format("%s%s", msg, v), level, src);
-}
-
 /// Log hex byte
-void loghb(string msg, ubyte op, int level = Log.Information, char* src = cast(char*)__MODULE__)
-{
-	log(format("%s%02X\0", msg, op), level, src);
+void loghb(string msg, ubyte op, int level = Log.Information) {
+	log(format("%s%02X\0", msg, op), level);
 }
 
 /// Log decimal
-void logd(string msg, long op, int level = Log.Information, char* src = cast(char*)__MODULE__)
-{
-	log(format("%s%d\0", msg, op), level, src);
+void logd(string msg, long op, int level = Log.Information) {
+	log(format("%s%d\0", msg, op), level);
 }
 
-void logexec(string msg, uint addr, ubyte op, char* src = cast(char*)__MODULE__)
-{
-	log(format("%s%8X  %02Xh\0", msg, addr, op), Log.Debug, src);
+debug void logexec(string msg, ushort seg, ushort ip, ubyte op) {
+	log(format("%s %4X:%4X    %02Xh\0", msg, seg, ip, op), Log.Debug);
 }
