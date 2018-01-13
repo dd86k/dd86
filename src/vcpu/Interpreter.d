@@ -973,7 +973,7 @@ void Execute(ubyte op) {
 		EIP += (CF || ZF) ? FetchImmSByte : 2;
 		return;
 	case 0x77: // JNBE/JA       SHORT-LABEL
-		EIP += CF == false && ZF == false ? FetchImmSByte : 2;
+		EIP += CF == 0 && ZF == 0 ? FetchImmSByte : 2;
 		return;
 	case 0x78: // JS            SHORT-LABEL
 		EIP += SF ? FetchImmSByte : 2;
@@ -997,7 +997,7 @@ void Execute(ubyte op) {
 		EIP += SF != OF || ZF ? FetchImmSByte : 2;
 		return;
 	case 0x7F: // JNLE/JG       SHORT-LABEL
-		EIP += SF == OF && ZF == false ? FetchImmSByte : 2;
+		EIP += SF == OF && ZF == 0 ? FetchImmSByte : 2;
 		return;
 	case 0x80: { // GRP1 R/M8, IMM8
 		const ubyte rm = FetchImmByte; // Get ModR/M byte

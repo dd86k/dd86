@@ -19,10 +19,18 @@ uint GetEA(ubyte rm) {
 	final switch (rm & RM_MOD) { // MOD
 	case RM_MOD_00: // MOD 00, Memory Mode, no displacement
 		switch (Seg) {
-		/*case SEG_CS:
+		case SEG_CS:
+			debug _debug("MOD_00, GetEA::SEG_CS");
+			break;
 		case SEG_DS:
+			debug _debug("MOD_00, GetEA::SEG_DS");
+			break;
 		case SEG_ES:
-		case SEG_SS:*/
+			debug _debug("MOD_00, GetEA::SEG_ES");
+			break;
+		case SEG_SS:
+			debug _debug("MOD_00, GetEA::SEG_SS");
+			break;
 		default:
 			final switch (rm & RM_RM) { // R/M
 			case 0:
@@ -50,7 +58,8 @@ uint GetEA(ubyte rm) {
 				debug _debug("EA:0:7");
 				return BX;
 			}
-		} // MOD 00
+		}
+		break; // MOD 00
 	case RM_MOD_01: // MOD 01, Memory Mode, 8-bit displacement follows
 		debug _debug("EA:1:_");
 		EIP += 1;
