@@ -51,7 +51,7 @@ unittest
     write("INT 21h->09_00h: ");
     DS = CS = 0x400;
     DX = EIP = 0x20;
-    Insert("OK\n$");
+    InsertString("OK\n$");
     AH = 9;
     Raise(0x21);
     assert(AL == 0x24);
@@ -95,7 +95,7 @@ unittest
 
     write("INT 21h->39_00h: ");
     DS = CS; DX = IP;
-    Insert("TESTDIR\0");
+    InsertString("TESTDIR\0");
     AH = 0x39;
     Raise(0x21);
     assert(exists("TESTDIR"));
@@ -112,7 +112,7 @@ unittest
     // CREATE/TRUNC FILE
 
     write("INT 21h->3C_00h: ");
-    Insert("TESTFILE\0");
+    InsertString("TESTFILE\0");
     CL = 0; // No attributes
     AH = 0x3C;
     Raise(0x21);

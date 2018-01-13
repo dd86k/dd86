@@ -373,7 +373,7 @@ void MakePSP(uint l, string appname, string args = null) {
 /// Params: code = Interrupt byte
 extern (C)
 void Raise(ubyte code) { // Rest of this source is this function
-	debug loghb("INTERRUPT: 0x", code, Log.Debug);
+	debug loghb("INTERRUPT: 0x", code);
 
 	// REAL-MODE
 	//const inum = code << 2;

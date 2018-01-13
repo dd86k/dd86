@@ -122,7 +122,7 @@ bool ExecLoad(string path, string args = null) {
 		fseek(f, _l, SEEK_SET);
 		ubyte* t = cast(ubyte*)malloc(_s);
 		fread(t, _s, 1, f);
-		Insert(t, _s); // Insert at CS:IP
+		InsertArray(t, _s, GetIPAddress); // Insert at CS:IP
 		free(t);
 
 		// ** Read relocation table and adjust far pointers in memory
@@ -164,7 +164,7 @@ bool ExecLoad(string path, string args = null) {
 	default:
 		if (fsize > 0xFF00) { // Size - PSP
 			if (Verbose)
-				log("COM file too large", Log.Error);
+				log("COM file too large");
 			AL = exec_bad_format;
 			return false;
 		}

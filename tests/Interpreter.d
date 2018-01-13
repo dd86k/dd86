@@ -14,57 +14,62 @@ unittest
 
     writeln("-- [ Help functions ]");
 
-    write("Insert : ");
-
+    write("InsertByte : ");
     uint ip = GetIPAddress;
-    Insert(0xFF, ip);
+    InsertByte(0xFF, ip);
     assert(MEMORY[ip]     == 0xFF);
     assert(MEMORY[ip + 1] == 0);
-    Insert(0x100, ip);
+    InsertByte(0x12, ip + 2);
+    assert(MEMORY[ip + 2] == 0x12);
+    writeln("OK");
+
+    write("InsertWord : ");
+    InsertWord(0x100, ip);
     assert(MEMORY[ip]     == 0);
     assert(MEMORY[ip + 1] == 1);
-    Insert(0x12, ip + 2);
-    assert(MEMORY[ip + 2] == 0x12);
-    Insert(0xABCD, ip);
+    InsertWord(0xABCD, ip);
     assert(MEMORY[ip]     == 0xCD);
     assert(MEMORY[ip + 1] == 0xAB);
-    Insert(0x5678, 4);
+    InsertWord(0x5678, 4);
     assert(MEMORY[4] == 0x78);
     assert(MEMORY[5] == 0x56);
-    Insert("AB$");
+    writeln("OK");
+    
+    write("InsertDWord : ");
+    InsertDWord(0xAABBCCFF, ip + 1);
+    assert(MEMORY[ip + 1] == 0xFF);
+    assert(MEMORY[ip + 2] == 0xCC);
+    assert(MEMORY[ip + 3] == 0xBB);
+    assert(MEMORY[ip + 4] == 0xAA);
+    writeln("OK");
+
+    write("InsertString: ");
+    InsertString("AB$");
     assert(MEMORY[ip .. ip + 3] == "AB$");
-    Insert("QWERTY", ip + 10);
+    InsertString("QWERTY", ip + 10);
     assert(MEMORY[ip + 10 .. ip + 16] == "QWERTY");
+    writeln("OK");
+
+    write("InsertW: ");
     InsertW("Heck"w);
     assert(MEMORY[ip     .. ip + 1] == "H"w);
     assert(MEMORY[ip + 2 .. ip + 3] == "e"w);
     assert(MEMORY[ip + 4 .. ip + 5] == "c"w);
     assert(MEMORY[ip + 6 .. ip + 7] == "k"w);
-    ubyte[] ar = [ 0xAA, 0xBB ];
-    Insert(ar, 2);
-    assert(MEMORY[ip + 2 .. ip + 4] == [ 0xAA, 0xBB ]);
-
     writeln("OK");
-    
-    write("InsertImm : ");
-    CS = 0; EIP = 0x1050;
-    InsertImm(0xAABBCCFF);
-    ip = GetIPAddress;
-    assert(MEMORY[ip + 1] == 0xFF);
-    assert(MEMORY[ip + 2] == 0xCC);
-    assert(MEMORY[ip + 3] == 0xBB);
-    assert(MEMORY[ip + 4] == 0xAA);
 
+    write("InsertArray: ");
+    ubyte[2] ar = [ 0xAA, 0xBB ];
+    InsertArray(cast(ubyte*)ar, 2, GetIPAddress);
+    assert(MEMORY[ip .. ip + 2] == [ 0xAA, 0xBB ]);
     writeln("OK");
 
     write("Fetch : ");
-
-    Insert(0xAAFF, GetIPAddress + 1);
+    InsertWord(0xAAFF, ip + 1);
     assert(FetchImmWord == 0xAAFF);
     assert(FetchWord(ip + 1) == 0xAAFF);
     assert(FetchImmSWord == cast(short)0xAAFF);
     assert(FetchSWord(ip + 1) == cast(short)0xAAFF);
-
     writeln("OK");
 
     writeln("-- [ Registers ]");
@@ -117,75 +122,73 @@ unittest
     assert(FLAGB == 0);
     assert(FLAG == 0);
 
-    FullReset; CS = 0;
-
     writeln("-- [ General instructions ]");
 
     // MOV
 
     write("MOV : ");
 
-    InsertImm(1);
+    InsertByte(0x1, GetIPAddress + 1);
     Execute(0xB0); // MOV AL, 1
     assert(AL == 1);
 
-    InsertImm(2);
+    InsertByte(0x2, GetIPAddress + 1);
     Execute(0xB1); // MOV CL, 2
     assert(CL == 2);
 
-    InsertImm(3);
+    InsertByte(0x3, GetIPAddress + 1);
     Execute(0xB2); // MOV DL, 3
     assert(DL == 3);
 
-    InsertImm(4);
+    InsertByte(0x4, GetIPAddress + 1);
     Execute(0xB3); // MOV BL, 4
     assert(BL == 4);
-    
-    InsertImm(5);
+
+    InsertByte(0x5, GetIPAddress + 1);
     Execute(0xB4); // MOV AH, 5
     assert(AH == 5);
 
-    InsertImm(6);
+    InsertByte(0x6, GetIPAddress + 1);
     Execute(0xB5); // MOV CH, 6
     assert(CH == 6);
 
-    InsertImm(7);
+    InsertByte(0x7, GetIPAddress + 1);
     Execute(0xB6); // MOV DH, 7
     assert(DH == 7);
 
-    InsertImm(8);
+    InsertByte(0x8, GetIPAddress + 1);
     Execute(0xB7); // MOV BH, 8
     assert(BH == 8);
 
-    InsertImm(0x1112); // [ 0x12, 0x11 ]
+    InsertWord(0x1112, GetIPAddress + 1); // [ 0x12, 0x11 ]
     Execute(0xB8); // MOV AX, 1112h
     assert(AX == 0x1112);
 
-    InsertImm(0x1113);
+    InsertWord(0x1113, GetIPAddress + 1);
     Execute(0xB9); // MOV CX, 1113h
     assert(CX == 0x1113);
 
-    InsertImm(0x1114);
+    InsertWord(0x1114, GetIPAddress + 1);
     Execute(0xBA); // MOV DX, 1114h
     assert(DX == 0x1114);
 
-    InsertImm(0x1115);
+    InsertWord(0x1115, GetIPAddress + 1);
     Execute(0xBB); // MOV BX, 1115h
     assert(BX == 0x1115);
 
-    InsertImm(0x1116);
+    InsertWord(0x1116, GetIPAddress + 1);
     Execute(0xBC); // MOV SP, 1116h
     assert(SP == 0x1116);
 
-    InsertImm(0x1117);
+    InsertWord(0x1117, GetIPAddress + 1);
     Execute(0xBD); // MOV BP, 1117h
     assert(BP == 0x1117);
 
-    InsertImm(0x1118);
+    InsertWord(0x1118, GetIPAddress + 1);
     Execute(0xBE); // MOV SI, 1118h
     assert(SI == 0x1118);
 
-    InsertImm(0x1119);
+    InsertWord(0x1119, GetIPAddress + 1);
     Execute(0xBF); // MOV DI, 1119h
     assert(DI == 0x1119);
 
@@ -221,12 +224,12 @@ unittest
 
     write("OR : ");
 
-    InsertImm(0xF0);
+    InsertByte(0xF0, GetIPAddress);
     AL = 0xF;
     Execute(0xC); // OR AL, 3
     assert(AL == 0xFF);
 
-    InsertImm(0xFF00);
+    InsertWord(0xFF00, GetIPAddress);
     Execute(0xD); // OR AX, F0h
     assert(AX == 0xFFFF);
 
@@ -548,10 +551,10 @@ unittest
 
     AX = 0;
     DS = 0x40; SI = 0x80;
-    Insert(0x48AA, GetAddress(DS, SI));
+    InsertWord(0x48AA, GetAddress(DS, SI));
     Execute(0xAD);
     assert(AX == 0x48AA);
-    Insert(0x65BB, GetAddress(DS, SI));
+    InsertWord(0x65BB, GetAddress(DS, SI));
     Execute(0xAD);
     assert(AX == 0x65BB);
 
@@ -562,7 +565,7 @@ unittest
     write("SCASB : ");
 
     CS = 0x600; ES = 0x600; EIP = 0x22; DI = 0x22;
-    Insert("Hello!");
+    InsertString("Hello!");
     AL = 'H';
     Execute(0xAE);
     assert(ZF);
@@ -575,7 +578,7 @@ unittest
     write("SCASW : ");
 
     CS = 0x800; ES = 0x800; EIP = 0x30; DI = 0x30;
-    Insert(0xFE22, GetAddress(ES, DI));
+    InsertWord(0xFE22, GetAddress(ES, DI));
     AX = 0xFE22;
     Execute(0xAF);
     assert(ZF);
@@ -589,9 +592,9 @@ unittest
     write("CMPSB : ");
 
     CS = 0xF00; ES = 0xF00; EIP = 0x100; DI = 0x100;
-    Insert("HELL");
+    InsertString("HELL");
     CS = 0xF00; DS = 0xF00; EIP = 0x110; SI = 0x110;
-    Insert("HeLL");
+    InsertString("HeLL");
     Execute(0xA6);
     assert(ZF);
     Execute(0xA6);

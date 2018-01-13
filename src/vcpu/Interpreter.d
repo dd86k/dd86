@@ -63,11 +63,12 @@ void Initiate() {
 extern (C)
 void Run() {
 	if (Verbose)
-		log("Running interpreter");
-
+		log("Interpreter::Run");
 	Running = 1;
 	while (Running) {
-		debug logexec("(vm):", CS, IP, MEMORY[GetIPAddress]);
+		//TODO: Create a new global var for effective CS:IP address
+		//      Avoids re-calculating the CS:IP address all the time
+		debug logexec("(vm)", CS, IP, MEMORY[GetIPAddress]);
 		Execute(MEMORY[GetIPAddress]);
 		Seg = SEG_NONE; // Reset SEG after instruction
 		if (Sleep)
@@ -287,7 +288,7 @@ private __gshared ushort* IPp;
  */
 
 /// Flag mask
-private enum
+private enum : ushort {
 	MASK_CF = 1,
 	MASK_PF = 4,
 	MASK_AF = 0x10,
@@ -296,8 +297,9 @@ private enum
 	MASK_TF = 0x100,
 	MASK_IF = 0x200,
 	MASK_DF = 0x400,
-	MASK_OF = 0x800;
-	// i386
+	MASK_OF = 0x800
+	// i486
+}
 
 __gshared bool
 OF, /// Bit 11, Overflow Flag
@@ -310,7 +312,7 @@ AF, /// Bit  4, Auxiliary Carry Flag (aka Adjust Flag)
 PF, /// Bit  2, Parity Flag
 CF; /// Bit  0, Carry Flag
 
-enum {
+enum : ubyte {
 	RM_MOD_00 = 0,   /// MOD 00, Memory Mode, no displacement
 	RM_MOD_01 = 64,  /// MOD 01, Memory Mode, 8-bit displacement
 	RM_MOD_10 = 128, /// MOD 10, Memory Mode, 16-bit displacement
@@ -338,31 +340,27 @@ enum {
 	RM_RM = 7, /// Used for masking the R/M bits
 }
 
-enum { // Segment override (for Seg)
-	SEG_NONE, /// Default, only exists to "reset" the preference.
-	SEG_CS, /// CS
-	SEG_DS, /// DS
-	SEG_ES, /// ES
-	SEG_SS  /// SS
-}
 /**
- * Push value into memory.
- * Params:
- *   value = WORD value to PUSH
+ * Push a WORD value into memory.
+ * Params: value = WORD value to PUSH
  */
 extern (C)
 void Push(ushort value) {
 	SP = SP - 2;
-	SetWord(GetAddress(SS, SP), value);
+	InsertWord(value, GetAddress(SS, SP));
 }
+/**
+ * Push a DWORD value into memory.
+ * Params: value = DWORD value
+ */
 extern (C)
 void EPush(uint value) {
 	SP = SP - 2;
-	SetDWord(GetAddress(SS, SP), value);
+	InsertDWord(value, GetAddress(SS, SP));
 }
 /**
- * Pop value from stack.
- * Returns: POP'd WORD value
+ * Pop a WORD value from stack.
+ * Returns: WORD value
  */
 extern (C)
 ushort Pop() {
@@ -370,13 +368,16 @@ ushort Pop() {
 	SP = SP + 2;
 	return FetchWord(addr);
 }
-/*extern (C)
-uint EPop()
-{
+/**
+ * Pop a WORD value from stack.
+ * Returns: WORD value
+ */
+extern (C)
+uint EPop() {
 	const uint addr = GetAddress(SS, SP);
 	SP = SP + 2;
 	return FetchDWord(addr);
-}*/
+}
 
 /**
  * Get FLAG as WORD.
@@ -406,8 +407,7 @@ uint EPop()
  * Get FLAG as WORD.
  * Returns: FLAG (WORD)
  */
-@property ushort FLAG()
-{
+@property ushort FLAG() {
 	ushort b = FLAGB;
 	if (OF) b |= MASK_OF;
 	if (DF) b |= MASK_DF;
@@ -426,8 +426,18 @@ uint EPop()
 	FLAGB = cast(ubyte)flag;
 }
 
+enum : ubyte { // Segment override (for Seg)
+	SEG_NONE, /// Default, only exists to "reset" the preference.
+	SEG_CS, /// CS
+	SEG_DS, /// DS
+	SEG_ES, /// ES
+	SEG_SS  /// SS
+}
 /// Preferred Segment register
-__gshared uint Seg; // See above enumeration
+__gshared ubyte Seg; // See above enumeration
+
+//TODO: Step function for increasing IP value (and StepL for multiple steps)
+//      This would assure CS:IP/EIP proper incrementing depending on mode
 
 // Rest of the source here is solely this function.
 /**
@@ -452,34 +462,34 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x01: { // ADD R/M16, REG16
-		const ubyte rm = FetchImmByte;
+		const ubyte rm = FetchByte(GetIPAddress);
 		const uint addr = GetEA(rm);
 		final switch (rm & RM_MOD) {
 		case RM_MOD_00:
 			final switch (rm & RM_REG) {
 			case RM_REG_000: // AX
-				SetWord(addr, FetchWord(addr) + AX);
+				InsertWord(FetchWord(addr) + AX, addr);
 				break;
 			case RM_REG_001: // CX
-				SetWord(addr, FetchWord(addr) + CX);
+				InsertWord(FetchWord(addr) + CX, addr);
 				break;
 			case RM_REG_010: // DX
-				SetWord(addr, FetchWord(addr) + DX);
+				InsertWord(FetchWord(addr) + DX, addr);
 				break;
 			case RM_REG_011: // BX
-				SetWord(addr, FetchWord(addr) + BX);
+				InsertWord(FetchWord(addr) + BX, addr);
 				break;
 			case RM_REG_100: // SP
-				SetWord(addr, FetchWord(addr) + SP);
+				InsertWord(FetchWord(addr) + SP, addr);
 				break;
 			case RM_REG_101: // BP
-				SetWord(addr, FetchWord(addr) + BP);
+				InsertWord(FetchWord(addr) + BP, addr);
 				break;
 			case RM_REG_110: // SI
-				SetWord(addr, FetchWord(addr) + SI);
+				InsertWord(FetchWord(addr) + SI, addr);
 				break;
 			case RM_REG_111: // DI
-				SetWord(addr, FetchWord(addr) + DI);
+				InsertWord(FetchWord(addr) + DI, addr);
 				break;
 			}
 			break; // MOD 00
@@ -508,16 +518,18 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x04: // ADD AL, IMM8
-		AL = AL + FetchImmByte;
-		EIP += 2;
+		AL = AL + FetchByte(GetIPAddress);
 		SF = CF = (AL & 0x80) != 0;
 		PF = (AL & 1) != 0;
 		AF = (AL & 0x10) != 0;
 		ZF = AL == 0;
+		//TODO: OF
 		//OF = 
+		EIP += 2;
 		return;
 	case 0x05: // ADD AX, IMM16
-		AX = AX + FetchWord;
+		AX = AX + FetchWord(GetIPAddress);
+		//TODO: Fill
 		EIP += 2;
 		return;
 	case 0x06: // PUSH ES
@@ -545,11 +557,11 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x0C: // OR AL, IMM8
-		AL = AL | FetchImmByte;
+		AL = AL | FetchByte(GetIPAddress);
 		EIP += 2;
 		return;
 	case 0x0D: // OR AX, IMM16
-		AX = AX | FetchWord;
+		AX = AX | FetchWord(GetIPAddress);
 		EIP += 3;
 		return;
 	case 0x0E: // PUSH CS
@@ -573,19 +585,19 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x14: { // ADC AL, IMM8
-		int t = AL + FetchImmByte;
+		int t = AL + FetchByte(GetIPAddress);
 		if (CF) ++t;
 		AL = t;
 		EIP += 2;
 		return;
 	}
 	case 0x15: { // ADC AX, IMM16
-		int t = AX + FetchWord;
+		int t = AX + FetchWord(GetIPAddress);
 		if (CF) ++t;
 		AX = t;
 		EIP += 3;
-	}
 		return;
+	}
 	case 0x16: // PUSH SS
 		Push(SS);
 		++EIP;
@@ -607,14 +619,14 @@ void Execute(ubyte op) {
 
 		return;
 	case 0x1C: { // SBB AL, IMM8
-		int t = AL - FetchImmByte;
+		int t = AL - FetchByte(GetIPAddress);
 		if (CF) --t;
 		AL = t;
 		EIP += 2;
 	}
 		return;
 	case 0x1D: { // SBB AX, IMM16
-		int t = AX - FetchImmByte;
+		int t = AX - FetchByte(GetIPAddress);
 		if (CF) --t;
 		AX = t;
 		EIP += 3;
@@ -641,11 +653,11 @@ void Execute(ubyte op) {
 
 		return;
 	case 0x24: // AND AL, IMM8
-		AL = AL & FetchImmByte;
+		AL = AL & FetchByte(GetIPAddress);
 		EIP += 2;
 		return;
 	case 0x25: // AND AX, IMM16
-		AX = AX & FetchWord;
+		AX = AX & FetchWord(GetIPAddress);
 		EIP += 3;
 		return;
 	case 0x26: // ES: (Segment override prefix)
@@ -687,11 +699,11 @@ void Execute(ubyte op) {
 
 		return;
 	case 0x2C: // SUB AL, IMM8
-		AL = AL - FetchImmByte;
+		AL = AL - FetchByte(GetIPAddress);
 		EIP += 2;
 		return;
 	case 0x2D: // SUB AX, IMM16
-		AX = AX - FetchWord;
+		AX = AX - FetchWord(GetIPAddress);
 		EIP += 3;
 		return;
 	case 0x2E: // CS:
@@ -733,11 +745,11 @@ void Execute(ubyte op) {
 
 		return;
 	case 0x34: // XOR AL, IMM8
-		AL = AL ^ FetchImmByte;
+		AL = AL ^ FetchByte(GetIPAddress);
 		EIP += 2;
 		return;
 	case 0x35: // XOR AX, IMM16
-		AX = AX ^ FetchWord;
+		AX = AX ^ FetchWord(GetIPAddress);
 		EIP += 3;
 		return;
 	case 0x36: // SS:
@@ -766,8 +778,8 @@ void Execute(ubyte op) {
 	case 0x3B: // CMP REG16, R/M16
 
 		return;
-	case 0x3C: // CMP AL, IMM8
-		const ubyte b = FetchImmByte;
+	case 0x3C: { // CMP AL, IMM8
+		const ubyte b = FetchByte(GetIPAddress);
 		const int r = AL - b;
 		CF = SF = (r & 0x80) != 0;
 		OF = r < 0;
@@ -776,8 +788,9 @@ void Execute(ubyte op) {
 		//PF =
 		EIP += 2;
 		return;
-	case 0x3D: // CMP AX, IMM16
-		const ushort w = FetchWord;
+	}
+	case 0x3D: { // CMP AX, IMM16
+		const ushort w = FetchWord(GetIPAddress);
 		const int r = AL - w;
 		SF = (r & 0x8000) != 0;
 		OF = r < 0;
@@ -787,6 +800,7 @@ void Execute(ubyte op) {
 		//CF =
 		EIP += 3;
 		return;
+	}
 	case 0x3E: // DS:
 		Seg = SEG_DS;
 		++EIP;
@@ -1050,60 +1064,12 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x81: { // GRP1 R/M16, IMM16
-		const ubyte rm = FetchImmByte;  // Get ModR/M byte
-		const ushort im = FetchImmWord(1); // 16-bit Immediate
-		final switch (rm & 0b111_000) { // ModR/M's REG
-		case 0: // 000 - ADD
 
-			break;
-		case 0b001_000: // 001 - OR
-
-			break;
-		case 0b010_000: // 010 - ADC
-
-			break;
-		case 0b011_000: // 011 - SBB
-
-			break;
-		case 0b100_000: // 100 - AND
-
-			break;
-		case 0b101_000: // 101 - SUB
-
-			break;
-		case 0b110_000: // 110 - XOR
-
-			break;
-		case 0b111_000: // 111 - CMP
-
-			break;
-		}
 		EIP += 4;
 		return;
 	}
 	case 0x82: // GRP2 R/M8, IMM8
-		const ubyte rm = FetchImmByte; // Get ModR/M byte
-		const ubyte im = FetchByte(GetIPAddress + 2);
-		switch (rm & 0b111_000) { // ModRM REG
-		case 0b000_000: // 000 - ADD
 
-			break;
-		case 0b010_000: // 010 - ADC
-
-			break;
-		case 0b011_000: // 011 - SBB
-
-			break;
-		case 0b101_000: // 101 - SUB
-
-			break;
-		case 0b111_000: // 111 - CMP
-
-			break;
-		default:
-		
-			break;
-		}
 		EIP += 3;
 		return;
 	case 0x83: // GRP2 R/M16, IMM16
@@ -1154,28 +1120,28 @@ void Execute(ubyte op) {
 		case RM_MOD_00:
 			final switch (rm & 0b111_000) {
 			case RM_REG_000: // AX
-				SetWord(GetEA(rm), AX);
+				InsertWord(AX, GetEA(rm));
 				break;
 			case RM_REG_001: // CX
-				SetWord(GetEA(rm), CX);
+				InsertWord(CX, GetEA(rm));
 				break;
 			case RM_REG_010: // DX
-				SetWord(GetEA(rm), DX);
+				InsertWord(DX, GetEA(rm));
 				break;
 			case RM_REG_011: // BX
-				SetWord(GetEA(rm), BX);
+				InsertWord(BX, GetEA(rm));
 				break;
 			case RM_REG_100: // SP
-				SetWord(GetEA(rm), SP);
+				InsertWord(SP, GetEA(rm));
 				break;
 			case RM_REG_101: // BP
-				SetWord(GetEA(rm), BP);
+				InsertWord(BP, GetEA(rm));
 				break;
 			case RM_REG_110: // SI
-				SetWord(GetEA(rm), SI);
+				InsertWord(SI, GetEA(rm));
 				break;
 			case RM_REG_111: // DI
-				SetWord(GetEA(rm), DI);
+				InsertWord(DI, GetEA(rm));
 				break;
 			}
 			break; // MOD 00
@@ -1378,7 +1344,7 @@ void Execute(ubyte op) {
 		MEMORY[FetchImmByte] = AL;
 		return;
 	case 0xA3: // MOV MEM16, AX
-		SetWord(FetchImmWord, AX);
+		InsertWord(AX, FetchImmWord);
 		return;
 	case 0xA4: // MOVS DEST-STR8, SRC-STR8
 
@@ -1437,7 +1403,7 @@ void Execute(ubyte op) {
 		++EIP;
 		return;
 	case 0xAB: // STOS DEST-STR16
-		Insert(AX, GetAddress(ES, DI));
+		InsertWord(AX, GetAddress(ES, DI));
 		if (DF == 0) DI = DI + 2;
 		else         DI = DI - 2;
 		++EIP;
@@ -1509,40 +1475,40 @@ void Execute(ubyte op) {
 		EIP += 2;
 		return;
 	case 0xB8: // MOV AX, IMM16
-		AX = FetchWord;
+		AX = FetchImmWord;
 		EIP += 3;
 		return;
 	case 0xB9: // MOV CX, IMM16
-		CX = FetchWord;
+		CX = FetchImmWord;
 		EIP += 3;
 		return;
 	case 0xBA: // MOV DX, IMM16
-		DX = FetchWord;
+		DX = FetchImmWord;
 		EIP += 3;
 		return;
 	case 0xBB: // MOV BX, IMM16
-		BX = FetchWord;
+		BX = FetchImmWord;
 		EIP += 3;
 		return;
 	case 0xBC: // MOV SP, IMM16
-		SP = FetchWord;
+		SP = FetchImmWord;
 		EIP += 3;
 		return;
 	case 0xBD: // MOV BP, IMM16
-		BP = FetchWord;
+		BP = FetchImmWord;
 		EIP += 3;
 		return;
 	case 0xBE: // MOV SI, IMM16
-		SI = FetchWord;
+		SI = FetchImmWord;
 		EIP += 3;
 		return;
 	case 0xBF: // MOV DI, IMM16
-		DI = FetchWord;
+		DI = FetchImmWord;
 		EIP += 3;
 		return;
 	case 0xC2: // RET IMM16 (NEAR)
 		IP = Pop();
-		SP = cast(ushort)(SP + FetchWord());
+		SP = cast(ushort)(SP + FetchImmWord);
 		//EIP += 3; ?
 		return;
 	case 0xC3: // RET (NEAR)
@@ -1565,7 +1531,7 @@ void Execute(ubyte op) {
 	case 0xCA: // RET IMM16 (FAR)
 		IP = Pop();
 		CS = Pop();
-		SP = SP + FetchWord;
+		SP = SP + FetchImmWord;
 		// EIP += 3; ?
 		return;
 	case 0xCB: // RET (FAR)
@@ -1942,7 +1908,7 @@ _F2_CX:
 		break;
 	default: // Illegal instruction
 		if (Verbose)
-			loghb("ILLEGAL: ", op, Log.Error);
+			loghb("ILLEGAL: ", op);
 		//TODO: Raise vector on illegal op
 		
 		++EIP; // ??
