@@ -80,8 +80,8 @@ int main(string[] args) {
 		return 0;
 	}
 
-	// The "blame getopt for only doing off->on switches" section
 	//TODO: Find a better getopt alternative, or make our own
+	// getopt can ONLY do off-to-on switches unfortunately
 	Sleep = !Sleep;
 	debug Verbose = !Verbose;
 
@@ -89,7 +89,7 @@ int main(string[] args) {
 		debug log("Debug mode is ON");
 		else log("Verbose mode is ON");
 		if (!Sleep)
-			log("Maximum performance is ACTIVE");
+			log("Maximum performance is ON");
 	}
 
 	if (!smsg)
@@ -106,7 +106,7 @@ int main(string[] args) {
 			if (ExecLoad(init_file, init_args))
 				Run;
 		} else {
-			puts("ERROR: File not found");
+			puts("ERROR: File not found or could not be loaded");
 		}
 	} else {
 		EnterShell;
