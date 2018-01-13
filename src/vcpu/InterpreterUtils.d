@@ -266,12 +266,20 @@ extern (C)
 ushort FetchWord(uint addr) {
 	return *(cast(ushort*)&MEMORY[addr]);
 }
-/// Fetch a DWORD from memory
+/**
+ * Fetch a DWORD from memory
+ * Params: addr = Memory address
+ * Returns: DWORD
+ */
 extern (C)
 uint FetchDWord(uint addr) {
 	return *(cast(uint*)&MEMORY[addr]);
 }
-/// Fetch an immediate word (short).
+/**
+ * Fetch a signed WORD from memory
+ * Params: addr = Memory address
+ * Returns: signed WORD
+ */
 extern (C)
 short FetchSWord(uint addr) {
 	return *(cast(short*)&MEMORY[addr]);

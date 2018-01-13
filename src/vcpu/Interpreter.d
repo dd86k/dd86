@@ -1221,36 +1221,35 @@ void Execute(ubyte op) {
 		const byte rm = FetchImmByte;
 		const ushort add = FetchImmWord(1);
 		if (rm & 0b00111000) { // MOD 000 R/M only
-			// Raise illegal instruction
+			//TODO: Raise illegal instruction
 		} else { // REMINDER: REG = 000 and D is SET
 			//TODO: POP R/RM16
-			final switch (rm & 0b11_000000)
-			{
-				case 0: // Memory
+			final switch (rm & 0b11_000000) {
+			case 0: // Memory
 
-					break;
-				case 0b01_000000: // Memory + D8
+				break;
+			case 0b01_000000: // Memory + D8
 
-					EIP += 1;
-					break;
-				case 0b10_000000: // Memory + D16
+				EIP += 1;
+				break;
+			case 0b10_000000: // Memory + D16
 
-					EIP += 2;
-					break;
-				case 0b11_000000: // Register
-					// Confusing.
-					/*final switch (rm & 0b111)
-					{
-					case 0: AX = Pop(); break;
-					case 1: AX = Pop(); break;
-					case 2: AX = Pop(); break;
-					case 3: AX = Pop(); break;
-					case 4: AX = Pop(); break;
-					case 5: AX = Pop(); break;
-					case 6: AX = Pop(); break;
-					case 7: AX = Pop(); break;
-					}*/
-					break;
+				EIP += 2;
+				break;
+			case 0b11_000000: // Register
+				// Confusing.
+				/*final switch (rm & 0b111)
+				{
+				case 0: AX = Pop(); break;
+				case 1: AX = Pop(); break;
+				case 2: AX = Pop(); break;
+				case 3: AX = Pop(); break;
+				case 4: AX = Pop(); break;
+				case 5: AX = Pop(); break;
+				case 6: AX = Pop(); break;
+				case 7: AX = Pop(); break;
+				}*/
+				break;
 			}
 		}
 		EIP += 2;
@@ -1312,9 +1311,13 @@ void Execute(ubyte op) {
 	case 0x9A: // CALL FAR_PROC
 		Push(CS);
 		Push(IP);
+		CS = FetchImmWord;
+		IP = FetchImmWord(2);
 		return;
 	case 0x9B: // WAIT
-	//TODO: WAIT ???
+	//TODO: WAIT
+	/* Causes the processor to check for and handle pending, unmasked,
+	   floating-point exceptions before proceeding.*/
 		++EIP;
 		return;
 	case 0x9C: // PUSHF
@@ -1365,8 +1368,8 @@ void Execute(ubyte op) {
 		} else {
 			DI = DI - 1; SI = SI - 1;
 		}
-	}
 		return;
+	}
 	case 0xA7: { // CMPS DEST-STR16, SRC-STR16
 		const int t = FetchWord(GetAddress(DS, SI)) - FetchWord(GetAddress(ES, DI));
 		//TODO: CMPS PF
@@ -1379,24 +1382,24 @@ void Execute(ubyte op) {
 		} else {
 			DI = DI - 2; SI = SI - 2;
 		}
-	}
 		return;
+	}
 	case 0xA8: { // TEST AL, IMM8
 		const int r = AL & FetchImmByte;
 		//TODO: TEST ZF SF PF
 
 		CF = OF = 0;
 		EIP += 2;
-	}
 		return;
+	}
 	case 0xA9: { // TEST AX, IMM16
 		const int r = AX & FetchImmWord;
 		//TODO: TEST ZF SF PF
 
 		CF = OF = 0;
 		EIP += 3;
-	}
 		return;
+	}
 	case 0xAA: // STOS DEST-STR8
 		MEMORY[GetAddress(ES, DI)] = AL;
 		if (DF == 0) DI = DI + 1;
@@ -1430,8 +1433,8 @@ void Execute(ubyte op) {
 		if (DF == 0) DI = DI + 1;
 		else         DI = DI - 1;
 		++EIP;
-	}
 		return;
+	}
 	case 0xAF: { // SCAS DEST-STR16
 		const int r = AX - FetchWord(GetAddress(ES, DI));
 		//TODO: SCAS OF, PF
@@ -1441,8 +1444,8 @@ void Execute(ubyte op) {
 		if (DF == 0) DI = DI + 2;
 		else         DI = DI - 2;
 		++EIP;
-	}
 		return;
+	}
 	case 0xB0: // MOV AL, IMM8
 		AL = FetchImmByte;
 		EIP += 2;
@@ -1549,12 +1552,10 @@ void Execute(ubyte op) {
 		IP = Pop();
 		CS = Pop();
 		SP = SP + FetchImmWord;
-		// EIP += 3; ?
 		return;
 	case 0xCB: // RET (FAR)
 		IP = Pop();
 		CS = Pop();
-		//++EIP; ?
 		return;
 	case 0xCC: // INT 3
 		Raise(3);
