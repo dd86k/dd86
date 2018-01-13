@@ -70,17 +70,17 @@ void EnterShell() {
 	import std.uni : toUpper;
 	import std.file : getcwd, chdir, FileException;
 _S:
-	//TODO: Print POMPT
+	//TODO: Print $POMPT
 	// getcwd uses system functions that are null-terminated (windows+linux tested)
 	printf("%s%% ", cast(char*)getcwd);
 
 	// Read line from stdln and remove \n, then split arguments.
-	string[] argv = split(readln()[0..$-1], ' '); //TODO: Better splitter
+	string[] argv = split(readln()[0..$-1], ' '); //TODO: Better splitter (and GC-less)
 	const size_t argc = argv.length;
 
 	if (argc > 0)
 	switch (toUpper(argv[0])) {
-	case "HELP": //TODO: /ALL should print info for "??"
+	case "HELP":
 		puts(
 `CD        Change working directory
 CLS       Clear screen
@@ -404,7 +404,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 *   DL (Column, 0 is top)
 		 */
 		case 0x02:
-		//TODO: Figure out page (Buffer?)
+		//TODO: Figure out "page" (Page buffer?)
 			SetPos(DH, DL);
 			break;
 		/*
@@ -919,7 +919,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 */
 		case 0x39: {
 			import std.file : mkdir;
-			string path = MemString(cast(void*)MEMORY, GetAddress(DS, DX));
+			string path = MemString(GetAddress(DS, DX));
 			version (Windows)
 			{
 				import std.windows.syserror : WindowsException;
@@ -956,7 +956,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 */
 		case 0x3A: {
 			import std.file : rmdir;
-			string path = MemString(cast(void*)MEMORY, GetAddress(DS, DX));
+			string path = MemString(GetAddress(DS, DX));
 			version (Windows)
 			{
 				import std.windows.syserror : WindowsException;
@@ -1020,7 +1020,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 			import std.stdio : toFile;
 			import std.file : setAttributes;
 			enum EMPTY = cast(ubyte[])null;
-			string path = MemString(cast(void*)MEMORY, GetAddress(DS, DX));
+			string path = MemString(GetAddress(DS, DX));
 			uint at; // VOLLABEL and DIRECTORY are ignored here
 			version (Windows) // 1:1 MS-DOS<->Windows
 			{ // https://msdn.microsoft.com/en-us/library/gg258117(v=vs.85).aspx
@@ -1134,7 +1134,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 */
 		case 0x41: {
 			import std.file : remove, FileException;
-			string path = MemString(cast(void*)MEMORY, GetAddress(DS, DX));
+			string path = MemString(GetAddress(DS, DX));
 			try
 			{
 				remove(path);
@@ -1244,7 +1244,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		case 0x4B: {
 			switch (AL) {
 			case 0: // Load and execute the program.
-				string p = MemString(cast(void*)MEMORY, GetAddress(DS, DX));
+				string p = MemString(GetAddress(DS, DX));
 				if (exists(p)) {
 					CF = 0;
 					ExecLoad(p);
@@ -1278,7 +1278,6 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 *     and all memory belonging to the process is freed.
 		 */
 		case 0x4C:
-		//TODO: Level count
 			Running = false;
 			break;
 		/*

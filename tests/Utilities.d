@@ -1,18 +1,18 @@
 module UtilitiesTests;
 
-import Interpreter, std.stdio, dd_dos, Utilities;
+import Interpreter : MEMORY;
+import std.stdio, dd_dos, Utilities;
+import core.stdc.string : memcpy;
 
 unittest
 {
-    writeln("---------- Utilities");
+    writeln("\n----- Utilities");
 
     const uint pos = 10;
-    ubyte[] c = new ubyte[50];
-    const char[] s = "Hello it's me";
-    ubyte* p = &c[pos];
-    for (int i; i < s.length; ++i, ++p) *p = s[i];
+    char* s = cast(char*)"Hello\0";
+    memcpy(cast(void*)MEMORY + pos, s, 6);
 
-    write("MemString(ubyte*, uint) : ");
-    assert(MemString(cast(void*)c, pos) == "Hello it's me");
+    write("MemString(uint) : ");
+    assert(MemString(pos) == "Hello");
     writeln("OK");
 }

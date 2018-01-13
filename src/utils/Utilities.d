@@ -4,15 +4,16 @@
 
 module Utilities;
 
+import Interpreter : MEMORY;
+
 /**
  * Fetches a string from memory.
  * Params:
- *   mem = Memory pointer
  *   pos = Starting position
  * Returns: String
  */
-string MemString(void* mem, uint pos) pure {
+string MemString(uint pos) {
     import core.stdc.string : strlen;
-    const size_t len = strlen(cast(char*)(mem + pos));
-    return cast(string)mem[pos..pos+len];
+    const size_t len = strlen(cast(char*)MEMORY + pos);
+    return cast(string)MEMORY[pos..pos+len];
 }

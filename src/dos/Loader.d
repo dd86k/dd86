@@ -14,7 +14,7 @@ private enum ERESWDS = 16; /// RESERVED WORDS
 /// MS-DOS EXE header
 private struct mz_hdr { align(1): // Necessary fields included
 //	ushort e_magic;        /// Magic number, "MZ"
-	ushort e_cblp;         /// Bytes on last page of file (extra bytes)
+	ushort e_cblp;         /// Bytes on last page of file (extra bytes), 9 bits
 	ushort e_cp;           /// Pages in file
 	ushort e_crlc;         /// Number of relocation entries
 	ushort e_cparh;        /// Size of header in paragraphs
@@ -46,6 +46,7 @@ private enum {
 
 /**
  * Load an executable file in memory.
+ * AL values are set according to error
  * Params:
  *   path = Path to executable
  *   args = Executable arguments
@@ -64,6 +65,7 @@ bool ExecLoad(string path, string args = null) {
 	fread(&sig, 2, 1, f);
 
 	if (fsize == 0) {
+		fclose(f);
 		if (Verbose)
 			log("File is zero length.");
 		AL = 2; // Non-official
@@ -89,19 +91,19 @@ bool ExecLoad(string path, string args = null) {
 		// ** Header is read for initial register values
 		mz_hdr mzh;
 		fread(&mzh, mzh.sizeof, 1, f);
-		CS = 0; IP = 0x100; // Temporary
+		CS = 0; IP = 0; // Temporary
 		//CS = CS + mzh.e_cs; // Relative
 		//IP = mzh.e_ip;
-		//SS = SS + mzh.e_ss; // Relative
-		//SP = mzh.e_sp;
+		SS = cast(ushort)(SS + mzh.e_ss); // Relative
+		SP = mzh.e_sp;
 
 		// ** Copy code section from exe into memory
-		if (mzh.e_minalloc && mzh.e_maxalloc) { // High memory
-			if (Verbose)
-				log("LOAD HIGH MEM");
-		} else { // Low memory
+		if (mzh.e_minalloc && mzh.e_maxalloc) { // Low memory
 			if (Verbose)
 				log("LOAD LOW MEM");
+		} else { // High memory
+			if (Verbose)
+				log("LOAD HIGH MEM");
 		}
 		const uint _h = mzh.e_cparh * PARAGRAPH; // Header size
 		const uint _l = _h + (mz_rlc.sizeof * mzh.e_crlc); // image code offset
@@ -111,6 +113,8 @@ bool ExecLoad(string path, string args = null) {
 		if (_h + _s < PAGE) // This snippet was found in DOSBox
 			_s = PAGE - _h;
 		debug {
+			logd("_H::", _h);
+			logd("_L::", _l);
 			logd("STRUCT_SIZE: ", mzh.sizeof);
 			logd("HEADER_SIZE: ", _h);
 			logd("IMAGE_SIZE : ", _s);
@@ -119,11 +123,8 @@ bool ExecLoad(string path, string args = null) {
 			logd("SS: ", SS);
 			logd("SP: ", SP);
 		}
-		fseek(f, _l, SEEK_SET);
-		ubyte* t = cast(ubyte*)malloc(_s);
-		fread(t, _s, 1, f);
-		InsertArray(t, _s, GetIPAddress); // Insert at CS:IP
-		free(t);
+		fseek(f, _l, SEEK_SET); // Seek to end of header
+		fread(cast(ubyte*)MEMORY + GetIPAddress, _s, 1, f); // and read the code portion
 
 		// ** Read relocation table and adjust far pointers in memory
 		if (mzh.e_crlc) {
@@ -140,11 +141,16 @@ bool ExecLoad(string path, string args = null) {
 				const ushort data = FetchWord(ip + (r[i].seg << 4) + r[i].off);
 				if (Verbose)
 					printf("%2d  %04X:%04X -> %04X\n", i, r[i].seg, r[i].off, data);
+				CS = cast(ushort)(CS + r[i].seg); // temporarily cheat
+				IP = cast(ushort)(IP + r[i].off); // ditto
 				//SetWord((r[i].seg << 4) + r[i].off, r[i].refseg);
 			}
 			free(r);
-		} else if (Verbose)
-			log("No relocations");
+		} else {
+			EIP += 0x100; // temporary
+			if (Verbose)
+				log("No relocations");
+		}
 
 		// ** Setup registers
 		// AL      drive letter
@@ -159,10 +165,11 @@ bool ExecLoad(string path, string args = null) {
 		//MakePSP(GetIPAddress, "test");
 
 		// ** Jump to CS:IP+0x0100, relative to start of program
-		EIP += 0x100;
-		return true; // case MZ
+		//EIP += 0x100;
+		break; // case MZ
 	default:
 		if (fsize > 0xFF00) { // Size - PSP
+			fclose(f);
 			if (Verbose)
 				log("COM file too large");
 			AL = exec_bad_format;
@@ -177,6 +184,9 @@ bool ExecLoad(string path, string args = null) {
 
 		//MakePSP(_comp - 0x100, "TEST");
 		AL = 0;
-		return true; // default (COM)
+		break; // default (COM)
 	}
+
+	fclose(f);
+	return true;
 }

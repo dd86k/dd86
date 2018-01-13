@@ -4,7 +4,7 @@ import Interpreter, InterpreterUtils, std.stdio, dd_dos, std.file : exists;
 
 unittest
 {
-    writeln("---------- DD-DOS (MS-DOS, IBM PC)");
+    writeln("\n----- DD-DOS (MS-DOS, IBM PC)");
 
     /*
      * Hardware (and/or BIOS)
@@ -46,11 +46,12 @@ unittest
     DL = '\n';
     Raise(0x21);
 
-    // "HELLO WORLD"
+    // PRINT STRING
 
     write("INT 21h->09_00h: ");
     DS = CS = 0x400;
     DX = EIP = 0x20;
+    _CURRENT_IP = (0x400 << 4) + 0x20;
     InsertString("OK\n$");
     AH = 9;
     Raise(0x21);
@@ -61,7 +62,7 @@ unittest
     write("INT 21h->2A_00h: ");
     AH = 0x2A;
     Raise(0x21);
-    write("(D/M/Y) ");
+    write("(WD D/M/Y) ");
     final switch (AL) {
     case 0, 7: write("Sunday"); break;
     case 1: write("Monday"); break;
@@ -78,7 +79,7 @@ unittest
     write("INT 21h->2C_00h: ");
     AH = 0x2C;
     Raise(0x21);
-    writefln("(H:M:S) %d:%d:%d.%d", CH, CL, DH, DL);
+    writefln("(H:M:S.MS) %d:%d:%d.%d", CH, CL, DH, DL);
 
     // GET VERSION
 
@@ -93,7 +94,7 @@ unittest
 
     // CREATE SUBDIRECTORY
 
-    write("INT 21h->39_00h: ");
+    /*write("INT 21h->39_00h: ");
     DS = CS; DX = IP;
     InsertString("TESTDIR\0");
     AH = 0x39;
@@ -136,7 +137,7 @@ unittest
     AH = 0x41;
     Raise(0x21);
     assert(!exists("TESTFILE"));
-    writeln("OK");
+    writeln("OK");*/
 
     // GET FREE DISK SPACE
 

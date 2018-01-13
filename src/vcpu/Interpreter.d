@@ -56,8 +56,10 @@ void Initiate() {
 	CLp = cast(ubyte*)CXp;
 	DLp = cast(ubyte*)DXp;
 
-	//TODO: Probably a FAR JMP to "BIOS" or something else
+	//TODO: Probably do a FAR JMP to "BIOS" or something else
 }
+
+__gshared uint _CURRENT_IP;
 
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
@@ -66,10 +68,9 @@ void Run() {
 		log("Interpreter::Run");
 	Running = 1;
 	while (Running) {
-		//TODO: Create a new global var for effective CS:IP address
-		//      Avoids re-calculating the CS:IP address all the time
-		debug logexec("(vm)", CS, IP, MEMORY[GetIPAddress]);
-		Execute(MEMORY[GetIPAddress]);
+		_CURRENT_IP = GetIPAddress;
+		debug logexec("(vm)", CS, IP, MEMORY[_CURRENT_IP]);
+		Execute(MEMORY[_CURRENT_IP]);
 		Seg = SEG_NONE; // Reset SEG after instruction
 		if (Sleep)
 			HSLEEP( 2 ); // Intel 8086 - 5 MHz
@@ -462,7 +463,7 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x01: { // ADD R/M16, REG16
-		const ubyte rm = FetchByte(GetIPAddress);
+		const ubyte rm = FetchImmByte;
 		const uint addr = GetEA(rm);
 		final switch (rm & RM_MOD) {
 		case RM_MOD_00:
@@ -557,11 +558,11 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x0C: // OR AL, IMM8
-		AL = AL | FetchByte(GetIPAddress);
+		AL = AL | FetchImmByte;
 		EIP += 2;
 		return;
 	case 0x0D: // OR AX, IMM16
-		AX = AX | FetchWord(GetIPAddress);
+		AX = AX | FetchImmWord;
 		EIP += 3;
 		return;
 	case 0x0E: // PUSH CS
@@ -585,14 +586,14 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x14: { // ADC AL, IMM8
-		int t = AL + FetchByte(GetIPAddress);
+		int t = AL + FetchImmByte;
 		if (CF) ++t;
 		AL = t;
 		EIP += 2;
 		return;
 	}
 	case 0x15: { // ADC AX, IMM16
-		int t = AX + FetchWord(GetIPAddress);
+		int t = AX + FetchImmWord;
 		if (CF) ++t;
 		AX = t;
 		EIP += 3;
@@ -619,14 +620,14 @@ void Execute(ubyte op) {
 
 		return;
 	case 0x1C: { // SBB AL, IMM8
-		int t = AL - FetchByte(GetIPAddress);
+		int t = AL - FetchImmByte;
 		if (CF) --t;
 		AL = t;
 		EIP += 2;
 	}
 		return;
 	case 0x1D: { // SBB AX, IMM16
-		int t = AX - FetchByte(GetIPAddress);
+		int t = AX - FetchImmByte;
 		if (CF) --t;
 		AX = t;
 		EIP += 3;
@@ -745,11 +746,11 @@ void Execute(ubyte op) {
 
 		return;
 	case 0x34: // XOR AL, IMM8
-		AL = AL ^ FetchByte(GetIPAddress);
+		AL = AL ^ FetchImmByte;
 		EIP += 2;
 		return;
 	case 0x35: // XOR AX, IMM16
-		AX = AX ^ FetchWord(GetIPAddress);
+		AX = AX ^ FetchImmWord;
 		EIP += 3;
 		return;
 	case 0x36: // SS:
@@ -1188,21 +1189,21 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x8C: { // MOV R/M16, SEGREG
-		// MOD 0SR R/M
-		// SR: 00=ES, 01=CS, 10=SS, 11=DS
+		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 		const byte rm = FetchImmByte;
-		final switch (rm & RM_MOD) {
-		case RM_MOD_00:
-
+		const int ea = GetEA(rm);
+		final switch (rm & 24) { // 00 011 000
+		case 0: // ES
+			InsertWord(ES, ea);
 			break;
-		case RM_MOD_01:
-
+		case 8: // CS
+			InsertWord(CS, ea);
 			break;
-		case RM_MOD_10:
-
+		case 16: // SS
+			InsertWord(SS, ea);
 			break;
-		case RM_MOD_11:
-
+		case 24: // DS
+			InsertWord(DS, ea);
 			break;
 		}
 		EIP += 2;
@@ -1522,12 +1523,28 @@ void Execute(ubyte op) {
 // Load into REG and DS
 
 		return;
-	case 0xC6: // MOV MEM8, IMM8
+	case 0xC6: { // MOV MEM8, IMM8
 		// MOD 000 R/M only
+		const ubyte rm = FetchImmByte;
+		const ubyte imm = FetchImmByte(1);
+		if (rm & 38) { // 111 000
+			//TODO: Raise GP
+		} else {
+
+		}
 		return;
-	case 0xC7: // MOV MEM16, IMM16
+	}
+	case 0xC7: { // MOV MEM16, IMM16
 		// MOD 000 R/M only
+		const ubyte rm = FetchImmByte;
+		const ushort imm = FetchImmWord(1);
+		if (rm & 38) { // 111 000
+			//TODO: Raise GP
+		} else {
+
+		}
 		return;
+	}
 	case 0xCA: // RET IMM16 (FAR)
 		IP = Pop();
 		CS = Pop();
@@ -1541,15 +1558,15 @@ void Execute(ubyte op) {
 		return;
 	case 0xCC: // INT 3
 		Raise(3);
-		++EIP;
+		++EIP; //TODO: Check: is this correct?
 		return;
 	case 0xCD: // INT IMM8
 		Raise(FetchImmByte);
-		EIP += 2;
+		EIP += 2; //TODO: Check: is this correct?
 		return;
 	case 0xCE: // INTO
 		if (CF) Raise(4);
-		++EIP;
+		++EIP; //TODO: Check: is this correct?
 		return;
 	case 0xCF: // IRET
 		IP = Pop();
@@ -1683,9 +1700,10 @@ void Execute(ubyte op) {
 		AH = 0;
 		++EIP;
 		return;
+	// D6 is illegal under 8086
 	case 0xD7: // XLAT SOURCE-TABLE
 		AL = MEMORY[GetAddress(DS, BX) + AL];
-		break;
+		return;
 	/*case 0xD8: // ESC OPCODE, SOURCE
 	case 0xD9: // 1101 1XXX - MOD YYY R/M
 	case 0xDA: // Used to escape to another co-processor.
@@ -1734,13 +1752,11 @@ void Execute(ubyte op) {
 	case 0xE9: // JMP    NEAR-LABEL
 		EIP += FetchImmSWord; // ±32 KB
 		return;
-	case 0xEA: { // JMP  FAR-LABEL
+	case 0xEA: // JMP  FAR-LABEL
 		// Any segment, any fragment, 5 byte instruction.
 		// EAh (LO-IP) (HI-IP) (LO-CS) (HI-CS)
-		const int ip = GetIPAddress + 1;
-		IP = FetchWord(ip);
-		CS = FetchWord(ip + 2);
-	}
+		IP = FetchImmWord;
+		CS = FetchImmWord(2);
 		return;
 	case 0xEB: // JMP  SHORT-LABEL
 		EIP += FetchImmSByte; // ±128 B
@@ -1770,13 +1786,13 @@ _F2_CX:
 			if (ZF == 0) goto _F2_CX;
 		} else ++EIP;
 		return;
-	/*case 0xF3: // REP/REPE/REPNZ
+	case 0xF3: // REP/REPE/REPNZ
 
 		return;
 	case 0xF4: // HLT
 	//TODO: HLT
 		++EIP;
-		return;*/
+		return;
 	case 0xF5: // CMC
 		CF = !CF;
 		++EIP;

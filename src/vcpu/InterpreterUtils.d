@@ -69,24 +69,74 @@ uint GetEA(ubyte rm) {
 		EIP += 2;
 		break; // MOD 10
 	case RM_MOD_11: // MOD 11, Register Mode
-		debug _debug("EA:3:_");
-		/*final switch (rm & 0b111_000) {
-		case 0: 
+		debug loghb("EA:3:REG::", rm & RM_REG);
+		debug loghb("EA:3:SEG::", Seg);
+		final switch (rm & RM_REG) {
+		case RM_REG_000: 
 			switch (Seg) {
 			case SEG_CS: return GetAddress(CS, AX);
 			case SEG_DS: return GetAddress(DS, AX);
+			case SEG_ES: return GetAddress(ES, AX);
+			case SEG_SS: return GetAddress(SS, AX);
 			default: return AX;
 			}
-			break;
-		case 0b00_1000:  break;
-		case 0b01_0000:  break;
-		case 0b01_1000:  break;
-		case 0b10_0000:  break;
-		case 0b10_1000:  break;
-		case 0b11_0000:  break;
-		case 0b11_1000:  break;
-		}*/
-		break; // MOD 11
+		case RM_REG_001:
+			switch (Seg) {
+			case SEG_CS: return GetAddress(CS, CX);
+			case SEG_DS: return GetAddress(DS, CX);
+			case SEG_ES: return GetAddress(ES, CX);
+			case SEG_SS: return GetAddress(SS, CX);
+			default: return CX;
+			}
+		case RM_REG_010:
+			switch (Seg) {
+			case SEG_CS: return GetAddress(CS, DX);
+			case SEG_DS: return GetAddress(DS, DX);
+			case SEG_ES: return GetAddress(ES, DX);
+			case SEG_SS: return GetAddress(SS, DX);
+			default: return DX;
+			}
+		case RM_REG_011:
+			switch (Seg) {
+			case SEG_CS: return GetAddress(CS, BX);
+			case SEG_DS: return GetAddress(DS, BX);
+			case SEG_ES: return GetAddress(ES, BX);
+			case SEG_SS: return GetAddress(SS, BX);
+			default: return BX;
+			}
+		case RM_REG_100:
+			switch (Seg) {
+			case SEG_CS: return GetAddress(CS, SP);
+			case SEG_DS: return GetAddress(DS, SP);
+			case SEG_ES: return GetAddress(ES, SP);
+			case SEG_SS: return GetAddress(SS, SP);
+			default: return SP;
+			}
+		case RM_REG_101:
+			switch (Seg) {
+			case SEG_CS: return GetAddress(CS, BP);
+			case SEG_DS: return GetAddress(DS, BP);
+			case SEG_ES: return GetAddress(ES, BP);
+			case SEG_SS: return GetAddress(SS, BP);
+			default: return BP;
+			}
+		case RM_REG_110:
+			switch (Seg) {
+			case SEG_CS: return GetAddress(CS, SI);
+			case SEG_DS: return GetAddress(DS, SI);
+			case SEG_ES: return GetAddress(ES, SI);
+			case SEG_SS: return GetAddress(SS, SI);
+			default: return SI;
+			}
+		case RM_REG_111:
+			switch (Seg) {
+			case SEG_CS: return GetAddress(CS, DI);
+			case SEG_DS: return GetAddress(DS, DI);
+			case SEG_ES: return GetAddress(ES, DI);
+			case SEG_SS: return GetAddress(SS, DI);
+			default: return DI;
+			}
+		}
 	}
 
 	return -1; // Temporary until final switch
@@ -139,20 +189,17 @@ void InsertDWord(uint op, int addr) {
 	*cast(uint*)(cast(void*)MEMORY + addr) = op;
 }
 /**
- * Insert a string in memory.
+ * Insert an ASCIZ string in memory.
  * Params:
  *   data = String value
  *   addr = Memory address, default being CS:IP
  */
-void InsertString(string data, size_t addr = 0) {
-	if (addr == 0) addr = GetIPAddress;
-	foreach(b; data) MEMORY[addr++] = b;
+void InsertString(string data, size_t addr = _CURRENT_IP) {
+	memcpy(cast(void*)MEMORY + addr, cast(void*)data, data.length);
 }
 //TODO: InsertString with char*
 /// Insert a wide string in memory.
-void InsertW(wstring data, size_t addr = 0) {
-	if (addr == 0)
-		addr = GetIPAddress;
+void InsertW(wstring data, size_t addr = _CURRENT_IP) {
 	size_t l = data.length * 2;
 	ubyte* bp = cast(ubyte*)MEMORY + addr;
 	ubyte* dp = cast(ubyte*)data;
@@ -171,8 +218,27 @@ void InsertW(wstring data, size_t addr = 0) {
  */
 extern (C)
 ubyte FetchImmByte(int off = 0) {
-	return MEMORY[GetIPAddress + off + 1];
+	return MEMORY[_CURRENT_IP + 1 + off];
 }
+/**
+ * Fetch an immediate WORD at CS:IP+n+1
+ * Params: off = Optional offset
+ * Returns: WORD
+ */
+extern (C)
+ushort FetchImmWord(uint off = 0) {
+	return *(cast(ushort*)&MEMORY[_CURRENT_IP + 1 + off]);
+}
+/**
+ * Fetch an immediate signed WORD at CS:IP+n+1
+ * Params: off = Optional offset
+ * Returns: signed WORD
+ */
+extern (C)
+short FetchImmSWord(uint off = 0) {
+	return *(cast(short*)&MEMORY[_CURRENT_IP + off + 1]);
+}
+
 /**
  * Fetch an unsigned byte (ubyte).
  * Params: addr = Memory address
@@ -182,54 +248,31 @@ extern (C)
 ubyte FetchByte(uint addr) {
 	return MEMORY[addr];
 }
-/// Fetch an immediate byte (byte).
+/**
+ * Fetch a signed byte (byte).
+ * Returns: signed BYTE
+ */
 extern (C)
 byte FetchImmSByte() {
-	return cast(byte)MEMORY[GetIPAddress + 1];
+	return cast(byte)MEMORY[_CURRENT_IP + 1];
 }
 
-/// Fetch a WORD from memory
+/**
+ * Fetch a WORD from memory
+ * Params: addr = Memory address
+ * Returns: WORD
+ */
 extern (C)
 ushort FetchWord(uint addr) {
-	version (X86_ANY)
-		return *(cast(ushort*)&MEMORY[addr]);
-	else
-		return cast(ushort)(MEMORY[addr] | MEMORY[addr + 1] << 8);
+	return *(cast(ushort*)&MEMORY[addr]);
 }
 /// Fetch a DWORD from memory
 extern (C)
 uint FetchDWord(uint addr) {
-	version (X86_ANY)
-		return *(cast(uint*)&MEMORY[addr]);
-	else
-		return cast(uint)(MEMORY[addr] | MEMORY[addr + 1] << 8);
-}
-/// Fetch an immediate unsigned word with optional offset.
-extern (C)
-ushort FetchImmWord(uint offset = 0) {
-	version (X86_ANY)
-		return *(cast(ushort*)&MEMORY[GetIPAddress + offset + 1]);
-	else {
-		const uint l = GetIPAddress + offset + 1;
-		return cast(ushort)(MEMORY[l] | MEMORY[l + 1] << 8);
-	}
+	return *(cast(uint*)&MEMORY[addr]);
 }
 /// Fetch an immediate word (short).
 extern (C)
 short FetchSWord(uint addr) {
-	version (X86_ANY)
-		return *(cast(short*)&MEMORY[addr]);
-	else {
-		if (addr == 0) addr = GetIPAddress + 1;
-		return cast(short)(MEMORY[addr] | MEMORY[addr + 1] << 8);
-	}
-}
-extern (C)
-short FetchImmSWord(uint offset = 0) {
-	version (X86_ANY)
-		return *(cast(short*)&MEMORY[GetIPAddress + offset + 1]);
-	else {
-		const uint addr = GetIPAddress + offset + 1;
-		return cast(short)(MEMORY[addr] | MEMORY[addr + 1] << 8);
-	}
+	return *(cast(short*)&MEMORY[addr]);
 }
