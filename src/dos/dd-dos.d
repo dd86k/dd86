@@ -15,10 +15,15 @@ debug pragma(msg, `
 | DEBUG BUILD |
 +-------------+
 `);
+else pragma(msg, `
++---------------+
+| RELEASE BUILD |
++---------------+
+`);
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
-enum APP_VERSION = "0.0.0"; /// Application version
+enum APP_VERSION = "0.0.0-0"; /// Application version
 
 enum BANNER = `
 _______ _______        _______  ______  _______
@@ -40,7 +45,7 @@ __gshared ubyte MajorVersion = DOS_MAJOR_VERSION; /// Alterable reported major v
 __gshared ubyte MinorVersion = DOS_MINOR_VERSION; /// Alterable reported minor version
 
 /// File/Folder attribute. See INT 21h AH=3Ch
-// Trivia: Did you know Windows still use these values?
+// Trivia: Did you know Windows still use these values today?
 enum
 	READONLY = 1,
 	HIDDEN = 2,
@@ -97,7 +102,7 @@ VER       Show DOS version
 		break;
 	case "VER":
 		if (argc > 1) {
-			switch (toUpper(argv[1])) { //toUpper in-case of future sub commands
+			switch (argv[1]) { //toUpper in-case of future sub commands
 			case "/?":
 
 				break;
@@ -118,21 +123,25 @@ VER       Show DOS version
 				const size_t ct = ext ? 0xA_0000 : MEMORYSIZE;
 				const size_t tt = MEMORYSIZE - ct;
 
-				int nzt; // Non-zero (total/excluded from conventional in some cases)
-				int nzc; // Convential (<640K) non-zero
-				for (int i; i < 0xA_0000; ++i) {
+				__gshared int nzt; // Non-zero (total/excluded from conventional in some cases)
+				__gshared int nzc; // Convential (<640K) non-zero
+				for (__gshared int i; i < 0xA_0000; ++i) {
 					if (i < 0xA_0000) {
 						if (MEMORY[i]) ++nzc;
 					} else if (MEMORY[i]) ++nzt;
 				}
-				puts("Memory type           Zero'd +   NZero =   Total");
-				puts("-------------------  -------   -------   -------");
-				printf("Conventional         %6dK   %6dK   %6dK\n",
-					(ct - nzc) / 1024, nzc / 1024, ct / 1024);
-				printf("Extended (DD-DOS)    %6dK   %6dK   %6dK\n",
+				puts(
+					"Memory type           Zero'd +   NZero =   Total\n" ~
+					"-------------------  -------   -------   -------"
+				);
+				printf(
+					"Conventional         %6dK   %6dK   %6dK\n" ~
+					"Extended (DD-DOS)    %6dK   %6dK   %6dK\n",
+					(ct - nzc) / 1024, nzc / 1024, ct / 1024,
 					(tt - nzt) / 1024, nzt / 1024, tt / 1024);
-				puts("-------------------  -------   -------   -------");
-				printf("Total                %6dK   %6dK   %6dK\n",
+				printf(
+					"-------------------  -------   -------   -------\n" ~
+					"Total                %6dK   %6dK   %6dK\n",
 					(MEMORYSIZE - nzt) / 1024, (nzt + nzc) / 1024, MEMORYSIZE / 1024);
 				break;
 			case "/DEBUG":
@@ -170,7 +179,7 @@ OPTIONS
 		break;
 	case "DIR": { //TODO: with folder arguemnt
 		import std.file : exists, isDir, dirEntries, SpanMode;
-		string dir;
+		__gshared string dir;
 		if (argc > 1) {
 			switch (argv[1]) {
 			case "/?":
@@ -193,7 +202,7 @@ OPTIONS
 				break;
 			}
 		}
-		int c;
+		__gshared int c;
 		foreach (string name; dirEntries(dir, SpanMode.shallow)) {
 			++c;
 			if (isDir(name))
@@ -201,7 +210,7 @@ OPTIONS
 			else
 				puts(cast(char*)name);
 		}
-		printf("        %d file(s)\n", c);
+		printf("\t\t\t\t%d file(s)\n", c);
 		break;
 	}
 	case "TIME":
@@ -256,7 +265,7 @@ OPTIONS
 
 		void printlevel(int l) {
 			do {
-				printf("+--");
+				printf(">>");
 			} while (--l);
 		}
 
@@ -356,7 +365,7 @@ void MakePSP(uint l, string appname, string args = null) {
 		len += args.length + 1;
 	MEMORY[l + 0x80] = len > 0xFF ? 0xFF : cast(ubyte)len;
 	ubyte* pbank = &MEMORY[l] + 0x81;
-	size_t i;
+	__gshared size_t i;
 	foreach (b; appname) pbank[i++] = b;
 	if (args) {
 		pbank[i++] = ' '; // Space

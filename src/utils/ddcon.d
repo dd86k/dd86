@@ -41,32 +41,6 @@ void InitConsole() {
 	version (Windows) {
 		hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 		hIn  = GetStdHandle(STD_INPUT_HANDLE);
-		/*HKEY key;
-		if (RegOpenKeyExW(
-			HKEY_CURRENT_USER,
-			`SOFTWARE\Microsoft\Command Processor`,
-			0,
-			0,
-			&key
-		))*/
-		/*wstring e = `SOFTWARE\Microsoft\Command Processor\DefaultColor`w;
-		DWORD n = 4;
-		DWORD val;
-		if (RegQueryValueExW(
-				cast(const)HKEY_CURRENT_USER,
-				cast(const wchar*)&e[0],
-				cast(uint*)0,
-				cast(uint*)0,
-				cast(void*)&val,
-				&n
-			) != 0)
-		{
-			defaultColor = cast(ushort)val;
-		}*/
-
-		/*if (SetConsoleCP(65001) == 0) {
-			sys ("chcp 65001");
-		}*/
 	}
 }
 
@@ -212,8 +186,7 @@ void InvertColor() {
 }
 
 extern (C)
-void ResetColor()
-{
+void ResetColor() {
 	version (Windows)
 		SetConsoleTextAttribute(hOut, defaultColor);
 	version (Posix)
@@ -372,13 +345,13 @@ void SetPos(int x, int y) {
  */
 extern (C)
 KeyInfo ReadKey(bool echo = false) {
-	KeyInfo k;
+	__gshared KeyInfo k;
 	version (Windows) { // Sort of is like .NET's ReadKey
 		INPUT_RECORD ir;
-		DWORD num = 0;
+		__gshared DWORD num;
 		if (ReadConsoleInput(hIn, &ir, 1, &num)) {
 			if (ir.KeyEvent.bKeyDown && ir.EventType == KEY_EVENT) {
-				DWORD state = ir.KeyEvent.dwControlKeyState;
+				const DWORD state = ir.KeyEvent.dwControlKeyState;
 				k.alt   = (state & ALT_PRESSED)   != 0;
 				k.ctrl  = (state & CTRL_PRESSED)  != 0;
 				k.shift = (state & SHIFT_PRESSED) != 0;
@@ -406,10 +379,9 @@ KeyInfo ReadKey(bool echo = false) {
 			keyCode = Key.Enter;
 			break;
 		case 27: // ESC
-			switch (c = getchar()) {
+			switch (c = getchar) {
 			case '[':
-				switch (c = getchar())
-				{
+				switch (c = getchar) {
 				case 'A': keyCode = Key.UpArrow; break;
 				case 'B': keyCode = Key.DownArrow; break;
 				case 'C': keyCode = Key.RightArrow; break;

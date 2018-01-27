@@ -13,7 +13,7 @@ import ddcon : InitConsole;
 import std.file : exists;
 
 debug {} else {
-	extern (C) __gshared bool // Defaults to false (.init)!
+	extern (C) __gshared bool
 		rt_envvars_enabled, /// Disable runtime environment variables
 		rt_cmdline_enabled; /// Disable runtime command-line (--DRT-gcopt)
 }
@@ -22,7 +22,7 @@ extern (C)
 private void DisplayVersion() {
 	printf(
 `dd-dos v%s  (%s)
-Copyright (c) 2017 dd86k, using MIT license
+Copyright (c) 2017-2018 dd86k, using MIT license
 Project page: <https://github.com/dd86k/dd-dos>
 Compiler: %s v%d
 `,
@@ -33,19 +33,21 @@ Compiler: %s v%d
 }
 
 extern (C)
-private void DisplayHelp() {
+private void help() {
 	puts(
-`A DOS virtual machine.");
-Usage:");
+`A DOS virtual machine.
+Usage:
   dd-dos [OPTIONS]`
 	);
 }
 
 private
 int main(string[] args) {
-	string init_file, init_args;
-	bool smsg; // Startup message
+	__gshared string init_file, init_args;
+	__gshared bool smsg; // Startup message
 
+	//TODO: Find a better getopt alternative, or make our own.
+	//      Unfortunately, getopt can ONLY do off-to-on switches
 	GetoptResult r;
 	try {
 		r = getopt(args,
@@ -62,26 +64,34 @@ int main(string[] args) {
 			config.caseSensitive,
 			"v|version", "Print version screen and exit", &DisplayVersion);
 	} catch (GetOptException ex) {
-		//stderr.writeln("Error: ", ex.msg);
 		printf("ERROR: %s\n", cast(char*)ex.msg);
 		return 1;
 	}
 
 	if (r.helpWanted) {
-		DisplayHelp;
-		puts("\nOPTIONS");
+		help;
+		puts(
+`
+OPTIONS
+  -p, --program    Run a program directly
+  -a, --args       Add arguments to -p
+  -P, --perf       Do not sleep between cycles (!)
+  -N, --nobanner   Removes starting message and banner
+  -V, --verbose    Set verbose mode
+  -v, --version    Print version screen and exit
+  -h, --help       This help information.`
+		);
+		/*puts("\nOPTIONS");
 		foreach (it; r.options) {
 			// "custom" and nicer defaultGetoptPrinter
 			printf("%*s, %*s %s\n",
 				4,  cast(char*)it.optShort,
 				-12, cast(char*)it.optLong,
 				cast(char*)it.help);
-		}
+		}*/
 		return 0;
 	}
 
-	//TODO: Find a better getopt alternative, or make our own
-	// getopt can ONLY do off-to-on switches unfortunately
 	Sleep = !Sleep;
 	debug Verbose = !Verbose;
 
