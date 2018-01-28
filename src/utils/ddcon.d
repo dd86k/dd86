@@ -359,7 +359,7 @@ KeyInfo ReadKey(bool echo = false) {
 				k.keyCode  = ir.KeyEvent.wVirtualKeyCode;
 				k.scanCode = ir.KeyEvent.wVirtualScanCode;
  
-				if (echo) printf("%c", k.keyChar);
+				if (echo) putchar(k.keyChar);
 			}
 		}
 	} else version (Posix) {

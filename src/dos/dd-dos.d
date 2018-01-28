@@ -444,7 +444,9 @@ void Raise(ubyte code) { // Rest of this source is this function
 		case 0x04:
 
 			break;
-		default: break;
+		default:
+		
+			break;
 		}
 		break;
 	case 0x11: { // BIOS - Get equipement list
@@ -485,7 +487,9 @@ void Raise(ubyte code) { // Rest of this source is this function
 			// AL = (flag)
 			break;
 
-		default: break;
+		default:
+			
+			break;
 		}
 		break;
 	case 0x17: // PRINTER
@@ -493,13 +497,24 @@ void Raise(ubyte code) { // Rest of this source is this function
 		break;
 	case 0x1A: // TIME
 		switch (AH) {
-		case 0: // Get system time
-		// CX:DX (Number of clock ticks since midnight)
-		// AL (Midnight flag)
+		/*
+		 * Get system time by number of clock ticks since midnight
+		 * Input: None
+		 * Returns:
+		 *   CX:DX 	Number of clock ticks since midnight
+		 *   AL		Midnight flag
+		 */
+		case 0:
 
 			break;
-		case 1: // Set system time
-		// CX:DX (Number of clock ticks since midnight)
+		/*
+		 * Set system time by number of clock ticks since midnight
+		 * Input:
+		 *   CX:DX 	Number of clock ticks since midnight
+		 * Returns: None
+		 */
+		case 1:
+		
 			break;
 
 		default: break;
@@ -553,7 +568,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 */
 		case 2:
 			AL = DL;
-			printf("%c", AL);
+			putchar(AL);
 			break;
 		/*
 		 * 05h - Write character to printer.
@@ -621,16 +636,9 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 * - ^C and ^Break are not checked.
 		 */
 		case 9:
-			uint pd = GetAddress(DS, DX);
-
-			version (LittleEndian) {
-				char* p = cast(char*)MEMORY + pd;
-				while (*p != '$')
-					printf("%c", *p++);
-			} else {
-				while (MEMORY[pd] != '$')
-					printf("%c", MEMORY[pd++]);
-			}
+			char* p = cast(char*)MEMORY + GetAddress(DS, DX);
+			while (*p != '$')
+				putchar(*p++);
 
 			AL = 0x24;
 			break;
@@ -747,8 +755,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 *   AL (Day of the week, Sunday = 0)
 		 */
 		case 0x2A:
-			version (Windows)
-			{
+			version (Windows) {
 				import core.sys.windows.winbase : SYSTEMTIME, GetLocalTime;
 				SYSTEMTIME s;
 				GetLocalTime(&s);
@@ -757,9 +764,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 				DH = cast(ubyte)s.wMonth;
 				DL = cast(ubyte)s.wDay;
 				AL = cast(ubyte)s.wDayOfWeek;
-			}
-			else version (Posix)
-			{
+			} else version (Posix) {
 				import core.sys.posix.time : time_t, time, localtime, tm;
 				time_t r;
 				time(&r);
@@ -769,9 +774,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 				DH = cast(ubyte)(s.tm_mon + 1);
 				DL = cast(ubyte)s.tm_mday;
 				AL = cast(ubyte)s.tm_wday;
-			}
-			else
-			{
+			} else {
 				static assert(0, "Implement INT 21h AH=2Ah");
 			}
 			break;
@@ -929,8 +932,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		case 0x39: {
 			import std.file : mkdir;
 			string path = MemString(GetAddress(DS, DX));
-			version (Windows)
-			{
+			version (Windows) {
 				import std.windows.syserror : WindowsException;
 				try {
 					mkdir(path);
@@ -939,9 +941,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 					CF = 1;
 					AX = 3;
 				}
-			}
-			else version (Posix)
-			{
+			} else version (Posix) {
 				import std.file : FileException;
 				try {
 					mkdir(path);
@@ -1368,7 +1368,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 
 		break;
 	case 0x29: // FAST CONSOLE OUTPUT
-		printf("%c", AL);
+		putchar(AL);
 		break;
 	default: break;
 	}
