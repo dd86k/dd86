@@ -32,15 +32,6 @@ Compiler: %s v%d
 	exit(0); // getopt hack ;-)
 }
 
-extern (C)
-private void help() {
-	puts(
-`A DOS virtual machine.
-Usage:
-  dd-dos [OPTIONS]`
-	);
-}
-
 private
 int main(string[] args) {
 	__gshared string init_file, init_args;
@@ -69,9 +60,11 @@ int main(string[] args) {
 	}
 
 	if (r.helpWanted) {
-		help;
 		puts(
-`
+`A DOS virtual machine.
+Usage:
+  dd-dos [OPTIONS]
+
 OPTIONS
   -p, --program    Run a program directly
   -a, --args       Add arguments to -p
