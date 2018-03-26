@@ -194,12 +194,12 @@ void InsertDWord(uint op, int addr) {
  *   data = String value
  *   addr = Memory address, default being CS:IP
  */
-void InsertString(string data, size_t addr = _CURRENT_IP) {
+void InsertString(string data, size_t addr = EIP) {
 	memcpy(cast(void*)MEMORY + addr, cast(void*)data, data.length);
 }
 //TODO: InsertString with char*
 /// Insert a wide string in memory.
-void InsertW(wstring data, size_t addr = _CURRENT_IP) {
+void InsertW(wstring data, size_t addr = EIP) {
 	size_t l = data.length * 2;
 	ubyte* bp = cast(ubyte*)MEMORY + addr;
 	ubyte* dp = cast(ubyte*)data;
@@ -218,7 +218,7 @@ void InsertW(wstring data, size_t addr = _CURRENT_IP) {
  */
 extern (C)
 ubyte FetchImmByte(int off = 0) {
-	return MEMORY[_CURRENT_IP + 1 + off];
+	return MEMORY[EIP + 1 + off];
 }
 /**
  * Fetch an immediate WORD at CS:IP+n+1
@@ -227,7 +227,7 @@ ubyte FetchImmByte(int off = 0) {
  */
 extern (C)
 ushort FetchImmWord(uint off = 0) {
-	return *(cast(ushort*)&MEMORY[_CURRENT_IP + 1 + off]);
+	return *(cast(ushort*)&MEMORY[EIP + 1 + off]);
 }
 /**
  * Fetch an immediate signed WORD at CS:IP+n+1
@@ -236,7 +236,7 @@ ushort FetchImmWord(uint off = 0) {
  */
 extern (C)
 short FetchImmSWord(uint off = 0) {
-	return *(cast(short*)&MEMORY[_CURRENT_IP + off + 1]);
+	return *(cast(short*)&MEMORY[EIP + off + 1]);
 }
 
 /**
@@ -245,6 +245,7 @@ short FetchImmSWord(uint off = 0) {
  * Returns: BYTE
  */
 extern (C)
+pragma(inline, true)
 ubyte FetchByte(uint addr) {
 	return MEMORY[addr];
 }
@@ -253,8 +254,9 @@ ubyte FetchByte(uint addr) {
  * Returns: signed BYTE
  */
 extern (C)
+pragma(inline, true)
 byte FetchImmSByte() {
-	return cast(byte)MEMORY[_CURRENT_IP + 1];
+	return cast(byte)MEMORY[EIP + 1];
 }
 
 /**

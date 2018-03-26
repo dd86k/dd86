@@ -1255,8 +1255,8 @@ void Raise(ubyte code) { // Rest of this source is this function
 			case 0: // Load and execute the program.
 				string p = MemString(GetAddress(DS, DX));
 				if (exists(p)) {
-					CF = 0;
 					ExecLoad(p);
+					CF = 0;
 					return;
 				}
 				AX = exec_file_not_found;
@@ -1287,7 +1287,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 *     and all memory belonging to the process is freed.
 		 */
 		case 0x4C:
-			Running = false;
+			--RLEVEL;
 			break;
 		/*
 		 * 4Dh - Get return code. (ERRORLEVEL)

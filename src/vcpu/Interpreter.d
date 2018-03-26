@@ -59,27 +59,25 @@ void Initiate() {
 	//TODO: Probably do a FAR JMP to "BIOS" or something else
 }
 
-__gshared uint _CURRENT_IP;
-
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
 void Run() {
 	if (Verbose)
 		log("Interpreter::Run");
-	Running = 1;
-	while (Running) {
-		_CURRENT_IP = GetIPAddress;
-		debug logexec("(vm)", CS, IP, MEMORY[_CURRENT_IP]);
-		Execute(MEMORY[_CURRENT_IP]);
+	++RLEVEL;
+	while (RLEVEL) {
+		EIP = GetIPAddress;
+		debug logexec("(vm)", CS, IP, MEMORY[EIP]);
+		Execute(MEMORY[EIP]);
 		Seg = SEG_NONE; // Reset SEG after instruction
-		if (Sleep)
-			HSLEEP( 2 ); // Intel 8086 - 5 MHz
+		if (Sleep) HSLEEP(2); // Intel 8086@~5MHz
 	}
 }
 
+__gshared ushort RLEVEL; /// Runnning level
+
 __gshared bool
 Sleep, /// Is vcpu sleeping between cycles?
-Running, /// Is vcpu currently running?
 Verbose; /// Is Verbose mode set?
 
 __gshared ubyte[MAX_MEM] MEMORY; /// Main memory brank
