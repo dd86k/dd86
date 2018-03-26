@@ -137,7 +137,7 @@ uint GetEA(ubyte rm) {
 			case SEG_SS: return GetAddress(SS, DI);
 			default: return DI;
 			}
-		default:
+		default: return -1; // Temporary
 		}
 	default:
 	}

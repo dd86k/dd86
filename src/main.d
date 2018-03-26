@@ -21,19 +21,19 @@ debug {} else {
 extern (C)
 private void _version() {
 	printf(
-`dd-dos v%s  (%s)
+`dd-dos v` ~ APP_VERSION ~ `  (` ~ __TIMESTAMP__ ~ `)
 Copyright (c) 2017-2018 dd86k, using MIT license
 Project page: <https://github.com/dd86k/dd-dos>
-Compiler: %s v%d
-`,
-	 cast(char*)APP_VERSION, cast(char*)__TIMESTAMP__,
-	 cast(char*)__VENDOR__, __VERSION__
+Compiler: ` ~ __VENDOR__ ~ " v%d\n", __VERSION__
 	);
 	exit(0); // getopt hack ;-)
 }
 
-private
-int main(string[] args) {
+version (D_BetterC)
+private int main(int argc, char** argv) {
+	// Reversed for future use ;-)
+} else
+private int main(string[] args) {
 	__gshared string init_file, init_args;
 	__gshared bool smsg; // Startup message
 
@@ -81,10 +81,10 @@ OPTIONS
 	debug Verbose = !Verbose;
 
 	if (Verbose) {
-		debug log("Debug mode is ON");
-		else log("Verbose mode is ON");
+		debug log("Debug mode: ON");
+		else log("Verbose mode: ON");
 		if (!Sleep)
-			log("Maximum performance is ON");
+			log("Maximum performance: ON");
 	}
 
 	if (!smsg)
@@ -101,7 +101,7 @@ OPTIONS
 			if (ExecLoad(init_file, init_args))
 				Run;
 		} else {
-			puts("ERROR: File not found or could not be loaded");
+			puts("E: File not found or could not be loaded");
 		}
 	} else {
 		EnterShell;
