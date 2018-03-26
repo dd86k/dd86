@@ -19,7 +19,7 @@ debug {} else {
 }
 
 extern (C)
-private void DisplayVersion() {
+private void _version() {
 	printf(
 `dd-dos v%s  (%s)
 Copyright (c) 2017-2018 dd86k, using MIT license
@@ -38,7 +38,7 @@ int main(string[] args) {
 	__gshared bool smsg; // Startup message
 
 	//TODO: Find a better getopt alternative, or make our own.
-	//      Unfortunately, getopt can ONLY do off-to-on switches
+	//      Unfortunately, getopt can ONLY does off-to-on switches.
 	GetoptResult r;
 	try {
 		r = getopt(args,
@@ -53,9 +53,9 @@ int main(string[] args) {
 			config.bundling, config.caseSensitive,
 			"V|verbose", "Set verbose mode", &Verbose,
 			config.caseSensitive,
-			"v|version", "Print version screen and exit", &DisplayVersion);
+			"v|version", "Print version screen and exit", &_version);
 	} catch (GetOptException ex) {
-		printf("ERROR: %s\n", cast(char*)ex.msg);
+		fprintf(stderr, "E: %s\n", cast(char*)ex.msg);
 		return 1;
 	}
 
@@ -68,20 +68,12 @@ Usage:
 OPTIONS
   -p, --program    Run a program directly
   -a, --args       Add arguments to -p
-  -P, --perf       Do not sleep between cycles (!)
+  -P, --perf       Do not sleep between cycles (fast!)
   -N, --nobanner   Removes starting message and banner
   -V, --verbose    Set verbose mode
   -v, --version    Print version screen and exit
   -h, --help       This help information.`
 		);
-		/*puts("\nOPTIONS");
-		foreach (it; r.options) {
-			// "custom" and nicer defaultGetoptPrinter
-			printf("%*s, %*s %s\n",
-				4,  cast(char*)it.optShort,
-				-12, cast(char*)it.optLong,
-				cast(char*)it.help);
-		}*/
 		return 0;
 	}
 

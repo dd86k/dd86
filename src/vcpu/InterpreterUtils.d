@@ -198,12 +198,17 @@ void InsertString(string data, size_t addr = EIP) {
 	memcpy(cast(void*)MEMORY + addr, cast(void*)data, data.length);
 }
 //TODO: InsertString with char*
-/// Insert a wide string in memory.
+/**
+ * Insert a wide string in memory.
+ * Params:
+ *   data = Wide String data
+ *   addr = Memory Address (EIP by default)
+ */
 void InsertW(wstring data, size_t addr = EIP) {
 	size_t l = data.length * 2;
 	ubyte* bp = cast(ubyte*)MEMORY + addr;
 	ubyte* dp = cast(ubyte*)data;
-	for (; l; --l) *bp++ = *dp++;
+	while (--l) *bp++ = *dp++;
 }
 //TODO: InsertWString(wstring data, size_t addr = 0) (tip: ushort casting)
 

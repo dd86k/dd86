@@ -127,71 +127,71 @@ unittest
 	// MOV
 
 	CS = 0; IP = 0x100;
-	_CURRENT_IP = GetIPAddress;
+	EIP = GetIPAddress;
 
 	write("MOV (Registers) : ");
 
-	InsertByte(0x1, _CURRENT_IP + 1);
+	InsertByte(0x1, EIP + 1);
 	Execute(0xB0); // MOV AL, 1
 	assert(AL == 1);
 
-	InsertByte(0x2, _CURRENT_IP + 1);
+	InsertByte(0x2, EIP + 1);
 	Execute(0xB1); // MOV CL, 2
 	assert(CL == 2);
 
-	InsertByte(0x3, _CURRENT_IP + 1);
+	InsertByte(0x3, EIP + 1);
 	Execute(0xB2); // MOV DL, 3
 	assert(DL == 3);
 
-	InsertByte(0x4, _CURRENT_IP + 1);
+	InsertByte(0x4, EIP + 1);
 	Execute(0xB3); // MOV BL, 4
 	assert(BL == 4);
 
-	InsertByte(0x5, _CURRENT_IP + 1);
+	InsertByte(0x5, EIP + 1);
 	Execute(0xB4); // MOV AH, 5
 	assert(AH == 5);
 
-	InsertByte(0x6, _CURRENT_IP + 1);
+	InsertByte(0x6, EIP + 1);
 	Execute(0xB5); // MOV CH, 6
 	assert(CH == 6);
 
-	InsertByte(0x7, _CURRENT_IP + 1);
+	InsertByte(0x7, EIP + 1);
 	Execute(0xB6); // MOV DH, 7
 	assert(DH == 7);
 
-	InsertByte(0x8, _CURRENT_IP + 1);
+	InsertByte(0x8, EIP + 1);
 	Execute(0xB7); // MOV BH, 8
 	assert(BH == 8);
 
-	InsertWord(0x1112, _CURRENT_IP + 1); // [ 0x12, 0x11 ]
+	InsertWord(0x1112, EIP + 1); // [ 0x12, 0x11 ]
 	Execute(0xB8); // MOV AX, 1112h
 	assert(AX == 0x1112);
 
-	InsertWord(0x1113, _CURRENT_IP + 1);
+	InsertWord(0x1113, EIP + 1);
 	Execute(0xB9); // MOV CX, 1113h
 	assert(CX == 0x1113);
 
-	InsertWord(0x1114, _CURRENT_IP + 1);
+	InsertWord(0x1114, EIP + 1);
 	Execute(0xBA); // MOV DX, 1114h
 	assert(DX == 0x1114);
 
-	InsertWord(0x1115, _CURRENT_IP + 1);
+	InsertWord(0x1115, EIP + 1);
 	Execute(0xBB); // MOV BX, 1115h
 	assert(BX == 0x1115);
 
-	InsertWord(0x1116, _CURRENT_IP + 1);
+	InsertWord(0x1116, EIP + 1);
 	Execute(0xBC); // MOV SP, 1116h
 	assert(SP == 0x1116);
 
-	InsertWord(0x1117, _CURRENT_IP + 1);
+	InsertWord(0x1117, EIP + 1);
 	Execute(0xBD); // MOV BP, 1117h
 	assert(BP == 0x1117);
 
-	InsertWord(0x1118, _CURRENT_IP + 1);
+	InsertWord(0x1118, EIP + 1);
 	Execute(0xBE); // MOV SI, 1118h
 	assert(SI == 0x1118);
 
-	InsertWord(0x1119, _CURRENT_IP + 1);
+	InsertWord(0x1119, EIP + 1);
 	Execute(0xBF); // MOV DI, 1119h
 	assert(DI == 0x1119);
 
@@ -227,12 +227,12 @@ unittest
 
 	write("OR (AL/AX) : ");
 
-	InsertByte(0xF0, _CURRENT_IP + 1);
+	InsertByte(0xF0, EIP + 1);
 	AL = 0xF;
 	Execute(0xC); // OR AL, 3
 	assert(AL == 0xFF);
 
-	InsertWord(0xFF00, _CURRENT_IP + 1);
+	InsertWord(0xFF00, EIP + 1);
 	Execute(0xD); // OR AX, F0h
 	assert(AX == 0xFFFF);
 
@@ -240,12 +240,12 @@ unittest
 
 	write("XOR (AL/AX) : ");
 
-	InsertByte(5, _CURRENT_IP + 1);
+	InsertByte(5, EIP + 1);
 	AL = 0xF;
 	Execute(0x34); // XOR AL, 5
 	assert(AL == 0xA);
 
-	InsertWord(0xFF00, _CURRENT_IP + 1);
+	InsertWord(0xFF00, EIP + 1);
 	AX = 0xAAFF;
 	Execute(0x35); // XOR AX, FF00h
 	assert(AX == 0x55FF);
@@ -582,7 +582,7 @@ unittest
 	write("SCASB : ");
 
 	ES = CS = 0x400; DI = 0x20; IP = 0x20;
-	_CURRENT_IP = GetIPAddress;
+	EIP = GetIPAddress;
 	InsertString("Hello!");
 	AL = 'H';
 	Execute(0xAE);

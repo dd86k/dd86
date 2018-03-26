@@ -51,7 +51,7 @@ unittest
     write("INT 21h->09_00h: ");
     DS = CS = 0x400;
     DX = EIP = 0x20;
-    _CURRENT_IP = (0x400 << 4) + 0x20;
+    EIP = (0x400 << 4) + 0x20;
     InsertString("OK\n$");
     AH = 9;
     Raise(0x21);

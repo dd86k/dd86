@@ -4,8 +4,9 @@ import core.stdc.stdio;
 import std.string : format;
 
 debug void _debug(string msg) {
-	printf("[ ~~ ] %s\n", cast(char*)msg);
+	printf("[ VM ] %s\n", cast(char*)msg);
 }
+
 /// Log an informational message
 /// Params: msg = Message
 void log(string msg) {
@@ -32,6 +33,6 @@ void logd(string msg, long op) {
 	log(format("%s%d\0", msg, op));
 }
 
-debug void logexec(string msg, ushort seg, ushort ip, ubyte op) {
-	_debug(format("%s | %04X:%04X    %02Xh\0", msg, seg, ip, op));
+debug void logexec(ushort seg, ushort ip, ubyte op) {
+	_debug(format("%04X:%04X  %02Xh\0", seg, ip, op));
 }

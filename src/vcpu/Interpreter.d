@@ -62,14 +62,13 @@ void Initiate() {
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
 void Run() {
-	if (Verbose)
-		log("Interpreter::Run");
+	if (Verbose) log("Interpreter::Run");
 	++RLEVEL;
 	while (RLEVEL) {
 		EIP = GetIPAddress;
-		debug logexec("(vm)", CS, IP, MEMORY[EIP]);
+		debug logexec(CS, IP, MEMORY[EIP]);
 		Execute(MEMORY[EIP]);
-		Seg = SEG_NONE; // Reset SEG after instruction
+		Seg = SEG_NONE; // Reset SEG PREFERENCE after instruction
 		if (Sleep) HSLEEP(2); // Intel 8086@~5MHz
 	}
 }
