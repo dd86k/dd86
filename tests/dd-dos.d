@@ -63,7 +63,7 @@ unittest
     AH = 0x2A;
     Raise(0x21);
     write("(WD D/M/Y) ");
-    final switch (AL) {
+    switch (AL) {
     case 0, 7: write("Sunday"); break;
     case 1: write("Monday"); break;
     case 2: write("Tuesday"); break;
@@ -71,6 +71,7 @@ unittest
     case 4: write("Thursday"); break;
     case 5: write("Friday"); break;
     case 6: write("Saturday"); break;
+    default:
     }
     writefln(" %d/%d/%d", DL, DH, CX);
 

@@ -16,7 +16,7 @@ import core.stdc.string : memcpy;
  */
 extern (C)
 uint GetEA(ubyte rm) {
-	final switch (rm & RM_MOD) { // MOD
+	switch (rm & RM_MOD) { // MOD
 	case RM_MOD_00: // MOD 00, Memory Mode, no displacement
 		switch (Seg) {
 		case SEG_CS:
@@ -32,7 +32,7 @@ uint GetEA(ubyte rm) {
 			debug _debug("MOD_00, GetEA::SEG_SS");
 			break;
 		default:
-			final switch (rm & RM_RM) { // R/M
+			switch (rm & RM_RM) { // R/M
 			case 0:
 				debug _debug("EA:0:0");
 				return SI + BX;
@@ -57,6 +57,7 @@ uint GetEA(ubyte rm) {
 			case 0b111:
 				debug _debug("EA:0:7");
 				return BX;
+			default:
 			}
 		}
 		break; // MOD 00
@@ -71,7 +72,7 @@ uint GetEA(ubyte rm) {
 	case RM_MOD_11: // MOD 11, Register Mode
 		debug loghb("EA:3:REG::", rm & RM_REG);
 		debug loghb("EA:3:SEG::", Seg);
-		final switch (rm & RM_REG) {
+		switch (rm & RM_REG) {
 		case RM_REG_000: 
 			switch (Seg) {
 			case SEG_CS: return GetAddress(CS, AX);
@@ -136,10 +137,12 @@ uint GetEA(ubyte rm) {
 			case SEG_SS: return GetAddress(SS, DI);
 			default: return DI;
 			}
+		default:
 		}
+	default:
 	}
 
-	return -1; // Temporary until final switch
+	return -1; // Temporary until switch
 }
 
 /*****************************************************************************

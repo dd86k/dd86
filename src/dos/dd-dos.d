@@ -222,7 +222,7 @@ OPTIONS
 		AH = 0x2A;
 		Raise(0x21);
 		printf("It is currently ");
-		final switch (AL) {
+		switch (AL) {
 		case 0, 7: printf("Sun"); break;
 		case 1: printf("Mon"); break;
 		case 2: printf("Tue"); break;
@@ -230,6 +230,7 @@ OPTIONS
 		case 4: printf("Thu"); break;
 		case 5: printf("Fri"); break;
 		case 6: printf("Sat"); break;
+		default:
 		}
 		printf(" %d-%02d-%02d\n", CX, DH, DL);
 		break;
@@ -451,7 +452,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		break;
 	case 0x11: { // BIOS - Get equipement list
 		// Number of 16K banks of RAM on motherboard (PC only).
-		int ax = 0b10000; // VGA
+		__gshared int ax = 0b10000; // VGA
 		/*if (FloppyDiskInstalled) {
 			ax |= 1;
 			// Bit 6-7 = Number of floppy drives

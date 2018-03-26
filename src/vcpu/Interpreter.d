@@ -462,9 +462,9 @@ void Execute(ubyte op) {
 	case 0x01: { // ADD R/M16, REG16
 		const ubyte rm = FetchImmByte;
 		const uint addr = GetEA(rm);
-		final switch (rm & RM_MOD) {
+		switch (rm & RM_MOD) {
 		case RM_MOD_00:
-			final switch (rm & RM_REG) {
+			switch (rm & RM_REG) {
 			case RM_REG_000: // AX
 				InsertWord(FetchWord(addr) + AX, addr);
 				break;
@@ -489,6 +489,7 @@ void Execute(ubyte op) {
 			case RM_REG_111: // DI
 				InsertWord(FetchWord(addr) + DI, addr);
 				break;
+			default:
 			}
 			break; // MOD 00
 		case RM_MOD_01:
@@ -500,9 +501,11 @@ void Execute(ubyte op) {
 			EIP += 2;
 			break; // MOD 10
 		case RM_MOD_11:
-			final switch (rm & RM_REG) {
+			switch (rm & RM_REG) {
+			default:
 			}
 			break; // MOD 11
+		default:
 		}
 		EIP += 2;
 		return;
@@ -1000,63 +1003,66 @@ void Execute(ubyte op) {
 	case 0x80: { // GRP1 R/M8, IMM8
 		const ubyte rm = FetchImmByte; // Get ModR/M byte
 		const ubyte im = FetchImmByte(2); // 8-bit Immediate after modr/m
-		final switch (rm & RM_MOD) {
-			case RM_MOD_00: // No displacement
-				final switch (rm & RM_REG) { // REG
-				case RM_REG_000: // 000 - ADD
-					final switch (rm & RM_RM) {
-					case RM_RM_000:
-						AL = AL + im;
-						break;
-					case RM_RM_001:
-						CL = CL + im;
-						break;
-					case RM_RM_010:
-						DL = DL + im;
-						break;
-					case RM_RM_011:
-						BL = BL + im;
-						break;
-					case RM_RM_100:
-						AH = AH + im;
-						break;
-					case RM_RM_101:
-						CH = CH + im;
-						break;
-					case RM_RM_110:
-						DH = DH + im;
-						break;
-					case RM_RM_111:
-						BH = BH + im;
-						break;
-					}
+		switch (rm & RM_MOD) {
+		case RM_MOD_00: // No displacement
+			switch (rm & RM_REG) { // REG
+			case RM_REG_000: // 000 - ADD
+				switch (rm & RM_RM) {
+				case RM_RM_000:
+					AL = AL + im;
 					break;
-				case RM_REG_001: // 001 - OR
-
+				case RM_RM_001:
+					CL = CL + im;
 					break;
-				case RM_REG_010: // 010 - ADC
-
+				case RM_RM_010:
+					DL = DL + im;
 					break;
-				case RM_REG_011: // 011 - SBB
-
+				case RM_RM_011:
+					BL = BL + im;
 					break;
-				case RM_REG_100: // 100 - AND
-
+				case RM_RM_100:
+					AH = AH + im;
 					break;
-				case RM_REG_101: // 101 - SUB
-
+				case RM_RM_101:
+					CH = CH + im;
 					break;
-				case RM_REG_110: // 110 - XOR
-
+				case RM_RM_110:
+					DH = DH + im;
 					break;
-				case RM_REG_111: // 111 - CMP
-
+				case RM_RM_111:
+					BH = BH + im;
 					break;
+				default:
 				}
-				break; // case 0
-			case RM_MOD_01: // 8-bit displacement
+				break;
+			case RM_REG_001: // 001 - OR
 
-				break; // case 01
+				break;
+			case RM_REG_010: // 010 - ADC
+
+				break;
+			case RM_REG_011: // 011 - SBB
+
+				break;
+			case RM_REG_100: // 100 - AND
+
+				break;
+			case RM_REG_101: // 101 - SUB
+
+				break;
+			case RM_REG_110: // 110 - XOR
+
+				break;
+			case RM_REG_111: // 111 - CMP
+
+				break;
+			default:
+			}
+			break; // case 0
+		case RM_MOD_01: // 8-bit displacement
+
+			break; // case 01
+		default:
 		}
 		EIP += 3;
 		return;
@@ -1114,9 +1120,9 @@ void Execute(ubyte op) {
 	}
 	case 0x89: { // MOV R/M16, REG16
 		const ubyte rm = FetchImmByte;
-		final switch (rm & 0b1100_0000) {
+		switch (rm & 0b1100_0000) {
 		case RM_MOD_00:
-			final switch (rm & 0b111_000) {
+			switch (rm & 0b111_000) {
 			case RM_REG_000: // AX
 				InsertWord(AX, GetEA(rm));
 				break;
@@ -1141,6 +1147,7 @@ void Execute(ubyte op) {
 			case RM_REG_111: // DI
 				InsertWord(DI, GetEA(rm));
 				break;
+			default:
 			}
 			break; // MOD 00
 		case RM_MOD_01:
@@ -1152,7 +1159,7 @@ void Execute(ubyte op) {
 			EIP += 2;
 			break; // MOD 10
 		case RM_MOD_11:
-			final switch (rm & 0b111_000) {
+			switch (rm & 0b111_000) {
 			/*case 0: AX =  break;
 			case 0b00_1000: CX =  break;
 			case 0b01_0000: DX =  break;
@@ -1169,8 +1176,10 @@ void Execute(ubyte op) {
 			case 0b10_1000: BP = getRMRegWord(rm); break;
 			case 0b11_0000: SI = getRMRegWord(rm); break;
 			case 0b11_1000: DI = getRMRegWord(rm); break;*/
+			default:
 			}
 			break; // MOD 11
+		default:
 		}
 		EIP += 2;
 		return;
@@ -1189,7 +1198,7 @@ void Execute(ubyte op) {
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 		const byte rm = FetchImmByte;
 		const int ea = GetEA(rm);
-		final switch (rm & 24) { // 00 011 000
+		switch (rm & 24) { // 00 011 000
 		case 0: // ES
 			InsertWord(ES, ea);
 			break;
@@ -1202,6 +1211,7 @@ void Execute(ubyte op) {
 		case 24: // DS
 			InsertWord(DS, ea);
 			break;
+		default:
 		}
 		EIP += 2;
 		return;
@@ -1221,7 +1231,7 @@ void Execute(ubyte op) {
 			//TODO: Raise illegal instruction
 		} else { // REMINDER: REG = 000 and D is SET
 			//TODO: POP R/RM16
-			final switch (rm & 0b11_000000) {
+			switch (rm & 0b11_000000) {
 			case 0: // Memory
 
 				break;
@@ -1234,19 +1244,9 @@ void Execute(ubyte op) {
 				EIP += 2;
 				break;
 			case 0b11_000000: // Register
-				// Confusing.
-				/*final switch (rm & 0b111)
-				{
-				case 0: AX = Pop(); break;
-				case 1: AX = Pop(); break;
-				case 2: AX = Pop(); break;
-				case 3: AX = Pop(); break;
-				case 4: AX = Pop(); break;
-				case 5: AX = Pop(); break;
-				case 6: AX = Pop(); break;
-				case 7: AX = Pop(); break;
-				}*/
+			
 				break;
+			default:
 			}
 		}
 		EIP += 2;
