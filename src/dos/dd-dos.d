@@ -411,7 +411,7 @@ void MakePSP(uint l, string appname, string args = null) {
 /// Params: code = Interrupt byte
 extern (C)
 void Raise(ubyte code) { // Rest of this source is this function
-	debug printf("[debug] INTERRUPT: 0x%d\n", code);
+	debug printf("[dbug] INTERRUPT: 0x%d\n", code);
 
 	// REAL-MODE
 	//const inum = code << 2;

@@ -71,8 +71,8 @@ uint GetEA(ubyte rm) {
 		EIP += 2;
 		break; // MOD 10
 	case RM_MOD_11: // MOD 11, Register Mode
-		debug printf("[debug] EA:3:REG::%d", rm & RM_REG);
-		debug printf("[debug] EA:3:SEG::%d", Seg);
+		debug printf("[dbug] EA:3:REG::%d", rm & RM_REG);
+		debug printf("[dbug] EA:3:SEG::%d", Seg);
 		switch (rm & RM_REG) {
 		case RM_REG_000: 
 			switch (Seg) {

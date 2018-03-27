@@ -57,7 +57,7 @@ int ExecLoad(char* path) {
 	fseek(f, 0, SEEK_END);
 	int fsize = cast(int)ftell(f); // who the hell would have a >2G exec to run in DOS
 
-	debug printf("[debug] File size: %d\n", fsize);
+	debug printf("[dbug] File size: %d\n", fsize);
 
 	__gshared ushort sig;
 	fseek(f, 0, SEEK_SET);
@@ -73,17 +73,6 @@ int ExecLoad(char* path) {
 
 	switch (sig) {
 	case MZ_MAGIC: // Party time!
-		/* Reserved code for Windows 286/386 era
-		if (mzh.e_lfanew) {
-			char[2] sig;
-			f.seek(e_lfanew);
-			f.rawRead(sig);
-			switch (sig) {
-			//case "NE":
-			default:
-			}
-		}*/
-
 		if (Verbose)
 			log("LOAD MZ");
 
@@ -112,15 +101,15 @@ int ExecLoad(char* path) {
 		if (_h + _s < PAGE) // This snippet was found in DOSBox
 			_s = PAGE - _h;
 		debug {
-			printf("[debug] _H::%d\n", _h);
-			printf("[debug] _L::%d\n", _l);
-			printf("[debug] STRUCT_SIZE: %d\n", mzh.sizeof);
-			printf("[debug] HEADER_SIZE: %d\n", _h);
-			printf("[debug] IMAGE_SIZE : %d\n", _s);
-			printf("[debug] CS: %d\n", CS);
-			printf("[debug] IP: %d\n", IP);
-			printf("[debug] SS: %d\n", SS);
-			printf("[debug] SP: %d\n", SP);
+			printf("[dbug] _H::%d\n", _h);
+			printf("[dbug] _L::%d\n", _l);
+			printf("[dbug] STRUCT_SIZE: %d\n", mzh.sizeof);
+			printf("[dbug] HEADER_SIZE: %d\n", _h);
+			printf("[dbug] IMAGE_SIZE : %d\n", _s);
+			printf("[dbug] CS: %d\n", CS);
+			printf("[dbug] IP: %d\n", IP);
+			printf("[dbug] SS: %d\n", SS);
+			printf("[dbug] SP: %d\n", SP);
 		}
 		fseek(f, _l, SEEK_SET); // Seek to end of header
 		fread(cast(ubyte*)MEMORY + GetIPAddress, _s, 1, f); // and read the code portion
