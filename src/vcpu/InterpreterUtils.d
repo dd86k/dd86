@@ -7,6 +7,7 @@ module InterpreterUtils;
 import Interpreter;
 import Logger;
 import core.stdc.string : memcpy;
+import core.stdc.stdio : printf, puts;
 
 /**
  * Get effective address from R/M byte, mostly usefull for R/M bits.
@@ -20,58 +21,58 @@ uint GetEA(ubyte rm) {
 	case RM_MOD_00: // MOD 00, Memory Mode, no displacement
 		switch (Seg) {
 		case SEG_CS:
-			debug _debug("MOD_00, GetEA::SEG_CS");
+			debug puts("MOD_00, GetEA::SEG_CS");
 			break;
 		case SEG_DS:
-			debug _debug("MOD_00, GetEA::SEG_DS");
+			debug puts("MOD_00, GetEA::SEG_DS");
 			break;
 		case SEG_ES:
-			debug _debug("MOD_00, GetEA::SEG_ES");
+			debug puts("MOD_00, GetEA::SEG_ES");
 			break;
 		case SEG_SS:
-			debug _debug("MOD_00, GetEA::SEG_SS");
+			debug puts("MOD_00, GetEA::SEG_SS");
 			break;
 		default:
 			switch (rm & RM_RM) { // R/M
 			case 0:
-				debug _debug("EA:0:0");
+				debug puts("EA:0:0");
 				return SI + BX;
 			case 0b001:
-				debug _debug("EA:0:1");
+				debug puts("EA:0:1");
 				return DI + BX;
 			case 0b010:
-				debug _debug("EA:0:2");
+				debug puts("EA:0:2");
 				return SI + BP;
 			case 0b011:
-				debug _debug("EA:0:3");
+				debug puts("EA:0:3");
 				return DI + BP;
 			case 0b100:
-				debug _debug("EA:0:4");
+				debug puts("EA:0:4");
 				return SI;
 			case 0b101:
-				debug _debug("EA:0:5");
+				debug puts("EA:0:5");
 				return DI;
 			case 0b110:
-				debug _debug("EA:0:6");
+				debug puts("EA:0:6");
 				return FetchImmWord(1); // DIRECT ADDRESS
 			case 0b111:
-				debug _debug("EA:0:7");
+				debug puts("EA:0:7");
 				return BX;
 			default:
 			}
 		}
 		break; // MOD 00
 	case RM_MOD_01: // MOD 01, Memory Mode, 8-bit displacement follows
-		debug _debug("EA:1:_");
+		debug puts("EA:1:_");
 		EIP += 1;
 		break; // MOD 01
 	case RM_MOD_10: // MOD 10, Memory Mode, 16-bit displacement follows
-		debug _debug("EA:2:_");
+		debug puts("EA:2:_");
 		EIP += 2;
 		break; // MOD 10
 	case RM_MOD_11: // MOD 11, Register Mode
-		debug loghb("EA:3:REG::", rm & RM_REG);
-		debug loghb("EA:3:SEG::", Seg);
+		debug printf("[debug] EA:3:REG::%d", rm & RM_REG);
+		debug printf("[debug] EA:3:SEG::%d", Seg);
 		switch (rm & RM_REG) {
 		case RM_REG_000: 
 			switch (Seg) {

@@ -20,6 +20,40 @@ string MemString(uint pos) {
 }
 
 /**
+ * Compare constant string. This function is mostly to compare constant strings.
+ * Note: 
+ * Params:
+ *   a = Input string
+ *   b = Constant string
+ *   c = String length
+ * Returns: 0 if same, 1 if different.
+ */
+extern (C)
+int _strcmp_c(char* a, immutable(char)* b, size_t c) {
+	while (--c)
+		if (*--a != *--b) return 1;
+	return 0;
+}
+
+/**
+ * Compare constant string. This function is mostly used in vshell
+ * Note: 
+ * Params:
+ *   a = Input string
+ *   b = Constant string
+ *   c = String length
+ * Returns: 0 if same, 1 if different.
+ */
+extern (C)
+int _strcmp_s(char* a, immutable(char)* b) {
+	while (*a != ' ' && *a != 0) {
+		if (*a != *b) return 1;
+		++a; ++b;
+	}
+	return 0;
+}
+
+/**
  * Byte swap a 2-byte number.
  * Params: num = 2-byte number to swap.
  * Returns: Byte swapped number.

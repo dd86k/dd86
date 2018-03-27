@@ -26,7 +26,7 @@ buildType "bench" {
   importPaths "bench/"
 }
 
-# like release-nobounds but no inlining
-buildType "super" {
+buildType "better" { # BetterC
   buildOptions "releaseMode" "noBoundsCheck" "optimize"
+  dflags "-betterC"
 }

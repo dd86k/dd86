@@ -5,10 +5,12 @@
 module dd_dos;
 
 import core.stdc.stdio;
+import core.stdc.string : memcpy;
 import std.stdio : readln, toFile;
 import std.file : exists;
 import Interpreter, Loader, ddcon, Utilities, Logger;
 import codes;
+import Utilities;
 
 debug pragma(msg, `
 +-------------+
@@ -68,6 +70,33 @@ enum
  *    7            wrap at end of line
  */
 
+enum MAX_INPUT = 255;
+
+/// Enter internal shell
+extern (C)
+void _EnterShell() {
+	__gshared int argc;
+
+SS: // Shell start
+	//TODO: Print user-prompt ($PROMPT)
+	fputs("% ", stdout);
+
+	char[MAX_INPUT] argv; // input buffer
+	gets(cast(char*)argv);
+	char* _t = cast(char*)argv;
+
+	argc = 0;
+	while (*_t != 0 && *_t != '\n') {
+		if (*_t == ' ') ++argc;
+
+
+	}
+
+	printf("spaces: %d\n", argc);
+
+	goto SS;
+}
+
 /// Enter internal shell
 extern (C)
 void EnterShell() {
@@ -99,20 +128,20 @@ VER       Show DOS version
 
 ??        Print debugger help screen`
 		);
-		break;
+		goto _S;
 	case "VER":
 		if (argc > 1) {
 			switch (argv[1]) { //toUpper in-case of future sub commands
 			case "/?":
 
-				break;
+				goto _S;
 			default:
 			}
 		} else {
 			printf("\nDD-DOS Version %s\nMS-DOS Version %d.%d\n\n",
 				cast(char*)APP_VERSION, MajorVersion, MinorVersion);
 		}
-		break;
+		goto _S;
 	case "MEM":
 		if (argc > 1) {
 			switch (toUpper(argv[1])) {
@@ -143,10 +172,10 @@ VER       Show DOS version
 					"-------------------  -------   -------   -------\n" ~
 					"Total                %6dK   %6dK   %6dK\n",
 					(MEMORYSIZE - nzt) / 1024, (nzt + nzc) / 1024, MEMORYSIZE / 1024);
-				break;
+				goto _S;
 			case "/DEBUG":
 				puts("Not implemented");
-				break;
+				goto _S;
 			//case "/FREE":
 			case "/?":
 				puts(
@@ -158,13 +187,13 @@ OPTIONS
 /FREE     Not implemented
 /STATS    Scan memory and show statistics`
 				);
-				break;
+				goto _S;
 			default:
 
-				break;
+				goto _S;
 			}
 		}
-		break;
+		goto _S;
 	case "CHDIR", "CD":
 		if (argc > 1)
 			try {
@@ -176,7 +205,7 @@ OPTIONS
 			}
 		else
 			puts(cast(char*)getcwd);
-		break;
+		goto _S;
 	case "DIR": { //TODO: with folder arguemnt
 		import std.file : exists, isDir, dirEntries, SpanMode;
 		__gshared string dir;
@@ -184,7 +213,7 @@ OPTIONS
 			switch (argv[1]) {
 			case "/?":
 				puts("List files and directories");
-				break;
+				goto _S;
 			default:
 				if (exists(argv[1])) {
 					if (isDir(argv[1]))
@@ -199,7 +228,7 @@ OPTIONS
 					AL = 1;
 					goto _S;
 				}
-				break;
+				goto _S;
 			}
 		}
 		__gshared int c;
@@ -211,29 +240,29 @@ OPTIONS
 				puts(cast(char*)name);
 		}
 		printf("\t\t\t\t%d file(s)\n", c);
-		break;
+		goto _S;
 	}
 	case "TIME":
 		AH = 0x2C;
 		Raise(0x21);
 		printf("It is currently %02d:%02d:%02d,%02d\n", CH, CL, DH, DL);
-		break;
+		goto _S;
 	case "DATE":
 		AH = 0x2A;
 		Raise(0x21);
 		printf("It is currently ");
 		switch (AL) {
-		case 0, 7: printf("Sun"); break;
-		case 1: printf("Mon"); break;
-		case 2: printf("Tue"); break;
-		case 3: printf("Wed"); break;
-		case 4: printf("Thu"); break;
-		case 5: printf("Fri"); break;
-		case 6: printf("Sat"); break;
+		case 0, 7: printf("Sun"); goto _S;
+		case 1: printf("Mon"); goto _S;
+		case 2: printf("Tue"); goto _S;
+		case 3: printf("Wed"); goto _S;
+		case 4: printf("Thu"); goto _S;
+		case 5: printf("Fri"); goto _S;
+		case 6: printf("Sat"); goto _S;
 		default:
 		}
 		printf(" %d-%02d-%02d\n", CX, DH, DL);
-		break;
+		goto _S;
 	case "TREE": {
 		import std.file : exists, isDir, dirEntries, SpanMode;
 		string dir;
@@ -260,7 +289,7 @@ OPTIONS
 					AL = 1;
 					goto _S;
 				}
-				break;
+				goto _S;
 			}
 		}
 
@@ -284,9 +313,9 @@ OPTIONS
 			--j;
 		}
 		tree(dir); // cd
-		break;
+		goto _S;
 	}
-	case "CLS": Clear; break;
+	case "CLS": Clear; goto _S;
 	case "EXIT": return;
 
 	// DEBUGGING COMMANDS
@@ -294,25 +323,25 @@ OPTIONS
 	case "?LOAD":
 		if (argc > 1) { // Is a file provided?
 			if (exists(argv[1]))
-				ExecLoad(argv[1]);
+				ExecLoad(cast(char*)(argv[1] ~ '\0')); // tempory until betterc
 			else
 				puts("File not found");
 		}
-		break;
-	case "?RUN": Run; break;
+		goto _S;
+	case "?RUN": Run; goto _S;
 	case "?V":
 		Verbose = !Verbose;
 		printf("Verbose?: %s\n", Verbose ? "ON" : cast(char*)"OFF");
-		break;
+		goto _S;
 	case "?P":
 		Sleep = !Sleep;
 		printf("Sleep?: %s\n", Sleep ? "ON" : cast(char*)"OFF");
-		break;
+		goto _S;
 	/*case "?DUMP":
 		//toFile(MEMORY, "MEMDUMP");
 		//puts("Memory dumped to MEMDUMP");
 		puts("TODO");
-		break;*/
+		goto _S;*/
 	case "?R":
 		printf(
 `EIP=%08X  (%04X:%04X)
@@ -334,7 +363,7 @@ SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  SS=%04X
 		if (PF) printf(" PF");
 		if (CF) printf(" CF");
 		printf(" (%Xh)\n", FLAG);
-		break;
+		goto _S;
 	case "??":
 		puts(
 `?run        Start the interpreter
@@ -343,12 +372,11 @@ SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  SS=%04X
 ?p          Toggle performance mode
 ?v          Toggle verbose mode`
 		);
-		break;
+		goto _S;
 	default:
 		puts("Bad command or file name");
-		break;
+		goto _S;
 	}
-	goto _S;
 }
 
 /**
@@ -383,7 +411,7 @@ void MakePSP(uint l, string appname, string args = null) {
 /// Params: code = Interrupt byte
 extern (C)
 void Raise(ubyte code) { // Rest of this source is this function
-	debug loghb("INTERRUPT: 0x", code);
+	debug printf("[debug] INTERRUPT: 0x%d\n", code);
 
 	// REAL-MODE
 	//const inum = code << 2;
@@ -1256,11 +1284,11 @@ void Raise(ubyte code) { // Rest of this source is this function
 			case 0: // Load and execute the program.
 				string p = MemString(GetAddress(DS, DX));
 				if (exists(p)) {
-					ExecLoad(p);
+					ExecLoad(cast(char*)(p ~ '\0')); // temporary until better
 					CF = 0;
 					return;
 				}
-				AX = exec_file_not_found;
+				AX = E_FILE_NOT_FOUND;
 				CF = 1;
 				break;
 			case 1: // Load, create the program header but do not begin execution.
@@ -1272,7 +1300,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 				CF = 1;
 				break;
 			default:
-				AX = exec_invalid_function;
+				AX = E_INVALID_FUNCTION;
 				CF = 1;
 				break;
 			}

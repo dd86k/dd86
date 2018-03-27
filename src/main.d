@@ -31,21 +31,20 @@ Compiler: ` ~ __VENDOR__ ~ " v%d\n", __VERSION__
 
 version (D_BetterC)
 private int main(int argc, char** argv) {
-	// Reversed for future use ;-)
+	for(__gshared size_t i; i < argc; ++i) {
+		
+	}
 } else
 private int main(string[] args) {
-	__gshared string init_file, init_args;
+	__gshared string init_file;
 	__gshared bool smsg; // Startup message
 
-	//TODO: Find a better getopt alternative, or make our own.
-	//      Unfortunately, getopt can ONLY does off-to-on switches.
+	//TODO: DO OUR OWN CLI
 	GetoptResult r;
 	try {
 		r = getopt(args,
 			config.caseSensitive,
 			"p|program", "Run a program directly", &init_file,
-			config.caseSensitive,
-			"a|args", "Add arguments to -p", &init_args,
 			config.bundling, config.caseSensitive,
 			"P|perf", "Do not sleep between cycles (!)", &Sleep,
 			config.bundling, config.caseSensitive,
@@ -91,17 +90,20 @@ OPTIONS
 		puts("DD-DOS is starting...");
 
 	InitConsole; // Initiates console screen (ddcon)
-	Initiate; // Initiates vcpu
+	Initiate; // Initiates vcpu (Interpreter)
 
 	if (!smsg)
 		puts(BANNER); // Defined in dd_dos.d
 
 	if (init_file) {
 		if (exists(init_file)) {
-			if (ExecLoad(init_file, init_args))
-				Run;
+			if (ExecLoad(cast(char*)(init_file ~ '\0'))) { // Temporary until betterC
+				fprintf(stderr, "E: Could not load file: %s\n", cast(char*)init_file);
+			}
+			Run;
 		} else {
 			puts("E: File not found or could not be loaded");
+			return 1;
 		}
 	} else {
 		EnterShell;

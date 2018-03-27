@@ -46,21 +46,20 @@ private enum {
 
 /**
  * Load an executable file in memory.
- * AL values are set according to error
+ * AL values are set according to error (destroyed)
  * Params:
  *   path = Path to executable
  *   args = Executable arguments
- * Returns: State is successfully loaded
+ * Returns: 0 if successfully loaded
  */
-bool ExecLoad(string path, string args = null) {
-	FILE* f = fopen(cast(char*)(path~'\0'), "rb"); // A little sad, I know
+int ExecLoad(char* path) {
+	FILE* f = fopen(path, "rb");
 	fseek(f, 0, SEEK_END);
-	size_t fsize = ftell(f); // who the hell would have a >2G exec to run in DOS
+	int fsize = cast(int)ftell(f); // who the hell would have a >2G exec to run in DOS
 
-	if (Verbose)
-		logd("File size: ", fsize);
+	debug printf("[debug] File size: %d\n", fsize);
 
-	ushort sig;
+	__gshared ushort sig;
 	fseek(f, 0, SEEK_SET);
 	fread(&sig, 2, 1, f);
 
@@ -69,7 +68,7 @@ bool ExecLoad(string path, string args = null) {
 		if (Verbose)
 			log("File is zero length.");
 		AL = 2; // Non-official
-		return false;
+		return 1;
 	}
 
 	switch (sig) {
@@ -113,23 +112,22 @@ bool ExecLoad(string path, string args = null) {
 		if (_h + _s < PAGE) // This snippet was found in DOSBox
 			_s = PAGE - _h;
 		debug {
-			logd("_H::", _h);
-			logd("_L::", _l);
-			logd("STRUCT_SIZE: ", mzh.sizeof);
-			logd("HEADER_SIZE: ", _h);
-			logd("IMAGE_SIZE : ", _s);
-			logd("CS: ", CS);
-			logd("IP: ", IP);
-			logd("SS: ", SS);
-			logd("SP: ", SP);
+			printf("[debug] _H::%d\n", _h);
+			printf("[debug] _L::%d\n", _l);
+			printf("[debug] STRUCT_SIZE: %d\n", mzh.sizeof);
+			printf("[debug] HEADER_SIZE: %d\n", _h);
+			printf("[debug] IMAGE_SIZE : %d\n", _s);
+			printf("[debug] CS: %d\n", CS);
+			printf("[debug] IP: %d\n", IP);
+			printf("[debug] SS: %d\n", SS);
+			printf("[debug] SP: %d\n", SP);
 		}
 		fseek(f, _l, SEEK_SET); // Seek to end of header
 		fread(cast(ubyte*)MEMORY + GetIPAddress, _s, 1, f); // and read the code portion
 
 		// ** Read relocation table and adjust far pointers in memory
 		if (mzh.e_crlc) {
-			if (Verbose)
-				logd("Relocation: ", mzh.e_crlc);
+			if (Verbose) printf("[INFO] Relocation: %d\n", mzh.e_crlc);
 			fseek(f, mzh.e_lfarlc, SEEK_SET);
 			const int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
 			mz_rlc* r = cast(mz_rlc*)malloc(rs); /// Relocation table
@@ -172,8 +170,8 @@ bool ExecLoad(string path, string args = null) {
 			fclose(f);
 			if (Verbose)
 				log("COM file too large");
-			AL = exec_bad_format;
-			return false;
+			AL = E_BAD_FORMAT;
+			return 1;
 		}
 		if (Verbose)
 			log("LOAD COM");
@@ -188,5 +186,5 @@ bool ExecLoad(string path, string args = null) {
 	}
 
 	fclose(f);
-	return true;
+	return 0;
 }

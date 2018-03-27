@@ -8,7 +8,9 @@
 module Interpreter;
 
 import core.stdc.stdlib : exit; // Temporary
-import dd_dos, InterpreterUtils, Logger;
+import core.stdc.stdio : printf, puts;
+import dd_dos, InterpreterUtils;
+debug import Logger : logexec;
 
 /// Initial and maximum amount of memory if not specified in settings.
 enum MAX_MEM = 0x10_0000;
@@ -62,7 +64,7 @@ void Initiate() {
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
 void Run() {
-	if (Verbose) log("Interpreter::Run");
+	if (Verbose) puts("[INFO] Interpreter::Run");
 	++RLEVEL;
 	while (RLEVEL) {
 		EIP = GetIPAddress;
@@ -1922,7 +1924,7 @@ _F2_CX:
 		break;
 	default: // Illegal instruction
 		if (Verbose)
-			loghb("ILLEGAL: ", op);
+			printf("[WARN] ILLEGAL: %d", op);
 		//TODO: Raise vector on illegal op
 		
 		++EIP; // ??

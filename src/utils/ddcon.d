@@ -169,8 +169,7 @@ extern (C)
 void SetColor(int n) {
 	version (Windows) {
 		SetConsoleTextAttribute(hOut, cast(ushort)n);
-	}
-	else version (Posix) { // Foreground and background
+	} else version (Posix) { // Foreground and background
 		printf("\033[38;5;%dm\033[48;5;%dm", cast(ubyte)n, cast(ubyte)(n >> 8));
 	} else {
 
