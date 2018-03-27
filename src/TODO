@@ -1,3 +1,0 @@
-Interpreter.d
-- The calculated effective address of CS:IP stored in a global variable
-  - Avoid re-calculating CS:IP everytime
