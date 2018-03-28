@@ -70,18 +70,18 @@ enum
  *    7            wrap at end of line
  */
 
-enum MAX_INPUT = 255;
+enum _BUFS = 255;
 
 /// Enter internal shell
 extern (C)
 void _EnterShell() {
 	__gshared int argc;
 
-SS: // Shell start
 	//TODO: Print user-prompt ($PROMPT)
+SS:
 	fputs("% ", stdout);
 
-	char[MAX_INPUT] argv; // input buffer
+	char[_BUFS] argv; // input buffer
 	gets(cast(char*)argv);
 	char* _t = cast(char*)argv;
 
@@ -379,30 +379,6 @@ SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  SS=%04X
 	}
 }
 
-/**
- * Make the Program Segment Prefix in memory
- * Params:
- *   l = Memory location
- *   appname = Application name
- *   args = Application arguments
- */
-void MakePSP(uint l, string appname, string args = null) {
-	MEMORY[l + 0x40] = MajorVersion;
-	MEMORY[l + 0x41] = MinorVersion;
-	size_t len = appname.length;
-	if (args)
-		len += args.length + 1;
-	MEMORY[l + 0x80] = len > 0xFF ? 0xFF : cast(ubyte)len;
-	ubyte* pbank = &MEMORY[l] + 0x81;
-	__gshared size_t i;
-	foreach (b; appname) pbank[i++] = b;
-	if (args) {
-		pbank[i++] = ' '; // Space
-		foreach (b; args) pbank[i++] = b;
-	}
-	pbank[i] = '\0';
-}
-
 /*
  * Interrupt handler (Hardware, BIOS, DOS, MS-DOS)
  */
@@ -410,7 +386,7 @@ void MakePSP(uint l, string appname, string args = null) {
 /// Raise interrupt.
 /// Params: code = Interrupt byte
 extern (C)
-void Raise(ubyte code) { // Rest of this source is this function
+void Raise(ubyte code) {
 	debug printf("[dbug] INTERRUPT: 0x%d\n", code);
 
 	// REAL-MODE
@@ -960,7 +936,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 */
 		case 0x39: {
 			import std.file : mkdir;
-			string path = MemString(GetAddress(DS, DX));
+			char[] path = MemString(GetAddress(DS, DX));
 			version (Windows) {
 				import std.windows.syserror : WindowsException;
 				try {
@@ -994,7 +970,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 */
 		case 0x3A: {
 			import std.file : rmdir;
-			string path = MemString(GetAddress(DS, DX));
+			char[] path = MemString(GetAddress(DS, DX));
 			version (Windows)
 			{
 				import std.windows.syserror : WindowsException;
@@ -1058,7 +1034,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 			import std.stdio : toFile;
 			import std.file : setAttributes;
 			enum EMPTY = cast(ubyte[])null;
-			string path = MemString(GetAddress(DS, DX));
+			char[] path = MemString(GetAddress(DS, DX));
 			uint at; // VOLLABEL and DIRECTORY are ignored here
 			version (Windows) // 1:1 MS-DOS<->Windows
 			{ // https://msdn.microsoft.com/en-us/library/gg258117(v=vs.85).aspx
@@ -1074,7 +1050,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 					 READ  = S_IRUSR | S_IRGRP | S_IROTH;
 				at = (CL & READONLY) ? READ : READ | WRITE;
 			}
-			toFile(EMPTY, path);
+			//TODO: create file if empty
 			setAttributes(path, at);
 		}
 			break;
@@ -1172,7 +1148,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		 */
 		case 0x41: {
 			import std.file : remove, FileException;
-			string path = MemString(GetAddress(DS, DX));
+			char[] path = MemString(GetAddress(DS, DX));
 			try
 			{
 				remove(path);
@@ -1282,7 +1258,7 @@ void Raise(ubyte code) { // Rest of this source is this function
 		case 0x4B: {
 			switch (AL) {
 			case 0: // Load and execute the program.
-				string p = MemString(GetAddress(DS, DX));
+				char[] p = MemString(GetAddress(DS, DX));
 				if (exists(p)) {
 					ExecLoad(cast(char*)(p ~ '\0')); // temporary until better
 					CF = 0;

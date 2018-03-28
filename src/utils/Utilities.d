@@ -5,6 +5,7 @@
 module Utilities;
 
 import Interpreter : MEMORY;
+import core.stdc.string : strlen;
 
 /**
  * Fetches a string from MEMORY.
@@ -12,11 +13,13 @@ import Interpreter : MEMORY;
  *   pos = Starting position
  * Returns: String
  */
-string MemString(uint pos) {
-//TODO: immutable(char*)
-    import core.stdc.string : strlen;
-    const size_t len = strlen(cast(char*)MEMORY + pos);
-    return cast(string)MEMORY[pos..pos+len];
+extern (C)
+char[] MemString(uint pos) {
+//TODO: Check overflows
+    return cast(char[])
+		MEMORY[
+			pos..pos + strlen(cast(char*)MEMORY + pos)
+		];
 }
 
 /**
