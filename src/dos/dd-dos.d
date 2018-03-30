@@ -5,12 +5,13 @@
 module dd_dos;
 
 import core.stdc.stdio;
-import core.stdc.string : memcpy;
+import core.stdc.string : memcpy, memset;
 import std.stdio : readln, toFile;
 import std.file : exists;
 import Interpreter, Loader, ddcon, Utilities, Logger;
 import codes;
 import Utilities;
+import OSUtilities;
 
 debug pragma(msg, `
 +-------------+
@@ -74,14 +75,16 @@ enum _BUFS = 255;
 
 /// Enter internal shell
 extern (C)
-void _EnterShell() {
+void EnterShell() {
+	__gshared char[_BUFS] argv; // input buffer
 	__gshared int argc;
-
+	__gshared int crs;
 	//TODO: Print user-prompt ($PROMPT)
 SS:
-	fputs("% ", stdout);
+	char[] cr = getcwd(&crs);
+	if (crs) printf("%s%% ", cast(char*)cr);
 
-	char[_BUFS] argv; // input buffer
+	memset(cast(char*)argv, 0, _BUFS);
 	gets(cast(char*)argv);
 	char* _t = cast(char*)argv;
 
@@ -89,7 +92,7 @@ SS:
 	while (*_t != 0 && *_t != '\n') {
 		if (*_t == ' ') ++argc;
 
-
+		++_t;
 	}
 
 	printf("spaces: %d\n", argc);
@@ -99,7 +102,7 @@ SS:
 
 /// Enter internal shell
 extern (C)
-void EnterShell() {
+void _EnterShell() {
 	import std.array : split;
 	import std.uni : toUpper;
 	import std.file : getcwd, chdir, FileException;
