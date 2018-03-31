@@ -48,12 +48,12 @@ int _strcmp_c(char* a, immutable(char)* b, size_t c) {
  * Returns: 0 if same, 1 if different.
  */
 extern (C)
-int _strcmp_s(char* a, immutable(char)* b) {
+int _argcmp_s(char* a, immutable(char)* b) {
 	while (*a != ' ' && *a != 0) {
-		if (*a != *b) return 1;
+		if (*a != *b) return 0;
 		++a; ++b;
 	}
-	return 0;
+	return 1;
 }
 
 /**

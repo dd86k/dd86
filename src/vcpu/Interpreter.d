@@ -1356,30 +1356,40 @@ void Execute(ubyte op) {
 
 		return;
 	case 0xA6: { // CMPS DEST-STR8, SRC-STR8
-		const int t = MEMORY[GetAddress(DS, SI)] - MEMORY[GetAddress(ES, DI)];
+		const int t =
+			MEMORY[GetAddress(DS, SI)] - MEMORY[GetAddress(ES, DI)];
 		//TODO: CMPS PF
 		ZF = t == 0;
 		AF = (t & 0x10) != 0;
 		CF = SF = (t & 0x80) != 0;
 		OF = (t < 0) || (t > 0xFF);
-		if (DF == 0) {
-			DI = DI + 1; SI = SI + 1;
+		if (DF) {
+			DI = DI - 1;
+			SI = SI - 1;
 		} else {
-			DI = DI - 1; SI = SI - 1;
+			DI = DI + 1;
+			SI = SI + 1;
 		}
 		return;
 	}
-	case 0xA7: { // CMPS DEST-STR16, SRC-STR16
-		const int t = FetchWord(GetAddress(DS, SI)) - FetchWord(GetAddress(ES, DI));
-		//TODO: CMPS PF
+	case 0xA7: { // CMPSW DEST-STR16, SRC-STR16
+		const int t =
+			FetchWord(GetAddress(DS, SI)) - FetchWord(GetAddress(ES, DI));
+		version (unittest) {
+			printf("\n%X - %X ",
+				FetchWord(GetAddress(DS, SI)), FetchWord(GetAddress(ES, DI)));
+		}
+		//TODO: CMPSW PF
 		ZF = t == 0;
 		AF = (t & 0x10) != 0;
 		CF = SF = (t & 0x80) != 0;
 		OF = (t < 0) || (t > 0xFFFF);
-		if (DF == 0) {
-			DI = DI + 2; SI = SI + 2;
+		if (DF) {
+			DI = DI - 2;
+			SI = SI - 2;
 		} else {
-			DI = DI - 2; SI = SI - 2;
+			DI = DI + 2;
+			SI = SI + 2;
 		}
 		return;
 	}

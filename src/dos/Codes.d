@@ -3,7 +3,7 @@
  *          You MUST keep the space indentation between errors codes/assignations
  */
 
-module codes;
+module Codes;
 
 enum : ubyte {
 	E_NONE                  = 0,

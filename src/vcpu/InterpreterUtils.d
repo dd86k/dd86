@@ -6,8 +6,9 @@ module InterpreterUtils;
 
 import Interpreter;
 import Logger;
-import core.stdc.string : memcpy;
 import core.stdc.stdio : printf, puts;
+import core.stdc.string : memcpy, strcpy;
+import core.stdc.wchar_ : wchar_t, wcscpy;
 
 /**
  * Get effective address from R/M byte, mostly usefull for R/M bits.
@@ -198,23 +199,20 @@ void InsertDWord(uint op, int addr) {
  *   data = String value
  *   addr = Memory address, default being CS:IP
  */
-void InsertString(string data, size_t addr = EIP) {
-	memcpy(cast(void*)MEMORY + addr, cast(void*)data, data.length);
+extern (C)
+void InsertString(immutable(char)* data, size_t addr = EIP) {
+	strcpy(cast(char*)MEMORY + addr, data);
 }
-//TODO: InsertString with char*
 /**
- * Insert a wide string in memory.
+ * Insert a wide string, null-terminated, in memory.
  * Params:
- *   data = Wide String data
+ *   data = Wide wtring data
  *   addr = Memory Address (EIP by default)
  */
-void InsertW(wstring data, size_t addr = EIP) {
-	size_t l = data.length * 2;
-	ubyte* bp = cast(ubyte*)MEMORY + addr;
-	ubyte* dp = cast(ubyte*)data;
-	while (--l) *bp++ = *dp++;
+extern (C)
+void InsertWString(immutable(wchar)[] data, size_t addr = EIP) {
+	wcscpy(cast(wchar_t*)(cast(ubyte*)MEMORY + addr), cast(wchar_t*)data);
 }
-//TODO: InsertWString(wstring data, size_t addr = 0) (tip: ushort casting)
 
 /*****************************************************************************
  * Fetch
@@ -222,7 +220,7 @@ void InsertW(wstring data, size_t addr = EIP) {
 
 /**
  * Fetch an immediate BYTE at CS:IP+n+1
- * Params: off = Optional offset
+ * Params: off = Optional offset (+1)
  * Returns: BYTE
  */
 extern (C)
@@ -231,21 +229,21 @@ ubyte FetchImmByte(int off = 0) {
 }
 /**
  * Fetch an immediate WORD at CS:IP+n+1
- * Params: off = Optional offset
+ * Params: off = Optional offset (+1)
  * Returns: WORD
  */
 extern (C)
 ushort FetchImmWord(uint off = 0) {
-	return *(cast(ushort*)&MEMORY[EIP + 1 + off]);
+	return *cast(ushort*)(cast(ubyte*)MEMORY + EIP + 1 + off);
 }
 /**
  * Fetch an immediate signed WORD at CS:IP+n+1
- * Params: off = Optional offset
+ * Params: off = Optional offset (+1)
  * Returns: signed WORD
  */
 extern (C)
 short FetchImmSWord(uint off = 0) {
-	return *(cast(short*)&MEMORY[EIP + off + 1]);
+	return *cast(short*)(cast(ubyte*)MEMORY + EIP + off + 1);
 }
 
 /**
@@ -260,7 +258,7 @@ ubyte FetchByte(uint addr) {
 }
 /**
  * Fetch a signed byte (byte).
- * Returns: signed BYTE
+ * Returns: Signed BYTE
  */
 extern (C)
 pragma(inline, true)
@@ -274,8 +272,9 @@ byte FetchImmSByte() {
  * Returns: WORD
  */
 extern (C)
+pragma(inline, true)
 ushort FetchWord(uint addr) {
-	return *(cast(ushort*)&MEMORY[addr]);
+	return *cast(ushort*)(cast(ubyte*)MEMORY + addr);
 }
 /**
  * Fetch a DWORD from memory
@@ -283,8 +282,9 @@ ushort FetchWord(uint addr) {
  * Returns: DWORD
  */
 extern (C)
+pragma(inline, true)
 uint FetchDWord(uint addr) {
-	return *(cast(uint*)&MEMORY[addr]);
+	return *cast(uint*)(cast(ubyte*)MEMORY + addr);
 }
 /**
  * Fetch a signed WORD from memory
@@ -292,6 +292,7 @@ uint FetchDWord(uint addr) {
  * Returns: signed WORD
  */
 extern (C)
+pragma(inline, true)
 short FetchSWord(uint addr) {
-	return *(cast(short*)&MEMORY[addr]);
+	return *cast(short*)(cast(ubyte*)MEMORY + addr);
 }

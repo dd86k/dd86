@@ -5,24 +5,18 @@
 module dd_dos;
 
 import core.stdc.stdio;
-import core.stdc.string : memcpy, memset;
+import core.stdc.string;
+import core.stdc.stdlib : malloc, free;
 import std.stdio : readln, toFile;
 import std.file : exists;
-import Interpreter, Loader, ddcon, Utilities, Logger;
-import codes;
-import Utilities;
-import OSUtilities;
+import Interpreter, Loader, ddcon, Logger, Codes, Utilities, OSUtilities;
 
 debug pragma(msg, `
 +-------------+
 | DEBUG BUILD |
 +-------------+
 `);
-else pragma(msg, `
-+---------------+
-| RELEASE BUILD |
-+---------------+
-`);
+
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
@@ -73,29 +67,82 @@ enum
 
 enum _BUFS = 255;
 
-/// Enter internal shell
+/**
+ * Argument splitter for the CLI.
+ * Modified and adapted from Nuke928's code.
+ * Params:
+ *   t = user input
+ *   argc = arg count pointer
+ * Returns: argv-like string array
+ */
+extern (C)
+char** sargs(const char* t, int* argc) {
+	int j, a;
+	char** argv = cast(char**)malloc(_BUFS * size_t.sizeof); // sizeof(char *)
+	size_t sl = strlen(t);
+
+	for (int i = 0; i <= sl; ++i) {
+		if (t[i] == 0 || t[i] == ' ') {
+			argv[a] = cast(char*)malloc(i - j + 1);
+			strncpy(argv[a], &t[j], i - j);
+			argv[a][i - j] = 0;
+			while (t[i + 1] == ' ') ++i;
+			j = i + 1;
+			++a;
+		} else if (t[i] == '\"') {
+			j = ++i;
+			while (t[i] != '\"' && t[i] != 0) ++i;
+			if (t[i] == 0) continue;
+			argv[a] = cast(char*)malloc(i - j + 1);
+			strncpy(argv[a], &t[j], i - j);
+			argv[a][i - j] = 0;
+			while(t[i + 1] == ' ') ++i;
+			j = ++i;
+			++a;
+		}
+	}
+	*argc = a;
+
+	return argv;
+}
+
+/// Enter internal shell (experimental)
 extern (C)
 void EnterShell() {
-	__gshared char[_BUFS] argv; // input buffer
+	char[_BUFS] cwb; // internal current working directory buffer
+	__gshared char[_BUFS] inb; // internal input buffer
+	__gshared char** argv;
 	__gshared int argc;
-	__gshared int crs;
 	//TODO: Print user-prompt ($PROMPT)
 SS:
-	char[] cr = getcwd(&crs);
-	if (crs) printf("%s%% ", cast(char*)cr);
+	//getcwd(cast(char*)cwb);
+	//printf("%s%% ", cast(char*)cwb);
+	fprintf(stdout, "%% ");
 
-	memset(cast(char*)argv, 0, _BUFS);
-	gets(cast(char*)argv);
-	char* _t = cast(char*)argv;
+	memset(cast(char*)inb, 0, _BUFS);
+	gets(cast(char*)inb);
 
 	argc = 0;
-	while (*_t != 0 && *_t != '\n') {
-		if (*_t == ' ') ++argc;
+	argv = sargs(cast(char*)inb, &argc);
 
-		++_t;
+	if (strcmp(argv[0], "help") == 0) {
+		puts(
+`CD        Change working directory
+CLS       Clear screen
+DATE      Get current date
+DIR       Show directory content
+EXIT      Exit DD-DOS or script
+TREE      Show directory structure
+TIME      Get current time
+MEM       Show memory information
+VER       Show DOS version
+
+??        Print debugger help screen`
+		);
+		goto SS;
 	}
 
-	printf("spaces: %d\n", argc);
+	free(argv);
 
 	goto SS;
 }
@@ -107,12 +154,11 @@ void _EnterShell() {
 	import std.uni : toUpper;
 	import std.file : getcwd, chdir, FileException;
 _S:
-	//TODO: Print $POMPT
 	// getcwd uses system functions that are null-terminated (windows+linux tested)
 	printf("%s%% ", cast(char*)getcwd);
 
 	// Read line from stdln and remove \n, then split arguments.
-	string[] argv = split(readln()[0..$-1], ' '); //TODO: Better splitter (and GC-less)
+	string[] argv = split(readln()[0..$-1], ' ');
 	const size_t argc = argv.length;
 
 	if (argc > 0)

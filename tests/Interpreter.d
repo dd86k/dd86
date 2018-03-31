@@ -48,8 +48,8 @@ unittest
 	assert(MEMORY[ip + 10 .. ip + 16] == "QWERTY");
 	writeln("OK");
 
-	write("InsertW: ");
-	InsertW("Heck"w);
+	write("InsertWString: ");
+	InsertWString("Heck"w);
 	assert(MEMORY[ip     .. ip + 1] == "H"w);
 	assert(MEMORY[ip + 2 .. ip + 3] == "e"w);
 	assert(MEMORY[ip + 4 .. ip + 5] == "c"w);
@@ -605,9 +605,11 @@ unittest
 
 	writeln("OK");
 
+	DF = 0;
+
 	// CMPS
 
-	write("CMPSB : ");
+	write("CMPS : ");
 
 	CS = ES = 0xF00; DI = EIP = 0x100;
 	InsertString("HELL", GetIPAddress);
@@ -627,9 +629,9 @@ unittest
 	write("CMPSW : ");
 
 	CS = ES = 0xF00; DI = EIP = 0x100;
-	InsertW("HELL"w, GetIPAddress);
+	InsertWString("HELL"w, GetIPAddress);
 	CS = DS = 0xF00; SI = EIP = 0x110;
-	InsertW("HeLL"w, GetIPAddress);
+	InsertWString("HeLL"w, GetIPAddress);
 	Execute(0xA7);
 	assert(ZF);
 	Execute(0xA7);

@@ -7,7 +7,7 @@ module Loader;
 import core.stdc.stdio;
 import core.stdc.stdlib : malloc, free;
 import dd_dos, Interpreter, InterpreterUtils, Logger;
-import codes;
+import Codes;
 
 private enum ERESWDS = 16; /// RESERVED WORDS
 
@@ -82,8 +82,6 @@ int ExecLoad(char* path) {
 		CS = 0; IP = 0; // Temporary
 		//CS = CS + mzh.e_cs; // Relative
 		//IP = mzh.e_ip;
-		SS = cast(ushort)(SS + mzh.e_ss); // Relative
-		SP = mzh.e_sp;
 
 		// ** Copy code section from exe into memory
 		if (mzh.e_minalloc && mzh.e_maxalloc) { // Low memory
@@ -95,27 +93,28 @@ int ExecLoad(char* path) {
 		}
 		const uint _h = mzh.e_cparh * PARAGRAPH; // Header size
 		const uint _l = _h + (mz_rlc.sizeof * mzh.e_crlc); // image code offset
-		uint _s = (mzh.e_cp * PAGE) - _h; // image code size
-		if (mzh.e_cblp) // Adjust _s for last bytes in page
-			_s -= PAGE - mzh.e_cblp;
-		if (_h + _s < PAGE) // This snippet was found in DOSBox
-			_s = PAGE - _h;
+		uint csize = (mzh.e_cp * PAGE) - _h; // image code size
+		if (mzh.e_cblp) // Adjust csize for last bytes in page
+			csize -= PAGE - mzh.e_cblp;
+		if (_h + csize < PAGE) // This snippet was found in DOSBox
+			csize = PAGE - _h;
 		debug {
 			printf("[dbug] _H::%d\n", _h);
 			printf("[dbug] _L::%d\n", _l);
 			printf("[dbug] STRUCT_SIZE: %d\n", mzh.sizeof);
 			printf("[dbug] HEADER_SIZE: %d\n", _h);
-			printf("[dbug] IMAGE_SIZE : %d\n", _s);
+			printf("[dbug] IMAGE_SIZE : %d\n", csize);
 			printf("[dbug] CS: %d\n", CS);
 			printf("[dbug] IP: %d\n", IP);
 			printf("[dbug] SS: %d\n", SS);
 			printf("[dbug] SP: %d\n", SP);
 		}
 		fseek(f, _l, SEEK_SET); // Seek to end of header
-		fread(cast(ubyte*)MEMORY + GetIPAddress, _s, 1, f); // and read the code portion
+		fread(cast(ubyte*)MEMORY + GetIPAddress, csize, 1, f); // and read the code portion
 
 		// ** Read relocation table and adjust far pointers in memory
 		if (mzh.e_crlc) {
+		//TODO: Adjust pointers in memory
 			if (Verbose) printf("[INFO] Relocation: %d\n", mzh.e_crlc);
 			fseek(f, mzh.e_lfarlc, SEEK_SET);
 			const int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
@@ -128,7 +127,7 @@ int ExecLoad(char* path) {
 				const ushort data = FetchWord(ip + (r[i].seg << 4) + r[i].off);
 				if (Verbose)
 					printf("%2d  %04X:%04X -> %04X\n", i, r[i].seg, r[i].off, data);
-				CS = cast(ushort)(CS + r[i].seg); // temporarily cheat
+				CS += cast(ushort)(CS + r[i].seg); // temporarily cheat
 				IP = cast(ushort)(IP + r[i].off); // ditto
 				//SetWord((r[i].seg << 4) + r[i].off, r[i].refseg);
 			}
@@ -147,6 +146,8 @@ int ExecLoad(char* path) {
 
 		AL = 3;
 		AH = 0;
+		SS = cast(ushort)(SS + mzh.e_ss); // Relative
+		SP = mzh.e_sp;
 
 		// ** Make PSP
 		//MakePSP(GetIPAddress, "test");
