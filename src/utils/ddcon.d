@@ -9,6 +9,8 @@
 
 module ddcon;
 
+pragma(msg, "Compiling ddcon"); // temporary
+
 //private import std.stdio;
 private import core.stdc.stdio;
 private alias sys = core.stdc.stdlib.system;

@@ -4,6 +4,8 @@
 
 module Loader;
 
+pragma(msg, "Compiling loader"); // temporary
+
 import core.stdc.stdio;
 import core.stdc.stdlib : malloc, free;
 import dd_dos, Interpreter, InterpreterUtils, Logger;

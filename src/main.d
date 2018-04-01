@@ -2,15 +2,20 @@
  * main.d: CLI entry point
  */
 
+pragma(msg, "Compiling main"); // temporary
+
 import core.stdc.stdio;
 import core.stdc.stdlib : exit;
-import std.getopt;
 import dd_dos : APP_VERSION, BANNER, EnterShell;
 import Interpreter : Initiate, Verbose, Sleep, Run;
 import Loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;
+
+version (D_BetterC) {} else {
 import std.file : exists;
+import std.getopt;
+}
 
 debug {} else {
 	extern (C) __gshared bool
@@ -29,12 +34,15 @@ Compiler: ` ~ __VENDOR__ ~ " v%d\n", __VERSION__
 	exit(0); // getopt hack ;-)
 }
 
-version (D_BetterC)
+version (D_BetterC) {
+extern (C)
 private int main(int argc, char** argv) {
 	for(__gshared size_t i; i < argc; ++i) {
 		
 	}
-} else
+	return 0;
+}
+} else {
 private int main(string[] args) {
 	__gshared string init_file;
 	__gshared bool smsg; // Startup message
@@ -76,6 +84,9 @@ OPTIONS
 		return 0;
 	}
 
+	if (!smsg)
+		puts("DD-DOS is starting...");
+
 	Sleep = !Sleep;
 	debug Verbose = !Verbose;
 
@@ -85,9 +96,6 @@ OPTIONS
 		if (!Sleep)
 			log("Maximum performance: ON");
 	}
-
-	if (!smsg)
-		puts("DD-DOS is starting...");
 
 	InitConsole; // Initiates console screen (ddcon)
 	Initiate; // Initiates vcpu (Interpreter)
@@ -110,4 +118,5 @@ OPTIONS
 	}
 
 	return 0;
+}
 }

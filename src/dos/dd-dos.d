@@ -4,12 +4,13 @@
 
 module dd_dos;
 
+pragma(msg, "Compiling dd-dos"); // temporary
+
 import core.stdc.stdio;
 import core.stdc.string;
 import core.stdc.stdlib : malloc, free;
-import std.stdio : readln, toFile;
-import std.file : exists;
-import Interpreter, Loader, ddcon, Logger, Codes, Utilities, OSUtilities;
+import Loader : ExecLoad;
+import Interpreter, ddcon, Logger, Codes, Utilities, OSUtilities;
 
 debug pragma(msg, `
 +-------------+
@@ -65,11 +66,11 @@ enum
  *    7            wrap at end of line
  */
 
-enum _BUFS = 255;
+enum _BUFS = 127; // ~max in MS-DOS 5.0
 
 /**
- * Argument splitter for the CLI.
- * Modified and adapted from Nuke928's code.
+ * Argument splitter, most useful for the CLI
+ * Adapted and modified from Nuke928's code
  * Params:
  *   t = user input
  *   argc = arg count pointer
@@ -106,24 +107,85 @@ char** sargs(const char* t, int* argc) {
 	return argv;
 }
 
-/// Enter internal shell (experimental)
+/// Enter internal shell
 extern (C)
 void EnterShell() {
-	char[_BUFS] cwb; // internal current working directory buffer
+	__gshared char[255] cwb; // internal current working directory buffer
 	__gshared char[_BUFS] inb; // internal input buffer
 	__gshared char** argv;
 	__gshared int argc;
 	//TODO: Print user-prompt ($PROMPT)
 SS:
-	//getcwd(cast(char*)cwb);
-	//printf("%s%% ", cast(char*)cwb);
-	fprintf(stdout, "%% ");
+	if (getcwd_dd(cast(char*)cwb))
+		printf("\n%s%% ", cast(char*)cwb);
+	else // The biggest just-in-case scenario
+		fprintf(stdout, "\n%% ");
 
 	memset(cast(char*)inb, 0, _BUFS);
-	gets(cast(char*)inb);
+	scanf("%s", cast(char*)inb); // R.I.P. gets ? - C99+TC3
 
 	argc = 0;
 	argv = sargs(cast(char*)inb, &argc);
+
+	//TODO: TREE, DIR
+
+	// C
+
+	if (strcmp(argv[0], "cd") == 0 ||
+		strcmp(argv[0], "chdir") == 0) {
+		if (argc > 1) {
+			if (strcmp(argv[0], "/?") == 0) {
+				puts(
+`Display or set current working directory
+  CD [FOLDER]
+  CHDIR [FOLDER]
+
+By default, CD will display the current working directory`
+				);
+			} else {
+				if (pisdir(argv[1])) {
+					setcwd_dd(argv[1]);
+				} else {
+					puts("Directory not found or entry is not a directory");
+				}
+			}
+		} else {
+			puts(cast(char*)cwb);
+		}
+		goto END;
+	}
+	if (strcmp(argv[0], "cls") == 0) {
+		Clear;
+		goto END;
+	}
+
+	// D
+
+	if (strcmp(argv[0], "date") == 0) {
+		AH = 0x2A;
+		Raise(0x21);
+		printf("It is currently ");
+		switch (AL) {
+		case 0, 7: printf("Sun"); break;
+		case 1: printf("Mon"); break;
+		case 2: printf("Tue"); break;
+		case 3: printf("Wed"); break;
+		case 4: printf("Thu"); break;
+		case 5: printf("Fri"); break;
+		case 6: printf("Sat"); break;
+		default:
+		}
+		printf(" %d-%02d-%02d\n", CX, DH, DL);
+		goto END;
+	}
+
+	// E
+
+	if (strcmp(argv[0], "exit") == 0) {
+		return;
+	}
+
+	// H
 
 	if (strcmp(argv[0], "help") == 0) {
 		puts(
@@ -139,259 +201,112 @@ VER       Show DOS version
 
 ??        Print debugger help screen`
 		);
-		goto SS;
+		goto END;
 	}
 
-	free(argv);
+	// M
 
-	goto SS;
-}
+	if (strcmp(argv[0], "mem") == 0) {
+		if (strcmp(argv[1], "/stats") == 0) {
+			puts("Fetching memory statistics...");
 
-/// Enter internal shell
-extern (C)
-void _EnterShell() {
-	import std.array : split;
-	import std.uni : toUpper;
-	import std.file : getcwd, chdir, FileException;
-_S:
-	// getcwd uses system functions that are null-terminated (windows+linux tested)
-	printf("%s%% ", cast(char*)getcwd);
+			const bool ext = MEMORYSIZE > 0xA_0000; // extended?
+			const size_t ct = ext ? 0xA_0000 : MEMORYSIZE;
+			const size_t tt = MEMORYSIZE - ct;
 
-	// Read line from stdln and remove \n, then split arguments.
-	string[] argv = split(readln()[0..$-1], ' ');
-	const size_t argc = argv.length;
-
-	if (argc > 0)
-	switch (toUpper(argv[0])) {
-	case "HELP":
-		puts(
-`CD        Change working directory
-CLS       Clear screen
-DATE      Get current date
-DIR       Show directory content
-EXIT      Exit DD-DOS or script
-TREE      Show directory structure
-TIME      Get current time
-MEM       Show memory information
-VER       Show DOS version
-
-??        Print debugger help screen`
-		);
-		goto _S;
-	case "VER":
-		if (argc > 1) {
-			switch (argv[1]) { //toUpper in-case of future sub commands
-			case "/?":
-
-				goto _S;
-			default:
+			__gshared int nzt; // Non-zero (total/excluded from conventional in some cases)
+			__gshared int nzc; // Convential (<640K) non-zero
+			for (__gshared int i; i < 0xA_0000; ++i) {
+				if (i < 0xA_0000) {
+					if (MEMORY[i]) ++nzc;
+				} else if (MEMORY[i]) ++nzt;
 			}
-		} else {
-			printf("\nDD-DOS Version %s\nMS-DOS Version %d.%d\n\n",
-				cast(char*)APP_VERSION, MajorVersion, MinorVersion);
-		}
-		goto _S;
-	case "MEM":
-		if (argc > 1) {
-			switch (toUpper(argv[1])) {
-			case "/STATS":
-				puts("Fetching memory statistics...");
-
-				const bool ext = MEMORYSIZE > 0xA_0000; // extended?
-				const size_t ct = ext ? 0xA_0000 : MEMORYSIZE;
-				const size_t tt = MEMORYSIZE - ct;
-
-				__gshared int nzt; // Non-zero (total/excluded from conventional in some cases)
-				__gshared int nzc; // Convential (<640K) non-zero
-				for (__gshared int i; i < 0xA_0000; ++i) {
-					if (i < 0xA_0000) {
-						if (MEMORY[i]) ++nzc;
-					} else if (MEMORY[i]) ++nzt;
-				}
-				puts(
-					"Memory type           Zero'd +   NZero =   Total\n" ~
-					"-------------------  -------   -------   -------"
-				);
-				printf(
-					"Conventional         %6dK   %6dK   %6dK\n" ~
-					"Extended (DD-DOS)    %6dK   %6dK   %6dK\n",
-					(ct - nzc) / 1024, nzc / 1024, ct / 1024,
-					(tt - nzt) / 1024, nzt / 1024, tt / 1024);
-				printf(
-					"-------------------  -------   -------   -------\n" ~
-					"Total                %6dK   %6dK   %6dK\n",
-					(MEMORYSIZE - nzt) / 1024, (nzt + nzc) / 1024, MEMORYSIZE / 1024);
-				goto _S;
-			case "/DEBUG":
-				puts("Not implemented");
-				goto _S;
-			//case "/FREE":
-			case "/?":
-				puts(
+			printf(
+				"Memory Type           Zero'd +   NZero =   Total\n" ~
+				"-------------------  -------   -------   -------\n" ~
+				"Conventional         %6dK   %6dK   %6dK\n" ~
+				"Extended (DD-DOS)    %6dK   %6dK   %6dK\n",
+				(ct - nzc) / 1024, nzc / 1024, ct / 1024,
+				(tt - nzt) / 1024, nzt / 1024, tt / 1024);
+			printf(
+				"-------------------  -------   -------   -------\n" ~
+				"Total                %6dK   %6dK   %6dK\n",
+				(MEMORYSIZE - nzt) / 1024, (nzt + nzc) / 1024, MEMORYSIZE / 1024);
+		} else if (strcmp(argv[1], "/debug") == 0) {
+			puts("Not implemented");
+		} else if (strcmp(argv[1], "/free") == 0) {
+			puts("Not implemented");
+		} else if (strcmp(argv[1], "/?") == 0) {
+			puts(
 `Display memory statistics
   MEM [OPTIONS]
 
 OPTIONS
 /DEBUG    Not implemented
 /FREE     Not implemented
-/STATS    Scan memory and show statistics`
-				);
-				goto _S;
-			default:
+/STATS    Scan memory and show statistics
 
-				goto _S;
-			}
+By default, MEM will show memory usage`
+			);
+		} else {
+			puts("Not implemented");
 		}
-		goto _S;
-	case "CHDIR", "CD":
-		if (argc > 1)
-			try {
-				if (argv[1] == "/?") {
-					puts("Display or set current working directory.");
-				} else chdir(argv[1]);
-			} catch (FileException) {
-				puts("Invalid directory");
-			}
-		else
-			puts(cast(char*)getcwd);
-		goto _S;
-	case "DIR": { //TODO: with folder arguemnt
-		import std.file : exists, isDir, dirEntries, SpanMode;
-		__gshared string dir;
-		if (argc > 1) {
-			switch (argv[1]) {
-			case "/?":
-				puts("List files and directories");
-				goto _S;
-			default:
-				if (exists(argv[1])) {
-					if (isDir(argv[1]))
-						dir = argv[1];
-					else {
-						puts("ERROR: Invalid path");
-						AL = 2;
-						goto _S;
-					}
-				} else {
-					puts("ERROR: Invalid path");
-					AL = 1;
-					goto _S;
-				}
-				goto _S;
-			}
-		}
-		__gshared int c;
-		foreach (string name; dirEntries(dir, SpanMode.shallow)) {
-			++c;
-			if (isDir(name))
-				printf("%*s <DIR>\n", -32, cast(char*)(name~'\0'));
-			else
-				puts(cast(char*)name);
-		}
-		printf("\t\t\t\t%d file(s)\n", c);
-		goto _S;
+		goto END;
 	}
-	case "TIME":
+
+	// T
+
+	if (strcmp(argv[0], "time") == 0) {
 		AH = 0x2C;
 		Raise(0x21);
 		printf("It is currently %02d:%02d:%02d,%02d\n", CH, CL, DH, DL);
-		goto _S;
-	case "DATE":
-		AH = 0x2A;
-		Raise(0x21);
-		printf("It is currently ");
-		switch (AL) {
-		case 0, 7: printf("Sun"); goto _S;
-		case 1: printf("Mon"); goto _S;
-		case 2: printf("Tue"); goto _S;
-		case 3: printf("Wed"); goto _S;
-		case 4: printf("Thu"); goto _S;
-		case 5: printf("Fri"); goto _S;
-		case 6: printf("Sat"); goto _S;
-		default:
-		}
-		printf(" %d-%02d-%02d\n", CX, DH, DL);
-		goto _S;
-	case "TREE": {
-		import std.file : exists, isDir, dirEntries, SpanMode;
-		string dir;
-		if (argc > 1) {
-			switch (argv[1]) {
-			case "/?":
-				puts(
-`Displays a graphical representation of a folder recursively
-  Usage:
-    TREE [OPTIONS]`
-				);
-				return;
-			default:
-				if (exists(argv[1])) {
-					if (isDir(argv[1]))
-						dir = argv[1];
-					else {
-						puts("ERROR: Invalid path");
-						AL = 2;
-						goto _S;
-					}
-				} else {
-					puts("ERROR: Invalid path");
-					AL = 1;
-					goto _S;
-				}
-				goto _S;
-			}
-		}
-
-		void printlevel(int l) {
-			do {
-				printf(">>");
-			} while (--l);
-		}
-
-		int j = 1;
-		puts(".");
-		void tree(string d) { // C: goto+var
-			foreach (string name; dirEntries(d, SpanMode.shallow)) {
-				printlevel(j);
-				puts(cast(char*)(name~'\0'));
-				if (isDir(name)) {
-					++j;
-					tree(name);
-				}
-			}
-			--j;
-		}
-		tree(dir); // cd
-		goto _S;
+		goto END;
 	}
-	case "CLS": Clear; goto _S;
-	case "EXIT": return;
 
-	// DEBUGGING COMMANDS
+	// V
 
-	case "?LOAD":
-		if (argc > 1) { // Is a file provided?
-			if (exists(argv[1]))
-				ExecLoad(cast(char*)(argv[1] ~ '\0')); // tempory until betterc
+	if (strcmp(argv[0], "ver") == 0) {
+		printf("\nDD-DOS Version %s\nMS-DOS Version %d.%d\n\n",
+			cast(char*)APP_VERSION, MajorVersion, MinorVersion);
+		goto END;
+	}
+
+	// ? -- debugging
+
+	if (strcmp(argv[0], "??") == 0) {
+		puts(
+`?run        Start the interpreter
+?load FILE  Load an executable file into memory
+?r          Print vm register information
+?p          Toggle performance mode
+?v          Toggle verbose mode`
+		);
+		goto END;
+	}
+	if (strcmp(argv[0], "?load") == 0) {
+		if (argc > 1) {
+			if (pexist(argv[1]))
+				ExecLoad(argv[1]);
 			else
 				puts("File not found");
-		}
-		goto _S;
-	case "?RUN": Run; goto _S;
-	case "?V":
+		} else puts("Executable required");
+		goto END;
+	}
+	if (strcmp(argv[0], "?run") == 0) {
+		Run;
+		goto END;
+	}
+	if (strcmp(argv[0], "?v") == 0) {
 		Verbose = !Verbose;
-		printf("Verbose?: %s\n", Verbose ? "ON" : cast(char*)"OFF");
-		goto _S;
-	case "?P":
+		printf("Verbose mode: %s\n", Verbose ? "ON" : cast(char*)"OFF");
+		goto END;
+	}
+	if (strcmp(argv[0], "?p") == 0) {
 		Sleep = !Sleep;
-		printf("Sleep?: %s\n", Sleep ? "ON" : cast(char*)"OFF");
-		goto _S;
-	/*case "?DUMP":
-		//toFile(MEMORY, "MEMDUMP");
-		//puts("Memory dumped to MEMDUMP");
-		puts("TODO");
-		goto _S;*/
-	case "?R":
+		printf("Sleep mode: %s\n", Sleep ? "ON" : cast(char*)"OFF");
+		goto END;
+	}
+	if (strcmp(argv[0], "?r") == 0) {
 		printf(
 `EIP=%08X  (%04X:%04X)
 EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X
@@ -412,20 +327,13 @@ SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  SS=%04X
 		if (PF) printf(" PF");
 		if (CF) printf(" CF");
 		printf(" (%Xh)\n", FLAG);
-		goto _S;
-	case "??":
-		puts(
-`?run        Start the interpreter
-?load FILE  Load an executable file into memory
-?r          Print vm register information
-?p          Toggle performance mode
-?v          Toggle verbose mode`
-		);
-		goto _S;
-	default:
-		puts("Bad command or file name");
-		goto _S;
+		goto END;
 	}
+
+	if (argc == 0) puts("Bad command or file name");
+END:
+	free(argv);
+	goto SS;
 }
 
 /*
@@ -505,7 +413,7 @@ void Raise(ubyte code) {
 		break;
 	case 0x11: { // BIOS - Get equipement list
 		// Number of 16K banks of RAM on motherboard (PC only).
-		__gshared int ax = 0b10000; // VGA
+		int ax = 0b10000; // VGA
 		/*if (FloppyDiskInstalled) {
 			ax |= 1;
 			// Bit 6-7 = Number of floppy drives
@@ -608,7 +516,7 @@ void Raise(ubyte code) {
 		 * - ^Z is not interpreted.
 		 */
 		case 1:
-			AL = cast(ubyte)ReadKey.keyCode;
+			//AL = cast(ubyte)ReadKey.keyCode;
 			break;
 		/*
 		 * 02h - Write character to stdout.
@@ -668,7 +576,7 @@ void Raise(ubyte code) {
 		 * - ^C/^Break are not checked.
 		 */
 		case 7:
-			AL = cast(ubyte)ReadKey.keyCode;
+			//AL = cast(ubyte)ReadKey.keyCode;
 			break;
 		/*
 		 * 08h - Read character from stdin without echo.
@@ -984,29 +892,8 @@ void Raise(ubyte code) {
 		 *     directory because the path would exceed 64 characters.
 		 */
 		case 0x39: {
-			import std.file : mkdir;
-			char[] path = MemString(GetAddress(DS, DX));
-			version (Windows) {
-				import std.windows.syserror : WindowsException;
-				try {
-					mkdir(path);
-					CF = 0;
-				} catch (WindowsException) {
-					CF = 1;
-					AX = 3;
-				}
-			} else version (Posix) {
-				import std.file : FileException;
-				try {
-					mkdir(path);
-					CF = 0;
-				} catch (FileException) {
-					CF = 1;
-					AX = 3;
-				}
-			}
-		}
 			break;
+		}
 		/*
 		 * 3Ah - Remove subdirectory.
 		 * Input: DS:DX (ASCIZ path)
@@ -1018,30 +905,8 @@ void Raise(ubyte code) {
 		 * - Subdirectory must be empty.
 		 */
 		case 0x3A: {
-			import std.file : rmdir;
-			char[] path = MemString(GetAddress(DS, DX));
-			version (Windows)
-			{
-				import std.windows.syserror : WindowsException;
-				try {
-					rmdir(path);
-					CF = 0;
-				} catch (WindowsException) {
-					CF = 1;
-					AX = 3;
-				}
-			}
-			else version (Posix)
-			{
-				import std.file : FileException;
-				try {
-					rmdir(path);
-				} catch (FileException) {
-					AX = 3;
-				}
-			}
-		}
 			break;
+		}
 		/*
 		 * 3Bh - Set current directory.
 		 * Input: DS:DX (ASCIZ path (maximum 64 Bytes))
@@ -1080,29 +945,8 @@ void Raise(ubyte code) {
 		 * 0 - R = Read-only
 		 */
 		case 0x3C: {
-			import std.stdio : toFile;
-			import std.file : setAttributes;
-			enum EMPTY = cast(ubyte[])null;
-			char[] path = MemString(GetAddress(DS, DX));
-			uint at; // VOLLABEL and DIRECTORY are ignored here
-			version (Windows) // 1:1 MS-DOS<->Windows
-			{ // https://msdn.microsoft.com/en-us/library/gg258117(v=vs.85).aspx
-				if (CL & READONLY) at |= READONLY;
-				if (CL & HIDDEN)   at |= HIDDEN;
-				if (CL & SYSTEM)   at |= SYSTEM;
-				if (CL & ARCHIVE)  at |= ARCHIVE;
-			}
-			else version (Posix)
-			{ // http://pubs.opengroup.org/onlinepubs/7908799/xsh/sysstat.h.html
-				import core.sys.posix.sys.stat; // (st_mode)
-				enum WRITE = S_IWUSR | S_IWGRP | S_IWOTH,
-					 READ  = S_IRUSR | S_IRGRP | S_IROTH;
-				at = (CL & READONLY) ? READ : READ | WRITE;
-			}
-			//TODO: create file if empty
-			setAttributes(path, at);
-		}
 			break;
+		}
 		/*
 		 * 3Dh - Open file.
 		 * Input:
@@ -1196,20 +1040,6 @@ void Raise(ubyte code) {
 		 *     corruption.
 		 */
 		case 0x41: {
-			import std.file : remove, FileException;
-			char[] path = MemString(GetAddress(DS, DX));
-			try
-			{
-				remove(path);
-				CF = 0;
-				AX = 0;
-				//AL =
-			}
-			catch (FileException)
-			{
-				CF = 1;
-				AX = 2;
-			}
 			break;
 		}
 		/*
@@ -1308,8 +1138,8 @@ void Raise(ubyte code) {
 			switch (AL) {
 			case 0: // Load and execute the program.
 				char[] p = MemString(GetAddress(DS, DX));
-				if (exists(p)) {
-					ExecLoad(cast(char*)(p ~ '\0')); // temporary until better
+				if (pexist(cast(char*)p)) {
+					ExecLoad(cast(char*)p); // temporary until better
 					CF = 0;
 					return;
 				}

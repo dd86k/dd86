@@ -1,7 +1,8 @@
 module Logger;
 
 import core.stdc.stdio;
-import std.string : format;
+
+pragma(msg, "Compiling logger"); // temporary
 
 /// Log an informational message
 /// Params: msg = Message

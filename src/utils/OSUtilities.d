@@ -7,6 +7,10 @@
 
 module OSUtilities;
 
+pragma(msg, "Compiling osutils"); // temporary
+
+//TODO: File/directory walker
+
 version (Windows) {
 	private import core.sys.windows.windows;
 }
@@ -17,7 +21,7 @@ version (Windows) {
  * Returns: 0 on success
  */
 extern (C)
-int setcwd(immutable(char)* p) {
+int setcwd_dd(char* p) {
 	version (Windows) {
 		return SetCurrentDirectoryA(p) != 0;
 	}
@@ -30,17 +34,17 @@ int setcwd(immutable(char)* p) {
 /**
  * Get the process' current working directory.
  * Params: po
- * Returns: 1 on success
+ * Returns: non-zero on success
  */
 extern (C)
-int getcwd(char* p) {
+int getcwd_dd(char* p) {
+	//TODO: Fix getcwd (remake probs)
 	version (Windows) {
 		return GetCurrentDirectoryA(255, p);
 	}
 	version (Posix) {
-		//TODO: Fix getcwd usage
 		import core.sys.posix.unistd : getcwd;
-		getcwd(p, 255);
+		p = getcwd(p, 255);
 		return 1;
 	}
 }
@@ -48,34 +52,38 @@ int getcwd(char* p) {
 /**
  * Verifies if the file or directory exists from path
  * Params: p = Path
- * Returns: 0 on found
+ * Returns: 1 on found
  */
 extern (C)
-int pexist(immutable(char)* p) {
+int pexist(char* p) {
 	version (Windows) {
 		return GetFileAttributesA(p) != 0xFFFF_FFFF;
 	}
 	version (Posix) {
 		import core.sys.posix.sys.stat;
 		debug import core.stdc.stdio;
-		stat_t s;
-		stat(p, &s);
-		debug printf("mode: %X \n", s.st_mode);
-		return s.st_mode != 0;
+		__gshared stat_t s;
+		return stat(p, &s) == 0;
+		//debug printf("mode: %X \n", s.st_mode);
+		//return s.st_mode != 0;
 	}
 }
 
 /**
- * Verifies if the file or directory exists from path
- * Params: p = Path
- * Returns: 0 on found
+ * Verifies if given path is a directory
+ *
+ * Returns: not-zero on success
  */
-/*extern (C)
-int fexist(FILE* f) {
+extern (C)
+int pisdir(char* p) {
 	version (Windows) {
-		
+		return GetFileAttributesA(p) == 0x10; // FILE_ATTRIBUTE_DIRECTORY
 	}
-	version (linux) {
-
+	version (Posix) {
+		import core.sys.posix.sys.stat;
+		debug import core.stdc.stdio;
+		__gshared stat_t s;
+		stat(p, &s);
+		return S_ISDIR(s.st_mode);
 	}
-}*/
+}

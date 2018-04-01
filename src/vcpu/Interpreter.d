@@ -7,6 +7,8 @@
 
 module Interpreter;
 
+pragma(msg, "Compiling interpreter"); // temporary
+
 import core.stdc.stdlib : exit; // Temporary
 import core.stdc.stdio : printf, puts;
 import dd_dos, InterpreterUtils;
@@ -21,6 +23,12 @@ enum MAX_MEM = 0x10_0000;
 // 0x20_0000    2 MB
 
 /// Sleep for n hecto-nanoseconds
+version (D_BetterC) {
+private void HSLEEP(int n) {
+	//TODO: HSLEEP
+}
+}
+else
 pragma(inline, true) extern (C)
 private void HSLEEP(int n) {
 	import core.thread : Thread;
@@ -29,6 +37,10 @@ private void HSLEEP(int n) {
 }
 
 /// Sleep for n nanoseconds
+version (D_BetterC) {
+	//TODO: NSLEEP
+}
+else
 pragma(inline, true) extern (C)
 private void NSLEEP(int n) {
 	import core.thread : Thread;

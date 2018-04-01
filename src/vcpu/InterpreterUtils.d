@@ -4,6 +4,8 @@
 
 module InterpreterUtils;
 
+pragma(msg, "Compiling interpreterutils"); // temporary
+
 import Interpreter;
 import Logger;
 import core.stdc.stdio : printf, puts;
