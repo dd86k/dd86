@@ -4,8 +4,6 @@
 
 module dd_dos;
 
-pragma(msg, "Compiling dd-dos"); // temporary
-
 import core.stdc.stdio;
 import core.stdc.string;
 import core.stdc.stdlib : malloc, free;
@@ -66,15 +64,22 @@ enum
  *    7            wrap at end of line
  */
 
+// Temporary -betterC fix, confirmed on DMD 2.079.0
+extern (C) void putchar(int);
+//TODO: Find a way to properly reference stdout
+//      Temporary
+extern (C) FILE* stdout;
+
 enum _BUFS = 127; // ~max in MS-DOS 5.0
 
 /**
- * Argument splitter, most useful for the CLI
- * Adapted and modified from Nuke928's code
+ * CLI argument splitter, supports quoting.
+ * This function uses a malloc call.
+ * Adapted and modified from Nuke928's C code (thanks!)
  * Params:
  *   t = user input
- *   argc = arg count pointer
- * Returns: argv-like string array
+ *   argc = argument count pointer
+ * Returns: argument vector string array
  */
 extern (C)
 char** sargs(const char* t, int* argc) {
@@ -119,7 +124,7 @@ SS:
 	if (getcwd_dd(cast(char*)cwb))
 		printf("\n%s%% ", cast(char*)cwb);
 	else // The biggest just-in-case scenario
-		fprintf(stdout, "\n%% ");
+		fputs("\n%% ", stdout); //TODO: fix stdout in betterC
 
 	memset(cast(char*)inb, 0, _BUFS);
 	scanf("%s", cast(char*)inb); // R.I.P. gets ? - C99+TC3
@@ -1139,7 +1144,7 @@ void Raise(ubyte code) {
 			case 0: // Load and execute the program.
 				char[] p = MemString(GetAddress(DS, DX));
 				if (pexist(cast(char*)p)) {
-					ExecLoad(cast(char*)p); // temporary until better
+					ExecLoad(cast(char*)p);
 					CF = 0;
 					return;
 				}

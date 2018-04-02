@@ -4,8 +4,6 @@
 
 module Utilities;
 
-pragma(msg, "Compiling utils"); // temporary
-
 import Interpreter : MEMORY;
 import core.stdc.string : strlen;
 

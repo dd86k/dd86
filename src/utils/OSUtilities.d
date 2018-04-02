@@ -7,8 +7,6 @@
 
 module OSUtilities;
 
-pragma(msg, "Compiling osutils"); // temporary
-
 //TODO: File/directory walker
 
 version (Windows) {

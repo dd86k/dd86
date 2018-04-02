@@ -9,8 +9,6 @@
 
 module ddcon;
 
-pragma(msg, "Compiling ddcon"); // temporary
-
 //private import std.stdio;
 private import core.stdc.stdio;
 private alias sys = core.stdc.stdlib.system;
@@ -32,6 +30,9 @@ version (Posix) {
 	private enum TERM_ATTR = ~ICANON & ~ECHO;
 	private __gshared termios old_tio, new_tio;
 }
+
+// Temporary -betterC fix, confirmed on DMD 2.079.0
+extern (C) void putchar(int);
 
 /*******************************************************************
  * Initiation
@@ -348,7 +349,7 @@ extern (C)
 KeyInfo ReadKey(bool echo = false) {
 	__gshared KeyInfo k;
 	version (Windows) { // Sort of is like .NET's ReadKey
-		INPUT_RECORD ir;
+		__gshared INPUT_RECORD ir;
 		__gshared DWORD num;
 		if (ReadConsoleInput(hIn, &ir, 1, &num)) {
 			if (ir.KeyEvent.bKeyDown && ir.EventType == KEY_EVENT) {

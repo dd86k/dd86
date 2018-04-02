@@ -2,8 +2,6 @@ module Logger;
 
 import core.stdc.stdio;
 
-pragma(msg, "Compiling logger"); // temporary
-
 /// Log an informational message
 /// Params: msg = Message
 void log(immutable(char)* msg) {

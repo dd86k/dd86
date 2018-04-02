@@ -2,20 +2,15 @@
  * main.d: CLI entry point
  */
 
-pragma(msg, "Compiling main"); // temporary
-
 import core.stdc.stdio;
 import core.stdc.stdlib : exit;
+import core.stdc.string : strncmp;
 import dd_dos : APP_VERSION, BANNER, EnterShell;
 import Interpreter : Initiate, Verbose, Sleep, Run;
 import Loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;
-
-version (D_BetterC) {} else {
-import std.file : exists;
-import std.getopt;
-}
+import OSUtilities : pexist;
 
 debug {} else {
 	extern (C) __gshared bool
@@ -31,92 +26,104 @@ Copyright (c) 2017-2018 dd86k, using MIT license
 Project page: <https://github.com/dd86k/dd-dos>
 Compiler: ` ~ __VENDOR__ ~ " v%d\n", __VERSION__
 	);
-	exit(0); // getopt hack ;-)
+	exit(0);
 }
 
-version (D_BetterC) {
 extern (C)
-private int main(int argc, char** argv) {
-	for(__gshared size_t i; i < argc; ++i) {
-		
-	}
-	return 0;
-}
-} else {
-private int main(string[] args) {
-	__gshared string init_file;
-	__gshared bool smsg; // Startup message
-
-	//TODO: DO OUR OWN CLI
-	GetoptResult r;
-	try {
-		r = getopt(args,
-			config.caseSensitive,
-			"p|program", "Run a program directly", &init_file,
-			config.bundling, config.caseSensitive,
-			"P|perf", "Do not sleep between cycles (!)", &Sleep,
-			config.bundling, config.caseSensitive,
-			"N|nobanner", "Removes starting message and banner", &smsg,
-			config.bundling, config.caseSensitive,
-			"V|verbose", "Set verbose mode", &Verbose,
-			config.caseSensitive,
-			"v|version", "Print version screen and exit", &_version);
-	} catch (GetOptException ex) {
-		fprintf(stderr, "E: %s\n", cast(char*)ex.msg);
-		return 1;
-	}
-
-	if (r.helpWanted) {
-		puts(
+void help() {
+	puts(
 `A DOS virtual machine.
 Usage:
-  dd-dos [OPTIONS]
+  dd-dos [OPTIONS] [EXEC [EXECARGS]]
 
 OPTIONS
-  -p, --program    Run a program directly
-  -a, --args       Add arguments to -p
   -P, --perf       Do not sleep between cycles (fast!)
   -N, --nobanner   Removes starting message and banner
   -V, --verbose    Set verbose mode
   -v, --version    Print version screen and exit
   -h, --help       This help information.`
-		);
-		return 0;
+	);
+	exit(0);
+}
+
+extern (C)
+void sarg(char* a) {
+	while (*++a) {
+		switch (*a) {
+		case 'P': --Sleep; break;
+		case 'N': --banner; break;
+		case 'V': ++Verbose; break;
+		case '-': --args; break;
+		case 'h': help; break;
+		case 'v': _version; break;
+		default:
+			printf("Invalid parameter: -%c\n", *a);
+			exit(1);
+		}
+	}
+}
+
+extern (C)
+void larg(char* a) {
+	if (strncmp(a, "help", 4) == 0)
+		help;
+	if (strncmp(a, "version", 6) == 0)
+		_version;
+
+	printf("Unknown parameter: --%s\n", a);
+	exit(1);
+}
+
+private __gshared byte args = 1;
+private __gshared byte banner = 1;
+
+extern (C)
+private int main(int argc, char** argv) {
+	__gshared char* prog; // Possible program to start
+
+	while (--argc >= 1) {
+		++argv;
+		if (args) {
+			if ((*argv)[1] == '-') { // long arguments
+				larg(*argv + 2); continue;
+			} else if ((*argv)[0] == '-') { // short arguments
+				sarg(*argv); continue;
+			}
+		}
+
+		if (cast(int)prog == 0) prog = *argv;
 	}
 
-	if (!smsg)
+	if (banner)
 		puts("DD-DOS is starting...");
 
-	Sleep = !Sleep;
-	debug Verbose = !Verbose;
-
 	if (Verbose) {
-		debug log("Debug mode: ON");
-		else log("Verbose mode: ON");
+		debug
+			log("Debug mode: ON");
+		else
+			log("Verbose mode: ON");
 		if (!Sleep)
 			log("Maximum performance: ON");
 	}
 
-	InitConsole; // Initiates console screen (ddcon)
-	Initiate; // Initiates vcpu (Interpreter)
+	InitConsole;
+	Initiate;
 
-	if (!smsg)
+	if (banner)
 		puts(BANNER); // Defined in dd_dos.d
-
-	if (init_file) {
-		if (exists(init_file)) {
-			if (ExecLoad(cast(char*)(init_file ~ '\0'))) { // Temporary until betterC
-				fprintf(stderr, "E: Could not load file: %s\n", cast(char*)init_file);
+	
+	if (cast(int)prog) {
+		if (pexist(prog)) {
+			if (ExecLoad(prog)) {
+				puts("E: Could not load executable");
+				return 1;
 			}
 			Run;
 		} else {
-			puts("E: File not found or could not be loaded");
+			puts("E: File not found or loaded");
 			return 1;
 		}
-	} else {
-		EnterShell;
-	}
+	} else EnterShell;
 
 	return 0;
-}
 }

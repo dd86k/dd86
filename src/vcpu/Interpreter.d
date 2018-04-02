@@ -7,8 +7,6 @@
 
 module Interpreter;
 
-pragma(msg, "Compiling interpreter"); // temporary
-
 import core.stdc.stdlib : exit; // Temporary
 import core.stdc.stdio : printf, puts;
 import dd_dos, InterpreterUtils;
@@ -16,19 +14,18 @@ debug import Logger : logexec;
 
 /// Initial and maximum amount of memory if not specified in settings.
 enum MAX_MEM = 0x10_0000;
-// Some memory configurations
-// 0x4_0000   256 KB -- Minimal goal, apparently MS-DOS can run with tihs
-// 0xA_0000   640 KB
-// 0x10_0000    1 MB
-// 0x20_0000    2 MB
+// 0x4_0000    256K -- MS-DOS 256K minimum
+// 0xA_0000    640K
+// 0x10_0000  1024K
+// 0x20_0000  2048K
 
 /// Sleep for n hecto-nanoseconds
 version (D_BetterC) {
+extern (C)
 private void HSLEEP(int n) {
 	//TODO: HSLEEP
 }
-}
-else
+} else
 pragma(inline, true) extern (C)
 private void HSLEEP(int n) {
 	import core.thread : Thread;
@@ -38,9 +35,11 @@ private void HSLEEP(int n) {
 
 /// Sleep for n nanoseconds
 version (D_BetterC) {
+extern (C)
+private void NSLEEP(int n) {
 	//TODO: NSLEEP
 }
-else
+} else
 pragma(inline, true) extern (C)
 private void NSLEEP(int n) {
 	import core.thread : Thread;
@@ -88,13 +87,14 @@ void Run() {
 }
 
 __gshared ushort RLEVEL; /// Runnning level
+__gshared byte Sleep = 1; /// Is vcpu sleeping between cycles?
+__gshared byte Verbose = 0; /// Is Verbose mode set?
 
-__gshared bool
-Sleep, /// Is vcpu sleeping between cycles?
-Verbose; /// Is Verbose mode set?
-
-__gshared ubyte[MAX_MEM] MEMORY; /// Main memory brank
-__gshared size_t MEMORYSIZE = MAX_MEM; /// Current memory MEMORY size. Default: MAX_MEM
+/// Main memory brank
+// Currently pre-allocated until I do a setting to make that variable
+__gshared ubyte[MAX_MEM] MEMORY;
+/// Current memory MEMORY size. Default: MAX_MEM
+__gshared size_t MEMORYSIZE = MAX_MEM;
 
 /**
  * Get memory address out of a segment and a register value.
@@ -1387,10 +1387,6 @@ void Execute(ubyte op) {
 	case 0xA7: { // CMPSW DEST-STR16, SRC-STR16
 		const int t =
 			FetchWord(GetAddress(DS, SI)) - FetchWord(GetAddress(ES, DI));
-		version (unittest) {
-			printf("\n%X - %X ",
-				FetchWord(GetAddress(DS, SI)), FetchWord(GetAddress(ES, DI)));
-		}
 		//TODO: CMPSW PF
 		ZF = t == 0;
 		AF = (t & 0x10) != 0;
