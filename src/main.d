@@ -67,7 +67,7 @@ extern (C)
 void larg(char* a) {
 	if (strncmp(a, "help", 4) == 0)
 		help;
-	if (strncmp(a, "version", 6) == 0)
+	if (strncmp(a, "version", 7) == 0)
 		_version;
 
 	printf("Unknown parameter: --%s\n", a);
