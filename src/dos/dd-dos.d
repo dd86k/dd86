@@ -68,6 +68,7 @@ enum
 extern (C) void putchar(int);
 //TODO: Find a way to properly reference stdout
 //      Temporary
+__gshared
 extern (C) FILE* stdout;
 
 enum _BUFS = 127; // ~max in MS-DOS 5.0
@@ -127,7 +128,8 @@ SS:
 		fputs("\n%% ", stdout); //TODO: fix stdout in betterC
 
 	memset(cast(char*)inb, 0, _BUFS);
-	scanf("%s", cast(char*)inb); // R.I.P. gets ? - C99+TC3
+	//scanf("%s", cast(char*)inb); // R.I.P. gets ? - C99+TC3
+	gets(cast(char*)inb);
 
 	argc = 0;
 	argv = sargs(cast(char*)inb, &argc);
@@ -136,10 +138,10 @@ SS:
 
 	// C
 
-	if (strcmp(argv[0], "cd") == 0 ||
-		strcmp(argv[0], "chdir") == 0) {
+	if (strcmp(*argv, "cd") == 0 ||
+		strcmp(*argv, "chdir") == 0) {
 		if (argc > 1) {
-			if (strcmp(argv[0], "/?") == 0) {
+			if (strcmp(*argv, "/?") == 0) {
 				puts(
 `Display or set current working directory
   CD [FOLDER]
@@ -159,14 +161,14 @@ By default, CD will display the current working directory`
 		}
 		goto END;
 	}
-	if (strcmp(argv[0], "cls") == 0) {
+	if (strcmp(*argv, "cls") == 0) {
 		Clear;
 		goto END;
 	}
 
 	// D
 
-	if (strcmp(argv[0], "date") == 0) {
+	if (strcmp(*argv, "date") == 0) {
 		AH = 0x2A;
 		Raise(0x21);
 		printf("It is currently ");
@@ -186,13 +188,13 @@ By default, CD will display the current working directory`
 
 	// E
 
-	if (strcmp(argv[0], "exit") == 0) {
+	if (strcmp(*argv, "exit") == 0) {
 		return;
 	}
 
 	// H
 
-	if (strcmp(argv[0], "help") == 0) {
+	if (strcmp(*argv, "help") == 0) {
 		puts(
 `CD        Change working directory
 CLS       Clear screen
@@ -211,7 +213,7 @@ VER       Show DOS version
 
 	// M
 
-	if (strcmp(argv[0], "mem") == 0) {
+	if (strcmp(*argv, "mem") == 0) {
 		if (strcmp(argv[1], "/stats") == 0) {
 			puts("Fetching memory statistics...");
 
@@ -261,7 +263,7 @@ By default, MEM will show memory usage`
 
 	// T
 
-	if (strcmp(argv[0], "time") == 0) {
+	if (strcmp(*argv, "time") == 0) {
 		AH = 0x2C;
 		Raise(0x21);
 		printf("It is currently %02d:%02d:%02d,%02d\n", CH, CL, DH, DL);
@@ -270,7 +272,7 @@ By default, MEM will show memory usage`
 
 	// V
 
-	if (strcmp(argv[0], "ver") == 0) {
+	if (strcmp(*argv, "ver") == 0) {
 		printf("\nDD-DOS Version %s\nMS-DOS Version %d.%d\n\n",
 			cast(char*)APP_VERSION, MajorVersion, MinorVersion);
 		goto END;
@@ -278,7 +280,7 @@ By default, MEM will show memory usage`
 
 	// ? -- debugging
 
-	if (strcmp(argv[0], "??") == 0) {
+	if (strcmp(*argv, "??") == 0) {
 		puts(
 `?run        Start the interpreter
 ?load FILE  Load an executable file into memory
@@ -288,7 +290,9 @@ By default, MEM will show memory usage`
 		);
 		goto END;
 	}
-	if (strcmp(argv[0], "?load") == 0) {
+	if (strcmp(*argv, "?load") == 0) {
+		printf("args::%d\n", argc);
+		printf("arg::%s\n", argv[1]);
 		if (argc > 1) {
 			if (pexist(argv[1]))
 				ExecLoad(argv[1]);
@@ -297,21 +301,21 @@ By default, MEM will show memory usage`
 		} else puts("Executable required");
 		goto END;
 	}
-	if (strcmp(argv[0], "?run") == 0) {
+	if (strcmp(*argv, "?run") == 0) {
 		Run;
 		goto END;
 	}
-	if (strcmp(argv[0], "?v") == 0) {
+	if (strcmp(*argv, "?v") == 0) {
 		Verbose = !Verbose;
 		printf("Verbose mode: %s\n", Verbose ? "ON" : cast(char*)"OFF");
 		goto END;
 	}
-	if (strcmp(argv[0], "?p") == 0) {
+	if (strcmp(*argv, "?p") == 0) {
 		Sleep = !Sleep;
 		printf("Sleep mode: %s\n", Sleep ? "ON" : cast(char*)"OFF");
 		goto END;
 	}
-	if (strcmp(argv[0], "?r") == 0) {
+	if (strcmp(*argv, "?r") == 0) {
 		printf(
 `EIP=%08X  (%04X:%04X)
 EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X
