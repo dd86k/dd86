@@ -66,32 +66,30 @@ enum
 
 // Temporary -betterC fix, confirmed on DMD 2.079.0
 extern (C) void putchar(int);
-//TODO: Find a way to properly reference stdout
-//      Temporary
-__gshared
-extern (C) FILE* stdout;
 
 enum _BUFS = 127; // ~max in MS-DOS 5.0
 
 /**
  * CLI argument splitter, supports quoting.
  * This function uses a malloc call.
- * Adapted and modified from Nuke928's C code (thanks!)
  * Params:
  *   t = user input
  *   argc = argument count pointer
  * Returns: argument vector string array
+ * Notes: Original function by Nuke928. Modified by dd86k.
  */
 extern (C)
 char** sargs(const char* t, int* argc) {
+	if (*t == '\n') return null;
 	int j, a;
 	char** argv = cast(char**)malloc(_BUFS * size_t.sizeof); // sizeof(char *)
+	
 	size_t sl = strlen(t);
 
 	for (int i = 0; i <= sl; ++i) {
-		if (t[i] == 0 || t[i] == ' ') {
+		if (t[i] == 0 || t[i] == ' ' || t[i] == '\n') {
 			argv[a] = cast(char*)malloc(i - j + 1);
-			strncpy(argv[a], &t[j], i - j);
+			strncpy(argv[a], t + j, i - j);
 			argv[a][i - j] = 0;
 			while (t[i + 1] == ' ') ++i;
 			j = i + 1;
@@ -101,14 +99,14 @@ char** sargs(const char* t, int* argc) {
 			while (t[i] != '\"' && t[i] != 0) ++i;
 			if (t[i] == 0) continue;
 			argv[a] = cast(char*)malloc(i - j + 1);
-			strncpy(argv[a], &t[j], i - j);
+			strncpy(argv[a], t + j, i - j);
 			argv[a][i - j] = 0;
 			while(t[i + 1] == ' ') ++i;
 			j = ++i;
 			++a;
 		}
 	}
-	*argc = a;
+	*argc = --a;
 
 	return argv;
 }
@@ -122,17 +120,18 @@ void EnterShell() {
 	__gshared int argc;
 	//TODO: Print user-prompt ($PROMPT)
 SS:
-	if (getcwd_dd(cast(char*)cwb))
-		printf("\n%s%% ", cast(char*)cwb);
-	else // The biggest just-in-case scenario
-		fputs("\n%% ", stdout); //TODO: fix stdout in betterC
+	//memset(cast(char*)cwb, 0, 255);
+	//if (getcwd_dd(cast(char*)cwb))
+	//	printf("\n%s%% ", cast(char*)cwb);
+	//else // The biggest just-in-case scenario
+		fputs("\n% ", stdout);
 
-	memset(cast(char*)inb, 0, _BUFS);
-	//scanf("%s", cast(char*)inb); // R.I.P. gets ? - C99+TC3
-	gets(cast(char*)inb);
+	//memset(cast(char*)inb, 0, _BUFS);
+	fgets(cast(char*)inb, _BUFS, stdin);
 
 	argc = 0;
 	argv = sargs(cast(char*)inb, &argc);
+	if (argc == 0) goto SS;
 
 	//TODO: TREE, DIR
 
@@ -141,7 +140,7 @@ SS:
 	if (strcmp(*argv, "cd") == 0 ||
 		strcmp(*argv, "chdir") == 0) {
 		if (argc > 1) {
-			if (strcmp(*argv, "/?") == 0) {
+			if (strcmp(argv[1], "/?") == 0) {
 				puts(
 `Display or set current working directory
   CD [FOLDER]
@@ -291,8 +290,6 @@ By default, MEM will show memory usage`
 		goto END;
 	}
 	if (strcmp(*argv, "?load") == 0) {
-		printf("args::%d\n", argc);
-		printf("arg::%s\n", argv[1]);
 		if (argc > 1) {
 			if (pexist(argv[1]))
 				ExecLoad(argv[1]);
@@ -316,33 +313,47 @@ By default, MEM will show memory usage`
 		goto END;
 	}
 	if (strcmp(*argv, "?r") == 0) {
-		printf(
+		print_regs;
+		goto END;
+	}
+	if (strcmp(*argv, "?s") == 0) {
+		print_stack;
+		goto END;
+	}
+
+	if (argc > 0) puts("Bad command or file name");
+END:
+	free(argv);
+	goto SS;
+}
+
+extern (C)
+void print_regs() {
+	printf(
 `EIP=%08X  (%04X:%04X)
 EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X
 SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  SS=%04X
 `,
-			EIP, CS, IP,
-			EAX, EBX, ECX, EDX,
-			SP, BP, SI, DI, CS, DS, ES, SS
-		);
-		printf("FLAG=");
-		if (OF) printf(" OF");
-		if (DF) printf(" DF");
-		if (IF) printf(" IF");
-		if (TF) printf(" TF");
-		if (SF) printf(" SF");
-		if (ZF) printf(" ZF");
-		if (AF) printf(" AF");
-		if (PF) printf(" PF");
-		if (CF) printf(" CF");
-		printf(" (%Xh)\n", FLAG);
-		goto END;
-	}
+		EIP, CS, IP,
+		EAX, EBX, ECX, EDX,
+		SP, BP, SI, DI, CS, DS, ES, SS
+	);
+	printf("FLAG=");
+	if (OF) printf(" OF");
+	if (DF) printf(" DF");
+	if (IF) printf(" IF");
+	if (TF) printf(" TF");
+	if (SF) printf(" SF");
+	if (ZF) printf(" ZF");
+	if (AF) printf(" AF");
+	if (PF) printf(" PF");
+	if (CF) printf(" CF");
+	printf(" (%Xh)\n", FLAG);
+}
 
-	if (argc == 0) puts("Bad command or file name");
-END:
-	free(argv);
-	goto SS;
+extern (C)
+void print_stack() {
+	
 }
 
 /*
