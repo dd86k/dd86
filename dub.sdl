@@ -6,6 +6,18 @@ copyright "Copyright © dd86k 2017-2018"
 license "MIT"
 homepage "https://github.com/dd86k/dd-dos"
 
+buildType "debug" {
+  targetType "executable"
+  buildOptions "debugInfoC"
+  dflags "-betterC"
+}
+
+buildType "release" {
+  targetType "executable"
+  buildOptions "releaseMode" "noBoundsCheck" "optimize"
+  dflags "-betterC"
+}
+
 buildType "unittest" {
   targetName "tests"
   targetType "executable"
@@ -24,9 +36,4 @@ buildType "bench" {
   excludedSourceFiles "src/main.d"
   sourcePaths "bench/"
   importPaths "bench/"
-}
-
-buildType "better" { # BetterC
-  buildOptions "releaseMode" "noBoundsCheck" "optimize"
-  dflags "-betterC"
 }
