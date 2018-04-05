@@ -121,9 +121,9 @@ void EnterShell() {
 	//TODO: Print user-prompt ($PROMPT)
 SS:
 	//memset(cast(char*)cwb, 0, 255);
-	//if (getcwd_dd(cast(char*)cwb))
-	//	printf("\n%s%% ", cast(char*)cwb);
-	//else // The biggest just-in-case scenario
+	if (getcwd_dd(cast(char*)cwb))
+		printf("\n%s%% ", cast(char*)cwb);
+	else // The biggest just-in-case scenario
 		fputs("\n% ", stdout);
 
 	//memset(cast(char*)inb, 0, _BUFS);
@@ -203,9 +203,9 @@ EXIT      Exit DD-DOS or script
 TREE      Show directory structure
 TIME      Get current time
 MEM       Show memory information
-VER       Show DOS version
+VER       Show DD-DOS and MS-DOS version
 
-??        Print debugger help screen`
+??        Print debug help screen`
 		);
 		goto END;
 	}
@@ -353,7 +353,7 @@ SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  SS=%04X
 
 extern (C)
 void print_stack() {
-	
+	puts("Not implemented.");
 }
 
 /*

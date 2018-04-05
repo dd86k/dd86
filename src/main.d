@@ -4,7 +4,7 @@
 
 import core.stdc.stdio;
 import core.stdc.stdlib : exit;
-import core.stdc.string : strncmp;
+import core.stdc.string : strcmp;
 import dd_dos : APP_VERSION, BANNER, EnterShell;
 import Interpreter : Initiate, Verbose, Sleep, Run;
 import Loader : ExecLoad;
@@ -65,9 +65,9 @@ void sarg(char* a) {
 
 extern (C)
 void larg(char* a) {
-	if (strncmp(a, "help", 4) == 0)
+	if (strcmp(a, "help") == 0)
 		help;
-	if (strncmp(a, "version", 7) == 0)
+	if (strcmp(a, "version") == 0)
 		_version;
 
 	printf("Unknown parameter: --%s\n", a);

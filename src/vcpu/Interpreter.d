@@ -88,7 +88,8 @@ void Run() {
 
 __gshared ushort RLEVEL; /// Runnning level
 __gshared byte Sleep = 1; /// Is vcpu sleeping between cycles?
-__gshared byte Verbose = 0; /// Is Verbose mode set?
+debug __gshared byte Verbose = 1; /// Is Verbose mode set?
+else  __gshared byte Verbose = 0; /// Is Verbose mode set?
 
 /// Main memory brank
 // Currently pre-allocated until I do a setting to make that variable
