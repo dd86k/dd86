@@ -451,10 +451,12 @@ void Execute(ubyte op) {
 	 * MEM - Memory location
 	 * SEGREG - Segment register
 	 * 
-	 * The number represents bitness.
+	 * The number suffix represents instruction width, such as 16 represents
+	 * 16-bit immediate values.
 	 */
 	switch (op) {
-		// case 0 is temporary commented to avoid log spam while debugging
+	// case 0 is temporary commented to avoid log spam while debugging,
+	// MEMORY is usually 0-filled
 	/*case 0x00: { // ADD R/M8, REG8
 
 		return;

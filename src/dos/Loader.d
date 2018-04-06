@@ -66,10 +66,12 @@ int ExecLoad(char* path) {
 	if (fsize == 0) {
 		fclose(f);
 		if (Verbose)
-			log("File is zero length.");
+			log("File is zero length");
 		AL = 2; // Non-official
 		return 1;
 	}
+
+	int cip = GetIPAddress; // calculated CS:IP
 
 	switch (sig) {
 	case MZ_MAGIC: // Party time!
@@ -110,21 +112,21 @@ int ExecLoad(char* path) {
 			printf("[dbug] SP: %d\n", SP);
 		}
 		fseek(f, _l, SEEK_SET); // Seek to end of header
-		fread(cast(ubyte*)MEMORY + GetIPAddress, csize, 1, f); // and read the code portion
+		fread(cast(ubyte*)MEMORY + cip, csize, 1, f); // and read the code portion
 
 		// ** Read relocation table and adjust far pointers in memory
 		if (mzh.e_crlc) {
 		//TODO: Adjust pointers in memory
-			if (Verbose) printf("[INFO] Relocation: %d\n", mzh.e_crlc);
+			if (Verbose)
+				printf("[INFO] Relocation: %d\n", mzh.e_crlc);
 			fseek(f, mzh.e_lfarlc, SEEK_SET);
 			const int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
 			mz_rlc* r = cast(mz_rlc*)malloc(rs); /// Relocation table
-			fread(cast(void*)r, rs, 1, f); // Read whole table
+			fread(r, rs, 1, f); // Read whole table
 			if (Verbose)
 				puts(" #   seg: off -> data");
-			const uint ip = GetIPAddress;
 			for (int i; i < mzh.e_crlc; ++i) {
-				const ushort data = FetchWord(ip + (r[i].seg << 4) + r[i].off);
+				const ushort data = FetchWord(cip + (r[i].seg << 4) + r[i].off);
 				if (Verbose)
 					printf("%2d  %04X:%04X -> %04X\n", i, r[i].seg, r[i].off, data);
 				CS += cast(ushort)(CS + r[i].seg); // temporarily cheat
@@ -159,16 +161,16 @@ int ExecLoad(char* path) {
 		if (fsize > 0xFF00) { // Size - PSP
 			fclose(f);
 			if (Verbose)
-				log("COM file too large");
+				error("COM file too large");
 			AL = E_BAD_FORMAT;
 			return 1;
 		}
 		if (Verbose)
 			log("LOAD COM");
-		CS = 0; EIP = 0x100; // Temporary
+
 		fseek(f, 0, SEEK_SET);
-		ubyte* _comp = cast(ubyte*)MEMORY + GetIPAddress;
-		fread(_comp, fsize, 1, f);
+		ubyte* c = cast(ubyte*)MEMORY + cip;
+		fread(c, fsize, 1, f);
 
 		//MakePSP(_comp - 0x100, "TEST");
 		AL = 0;

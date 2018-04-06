@@ -320,6 +320,10 @@ By default, MEM will show memory usage`
 		print_stack;
 		goto END;
 	}
+	if (strcmp(*argv, "?panic") == 0) {
+		panic("MANUAL PANIC");
+		goto END;
+	}
 
 	if (argc > 0) puts("Bad command or file name");
 END:
@@ -353,7 +357,26 @@ SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  SS=%04X
 
 extern (C)
 void print_stack() {
-	puts("Not implemented.");
+	puts("print_stack::Not implemented.");
+}
+
+extern (C)
+void panic(immutable(char)* r = null) {
+	enum RANGE = 20;
+
+	if (r) printf("\n[ !! ] PANIC: %s\n\n", r);
+	print_regs;
+	//print_stack;
+	printf("CODE:");
+	__gshared size_t i = RANGE;
+	ubyte* p = cast(ubyte*)MEMORY + GetIPAddress - 4;
+	while (--i) {
+		if (i == (RANGE - 5))
+			printf(" {%02x}", *p);
+		else
+			printf(" %02x", *p);
+		++p;
+	}
 }
 
 /*

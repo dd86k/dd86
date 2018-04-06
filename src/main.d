@@ -111,7 +111,7 @@ private int main(int argc, char** argv) {
 
 	if (banner)
 		puts(BANNER); // Defined in dd_dos.d
-	
+
 	if (cast(int)prog) {
 		if (pexist(prog)) {
 			if (ExecLoad(prog)) {
