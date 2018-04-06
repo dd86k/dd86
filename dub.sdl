@@ -8,7 +8,7 @@ homepage "https://github.com/dd86k/dd-dos"
 
 buildType "debug" {
   targetType "executable"
-  buildOptions "debugInfoC"
+  buildOptions "debugMode" "debugInfoC"
   dflags "-betterC"
 }
 
