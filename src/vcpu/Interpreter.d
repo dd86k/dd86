@@ -20,38 +20,20 @@ enum MAX_MEM = 0x10_0000;
 // 0x20_0000  2048K
 
 /// Sleep for n hecto-nanoseconds
-version (D_BetterC) {
 extern (C)
 private void HSLEEP(int n) {
 	//TODO: HSLEEP
 }
-} else
-pragma(inline, true) extern (C)
-private void HSLEEP(int n) {
-	import core.thread : Thread;
-	import core.time : hnsecs;
-	Thread.sleep(hnsecs(n));
-}
 
 /// Sleep for n nanoseconds
-version (D_BetterC) {
 extern (C)
 private void NSLEEP(int n) {
 	//TODO: NSLEEP
-}
-} else
-pragma(inline, true) extern (C)
-private void NSLEEP(int n) {
-	import core.thread : Thread;
-	import core.time : nsecs;
-	Thread.sleep(nsecs(n));
 }
 
 /// Initiate machine (memory, etc.)
 extern (C)
 void Initiate() {
-	CS = 0xFFFF;
-
 	IPp = cast(ushort*)&EIP;
 
 	AXp = cast(ushort*)&EAX;
@@ -68,6 +50,8 @@ void Initiate() {
 	BLp = cast(ubyte*)BXp;
 	CLp = cast(ubyte*)CXp;
 	DLp = cast(ubyte*)DXp;
+
+	IP = 0x100; // Temporary
 
 	//TODO: Probably do a FAR JMP to "BIOS" or something else
 }
@@ -470,10 +454,11 @@ void Execute(ubyte op) {
 	 * The number represents bitness.
 	 */
 	switch (op) {
-	case 0x00: { // ADD R/M8, REG8
+		// case 0 is temporary commented to avoid log spam while debugging
+	/*case 0x00: { // ADD R/M8, REG8
 
 		return;
-	}
+	}*/
 	case 0x01: { // ADD R/M16, REG16
 		const ubyte rm = FetchImmByte;
 		const uint addr = GetEA(rm);
@@ -639,15 +624,15 @@ void Execute(ubyte op) {
 		if (CF) --t;
 		AL = t;
 		EIP += 2;
-	}
 		return;
+	}
 	case 0x1D: { // SBB AX, IMM16
 		int t = AX - FetchImmByte;
 		if (CF) --t;
 		AX = t;
 		EIP += 3;
-	}
 		return;
+	}
 	case 0x1E: // PUSH DS
 		Push(DS);
 		++EIP;
@@ -683,25 +668,22 @@ void Execute(ubyte op) {
 	case 0x27: { // DAA
 		const ubyte oldAL = AL;
 		const bool oldCF = CF;
-		CF = false;
+		CF = 0;
 
-		if (((oldAL & 0xF) > 9) || AF)
-		{
+		if (((oldAL & 0xF) > 9) || AF) {
 			AL = AL + 6;
 			CF = oldCF || (AL & 0x80);
-			AF = true;
-		}
-		else AF = false;
+			AF = 1;
+		} else AF = 0;
 
-		if ((oldAL > 0x99) || oldCF)
-		{
+		if ((oldAL > 0x99) || oldCF) {
 			AL = AL + 0x60;
-			CF = true;
-		}
-		else CF = false;
+			CF = 1;
+		} else CF = 0;
+
 		++EIP;
-	}
 		return;
+	}
 	case 0x28: // SUB R/M8, REG8
 
 		return;
@@ -729,25 +711,22 @@ void Execute(ubyte op) {
 	case 0x2F: { // DAS
 		const ubyte oldAL = AL;
 		const bool oldCF = CF;
-		CF = false;
+		CF = 0;
 
-		if (((oldAL & 0xF) > 9) || AF)
-		{
+		if (((oldAL & 0xF) > 9) || AF) {
 			AL = AL - 6;
 			CF = oldCF || (AL & 0b10000000);
-			AF = true;
-		}
-		else AF = false;
+			AF = 1;
+		} else AF = 0;
 
-		if ((oldAL > 0x99) || oldCF)
-		{
+		if ((oldAL > 0x99) || oldCF) {
 			AL = AL - 0x60;
-			CF = true;
-		}
-		else CF = false;
+			CF = 1;
+		} else CF = 0;
+
 		++EIP;
-	}
 		return;
+	}
 	case 0x30: // XOR R/M8, REG8
 
 		return;
@@ -773,12 +752,10 @@ void Execute(ubyte op) {
 		++EIP;
 		return;
 	case 0x37: // AAA
-		if (((AL & 0xF) > 9) || AF)
-		{
+		if (((AL & 0xF) > 9) || AF) {
 			AX = AX + 0x106;
-			AF = CF = true;
-		}
-		else AF = CF = false;
+			AF = CF = 1;
+		} else AF = CF = 0;
 		AL = AL & 0xF;
 		++EIP;
 		return;
@@ -825,9 +802,9 @@ void Execute(ubyte op) {
 		if (((AL & 0xF) > 9) || AF) {
 			AX = AX - 6;
 			AH = AH - 1;
-			AF = CF = true;
+			AF = CF = 1;
 		} else {
-			AF = CF = false;
+			AF = CF = 0;
 		}
 		AL = AL & 0xF;
 		++EIP;
@@ -841,8 +818,8 @@ void Execute(ubyte op) {
 		//OF =
 		AX = r;
 		++EIP;
-	}
 		return;
+	}
 	case 0x41: // INC CX
 		CX = CX + 1;
 		++EIP;
@@ -1942,11 +1919,9 @@ _F2_CX:
 		}*/
 		break;
 	default: // Illegal instruction
-		if (Verbose)
-			printf("[WARN] ILLEGAL: %d", op);
 		//TODO: Raise vector on illegal op
 		
-		++EIP; // ??
+		panic("INVALID OPERATION CODE");
 
 		exit(0); // Temporary
 		return;
