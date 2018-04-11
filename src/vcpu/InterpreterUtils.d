@@ -11,10 +11,11 @@ import core.stdc.string : memcpy, strcpy;
 import core.stdc.wchar_ : wchar_t, wcscpy;
 
 /**
- * Get effective address from R/M byte, mostly usefull for R/M bits.
+ * Get effective address from a R/M byte.
  * Takes account of the preferred segment register.
  * Params: rm = R/M BYTE
  * Returns: Effective Address
+ * Notes: Uses MOD and RM fields.
  */
 extern (C)
 uint GetEA(ubyte rm) {
@@ -68,7 +69,48 @@ uint GetEA(ubyte rm) {
 		EIP += 1;
 		break; // MOD 01
 	case RM_MOD_10: // MOD 10, Memory Mode, 16-bit displacement follows
-		debug puts("EA:2:_");
+		switch (Seg) {
+		case SEG_CS:
+			debug puts("MOD_10, GetEA::SEG_CS");
+			break;
+		case SEG_DS:
+			debug puts("MOD_10, GetEA::SEG_DS");
+			break;
+		case SEG_ES:
+			debug puts("MOD_10, GetEA::SEG_ES");
+			break;
+		case SEG_SS:
+			debug puts("MOD_10, GetEA::SEG_SS");
+			break;
+		default:
+			switch (rm & RM_RM) { // R/M
+			case 0:
+				debug puts("EA:2:0");
+				return SI + BX + FetchImmWord(1);
+			case RM_RM_001:
+				debug puts("EA:2:1");
+				return DI + BX + FetchImmWord(1);
+			case RM_RM_010:
+				debug puts("EA:2:2");
+				return SI + BP + FetchImmWord(1);
+			case RM_RM_011:
+				debug puts("EA:2:3");
+				return DI + BP + FetchImmWord(1);
+			case RM_RM_100:
+				debug puts("EA:2:4");
+				return SI + FetchImmWord(1);
+			case RM_RM_101:
+				debug puts("EA:2:5");
+				return DI + FetchImmWord(1);
+			case RM_RM_110:
+				debug puts("EA:2:6");
+				return BP + FetchImmWord(1);
+			case RM_RM_111:
+				debug puts("EA:2:7");
+				return BX + FetchImmWord(1);
+			default:
+			}
+		}
 		EIP += 2;
 		break; // MOD 10
 	case RM_MOD_11: // MOD 11, Register Mode
@@ -180,8 +222,8 @@ void InsertByte(ubyte op, int addr) {
  *   addr = Memory address
  */
 extern (C)
-void InsertWord(int op, int addr) { // int promotion ;-)
-	*cast(ushort*)(cast(void*)MEMORY + addr) = cast(ushort)op;
+void InsertWord(int data, int addr) { // int promotion ;-)
+	*cast(ushort*)(cast(void*)MEMORY + addr) = cast(ushort)data;
 }
 /**
  * Insert a DWORD in memory.

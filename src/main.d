@@ -6,7 +6,7 @@ import core.stdc.stdio;
 import core.stdc.stdlib : exit;
 import core.stdc.string : strcmp;
 import dd_dos : APP_VERSION, BANNER, EnterShell;
-import Interpreter : Initiate, Verbose, Sleep, Run;
+import Interpreter : Initiate, Verbose, CpuSleep, Run;
 import Loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;
@@ -50,7 +50,7 @@ extern (C)
 void sarg(char* a) {
 	while (*++a) {
 		switch (*a) {
-		case 'P': --Sleep; break;
+		case 'P': --CpuSleep; break;
 		case 'N': --banner; break;
 		case 'V': ++Verbose; break;
 		case '-': --args; break;
@@ -102,7 +102,7 @@ private int main(int argc, char** argv) {
 			log("Debug mode: ON");
 		else
 			log("Verbose mode: ON");
-		if (!Sleep)
+		if (!CpuSleep)
 			log("Maximum performance: ON");
 	}
 

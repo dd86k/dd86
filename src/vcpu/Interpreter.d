@@ -19,18 +19,6 @@ enum MAX_MEM = 0x10_0000;
 // 0x10_0000  1024K
 // 0x20_0000  2048K
 
-/// Sleep for n hecto-nanoseconds
-extern (C)
-private void HSLEEP(int n) {
-	//TODO: HSLEEP
-}
-
-/// Sleep for n nanoseconds
-extern (C)
-private void NSLEEP(int n) {
-	//TODO: NSLEEP
-}
-
 /// Initiate machine (memory, etc.)
 extern (C)
 void Initiate() {
@@ -59,23 +47,31 @@ void Initiate() {
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
 void Run() {
-	if (Verbose) puts("[INFO] Interpreter::Run");
-	++RLEVEL;
+	if (Verbose)
+		puts("[INFO] Interpreter::Run");
+
 	while (RLEVEL) {
 		EIP = GetIPAddress;
 		debug logexec(CS, IP, MEMORY[EIP]);
 		Execute(MEMORY[EIP]);
-		Seg = SEG_NONE; // Reset SEG PREFERENCE after instruction
-		if (Sleep) HSLEEP(2); // Intel 8086@~5MHz
+		//if (CpuSleep) SLEEP(1);
 	}
 }
 
-__gshared ushort RLEVEL; /// Runnning level
-__gshared byte Sleep = 1; /// Is vcpu sleeping between cycles?
-debug __gshared byte Verbose = 1; /// Is Verbose mode set?
-else  __gshared byte Verbose = 0; /// Is Verbose mode set?
+/**
+ * Runnning level. Used to determine the "level of execution", such as the
+ * "deepness" of a program. When a program terminates, its RLEVEL is decreased.
+ * If RLEVEL reaches 0, the emulator either stops, or returns to the virtual
+ * shell. Starts at 1.
+ * tl;dr: Emulates CALL deep-ness.
+ */
+__gshared short RLEVEL = 1;
+__gshared byte CpuSleep = 1; /// Is vcpu CpuSleeping between cycles?
+/// Is Verbose mode set?
+debug __gshared byte Verbose = 1;
+else  __gshared byte Verbose = 0;
 
-/// Main memory brank
+/// Main memory brank. MEMORYSIZE's default: MAX_MEM
 // Currently pre-allocated until I do a setting to make that variable
 __gshared ubyte[MAX_MEM] MEMORY;
 /// Current memory MEMORY size. Default: MAX_MEM
@@ -121,8 +117,8 @@ void FullReset() {
 
 /// Generic register
 __gshared uint EAX, EBX, ECX, EDX;
-private __gshared ubyte* ALp, BLp, CLp, DLp;
 private __gshared ushort* AXp, BXp, CXp, DXp;
+private __gshared ubyte* ALp, BLp, CLp, DLp;
 
 /*
  * Register properties.
@@ -298,7 +294,7 @@ private enum : ushort {
 	// i486
 }
 
-__gshared bool
+__gshared ubyte
 OF, /// Bit 11, Overflow Flag
 DF, /// Bit 10, Direction Flag
 IF, /// Bit  9, Interrupt Enable Flag
@@ -308,6 +304,30 @@ ZF, /// Bit  6, Zero Flag
 AF, /// Bit  4, Auxiliary Carry Flag (aka Adjust Flag)
 PF, /// Bit  2, Parity Flag
 CF; /// Bit  0, Carry Flag
+
+/**
+ * Get FLAG as WORD.
+ * Returns: FLAG as byte
+ */
+@property ubyte FLAGB() {
+	ubyte b;
+	if (SF) b |= MASK_SF;
+	if (ZF) b |= MASK_ZF;
+	if (AF) b |= MASK_AF;
+	if (PF) b |= MASK_PF;
+	if (CF) b |= MASK_CF;
+	return b;
+}
+
+/// Set FLAG as BYTE.
+/// Params: flag = FLAG byte
+@property void FLAGB(ubyte flag) {
+	SF = flag & MASK_SF;
+	ZF = flag & MASK_ZF;
+	AF = flag & MASK_AF;
+	PF = flag & MASK_PF;
+	CF = flag & MASK_CF;
+}
 
 enum : ubyte {
 	RM_MOD_00 = 0,   /// MOD 00, Memory Mode, no displacement
@@ -378,30 +398,6 @@ uint EPop() {
 
 /**
  * Get FLAG as WORD.
- * Returns: FLAG as byte
- */
-@property ubyte FLAGB() {
-	ubyte b;
-	if (SF) b |= MASK_SF;
-	if (ZF) b |= MASK_ZF;
-	if (AF) b |= MASK_AF;
-	if (PF) b |= MASK_PF;
-	if (CF) b |= MASK_CF;
-	return b;
-}
-
-/// Set FLAG as BYTE.
-/// Params: flag = FLAG byte
-@property void FLAGB(ubyte flag) {
-	SF = (flag & MASK_SF) != 0;
-	ZF = (flag & MASK_ZF) != 0;
-	AF = (flag & MASK_AF) != 0;
-	PF = (flag & MASK_PF) != 0;
-	CF = (flag & MASK_CF) != 0;
-}
-
-/**
- * Get FLAG as WORD.
  * Returns: FLAG (WORD)
  */
 @property ushort FLAG() {
@@ -455,12 +451,11 @@ void Execute(ubyte op) {
 	 * 16-bit immediate values.
 	 */
 	switch (op) {
-	// case 0 is temporary commented to avoid log spam while debugging,
-	// MEMORY is usually 0-filled
-	/*case 0x00: { // ADD R/M8, REG8
+	case 0x00: { // ADD R/M8, REG8
 
+		++EIP; // Temporary
 		return;
-	}*/
+	}
 	case 0x01: { // ADD R/M16, REG16
 		const ubyte rm = FetchImmByte;
 		const uint addr = GetEA(rm);
@@ -646,9 +641,39 @@ void Execute(ubyte op) {
 	case 0x20: // AND R/M8, REG8
 
 		return;
-	case 0x21: // AND R/M16, REG16
+	case 0x21: { // AND R/M16, REG16
+		const ubyte rm = FetchImmByte;
+		const int ea = GetEA(rm);
+		switch (rm & RM_MOD) {
+		case RM_MOD_00:
 
+			break;
+		case RM_MOD_01:
+
+			break;
+		case RM_MOD_10:
+			switch (rm & RM_REG) {
+			
+			case RM_REG_001: // CX
+				switch (rm & RM_RM) {
+				case RM_RM_011: // 
+					
+					break;
+				default:
+				}
+				break;
+
+			default:
+			}
+			break;
+		case RM_MOD_11:
+
+			break;
+		default:
+		}
+		EIP += 2;
 		return;
+	}
 	case 0x22: // AND REG8, R/M8
 
 		return;
@@ -669,7 +694,7 @@ void Execute(ubyte op) {
 		return;
 	case 0x27: { // DAA
 		const ubyte oldAL = AL;
-		const bool oldCF = CF;
+		const ubyte oldCF = CF;
 		CF = 0;
 
 		if (((oldAL & 0xF) > 9) || AF) {
@@ -712,12 +737,12 @@ void Execute(ubyte op) {
 		return;
 	case 0x2F: { // DAS
 		const ubyte oldAL = AL;
-		const bool oldCF = CF;
+		const ubyte oldCF = CF;
 		CF = 0;
 
 		if (((oldAL & 0xF) > 9) || AF) {
 			AL = AL - 6;
-			CF = oldCF || (AL & 0b10000000);
+			CF = oldCF || (AL & 0x80);
 			AF = 1;
 		} else AF = 0;
 
@@ -774,7 +799,7 @@ void Execute(ubyte op) {
 
 		return;
 	case 0x3C: { // CMP AL, IMM8
-		const ubyte b = FetchByte(GetIPAddress);
+		const ubyte b = FetchImmByte;
 		const int r = AL - b;
 		CF = SF = (r & 0x80) != 0;
 		OF = r < 0;
@@ -785,7 +810,7 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x3D: { // CMP AX, IMM16
-		const ushort w = FetchWord(GetIPAddress);
+		const ushort w = FetchImmWord;
 		const int r = AL - w;
 		SF = (r & 0x8000) != 0;
 		OF = r < 0;
@@ -1073,7 +1098,7 @@ void Execute(ubyte op) {
 	case 0x83: // GRP2 R/M16, IMM16
 		const ubyte rm = FetchImmByte; // Get ModR/M byte
 		const ushort im = FetchImmWord(2);
-		switch (rm & 0b111_000) { // ModRM REG
+		switch (rm & RM_REG) { // ModRM REG
 		case 0b000_000: // 000 - ADD
 
 			break;
@@ -1112,34 +1137,36 @@ void Execute(ubyte op) {
 		EIP += 2;
 		return;
 	}
-	case 0x89: { // MOV R/M16, REG16
+	case 0x89: { // MOV R/M16, REG16 (I, MODR/M, [LOW], [HIGH])
 		const ubyte rm = FetchImmByte;
-		switch (rm & 0b1100_0000) {
+		//const ushort imm = FetchImmWord(1);
+		const int addr = GetEA(rm);
+		switch (rm & RM_MOD) {
 		case RM_MOD_00:
-			switch (rm & 0b111_000) {
+			switch (rm & RM_REG) {
 			case RM_REG_000: // AX
-				InsertWord(AX, GetEA(rm));
+				InsertWord(AX, addr);
 				break;
 			case RM_REG_001: // CX
-				InsertWord(CX, GetEA(rm));
+				InsertWord(CX, addr);
 				break;
 			case RM_REG_010: // DX
-				InsertWord(DX, GetEA(rm));
+				InsertWord(DX, addr);
 				break;
 			case RM_REG_011: // BX
-				InsertWord(BX, GetEA(rm));
+				InsertWord(BX, addr);
 				break;
 			case RM_REG_100: // SP
-				InsertWord(SP, GetEA(rm));
+				InsertWord(SP, addr);
 				break;
 			case RM_REG_101: // BP
-				InsertWord(BP, GetEA(rm));
+				InsertWord(BP, addr);
 				break;
 			case RM_REG_110: // SI
-				InsertWord(SI, GetEA(rm));
+				InsertWord(SI, addr);
 				break;
 			case RM_REG_111: // DI
-				InsertWord(DI, GetEA(rm));
+				InsertWord(DI, addr);
 				break;
 			default:
 			}
@@ -1150,10 +1177,11 @@ void Execute(ubyte op) {
 			break; // MOD 01
 		case RM_MOD_10:
 
+			debug puts("89h MOD 10");
 			EIP += 2;
 			break; // MOD 10
 		case RM_MOD_11:
-			switch (rm & 0b111_000) {
+			switch (rm & RM_REG) {
 			/*case 0: AX =  break;
 			case 0b00_1000: CX =  break;
 			case 0b01_0000: DX =  break;
@@ -1192,20 +1220,20 @@ void Execute(ubyte op) {
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 		const byte rm = FetchImmByte;
 		const int ea = GetEA(rm);
-		switch (rm & 24) { // 00 011 000
-		case 0: // ES
+		switch (rm & RM_REG) { // if bit 10_0000 is clear, trip to default
+		case RM_REG_100: // ES
 			InsertWord(ES, ea);
 			break;
-		case 8: // CS
+		case RM_REG_101: // CS
 			InsertWord(CS, ea);
 			break;
-		case 16: // SS
+		case RM_REG_110: // SS
 			InsertWord(SS, ea);
 			break;
-		case 24: // DS
+		case RM_REG_111: // DS
 			InsertWord(DS, ea);
 			break;
-		default:
+		default: //TODO: #GP(0) ✧(≖ ◡ ≖✿)
 		}
 		EIP += 2;
 		return;
@@ -1214,9 +1242,25 @@ void Execute(ubyte op) {
 
 		return;
 	case 0x8E: // MOV SEGREG, R/M16
-		// MOD 0SR R/M
-		// SR: 00=ES, 01=CS, 10=SS, 11=DS
-
+		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
+		const byte rm = FetchImmByte;
+		const int ea = GetEA(rm);
+		switch (rm & RM_REG) { // if bit 10_0000 is clear, trip to default
+		case RM_REG_100: // ES
+			ES = FetchWord(ea);
+			break;
+		case RM_REG_101: // CS
+			CS = FetchWord(ea);
+			break;
+		case RM_REG_110: // SS
+			SS = FetchWord(ea);
+			break;
+		case RM_REG_111: // DS
+			DS = FetchWord(ea);
+			break;
+		default: //TODO: #GP(0) ✧(≖ ◡ ≖✿)
+		}
+		EIP += 2;
 		return;
 	case 0x8F: { // POP R/M16
 		const byte rm = FetchImmByte;

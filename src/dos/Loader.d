@@ -11,13 +11,13 @@ import Codes;
 
 private enum ERESWDS = 16; /// RESERVED WORDS
 
-/// MS-DOS EXE header
+/// MS-DOS EXE header (Introduced in MS-DOS 2.0)
 private struct mz_hdr { align(1): // Necessary fields included
 //	ushort e_magic;        /// Magic number, "MZ"
 	ushort e_cblp;         /// Bytes on last page of file (extra bytes), 9 bits
 	ushort e_cp;           /// Pages in file
 	ushort e_crlc;         /// Number of relocation entries
-	ushort e_cparh;        /// Size of header in paragraphs
+	ushort e_cparh;        /// Size of header in paragraphs (usually 32 (512B))
 	ushort e_minalloc;     /// Minimum extra paragraphs needed
 	ushort e_maxalloc;     /// Maximum extra paragraphs needed
 	ushort e_ss;           /// Initial (relative) SS value
@@ -27,8 +27,8 @@ private struct mz_hdr { align(1): // Necessary fields included
 	ushort e_cs;           /// Initial (relative) CS value
 	ushort e_lfarlc;       /// File address (byte offset) of relocation table
 	ushort e_ovno;         /// Overlay number
-//	ushort[ERESWDS] e_res; /// Reserved words
-//	uint   e_lfanew;       /// File address of new exe header
+	ushort[ERESWDS] e_res; /// Reserved words
+	uint   e_lfanew;       /// File address of new exe header
 }
 
 private struct mz_rlc { align(1): // For AL=03h
@@ -40,8 +40,9 @@ private struct mz_rlc { align(1): // For AL=03h
 private enum MZ_MAGIC = 0x5A4D;
 
 private enum {
-	PARAGRAPH = 16, /// Size of a paragraph
-	PAGE = 512, /// Size of a page
+	PARAGRAPH = 16, /// Size of a paragraph (16B)
+	PAGE = 512, /// Size of a page (512B)
+	SEG_SIZE = 64 * 1024, /// i8086 maximum code size
 }
 
 /**
@@ -51,6 +52,7 @@ private enum {
  *   path = Path to executable
  *   args = Executable arguments
  * Returns: 0 if successfully loaded
+ * Notes: Refer to EXEC2BIN.ASM from MS-DOS 2.0 for details, at EXELOAD.
  */
 int ExecLoad(char* path) {
 	FILE* f = fopen(path, "rb");
@@ -93,13 +95,18 @@ int ExecLoad(char* path) {
 			if (Verbose)
 				log("LOAD HIGH MEM");
 		}
-		const uint _h = mzh.e_cparh * PARAGRAPH; // Header size
+		const uint _h = mzh.e_cparh * PARAGRAPH; /// Header size
 		const uint _l = _h + (mz_rlc.sizeof * mzh.e_crlc); // image code offset
 		uint csize = (mzh.e_cp * PAGE) - _h; // image code size
 		if (mzh.e_cblp) // Adjust csize for last bytes in page
 			csize -= PAGE - mzh.e_cblp;
-		if (_h + csize < PAGE) // This snippet was found in DOSBox
-			csize = PAGE - _h;
+		if (csize >= SEG_SIZE) {
+			if (Verbose)
+				error("Executable code size too big (>64K)");
+			return -1; // TOOBIG
+		}
+		//TODO: Binary fix on IP=0
+
 		debug {
 			printf("[dbug] _H::%d\n", _h);
 			printf("[dbug] _L::%d\n", _l);
@@ -111,11 +118,11 @@ int ExecLoad(char* path) {
 			printf("[dbug] SS: %d\n", SS);
 			printf("[dbug] SP: %d\n", SP);
 		}
-		fseek(f, _l, SEEK_SET); // Seek to end of header
-		fread(cast(ubyte*)MEMORY + cip, csize, 1, f); // and read the code portion
+		fseek(f, _h, SEEK_SET); // Seek to end of header
+		fread(cast(ubyte*)MEMORY + cip, csize, 1, f); // read code into MEMORY
 
 		// ** Read relocation table and adjust far pointers in memory
-		if (mzh.e_crlc) {
+		/+if (mzh.e_crlc) {
 		//TODO: Adjust pointers in memory
 			if (Verbose)
 				printf("[INFO] Relocation: %d\n", mzh.e_crlc);
@@ -138,7 +145,7 @@ int ExecLoad(char* path) {
 			EIP += 0x100; // temporary
 			if (Verbose)
 				log("No relocations");
-		}
+		}+/
 
 		// ** Setup registers
 		// AL      drive letter
@@ -155,7 +162,7 @@ int ExecLoad(char* path) {
 		//MakePSP(GetIPAddress, "test");
 
 		// ** Jump to CS:IP+0x0100, relative to start of program
-		//EIP += 0x100;
+		EIP += 0x100;
 		break; // case MZ
 	default:
 		if (fsize > 0xFF00) { // Size - PSP
