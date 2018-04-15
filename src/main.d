@@ -12,12 +12,6 @@ import Logger;
 import ddcon : InitConsole;
 import OSUtilities : pexist;
 
-debug {} else {
-	extern (C) __gshared bool
-		rt_envvars_enabled, /// Disable runtime environment variables
-		rt_cmdline_enabled; /// Disable runtime command-line (--DRT-gcopt)
-}
-
 extern (C)
 private void _version() {
 	printf(
