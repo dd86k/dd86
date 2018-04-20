@@ -18,6 +18,22 @@ debug pragma(msg, `
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
+version(CRuntime_Bionic) {
+	pragma(msg, "Using Bionic C Runtime");
+} else version(CRuntime_DigitalMars) {
+	pragma(msg, "Using DigitalMars C Runtime");
+} else version(CRuntime_Glibc) {
+	pragma(msg, "Using Glibc C Runtime");
+} else version(CRuntime_Microsoft) {
+	pragma(msg, "Using Microsoft C Runtime");
+} else version(CRuntime_Musl) {
+	pragma(msg, "Using musl C Runtime");
+} else version(CRuntime_UClibc) {
+	pragma(msg, "Using uClibc C Runtime");
+} else {
+	pragma(msg, "Runtime: Unknown (You better watch out!)");
+}
+
 
 enum APP_VERSION = "0.0.0-0"; /// Application version
 
@@ -64,8 +80,9 @@ enum
  *    7            wrap at end of line
  */
 
-// Temporary -betterC fix, confirmed on DMD 2.079.0
-extern (C) void putchar(int);
+// Temporary -betterC fix, confirmed on DMD 2.079.0+ (Windows)
+// putchar is extern (D) for some stupid reason
+version (Windows) extern (C) void putchar(int);
 
 enum _BUFS = 127; // ~max in MS-DOS 5.0
 
@@ -112,7 +129,7 @@ char** sargs(const char* t, int* argc) {
 }
 
 /// Enter internal shell
-extern (C)
+extern (C) __gshared
 void EnterShell() {
 	__gshared char[255] cwb; // internal current working directory buffer
 	__gshared char[_BUFS] inb; // internal input buffer

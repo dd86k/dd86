@@ -9,7 +9,6 @@
 
 module ddcon;
 
-//private import std.stdio;
 private import core.stdc.stdio;
 private alias sys = core.stdc.stdlib.system;
 
@@ -31,8 +30,9 @@ version (Posix) {
 	private __gshared termios old_tio, new_tio;
 }
 
-// Temporary -betterC fix, confirmed on DMD 2.079.0
-extern (C) void putchar(int);
+// Temporary -betterC fix, confirmed on DMD 2.079.0+ (Windows)
+// putchar is extern (D) for some stupid reason
+version (Windows) extern (C) void putchar(int);
 
 /*******************************************************************
  * Initiation
@@ -347,7 +347,7 @@ void SetPos(int x, int y) {
  */
 extern (C)
 KeyInfo ReadKey(bool echo = false) {
-	__gshared KeyInfo k;
+	KeyInfo k;
 	version (Windows) { // Sort of is like .NET's ReadKey
 		__gshared INPUT_RECORD ir;
 		__gshared DWORD num;

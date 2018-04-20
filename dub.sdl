@@ -9,7 +9,7 @@ homepage "https://github.com/dd86k/dd-dos"
 buildType "debug" {
   targetType "executable"
   buildOptions "debugMode" "debugInfoC"
-  dflags "-betterC" "-gc"
+  dflags "-betterC"
 }
 
 buildType "release" {
