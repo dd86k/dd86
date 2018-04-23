@@ -18,7 +18,8 @@ private void _version() {
 `dd-dos v` ~ APP_VERSION ~ `  (` ~ __TIMESTAMP__ ~ `)
 Copyright (c) 2017-2018 dd86k, using MIT license
 Project page: <https://github.com/dd86k/dd-dos>
-Compiler: ` ~ __VENDOR__ ~ " v%d\n", __VERSION__
+Compiler: ` ~ __VENDOR__ ~ " v%d\n",
+	__VERSION__
 	);
 	exit(0);
 }
@@ -26,7 +27,7 @@ Compiler: ` ~ __VENDOR__ ~ " v%d\n", __VERSION__
 extern (C)
 void help() {
 	puts(
-`A DOS virtual machine.
+`A DOS virtual machine
 Usage:
   dd-dos [OPTIONS] [EXEC [EXECARGS]]
 
@@ -100,8 +101,8 @@ private int main(int argc, char** argv) {
 			log("Maximum performance: ON");
 	}
 
-	InitConsole;
-	Initiate;
+	InitConsole; // ddcon
+	Initiate; // dd-dos
 
 	if (banner)
 		puts(BANNER); // Defined in dd_dos.d
@@ -110,12 +111,12 @@ private int main(int argc, char** argv) {
 		if (pexist(prog)) {
 			if (ExecLoad(prog)) {
 				puts("E: Could not load executable");
-				return 1;
+				return 3;
 			}
 			Run;
 		} else {
 			puts("E: File not found or loaded");
-			return 1;
+			return 2;
 		}
 	} else EnterShell;
 
