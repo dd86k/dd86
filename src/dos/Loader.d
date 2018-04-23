@@ -6,7 +6,7 @@ module Loader;
 
 import core.stdc.stdio;
 import core.stdc.stdlib : malloc, free;
-import dd_dos, Interpreter, InterpreterUtils, Logger;
+import vdos, Interpreter, InterpreterUtils, Logger;
 import Codes;
 
 private enum ERESWDS = 16; /// RESERVED WORDS
@@ -73,7 +73,7 @@ int ExecLoad(char* path) {
 		return 1;
 	}
 
-	int cip = GetIPAddress; // calculated CS:IP
+	int cip = get_ip; // calculated CS:IP
 
 	switch (sig) {
 	case MZ_MAGIC: // Party time!
@@ -159,7 +159,7 @@ int ExecLoad(char* path) {
 		SP = mzh.e_sp;
 
 		// ** Make PSP
-		//MakePSP(GetIPAddress, "test");
+		//MakePSP(get_ip, "test");
 
 		// ** Jump to CS:IP+0x0100, relative to start of program
 		EIP += 0x100;

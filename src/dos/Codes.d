@@ -26,3 +26,7 @@ enum : ubyte {
 	E_NOT_SAME_DEVICE       = 17,
 	E_NO_MORE_FILES         = 18,
 }
+
+enum {
+	PANIC_MSG_MANUAL = "MANUAL PANIC"
+}

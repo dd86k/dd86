@@ -1,6 +1,6 @@
 module Benchmarks;
 
-import Interpreter, std.stdio, dd_dos, Utilities;
+import Interpreter, std.stdio, vdos, Utilities;
 import std.datetime.stopwatch : StopWatch;
 import core.time : Duration;
 import std.conv : to;

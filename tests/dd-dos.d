@@ -1,6 +1,6 @@
-module dd_dosTests;
+module vdosTests;
 
-import Interpreter, InterpreterUtils, std.stdio, dd_dos, std.file : exists;
+import Interpreter, InterpreterUtils, std.stdio, vdos, std.file : exists;
 
 unittest
 {

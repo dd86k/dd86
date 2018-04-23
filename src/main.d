@@ -5,8 +5,8 @@
 import core.stdc.stdio;
 import core.stdc.stdlib : exit;
 import core.stdc.string : strcmp;
-import dd_dos : APP_VERSION, BANNER, EnterShell;
-import Interpreter : Initiate, Verbose, CpuSleep, Run;
+import vdos : APP_VERSION, BANNER, EnterShell;
+import Interpreter : init, Verbose, CpuSleep, run;
 import Loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;
@@ -105,10 +105,10 @@ private int main(int argc, char** argv) {
 	}
 
 	InitConsole; // ddcon
-	Initiate; // dd-dos
+	init; // dd-dos
 
 	if (banner)
-		puts(BANNER); // Defined in dd_dos.d
+		puts(BANNER); // Defined in vdos.d
 
 	if (cast(int)prog) {
 		if (pexist(prog)) {
@@ -116,7 +116,7 @@ private int main(int argc, char** argv) {
 				puts("E: Could not load executable");
 				return 3;
 			}
-			Run;
+			run;
 		} else {
 			puts("E: File not found or loaded");
 			return 2;

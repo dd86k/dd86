@@ -9,19 +9,19 @@ module Interpreter;
 
 import core.stdc.stdlib : exit; // Temporary
 import core.stdc.stdio : printf, puts;
-import dd_dos, InterpreterUtils;
+import vdos, InterpreterUtils;
 debug import Logger : logexec;
 
 /// Initial and maximum amount of memory if not specified in settings.
-enum MAX_MEM = 0x10_0000;
-// 0x4_0000    256K -- MS-DOS 256K minimum
+enum MAX_MEM = 0xA_0000;
+// 0x4_0000    256K -- MS-DOS minimum
 // 0xA_0000    640K
 // 0x10_0000  1024K
 // 0x20_0000  2048K
 
 /// Initiate machine (memory, etc.)
 extern (C)
-void Initiate() {
+void init() {
 	IPp = cast(ushort*)&EIP;
 
 	AXp = cast(ushort*)&EAX;
@@ -40,20 +40,18 @@ void Initiate() {
 	DLp = cast(ubyte*)DXp;
 
 	IP = 0x100; // Temporary
-
-	//TODO: Probably do a FAR JMP to "BIOS" or something else
 }
 
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
-void Run() {
+void run() {
 	if (Verbose)
 		puts("[INFO] Interpreter::Run");
 
 	while (RLEVEL) {
-		EIP = GetIPAddress;
+		EIP = get_ip;
 		debug logexec(CS, IP, MEMORY[EIP]);
-		Execute(MEMORY[EIP]);
+		exec(MEMORY[EIP]);
 		//if (CpuSleep) SLEEP(1);
 	}
 }
@@ -85,7 +83,7 @@ __gshared size_t MEMORYSIZE = MAX_MEM;
  * Returns: SEG:ADDR Location
  */
 extern (C)
-uint GetAddress(int s, int o) {
+uint get_ad(int s, int o) {
 	return (s << 4) + o;
 }
 /**
@@ -93,13 +91,13 @@ uint GetAddress(int s, int o) {
  * Returns: CS:IP effective address
  */
 extern (C)
-uint GetIPAddress() {
-	return GetAddress(CS, IP);
+uint get_ip() {
+	return get_ad(CS, IP);
 }
 
 /// RESET instruction function
 extern (C)
-void Reset() {
+void reset() {
 	OF = DF = IF = TF = SF =
 		ZF = AF = PF = CF = 0;
 	CS = 0xFFFF;
@@ -107,10 +105,10 @@ void Reset() {
 	// Empty Queue Bus
 }
 
-/// Resets the entire vcpu. Does not refer to the RESET instruction!
+/// resets the entire vcpu. Does not refer to the RESET instruction!
 extern (C)
-void FullReset() {
-	Reset();
+void fullreset() {
+	reset();
 	EAX = EBX = ECX = EDX =
 	EBP = ESP = EDI = ESI = 0;
 }
@@ -362,26 +360,26 @@ enum : ubyte {
  * Params: value = WORD value to PUSH
  */
 extern (C)
-void Push(ushort value) {
+void push(ushort value) {
 	SP = SP - 2;
-	InsertWord(value, GetAddress(SS, SP));
+	InsertWord(value, get_ad(SS, SP));
 }
 /**
  * Push a DWORD value into memory.
  * Params: value = DWORD value
  */
 extern (C)
-void EPush(uint value) {
+void epush(uint value) {
 	SP = SP - 2;
-	InsertDWord(value, GetAddress(SS, SP));
+	InsertDWord(value, get_ad(SS, SP));
 }
 /**
  * Pop a WORD value from stack.
  * Returns: WORD value
  */
 extern (C)
-ushort Pop() {
-	const uint addr = GetAddress(SS, SP);
+ushort pop() {
+	const uint addr = get_ad(SS, SP);
 	SP = SP + 2;
 	return FetchWord(addr);
 }
@@ -390,8 +388,8 @@ ushort Pop() {
  * Returns: WORD value
  */
 extern (C)
-uint EPop() {
-	const uint addr = GetAddress(SS, SP);
+uint epop() {
+	const uint addr = get_ad(SS, SP);
 	SP = SP + 2;
 	return FetchDWord(addr);
 }
@@ -438,7 +436,7 @@ __gshared ubyte Seg; // See above enumeration
  * Params: op = Operation Code
  */
 extern (C)
-void Execute(ubyte op) {
+void exec(ubyte op) {
 	/*
 	 * Legend:
 	 * R/M - Mod Register/Memory byte
@@ -516,7 +514,7 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x04: // ADD AL, IMM8
-		AL = AL + FetchByte(GetIPAddress);
+		AL = AL + FetchByte(get_ip);
 		SF = CF = (AL & 0x80) != 0;
 		PF = (AL & 1) != 0;
 		AF = (AL & 0x10) != 0;
@@ -526,16 +524,16 @@ void Execute(ubyte op) {
 		EIP += 2;
 		return;
 	case 0x05: // ADD AX, IMM16
-		AX = AX + FetchWord(GetIPAddress);
+		AX = AX + FetchWord(get_ip);
 		//TODO: Fill
 		EIP += 2;
 		return;
 	case 0x06: // PUSH ES
-		Push(ES);
+		push(ES);
 		++EIP;
 		return;
 	case 0x07: // POP ES
-		ES = Pop();
+		ES = pop();
 		++EIP;
 		return;
 	case 0x08: { // OR R/M8, REG8
@@ -563,7 +561,7 @@ void Execute(ubyte op) {
 		EIP += 3;
 		return;
 	case 0x0E: // PUSH CS
-		Push(CS);
+		push(CS);
 		++EIP;
 		return;
 	case 0x10: { // ADC R/M8, REG8
@@ -597,11 +595,11 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x16: // PUSH SS
-		Push(SS);
+		push(SS);
 		++EIP;
 		return;
 	case 0x17: // POP SS
-		SS = Pop();
+		SS = pop();
 		++EIP;
 		return;
 	case 0x18: // SBB R/M8, REG8
@@ -631,11 +629,11 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0x1E: // PUSH DS
-		Push(DS);
+		push(DS);
 		++EIP;
 		return;
 	case 0x1F: // POP DS
-		DS = Pop();
+		DS = pop();
 		++EIP;
 		return;
 	case 0x20: // AND R/M8, REG8
@@ -681,11 +679,11 @@ void Execute(ubyte op) {
 
 		return;
 	case 0x24: // AND AL, IMM8
-		AL = AL & FetchByte(GetIPAddress);
+		AL = AL & FetchByte(get_ip);
 		EIP += 2;
 		return;
 	case 0x25: // AND AX, IMM16
-		AX = AX & FetchWord(GetIPAddress);
+		AX = AX & FetchWord(get_ip);
 		EIP += 3;
 		return;
 	case 0x26: // ES: (Segment override prefix)
@@ -724,11 +722,11 @@ void Execute(ubyte op) {
 
 		return;
 	case 0x2C: // SUB AL, IMM8
-		AL = AL - FetchByte(GetIPAddress);
+		AL = AL - FetchByte(get_ip);
 		EIP += 2;
 		return;
 	case 0x2D: // SUB AX, IMM16
-		AX = AX - FetchWord(GetIPAddress);
+		AX = AX - FetchWord(get_ip);
 		EIP += 3;
 		return;
 	case 0x2E: // CS:
@@ -908,67 +906,67 @@ void Execute(ubyte op) {
 		++EIP;
 		return;
 	case 0x50: // PUSH AX
-		Push(AX);
+		push(AX);
 		++EIP;
 		return;
 	case 0x51: // PUSH CX
-		Push(CX);
+		push(CX);
 		++EIP;
 		return;
 	case 0x52: // PUSH DX
-		Push(DX);
+		push(DX);
 		++EIP;
 		return;
 	case 0x53: // PUSH BX
-		Push(BX);
+		push(BX);
 		++EIP;
 		return;
 	case 0x54: // PUSH SP
-		Push(SP);
+		push(SP);
 		++EIP;
 		return;
 	case 0x55: // PUSH BP
-		Push(BP);
+		push(BP);
 		++EIP;
 		return;
 	case 0x56: // PUSH SI
-		Push(SI);
+		push(SI);
 		++EIP;
 		return;
 	case 0x57: // PUSH DI
-		Push(DI);
+		push(DI);
 		++EIP;
 		return;
 	case 0x58: // POP AX
-		AX = Pop();
+		AX = pop();
 		++EIP;
 		return;
 	case 0x59: // POP CX
-		CX = Pop();
+		CX = pop();
 		++EIP;
 		return;
 	case 0x5A: // POP DX
-		DX = Pop();
+		DX = pop();
 		++EIP;
 		return;
 	case 0x5B: // POP BX
-		BX = Pop();
+		BX = pop();
 		++EIP;
 		return;
 	case 0x5C: // POP SP
-		SP = Pop();
+		SP = pop();
 		++EIP;
 		return;
 	case 0x5D: // POP BP
-		BP = Pop();
+		BP = pop();
 		++EIP;
 		return;
 	case 0x5E: // POP SI
-		SI = Pop();
+		SI = pop();
 		++EIP;
 		return;
 	case 0x5F: // POP DI
-		DI = Pop();
+		DI = pop();
 		++EIP;
 		return;
 	case 0x70: // JO            SHORT-LABEL
@@ -1344,8 +1342,8 @@ void Execute(ubyte op) {
 		++EIP;
 		return;
 	case 0x9A: // CALL FAR_PROC
-		Push(CS);
-		Push(IP);
+		push(CS);
+		push(IP);
 		CS = FetchImmWord;
 		IP = FetchImmWord(2);
 		return;
@@ -1356,11 +1354,11 @@ void Execute(ubyte op) {
 		++EIP;
 		return;
 	case 0x9C: // PUSHF
-		Push(FLAG);
+		push(FLAG);
 		++EIP;
 		return;
 	case 0x9D: // POPF
-		FLAG = Pop();
+		FLAG = pop();
 		++EIP;
 		return;
 	case 0x9E: // SAHF (AH to Flags)
@@ -1393,7 +1391,7 @@ void Execute(ubyte op) {
 		return;
 	case 0xA6: { // CMPS DEST-STR8, SRC-STR8
 		const int t =
-			MEMORY[GetAddress(DS, SI)] - MEMORY[GetAddress(ES, DI)];
+			MEMORY[get_ad(DS, SI)] - MEMORY[get_ad(ES, DI)];
 		//TODO: CMPS PF
 		ZF = t == 0;
 		AF = (t & 0x10) != 0;
@@ -1410,7 +1408,7 @@ void Execute(ubyte op) {
 	}
 	case 0xA7: { // CMPSW DEST-STR16, SRC-STR16
 		const int t =
-			FetchWord(GetAddress(DS, SI)) - FetchWord(GetAddress(ES, DI));
+			FetchWord(get_ad(DS, SI)) - FetchWord(get_ad(ES, DI));
 		//TODO: CMPSW PF
 		ZF = t == 0;
 		AF = (t & 0x10) != 0;
@@ -1442,31 +1440,31 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0xAA: // STOS DEST-STR8
-		MEMORY[GetAddress(ES, DI)] = AL;
+		MEMORY[get_ad(ES, DI)] = AL;
 		if (DF == 0) DI = DI + 1;
 		else         DI = DI - 1;
 		++EIP;
 		return;
 	case 0xAB: // STOS DEST-STR16
-		InsertWord(AX, GetAddress(ES, DI));
+		InsertWord(AX, get_ad(ES, DI));
 		if (DF == 0) DI = DI + 2;
 		else         DI = DI - 2;
 		++EIP;
 		return;
 	case 0xAC: // LODS SRC-STR8
-		AL = MEMORY[GetAddress(DS, SI)];
+		AL = MEMORY[get_ad(DS, SI)];
 		if (DF == 0) SI = SI + 1;
 		else         SI = SI - 1;
 		++EIP;
 		return;
 	case 0xAD: // LODS SRC-STR16
-		AX = FetchWord(GetAddress(DS, SI));
+		AX = FetchWord(get_ad(DS, SI));
 		if (DF == 0) SI = SI + 2;
 		else         SI = SI - 2;
 		++EIP;
 		return;
 	case 0xAE: { // SCAS DEST-STR8
-		const int r = AL - MEMORY[GetAddress(ES, DI)];
+		const int r = AL - MEMORY[get_ad(ES, DI)];
 		//TODO: SCAS OF, PF
 		ZF = r == 0;
 		AF = (r & 0x10) != 0;
@@ -1477,7 +1475,7 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0xAF: { // SCAS DEST-STR16
-		const int r = AX - FetchWord(GetAddress(ES, DI));
+		const int r = AX - FetchWord(get_ad(ES, DI));
 		//TODO: SCAS OF, PF
 		ZF = r == 0;
 		AF = (r & 0x10) != 0;
@@ -1552,12 +1550,12 @@ void Execute(ubyte op) {
 		EIP += 3;
 		return;
 	case 0xC2: // RET IMM16 (NEAR)
-		IP = Pop();
+		IP = pop();
 		SP = cast(ushort)(SP + FetchImmWord);
 		//EIP += 3; ?
 		return;
 	case 0xC3: // RET (NEAR)
-		IP = Pop();
+		IP = pop();
 		return;
 	case 0xC4: // LES REG16, MEM16
 // Load into REG and ES
@@ -1590,13 +1588,13 @@ void Execute(ubyte op) {
 		return;
 	}
 	case 0xCA: // RET IMM16 (FAR)
-		IP = Pop();
-		CS = Pop();
+		IP = pop();
+		CS = pop();
 		SP = SP + FetchImmWord;
 		return;
 	case 0xCB: // RET (FAR)
-		IP = Pop();
-		CS = Pop();
+		IP = pop();
+		CS = pop();
 		return;
 	case 0xCC: // INT 3
 		Raise(3);
@@ -1611,9 +1609,9 @@ void Execute(ubyte op) {
 		++EIP; //TODO: Check: is this correct?
 		return;
 	case 0xCF: // IRET
-		IP = Pop();
-		CS = Pop();
-		FLAG = Pop();
+		IP = pop();
+		CS = pop();
+		FLAG = pop();
 		++EIP;
 		return;
 	case 0xD0: // GRP2 R/M8, 1
@@ -1744,7 +1742,7 @@ void Execute(ubyte op) {
 		return;
 	// D6 is illegal under 8086
 	case 0xD7: // XLAT SOURCE-TABLE
-		AL = MEMORY[GetAddress(DS, BX) + AL];
+		AL = MEMORY[get_ad(DS, BX) + AL];
 		return;
 	/*case 0xD8: // ESC OPCODE, SOURCE
 	case 0xD9: // 1101 1XXX - MOD YYY R/M
@@ -1788,7 +1786,7 @@ void Execute(ubyte op) {
 
 		return;*/
 	case 0xE8: // CALL NEAR-PROC
-		Push(IP);
+		push(IP);
 		EIP += FetchImmSWord; // Direct within segment
 		return;
 	case 0xE9: // JMP    NEAR-LABEL
@@ -1823,7 +1821,7 @@ void Execute(ubyte op) {
 _F2_CX:
 		if (CX) {
 			//TODO: Finish REPNE/REPNZ properly?
-			Execute(0xA6);
+			exec(0xA6);
 			CX = CX - 1;
 			if (ZF == 0) goto _F2_CX;
 		} else ++EIP;

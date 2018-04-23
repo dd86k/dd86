@@ -119,66 +119,66 @@ uint GetEA(ubyte rm) {
 		switch (rm & RM_REG) {
 		case RM_REG_000: 
 			switch (Seg) {
-			case SEG_CS: return GetAddress(CS, AX);
-			case SEG_DS: return GetAddress(DS, AX);
-			case SEG_ES: return GetAddress(ES, AX);
-			case SEG_SS: return GetAddress(SS, AX);
+			case SEG_CS: return get_ad(CS, AX);
+			case SEG_DS: return get_ad(DS, AX);
+			case SEG_ES: return get_ad(ES, AX);
+			case SEG_SS: return get_ad(SS, AX);
 			default: return AX;
 			}
 		case RM_REG_001:
 			switch (Seg) {
-			case SEG_CS: return GetAddress(CS, CX);
-			case SEG_DS: return GetAddress(DS, CX);
-			case SEG_ES: return GetAddress(ES, CX);
-			case SEG_SS: return GetAddress(SS, CX);
+			case SEG_CS: return get_ad(CS, CX);
+			case SEG_DS: return get_ad(DS, CX);
+			case SEG_ES: return get_ad(ES, CX);
+			case SEG_SS: return get_ad(SS, CX);
 			default: return CX;
 			}
 		case RM_REG_010:
 			switch (Seg) {
-			case SEG_CS: return GetAddress(CS, DX);
-			case SEG_DS: return GetAddress(DS, DX);
-			case SEG_ES: return GetAddress(ES, DX);
-			case SEG_SS: return GetAddress(SS, DX);
+			case SEG_CS: return get_ad(CS, DX);
+			case SEG_DS: return get_ad(DS, DX);
+			case SEG_ES: return get_ad(ES, DX);
+			case SEG_SS: return get_ad(SS, DX);
 			default: return DX;
 			}
 		case RM_REG_011:
 			switch (Seg) {
-			case SEG_CS: return GetAddress(CS, BX);
-			case SEG_DS: return GetAddress(DS, BX);
-			case SEG_ES: return GetAddress(ES, BX);
-			case SEG_SS: return GetAddress(SS, BX);
+			case SEG_CS: return get_ad(CS, BX);
+			case SEG_DS: return get_ad(DS, BX);
+			case SEG_ES: return get_ad(ES, BX);
+			case SEG_SS: return get_ad(SS, BX);
 			default: return BX;
 			}
 		case RM_REG_100:
 			switch (Seg) {
-			case SEG_CS: return GetAddress(CS, SP);
-			case SEG_DS: return GetAddress(DS, SP);
-			case SEG_ES: return GetAddress(ES, SP);
-			case SEG_SS: return GetAddress(SS, SP);
+			case SEG_CS: return get_ad(CS, SP);
+			case SEG_DS: return get_ad(DS, SP);
+			case SEG_ES: return get_ad(ES, SP);
+			case SEG_SS: return get_ad(SS, SP);
 			default: return SP;
 			}
 		case RM_REG_101:
 			switch (Seg) {
-			case SEG_CS: return GetAddress(CS, BP);
-			case SEG_DS: return GetAddress(DS, BP);
-			case SEG_ES: return GetAddress(ES, BP);
-			case SEG_SS: return GetAddress(SS, BP);
+			case SEG_CS: return get_ad(CS, BP);
+			case SEG_DS: return get_ad(DS, BP);
+			case SEG_ES: return get_ad(ES, BP);
+			case SEG_SS: return get_ad(SS, BP);
 			default: return BP;
 			}
 		case RM_REG_110:
 			switch (Seg) {
-			case SEG_CS: return GetAddress(CS, SI);
-			case SEG_DS: return GetAddress(DS, SI);
-			case SEG_ES: return GetAddress(ES, SI);
-			case SEG_SS: return GetAddress(SS, SI);
+			case SEG_CS: return get_ad(CS, SI);
+			case SEG_DS: return get_ad(DS, SI);
+			case SEG_ES: return get_ad(ES, SI);
+			case SEG_SS: return get_ad(SS, SI);
 			default: return SI;
 			}
 		case RM_REG_111:
 			switch (Seg) {
-			case SEG_CS: return GetAddress(CS, DI);
-			case SEG_DS: return GetAddress(DS, DI);
-			case SEG_ES: return GetAddress(ES, DI);
-			case SEG_SS: return GetAddress(SS, DI);
+			case SEG_CS: return get_ad(CS, DI);
+			case SEG_DS: return get_ad(DS, DI);
+			case SEG_ES: return get_ad(ES, DI);
+			case SEG_SS: return get_ad(SS, DI);
 			default: return DI;
 			}
 		default: return -1; // Temporary

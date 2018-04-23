@@ -14,6 +14,12 @@ buildType "debug" {
 
 buildType "release" {
   targetType "executable"
+  buildOptions "releaseMode" "optimize"
+  dflags "-betterC"
+}
+
+buildType "release-nobounds" {
+  targetType "executable"
   buildOptions "releaseMode" "noBoundsCheck" "optimize"
   dflags "-betterC"
 }

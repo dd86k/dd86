@@ -1,7 +1,7 @@
 module UtilitiesTests;
 
 import Interpreter : MEMORY;
-import std.stdio, dd_dos, Utilities;
+import std.stdio, vdos, Utilities;
 import core.stdc.string : memcpy;
 
 unittest

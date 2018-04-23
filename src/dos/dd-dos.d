@@ -2,7 +2,7 @@
  * dd-dos.d: Operating system, shell, system and hardware interrupts handler
  */
 
-module dd_dos;
+module vdos;
 
 import core.stdc.stdio;
 import core.stdc.string;
@@ -10,28 +10,40 @@ import core.stdc.stdlib : malloc, free;
 import Loader : ExecLoad;
 import Interpreter, ddcon, Logger, Codes, Utilities, OSUtilities;
 
-debug pragma(msg, `
+debug {
+pragma(msg, `
 +-------------+
 | DEBUG BUILD |
 +-------------+
 `);
+enum BUILD_TYPE = "DEBUG";
+} else {
+enum BUILD_TYPE = "RELEASE";
+}
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
-version(CRuntime_Bionic) {
+version (CRuntime_Bionic) {
 	pragma(msg, "Using Bionic C Runtime");
-} else version(CRuntime_DigitalMars) {
+	enum C_RUNTIME = "Bionic";
+} else version (CRuntime_DigitalMars) {
 	pragma(msg, "Using DigitalMars C Runtime");
-} else version(CRuntime_Glibc) {
+	enum C_RUNTIME = "DigitalMars";
+} else version (CRuntime_Glibc) {
 	pragma(msg, "Using Glibc C Runtime");
-} else version(CRuntime_Microsoft) {
+	enum C_RUNTIME = "Glibc";
+} else version (CRuntime_Microsoft) {
 	pragma(msg, "Using Microsoft C Runtime");
+	enum C_RUNTIME = "Microsoft";
 } else version(CRuntime_Musl) {
 	pragma(msg, "Using musl C Runtime");
-} else version(CRuntime_UClibc) {
+	enum C_RUNTIME = "musl";
+} else version (CRuntime_UClibc) {
 	pragma(msg, "Using uClibc C Runtime");
+	enum C_RUNTIME = "uClibc";
 } else {
-	pragma(msg, "Runtime: Unknown (You better watch out!)");
+	pragma(msg, "Runtime: Unknown (Be careful!)");
+	enum C_RUNTIME = "UNKNOWN";
 }
 
 
@@ -84,7 +96,7 @@ enum
 // putchar is extern (D) for some stupid reason
 version (Windows) extern (C) void putchar(int);
 
-enum _BUFS = 127; // ~max in MS-DOS 5.0
+enum _BUFS = 127; // maximum in MS-DOS 5.0
 
 /**
  * CLI argument splitter, supports quoting.
@@ -97,7 +109,6 @@ enum _BUFS = 127; // ~max in MS-DOS 5.0
  */
 extern (C)
 char** sargs(const char* t, int* argc) {
-	if (*t == '\n') return null;
 	int j, a;
 	char** argv = cast(char**)malloc(_BUFS * size_t.sizeof); // sizeof(char *)
 	
@@ -145,10 +156,10 @@ SS:
 
 	//memset(cast(char*)inb, 0, _BUFS);
 	fgets(cast(char*)inb, _BUFS, stdin);
+	if (inb[0] == '\n') goto SS;
 
 	argc = 0;
 	argv = sargs(cast(char*)inb, &argc);
-	if (argc == 0) goto SS;
 
 	//TODO: TREE, DIR
 
@@ -231,29 +242,28 @@ VER       Show DD-DOS and MS-DOS version
 
 	if (strcmp(*argv, "mem") == 0) {
 		if (strcmp(argv[1], "/stats") == 0) {
-			puts("Fetching memory statistics...");
-
 			const bool ext = MEMORYSIZE > 0xA_0000; // extended?
 			const size_t ct = ext ? 0xA_0000 : MEMORYSIZE;
 			const size_t tt = MEMORYSIZE - ct;
 
-			__gshared int nzt; // Non-zero (total/excluded from conventional in some cases)
-			__gshared int nzc; // Convential (<640K) non-zero
-			for (__gshared int i; i < 0xA_0000; ++i) {
+			int nzt; /// Non-zero (total/excluded from conventional in some cases)
+			int nzc; /// Convential (<640K) non-zero
+			for (int i; i < MEMORYSIZE; ++i) {
 				if (i < 0xA_0000) {
-					if (MEMORY[i]) ++nzc;
-				} else if (MEMORY[i]) ++nzt;
+					if (MEMORY[i])
+						++nzc;
+				} else if (MEMORY[i])
+					++nzt;
 			}
 			printf(
-				"Memory Type           Zero'd +   NZero =   Total\n" ~
+				"Memory Type             Zero +    Data =   Total\n" ~
 				"-------------------  -------   -------   -------\n" ~
 				"Conventional         %6dK   %6dK   %6dK\n" ~
-				"Extended (DD-DOS)    %6dK   %6dK   %6dK\n",
-				(ct - nzc) / 1024, nzc / 1024, ct / 1024,
-				(tt - nzt) / 1024, nzt / 1024, tt / 1024);
-			printf(
+				"Extended (DD-DOS)    %6dK   %6dK   %6dK\n" ~
 				"-------------------  -------   -------   -------\n" ~
 				"Total                %6dK   %6dK   %6dK\n",
+				(ct - nzc) / 1024, nzc / 1024, ct / 1024,
+				(tt - nzt) / 1024, nzt / 1024, tt / 1024,
 				(MEMORYSIZE - nzt) / 1024, (nzt + nzc) / 1024, MEMORYSIZE / 1024);
 		} else if (strcmp(argv[1], "/debug") == 0) {
 			puts("Not implemented");
@@ -298,11 +308,16 @@ By default, MEM will show memory usage`
 
 	if (strcmp(*argv, "??") == 0) {
 		puts(
-`?run        Start the interpreter
-?load FILE  Load an executable file into memory
-?r          Print vm register information
+`
+?diag       Print diagnostic information screen
+?load FILE  Load an executable FILE into memory
 ?p          Toggle performance mode
-?v          Toggle verbose mode`
+?panic      Manually panic
+?r          Print interpreter registers info
+?run        Start the interpreter at current CS:IP values
+?s          Print stack (Not implemented)
+?v          Toggle verbose mode
+`
 		);
 		goto END;
 	}
@@ -316,7 +331,7 @@ By default, MEM will show memory usage`
 		goto END;
 	}
 	if (strcmp(*argv, "?run") == 0) {
-		Run;
+		run;
 		goto END;
 	}
 	if (strcmp(*argv, "?v") == 0) {
@@ -338,11 +353,25 @@ By default, MEM will show memory usage`
 		goto END;
 	}
 	if (strcmp(*argv, "?panic") == 0) {
-		panic("MANUAL PANIC");
+		panic(PANIC_MSG_MANUAL);
+		goto END;
+	}
+	if (strcmp(*argv, "?diag") == 0) {
+		printf(
+			"Current MS-DOS version: %d.%d\n" ~
+			"Compiled MS-DOS version: %d.%d\n" ~
+			"vDOS version: " ~ APP_VERSION ~ "\n" ~
+			"Compiler: " ~ __VENDOR__ ~ " v%d\n" ~
+			"C Runtime: " ~ C_RUNTIME ~ "\n" ~
+			"Build type: " ~ BUILD_TYPE ~ "\n",
+			MinorVersion, MajorVersion,
+			DOS_MAJOR_VERSION, DOS_MINOR_VERSION,
+			__VERSION__
+		);
 		goto END;
 	}
 
-	if (argc > 0) puts("Bad command or file name");
+	puts("Bad command or file name");
 END:
 	free(argv);
 	goto SS;
@@ -378,18 +407,18 @@ void print_stack() {
 }
 
 extern (C)
-void panic(immutable(char)* r = null) {
+void panic(immutable(char)* r) {
 	enum RANGE = 20;
 
-	if (r) printf("\n[ !! ] PANIC: %s\n\n", r);
+	printf("\n[ !! ] PANIC: %s\n\n", r);
 	print_regs;
-	//print_stack;
+	print_stack;
 	printf("CODE:");
-	__gshared size_t i = RANGE;
-	ubyte* p = cast(ubyte*)MEMORY + GetIPAddress - 4;
+	__gshared int i = RANGE;
+	ubyte* p = cast(ubyte*)MEMORY + get_ip - 4;
 	while (--i) {
 		if (i == (RANGE - 5))
-			printf(" {%02x}", *p);
+			printf(" <%02x>", *p);
 		else
 			printf(" %02x", *p);
 		++p;
@@ -414,10 +443,10 @@ void Raise(ubyte code) {
 	IF stack not large enough for a 6-byte return information
 		#SS
 	*/
-	Push(FLAG);
+	push(FLAG);
 	IF = TF = 0;
-	Push(CS);
-	Push(IP);
+	push(CS);
+	push(IP);
 	//CS ← IDT[inum].selector;
 	//IP ← IDT[inum].offset;
 
@@ -435,7 +464,7 @@ void Raise(ubyte code) {
 		 *   DL (Column, 0 is top)
 		 */
 		case 0x02:
-		//TODO: Figure out "page" (Page buffer?)
+			//TODO: Figure out "page" (Page buffer?)
 			SetPos(DH, DL);
 			break;
 		/*
@@ -658,7 +687,7 @@ void Raise(ubyte code) {
 		 * - ^C and ^Break are not checked.
 		 */
 		case 9:
-			char* p = cast(char*)MEMORY + GetAddress(DS, DX);
+			char* p = cast(char*)MEMORY + get_ad(DS, DX);
 			while (*p != '$')
 				putchar(*p++);
 
@@ -1197,7 +1226,7 @@ void Raise(ubyte code) {
 		case 0x4B: {
 			switch (AL) {
 			case 0: // Load and execute the program.
-				char[] p = MemString(GetAddress(DS, DX));
+				char[] p = MemString(get_ad(DS, DX));
 				if (pexist(cast(char*)p)) {
 					ExecLoad(cast(char*)p);
 					CF = 0;
@@ -1317,8 +1346,8 @@ void Raise(ubyte code) {
 	default: break;
 	}
 
-	IP = Pop();
-	CS = Pop();
+	IP = pop();
+	CS = pop();
 	IF = TF = 1;
-	FLAG = Pop();
+	FLAG = pop();
 }
