@@ -8,11 +8,9 @@ _______ _______        _______  ______  _______
 |______/|______/       |______/\______/\______/
 ```
 
-dd-dos aims to be a simple compatibility layer, like NTVDM.
+dd-dos aims to be a simple compatibility layer, like NTVDM, as a multi-platform virtual machine.
 
 Interested? Head over to the [Wiki](https://github.com/dd86k/dd-dos/wiki).
-
-If you wish to build, or help develop dd-dos, the [Dev Space](https://github.com/dd86k/dd-dos/wiki/Dev-Space) will help you.
 
 # Credits
 
