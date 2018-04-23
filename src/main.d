@@ -15,11 +15,14 @@ import OSUtilities : pexist;
 extern (C)
 private void _version() {
 	printf(
-`dd-dos v` ~ APP_VERSION ~ `  (` ~ __TIMESTAMP__ ~ `)
-Copyright (c) 2017-2018 dd86k, using MIT license
-Project page: <https://github.com/dd86k/dd-dos>
-Compiler: ` ~ __VENDOR__ ~ " v%d\n",
-	__VERSION__
+		"dd-dos v" ~ APP_VERSION ~ "  (" ~ __TIMESTAMP__ ~ ")" ~
+		"Copyright (c) 2017-2018 dd86k, using MIT license" ~
+		"Project page: <https://github.com/dd86k/dd-dos>" ~
+		"Compiler: " ~ __VENDOR__ ~ " v%d\n\n" ~
+		`Credits
+dd86k -- Original author and developer
+`,
+		__VERSION__
 	);
 	exit(0);
 }
