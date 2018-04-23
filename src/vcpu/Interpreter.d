@@ -64,7 +64,7 @@ void run() {
  * tl;dr: Emulates CALL deep-ness.
  */
 __gshared short RLEVEL = 1;
-__gshared byte CpuSleep = 1; /// Is vcpu CpuSleeping between cycles?
+__gshared byte CpuSleep = 1; /// Is vcpu sleeping between cycles?
 /// Is Verbose mode set?
 debug __gshared byte Verbose = 1;
 else  __gshared byte Verbose = 0;

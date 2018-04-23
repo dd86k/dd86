@@ -188,7 +188,7 @@ void InvertColor() {
 }
 
 extern (C)
-void resetColor() {
+void ResetColor() {
 	version (Windows)
 		SetConsoleTextAttribute(hOut, defaultColor);
 	version (Posix)
