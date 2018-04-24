@@ -139,24 +139,22 @@ char** sargs(const char* t, int* argc) {
 	return argv;
 }
 
-/// Enter internal shell
-extern (C) __gshared
+/// Enter virtual shell
+extern (C)
 void EnterShell() {
-	__gshared char[255] cwb; // internal current working directory buffer
-	__gshared char[_BUFS] inb; // internal input buffer
-	__gshared char** argv;
-	__gshared int argc;
+	__gshared char[255] cwb; /// internal current working directory buffer
+	__gshared char[_BUFS] inb; /// internal input buffer
+	__gshared char** argv; /// argument vector
+	__gshared int argc; /// argument count
 	//TODO: Print user-prompt ($PROMPT)
-SS:
-	//memset(cast(char*)cwb, 0, 255);
+START:
 	if (getcwd_dd(cast(char*)cwb))
 		printf("\n%s%% ", cast(char*)cwb);
-	else // The biggest just-in-case scenario
+	else // just-in-case
 		fputs("\n% ", stdout);
 
-	//memset(cast(char*)inb, 0, _BUFS);
 	fgets(cast(char*)inb, _BUFS, stdin);
-	if (inb[0] == '\n') goto SS;
+	if (inb[0] == '\n') goto START;
 
 	argc = 0;
 	argv = sargs(cast(char*)inb, &argc);
@@ -216,6 +214,7 @@ By default, CD will display the current working directory`
 	// E
 
 	if (strcmp(*argv, "exit") == 0) {
+		free(argv);
 		return;
 	}
 
@@ -231,9 +230,7 @@ EXIT      Exit DD-DOS or script
 TREE      Show directory structure
 TIME      Get current time
 MEM       Show memory information
-VER       Show DD-DOS and MS-DOS version
-
-??        Print debug help screen`
+VER       Show DD-DOS and MS-DOS version`
 		);
 		goto END;
 	}
@@ -243,8 +240,8 @@ VER       Show DD-DOS and MS-DOS version
 	if (strcmp(*argv, "mem") == 0) {
 		if (strcmp(argv[1], "/stats") == 0) {
 			const bool ext = MEMORYSIZE > 0xA_0000; // extended?
-			const size_t ct = ext ? 0xA_0000 : MEMORYSIZE;
-			const size_t tt = MEMORYSIZE - ct;
+			const size_t ct = ext ? 0xA_0000 : MEMORYSIZE; /// convential memsize
+			const size_t tt = MEMORYSIZE - ct; /// total memsize excluding convential
 
 			int nzt; /// Non-zero (total/excluded from conventional in some cases)
 			int nzc; /// Convential (<640K) non-zero
@@ -364,7 +361,7 @@ By default, MEM will show memory usage`
 			"Compiler: " ~ __VENDOR__ ~ " v%d\n" ~
 			"C Runtime: " ~ C_RUNTIME ~ "\n" ~
 			"Build type: " ~ BUILD_TYPE ~ "\n",
-			MinorVersion, MajorVersion,
+			MajorVersion, MinorVersion,
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION,
 			__VERSION__
 		);
@@ -374,7 +371,7 @@ By default, MEM will show memory usage`
 	puts("Bad command or file name");
 END:
 	free(argv);
-	goto SS;
+	goto START;
 }
 
 extern (C)
@@ -418,9 +415,9 @@ void panic(immutable(char)* r) {
 	ubyte* p = cast(ubyte*)MEMORY + get_ip - 4;
 	while (--i) {
 		if (i == (RANGE - 5))
-			printf(" <%02x>", *p);
+			printf(" <%02X>", *p);
 		else
-			printf(" %02x", *p);
+			printf(" %02X", *p);
 		++p;
 	}
 }

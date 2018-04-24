@@ -11,8 +11,8 @@ import Codes;
 
 private enum ERESWDS = 16; /// RESERVED WORDS
 
-/// MS-DOS EXE header (Introduced in MS-DOS 2.0)
-private struct mz_hdr { align(1): // Necessary fields included
+/// MS-DOS EXE header structure
+private struct mz_hdr { align(1):
 //	ushort e_magic;        /// Magic number, "MZ"
 	ushort e_cblp;         /// Bytes on last page of file (extra bytes), 9 bits
 	ushort e_cp;           /// Pages in file
@@ -31,6 +31,7 @@ private struct mz_hdr { align(1): // Necessary fields included
 	uint   e_lfanew;       /// File address of new exe header
 }
 
+/// MS_DOS EXE Relocation structure
 private struct mz_rlc { align(1): // For AL=03h
 	ushort off; /// Offset
 	ushort seg; /// Segment of relocation
@@ -42,7 +43,7 @@ private enum MZ_MAGIC = 0x5A4D;
 private enum {
 	PARAGRAPH = 16, /// Size of a paragraph (16B)
 	PAGE = 512, /// Size of a page (512B)
-	SEG_SIZE = 64 * 1024, /// i8086 maximum code size
+	SEG_SIZE = 64 * 1024, /// i8086 maximum code size (64K)
 }
 
 /**
@@ -61,33 +62,34 @@ int ExecLoad(char* path) {
 
 	debug printf("[dbug] File size: %d\n", fsize);
 
-	__gshared ushort sig;
-	fseek(f, 0, SEEK_SET);
-	fread(&sig, 2, 1, f);
-
 	if (fsize == 0) {
 		fclose(f);
 		if (Verbose)
 			log("File is zero length");
-		AL = 2; // Non-official
-		return 1;
+		AL = E_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
+		return E_BAD_FORMAT;
 	}
 
-	int cip = get_ip; // calculated CS:IP
+	__gshared ushort sig; /// signature
+	fseek(f, 0, SEEK_SET);
+	fread(&sig, 2, 1, f);
+
+	int cip = get_ip;
+	ubyte* memloc = cast(ubyte*)MEMORY + cip;
 
 	switch (sig) {
 	case MZ_MAGIC: // Party time!
-		if (Verbose)
-			log("LOAD MZ");
+		if (Verbose) log("LOADING MZ");
 
 		// ** Header is read for initial register values
-		mz_hdr mzh;
+		__gshared mz_hdr mzh;
 		fread(&mzh, mzh.sizeof, 1, f);
-		CS = 0; IP = 0; // Temporary
+		//CS = 0; IP = 0; // Temporary
 		//CS = CS + mzh.e_cs; // Relative
 		//IP = mzh.e_ip;
 
 		// ** Copy code section from exe into memory
+		//TODO: LOW/HIGH MEMORY
 		if (mzh.e_minalloc && mzh.e_maxalloc) { // Low memory
 			if (Verbose)
 				log("LOAD LOW MEM");
@@ -95,31 +97,32 @@ int ExecLoad(char* path) {
 			if (Verbose)
 				log("LOAD HIGH MEM");
 		}
-		const uint _h = mzh.e_cparh * PARAGRAPH; /// Header size
-		const uint _l = _h + (mz_rlc.sizeof * mzh.e_crlc); // image code offset
-		uint csize = (mzh.e_cp * PAGE) - _h; // image code size
-		if (mzh.e_cblp) // Adjust csize for last bytes in page
+
+		// Shouldn't it be there _multiple_ code segments in some cases?
+		const uint hsize = mzh.e_cparh * PARAGRAPH; /// Header size
+		const uint cstart = hsize + (mz_rlc.sizeof * mzh.e_crlc); /// code section start
+		uint csize = mzh.e_cp * PAGE; /// image code size
+
+		if (mzh.e_cblp) // Adjust csize for last bytes in page (DJGPP)
 			csize -= PAGE - mzh.e_cblp;
-		if (csize >= SEG_SIZE) {
+
+		if (csize >= SEG_SIZE) { // Section too large?
 			if (Verbose)
 				error("Executable code size too big (>64K)");
-			return -1; // TOOBIG
+			return -1; //TODO: check error code (for AL)
 		}
-		//TODO: Binary fix on IP=0
 
 		debug {
-			printf("[dbug] _H::%d\n", _h);
-			printf("[dbug] _L::%d\n", _l);
-			printf("[dbug] STRUCT_SIZE: %d\n", mzh.sizeof);
-			printf("[dbug] HEADER_SIZE: %d\n", _h);
-			printf("[dbug] IMAGE_SIZE : %d\n", csize);
+			printf("[dbug] STRUCT SIZE: %d\n", mzh.sizeof);
+			printf("[dbug] HEADER SIZE: %d\n", hsize);
+			printf("[dbug] CODE SIZE : %d\n", csize);
 			printf("[dbug] CS: %d\n", CS);
 			printf("[dbug] IP: %d\n", IP);
 			printf("[dbug] SS: %d\n", SS);
 			printf("[dbug] SP: %d\n", SP);
 		}
-		fseek(f, _h, SEEK_SET); // Seek to end of header
-		fread(cast(ubyte*)MEMORY + cip, csize, 1, f); // read code into MEMORY
+		fseek(f, cstart, SEEK_SET); // Seek to start of first code segment
+		fread(memloc, csize, 1, f); // read code segment into MEMORY
 
 		// ** Read relocation table and adjust far pointers in memory
 		/+if (mzh.e_crlc) {
@@ -133,7 +136,7 @@ int ExecLoad(char* path) {
 			if (Verbose)
 				puts(" #   seg: off -> data");
 			for (int i; i < mzh.e_crlc; ++i) {
-				const ushort data = __fu16(cip + (r[i].seg << 4) + r[i].off);
+				const ushort data = __fu16(get_ea + (r[i].seg << 4) + r[i].off);
 				if (Verbose)
 					printf("%2d  %04X:%04X -> %04X\n", i, r[i].seg, r[i].off, data);
 				CS += cast(ushort)(CS + r[i].seg); // temporarily cheat
@@ -142,7 +145,6 @@ int ExecLoad(char* path) {
 			}
 			free(r);
 		} else {
-			EIP += 0x100; // temporary
 			if (Verbose)
 				log("No relocations");
 		}+/
@@ -153,31 +155,29 @@ int ExecLoad(char* path) {
 		// DS:ES   Points to PSP
 		// SS:SP   Stack pointer (from EXE header)
 
-		AL = 3;
+		AL = 2;
 		AH = 0;
 		SS = cast(ushort)(SS + mzh.e_ss); // Relative
-		SP = mzh.e_sp;
+		SP = SP + mzh.e_sp;
+		SS = mzh.e_ss;
 
 		// ** Make PSP
 		//MakePSP(get_ip, "test");
 
 		// ** Jump to CS:IP+0x0100, relative to start of program
-		EIP += 0x100;
+		EIP += 0x100; // cheapest CALL for the moment
 		break; // case MZ
 	default:
 		if (fsize > 0xFF00) { // Size - PSP
 			fclose(f);
-			if (Verbose)
-				error("COM file too large");
-			AL = E_BAD_FORMAT;
-			return 1;
+			if (Verbose) error("COM file too large");
+			AL = E_BAD_FORMAT; //TODO: Verify code
+			return E_BAD_FORMAT;
 		}
-		if (Verbose)
-			log("LOAD COM");
+		if (Verbose) log("LOADING COM");
 
 		fseek(f, 0, SEEK_SET);
-		ubyte* c = cast(ubyte*)MEMORY + cip;
-		fread(c, fsize, 1, f);
+		fread(memloc, fsize, 1, f);
 
 		//MakePSP(_comp - 0x100, "TEST");
 		AL = 0;

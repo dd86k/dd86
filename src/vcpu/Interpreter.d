@@ -13,13 +13,13 @@ import vdos, InterpreterUtils;
 debug import Logger : logexec;
 
 /// Initial and maximum amount of memory if not specified in settings.
-enum MAX_MEM = 0xA_0000;
+enum INIT_MEM = 0x4_0000;
 // 0x4_0000    256K -- MS-DOS minimum
 // 0xA_0000    640K
 // 0x10_0000  1024K
 // 0x20_0000  2048K
 
-/// Initiate machine (memory, etc.)
+/// Initiate interpreter
 extern (C)
 void init() {
 	IPp = cast(ushort*)&EIP;
@@ -69,11 +69,11 @@ __gshared byte CpuSleep = 1; /// Is vcpu sleeping between cycles?
 debug __gshared byte Verbose = 1;
 else  __gshared byte Verbose = 0;
 
-/// Main memory brank. MEMORYSIZE's default: MAX_MEM
+/// Main memory brank. MEMORYSIZE's default: INIT_MEM
 // Currently pre-allocated until I do a setting to make that variable
-__gshared ubyte[MAX_MEM] MEMORY;
-/// Current memory MEMORY size. Default: MAX_MEM
-__gshared size_t MEMORYSIZE = MAX_MEM;
+__gshared ubyte[INIT_MEM] MEMORY;
+/// Current memory MEMORY size. Default: INIT_MEM
+__gshared size_t MEMORYSIZE = INIT_MEM;
 
 /**
  * Get memory address out of a segment and a register value.
@@ -938,35 +938,35 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0x58: // POP AX
-		AX = pop();
+		AX = pop;
 		++EIP;
 		return;
 	case 0x59: // POP CX
-		CX = pop();
+		CX = pop;
 		++EIP;
 		return;
 	case 0x5A: // POP DX
-		DX = pop();
+		DX = pop;
 		++EIP;
 		return;
 	case 0x5B: // POP BX
-		BX = pop();
+		BX = pop;
 		++EIP;
 		return;
 	case 0x5C: // POP SP
-		SP = pop();
+		SP = pop;
 		++EIP;
 		return;
 	case 0x5D: // POP BP
-		BP = pop();
+		BP = pop;
 		++EIP;
 		return;
 	case 0x5E: // POP SI
-		SI = pop();
+		SI = pop;
 		++EIP;
 		return;
 	case 0x5F: // POP DI
-		DI = pop();
+		DI = pop;
 		++EIP;
 		return;
 	case 0x70: // JO            SHORT-LABEL
