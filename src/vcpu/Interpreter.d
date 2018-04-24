@@ -362,7 +362,7 @@ enum : ubyte {
 extern (C)
 void push(ushort value) {
 	SP = SP - 2;
-	InsertWord(value, get_ad(SS, SP));
+	__iu16(value, get_ad(SS, SP));
 }
 /**
  * Push a DWORD value into memory.
@@ -371,7 +371,7 @@ void push(ushort value) {
 extern (C)
 void epush(uint value) {
 	SP = SP - 2;
-	InsertDWord(value, get_ad(SS, SP));
+	__iu32(value, get_ad(SS, SP));
 }
 /**
  * Pop a WORD value from stack.
@@ -381,7 +381,7 @@ extern (C)
 ushort pop() {
 	const uint addr = get_ad(SS, SP);
 	SP = SP + 2;
-	return FetchWord(addr);
+	return __fu16(addr);
 }
 /**
  * Pop a WORD value from stack.
@@ -391,7 +391,7 @@ extern (C)
 uint epop() {
 	const uint addr = get_ad(SS, SP);
 	SP = SP + 2;
-	return FetchDWord(addr);
+	return __fu32(addr);
 }
 
 /**
@@ -455,34 +455,34 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x01: { // ADD R/M16, REG16
-		const ubyte rm = FetchImmByte;
-		const uint addr = GetEA(rm);
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
 		switch (rm & RM_MOD) {
 		case RM_MOD_00:
 			switch (rm & RM_REG) {
 			case RM_REG_000: // AX
-				InsertWord(FetchWord(addr) + AX, addr);
+				__iu16(__fu16(addr) + AX, addr);
 				break;
 			case RM_REG_001: // CX
-				InsertWord(FetchWord(addr) + CX, addr);
+				__iu16(__fu16(addr) + CX, addr);
 				break;
 			case RM_REG_010: // DX
-				InsertWord(FetchWord(addr) + DX, addr);
+				__iu16(__fu16(addr) + DX, addr);
 				break;
 			case RM_REG_011: // BX
-				InsertWord(FetchWord(addr) + BX, addr);
+				__iu16(__fu16(addr) + BX, addr);
 				break;
 			case RM_REG_100: // SP
-				InsertWord(FetchWord(addr) + SP, addr);
+				__iu16(__fu16(addr) + SP, addr);
 				break;
 			case RM_REG_101: // BP
-				InsertWord(FetchWord(addr) + BP, addr);
+				__iu16(__fu16(addr) + BP, addr);
 				break;
 			case RM_REG_110: // SI
-				InsertWord(FetchWord(addr) + SI, addr);
+				__iu16(__fu16(addr) + SI, addr);
 				break;
 			case RM_REG_111: // DI
-				InsertWord(FetchWord(addr) + DI, addr);
+				__iu16(__fu16(addr) + DI, addr);
 				break;
 			default:
 			}
@@ -514,7 +514,7 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x04: // ADD AL, IMM8
-		AL = AL + FetchByte(get_ip);
+		AL = AL + __fu8(get_ip);
 		SF = CF = (AL & 0x80) != 0;
 		PF = (AL & 1) != 0;
 		AF = (AL & 0x10) != 0;
@@ -524,7 +524,7 @@ void exec(ubyte op) {
 		EIP += 2;
 		return;
 	case 0x05: // ADD AX, IMM16
-		AX = AX + FetchWord(get_ip);
+		AX = AX + __fu16(get_ip);
 		//TODO: Fill
 		EIP += 2;
 		return;
@@ -553,11 +553,11 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x0C: // OR AL, IMM8
-		AL = AL | FetchImmByte;
+		AL = AL | __fu8_i;
 		EIP += 2;
 		return;
 	case 0x0D: // OR AX, IMM16
-		AX = AX | FetchImmWord;
+		AX = AX | __fu16_i;
 		EIP += 3;
 		return;
 	case 0x0E: // PUSH CS
@@ -581,14 +581,14 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x14: { // ADC AL, IMM8
-		int t = AL + FetchImmByte;
+		int t = AL + __fu8_i;
 		if (CF) ++t;
 		AL = t;
 		EIP += 2;
 		return;
 	}
 	case 0x15: { // ADC AX, IMM16
-		int t = AX + FetchImmWord;
+		int t = AX + __fu16_i;
 		if (CF) ++t;
 		AX = t;
 		EIP += 3;
@@ -615,14 +615,14 @@ void exec(ubyte op) {
 
 		return;
 	case 0x1C: { // SBB AL, IMM8
-		int t = AL - FetchImmByte;
+		int t = AL - __fu8_i;
 		if (CF) --t;
 		AL = t;
 		EIP += 2;
 		return;
 	}
 	case 0x1D: { // SBB AX, IMM16
-		int t = AX - FetchImmByte;
+		int t = AX - __fu8_i;
 		if (CF) --t;
 		AX = t;
 		EIP += 3;
@@ -640,8 +640,8 @@ void exec(ubyte op) {
 
 		return;
 	case 0x21: { // AND R/M16, REG16
-		const ubyte rm = FetchImmByte;
-		const int ea = GetEA(rm);
+		const ubyte rm = __fu8_i;
+		const int ea = get_ea(rm);
 		switch (rm & RM_MOD) {
 		case RM_MOD_00:
 
@@ -679,11 +679,11 @@ void exec(ubyte op) {
 
 		return;
 	case 0x24: // AND AL, IMM8
-		AL = AL & FetchByte(get_ip);
+		AL = AL & __fu8(get_ip);
 		EIP += 2;
 		return;
 	case 0x25: // AND AX, IMM16
-		AX = AX & FetchWord(get_ip);
+		AX = AX & __fu16(get_ip);
 		EIP += 3;
 		return;
 	case 0x26: // ES: (Segment override prefix)
@@ -722,11 +722,11 @@ void exec(ubyte op) {
 
 		return;
 	case 0x2C: // SUB AL, IMM8
-		AL = AL - FetchByte(get_ip);
+		AL = AL - __fu8(get_ip);
 		EIP += 2;
 		return;
 	case 0x2D: // SUB AX, IMM16
-		AX = AX - FetchWord(get_ip);
+		AX = AX - __fu16(get_ip);
 		EIP += 3;
 		return;
 	case 0x2E: // CS:
@@ -765,11 +765,11 @@ void exec(ubyte op) {
 
 		return;
 	case 0x34: // XOR AL, IMM8
-		AL = AL ^ FetchImmByte;
+		AL = AL ^ __fu8_i;
 		EIP += 2;
 		return;
 	case 0x35: // XOR AX, IMM16
-		AX = AX ^ FetchImmWord;
+		AX = AX ^ __fu16_i;
 		EIP += 3;
 		return;
 	case 0x36: // SS:
@@ -797,7 +797,7 @@ void exec(ubyte op) {
 
 		return;
 	case 0x3C: { // CMP AL, IMM8
-		const ubyte b = FetchImmByte;
+		const ubyte b = __fu8_i;
 		const int r = AL - b;
 		CF = SF = (r & 0x80) != 0;
 		OF = r < 0;
@@ -808,7 +808,7 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x3D: { // CMP AX, IMM16
-		const ushort w = FetchImmWord;
+		const ushort w = __fu16_i;
 		const int r = AL - w;
 		SF = (r & 0x8000) != 0;
 		OF = r < 0;
@@ -970,56 +970,56 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0x70: // JO            SHORT-LABEL
-		EIP += OF ? FetchImmSByte : 2;
+		EIP += OF ? __fi8_i : 2;
 		return;
 	case 0x71: // JNO           SHORT-LABEL
-		EIP += OF ? 2 : FetchImmSByte;
+		EIP += OF ? 2 : __fi8_i;
 		return;
 	case 0x72: // JB/JNAE/JC    SHORT-LABEL
-		EIP += CF ? FetchImmSByte : 2;
+		EIP += CF ? __fi8_i : 2;
 		return;
 	case 0x73: // JNB/JAE/JNC   SHORT-LABEL
-		EIP += CF ? 2 : FetchImmSByte;
+		EIP += CF ? 2 : __fi8_i;
 		return;
 	case 0x74: // JE/JZ         SHORT-LABEL
-		EIP += ZF ? FetchImmSByte : 2;
+		EIP += ZF ? __fi8_i : 2;
 		return;
 	case 0x75: // JNE/JNZ       SHORT-LABEL
-		EIP += ZF ? 2 : FetchImmSByte;
+		EIP += ZF ? 2 : __fi8_i;
 		return;
 	case 0x76: // JBE/JNA       SHORT-LABEL
-		EIP += (CF || ZF) ? FetchImmSByte : 2;
+		EIP += (CF || ZF) ? __fi8_i : 2;
 		return;
 	case 0x77: // JNBE/JA       SHORT-LABEL
-		EIP += CF == 0 && ZF == 0 ? FetchImmSByte : 2;
+		EIP += CF == 0 && ZF == 0 ? __fi8_i : 2;
 		return;
 	case 0x78: // JS            SHORT-LABEL
-		EIP += SF ? FetchImmSByte : 2;
+		EIP += SF ? __fi8_i : 2;
 		return;
 	case 0x79: // JNS           SHORT-LABEL
-		EIP += SF ? 2 : FetchImmSByte;
+		EIP += SF ? 2 : __fi8_i;
 		return;
 	case 0x7A: // JP/JPE        SHORT-LABEL
-		EIP += PF ? FetchImmSByte : 2;
+		EIP += PF ? __fi8_i : 2;
 		return;
 	case 0x7B: // JNP/JPO       SHORT-LABEL
-		EIP += PF ? 2 : FetchImmSByte;
+		EIP += PF ? 2 : __fi8_i;
 		return;
 	case 0x7C: // JL/JNGE       SHORT-LABEL
-		EIP += SF != OF ? FetchImmSByte : 2;
+		EIP += SF != OF ? __fi8_i : 2;
 		return;
 	case 0x7D: // JNL/JGE       SHORT-LABEL
-		EIP += SF == OF ? FetchImmSByte : 2;
+		EIP += SF == OF ? __fi8_i : 2;
 		return;
 	case 0x7E: // JLE/JNG       SHORT-LABEL
-		EIP += SF != OF || ZF ? FetchImmSByte : 2;
+		EIP += SF != OF || ZF ? __fi8_i : 2;
 		return;
 	case 0x7F: // JNLE/JG       SHORT-LABEL
-		EIP += SF == OF && ZF == 0 ? FetchImmSByte : 2;
+		EIP += SF == OF && ZF == 0 ? __fi8_i : 2;
 		return;
 	case 0x80: { // GRP1 R/M8, IMM8
-		const ubyte rm = FetchImmByte; // Get ModR/M byte
-		const ubyte im = FetchImmByte(2); // 8-bit Immediate after modr/m
+		const ubyte rm = __fu8_i; // Get ModR/M byte
+		const ubyte im = __fu8_i(2); // 8-bit Immediate after modr/m
 		switch (rm & RM_MOD) {
 		case RM_MOD_00: // No displacement
 			switch (rm & RM_REG) { // REG
@@ -1094,8 +1094,8 @@ void exec(ubyte op) {
 		EIP += 3;
 		return;
 	case 0x83: // GRP2 R/M16, IMM16
-		const ubyte rm = FetchImmByte; // Get ModR/M byte
-		const ushort im = FetchImmWord(2);
+		const ubyte rm = __fu8_i; // Get ModR/M byte
+		const ushort im = __fu16_i(2);
 		switch (rm & RM_REG) { // ModRM REG
 		case 0b000_000: // 000 - ADD
 
@@ -1136,35 +1136,35 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x89: { // MOV R/M16, REG16 (I, MODR/M, [LOW], [HIGH])
-		const ubyte rm = FetchImmByte;
-		//const ushort imm = FetchImmWord(1);
-		const int addr = GetEA(rm);
+		const ubyte rm = __fu8_i;
+		//const ushort imm = __fu16_i(1);
+		const int addr = get_ea(rm);
 		switch (rm & RM_MOD) {
 		case RM_MOD_00:
 			switch (rm & RM_REG) {
 			case RM_REG_000: // AX
-				InsertWord(AX, addr);
+				__iu16(AX, addr);
 				break;
 			case RM_REG_001: // CX
-				InsertWord(CX, addr);
+				__iu16(CX, addr);
 				break;
 			case RM_REG_010: // DX
-				InsertWord(DX, addr);
+				__iu16(DX, addr);
 				break;
 			case RM_REG_011: // BX
-				InsertWord(BX, addr);
+				__iu16(BX, addr);
 				break;
 			case RM_REG_100: // SP
-				InsertWord(SP, addr);
+				__iu16(SP, addr);
 				break;
 			case RM_REG_101: // BP
-				InsertWord(BP, addr);
+				__iu16(BP, addr);
 				break;
 			case RM_REG_110: // SI
-				InsertWord(SI, addr);
+				__iu16(SI, addr);
 				break;
 			case RM_REG_111: // DI
-				InsertWord(DI, addr);
+				__iu16(DI, addr);
 				break;
 			default:
 			}
@@ -1216,20 +1216,20 @@ void exec(ubyte op) {
 	}
 	case 0x8C: { // MOV R/M16, SEGREG
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
-		const byte rm = FetchImmByte;
-		const int ea = GetEA(rm);
+		const byte rm = __fu8_i;
+		const int ea = get_ea(rm);
 		switch (rm & RM_REG) { // if bit 10_0000 is clear, trip to default
 		case RM_REG_100: // ES
-			InsertWord(ES, ea);
+			__iu16(ES, ea);
 			break;
 		case RM_REG_101: // CS
-			InsertWord(CS, ea);
+			__iu16(CS, ea);
 			break;
 		case RM_REG_110: // SS
-			InsertWord(SS, ea);
+			__iu16(SS, ea);
 			break;
 		case RM_REG_111: // DS
-			InsertWord(DS, ea);
+			__iu16(DS, ea);
 			break;
 		default: //TODO: #GP(0) ✧(≖ ◡ ≖✿)
 		}
@@ -1241,28 +1241,28 @@ void exec(ubyte op) {
 		return;
 	case 0x8E: // MOV SEGREG, R/M16
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
-		const byte rm = FetchImmByte;
-		const int ea = GetEA(rm);
+		const byte rm = __fu8_i;
+		const int ea = get_ea(rm);
 		switch (rm & RM_REG) { // if bit 10_0000 is clear, trip to default
 		case RM_REG_100: // ES
-			ES = FetchWord(ea);
+			ES = __fu16(ea);
 			break;
 		case RM_REG_101: // CS
-			CS = FetchWord(ea);
+			CS = __fu16(ea);
 			break;
 		case RM_REG_110: // SS
-			SS = FetchWord(ea);
+			SS = __fu16(ea);
 			break;
 		case RM_REG_111: // DS
-			DS = FetchWord(ea);
+			DS = __fu16(ea);
 			break;
 		default: //TODO: #GP(0) ✧(≖ ◡ ≖✿)
 		}
 		EIP += 2;
 		return;
 	case 0x8F: { // POP R/M16
-		const byte rm = FetchImmByte;
-		const ushort add = FetchImmWord(1);
+		const byte rm = __fu8_i;
+		const ushort add = __fu16_i(1);
 		if (rm & 0b00111000) { // MOD 000 R/M only
 			//TODO: Raise illegal instruction
 		} else { // REMINDER: REG = 000 and D is SET
@@ -1344,8 +1344,8 @@ void exec(ubyte op) {
 	case 0x9A: // CALL FAR_PROC
 		push(CS);
 		push(IP);
-		CS = FetchImmWord;
-		IP = FetchImmWord(2);
+		CS = __fu16_i;
+		IP = __fu16_i(2);
 		return;
 	case 0x9B: // WAIT
 	//TODO: WAIT
@@ -1370,18 +1370,18 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0xA0: // MOV AL, MEM8
-		AL = MEMORY[FetchImmByte];
+		AL = MEMORY[__fu8_i];
 		EIP += 2;
 		return;
 	case 0xA1: // MOV AX, MEM16
-		AX = FetchWord(FetchImmWord);
+		AX = __fu16(__fu16_i);
 		EIP += 3;
 		return;
 	case 0xA2: // MOV MEM8, AL
-		MEMORY[FetchImmByte] = AL;
+		MEMORY[__fu8_i] = AL;
 		return;
 	case 0xA3: // MOV MEM16, AX
-		InsertWord(AX, FetchImmWord);
+		__iu16(AX, __fu16_i);
 		return;
 	case 0xA4: // MOVS DEST-STR8, SRC-STR8
 
@@ -1408,7 +1408,7 @@ void exec(ubyte op) {
 	}
 	case 0xA7: { // CMPSW DEST-STR16, SRC-STR16
 		const int t =
-			FetchWord(get_ad(DS, SI)) - FetchWord(get_ad(ES, DI));
+			__fu16(get_ad(DS, SI)) - __fu16(get_ad(ES, DI));
 		//TODO: CMPSW PF
 		ZF = t == 0;
 		AF = (t & 0x10) != 0;
@@ -1424,7 +1424,7 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0xA8: { // TEST AL, IMM8
-		const int r = AL & FetchImmByte;
+		const int r = AL & __fu8_i;
 		//TODO: TEST ZF SF PF
 
 		CF = OF = 0;
@@ -1432,7 +1432,7 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0xA9: { // TEST AX, IMM16
-		const int r = AX & FetchImmWord;
+		const int r = AX & __fu16_i;
 		//TODO: TEST ZF SF PF
 
 		CF = OF = 0;
@@ -1446,7 +1446,7 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0xAB: // STOS DEST-STR16
-		InsertWord(AX, get_ad(ES, DI));
+		__iu16(AX, get_ad(ES, DI));
 		if (DF == 0) DI = DI + 2;
 		else         DI = DI - 2;
 		++EIP;
@@ -1458,7 +1458,7 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0xAD: // LODS SRC-STR16
-		AX = FetchWord(get_ad(DS, SI));
+		AX = __fu16(get_ad(DS, SI));
 		if (DF == 0) SI = SI + 2;
 		else         SI = SI - 2;
 		++EIP;
@@ -1475,7 +1475,7 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0xAF: { // SCAS DEST-STR16
-		const int r = AX - FetchWord(get_ad(ES, DI));
+		const int r = AX - __fu16(get_ad(ES, DI));
 		//TODO: SCAS OF, PF
 		ZF = r == 0;
 		AF = (r & 0x10) != 0;
@@ -1486,72 +1486,72 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0xB0: // MOV AL, IMM8
-		AL = FetchImmByte;
+		AL = __fu8_i;
 		EIP += 2;
 		return;
 	case 0xB1: // MOV CL, IMM8
-		CL = FetchImmByte;
+		CL = __fu8_i;
 		EIP += 2;
 		return;
 	case 0xB2: // MOV DL, IMM8
-		DL = FetchImmByte;
+		DL = __fu8_i;
 		EIP += 2;
 		return;
 	case 0xB3: // MOV BL, IMM8
-		BL = FetchImmByte;
+		BL = __fu8_i;
 		EIP += 2;
 		return;
 	case 0xB4: // MOV AH, IMM8
-		AH = FetchImmByte;
+		AH = __fu8_i;
 		EIP += 2;
 		return;
 	case 0xB5: // MOV CH, IMM8
-		CH = FetchImmByte;
+		CH = __fu8_i;
 		EIP += 2;
 		return;
 	case 0xB6: // MOV DH, IMM8  
-		DH = FetchImmByte;
+		DH = __fu8_i;
 		EIP += 2;
 		return;
 	case 0xB7: // MOV BH, IMM8
-		BH = FetchImmByte;
+		BH = __fu8_i;
 		EIP += 2;
 		return;
 	case 0xB8: // MOV AX, IMM16
-		AX = FetchImmWord;
+		AX = __fu16_i;
 		EIP += 3;
 		return;
 	case 0xB9: // MOV CX, IMM16
-		CX = FetchImmWord;
+		CX = __fu16_i;
 		EIP += 3;
 		return;
 	case 0xBA: // MOV DX, IMM16
-		DX = FetchImmWord;
+		DX = __fu16_i;
 		EIP += 3;
 		return;
 	case 0xBB: // MOV BX, IMM16
-		BX = FetchImmWord;
+		BX = __fu16_i;
 		EIP += 3;
 		return;
 	case 0xBC: // MOV SP, IMM16
-		SP = FetchImmWord;
+		SP = __fu16_i;
 		EIP += 3;
 		return;
 	case 0xBD: // MOV BP, IMM16
-		BP = FetchImmWord;
+		BP = __fu16_i;
 		EIP += 3;
 		return;
 	case 0xBE: // MOV SI, IMM16
-		SI = FetchImmWord;
+		SI = __fu16_i;
 		EIP += 3;
 		return;
 	case 0xBF: // MOV DI, IMM16
-		DI = FetchImmWord;
+		DI = __fu16_i;
 		EIP += 3;
 		return;
 	case 0xC2: // RET IMM16 (NEAR)
 		IP = pop();
-		SP = cast(ushort)(SP + FetchImmWord);
+		SP = cast(ushort)(SP + __fu16_i);
 		//EIP += 3; ?
 		return;
 	case 0xC3: // RET (NEAR)
@@ -1567,8 +1567,8 @@ void exec(ubyte op) {
 		return;
 	case 0xC6: { // MOV MEM8, IMM8
 		// MOD 000 R/M only
-		const ubyte rm = FetchImmByte;
-		const ubyte imm = FetchImmByte(1);
+		const ubyte rm = __fu8_i;
+		const ubyte imm = __fu8_i(1);
 		if (rm & 38) { // 111 000
 			//TODO: Raise GP
 		} else {
@@ -1578,8 +1578,8 @@ void exec(ubyte op) {
 	}
 	case 0xC7: { // MOV MEM16, IMM16
 		// MOD 000 R/M only
-		const ubyte rm = FetchImmByte;
-		const ushort imm = FetchImmWord(1);
+		const ubyte rm = __fu8_i;
+		const ushort imm = __fu16_i(1);
 		if (rm & 38) { // 111 000
 			//TODO: Raise GP
 		} else {
@@ -1590,7 +1590,7 @@ void exec(ubyte op) {
 	case 0xCA: // RET IMM16 (FAR)
 		IP = pop();
 		CS = pop();
-		SP = SP + FetchImmWord;
+		SP = SP + __fu16_i;
 		return;
 	case 0xCB: // RET (FAR)
 		IP = pop();
@@ -1601,7 +1601,7 @@ void exec(ubyte op) {
 		++EIP; //TODO: Check: is this correct?
 		return;
 	case 0xCD: // INT IMM8
-		Raise(FetchImmByte);
+		Raise(__fu8_i);
 		EIP += 2; //TODO: Check: is this correct?
 		return;
 	case 0xCE: // INTO
@@ -1756,21 +1756,21 @@ void exec(ubyte op) {
 		break;*/
 	case 0xE0: // LOOPNE/LOOPNZ SHORT-LABEL
 		CX = CX - 1;
-		if (CX && ZF == 0) EIP += FetchImmSByte;
+		if (CX && ZF == 0) EIP += __fi8_i;
 		else               EIP += 2;
 		return;
 	case 0xE1: // LOOPE/LOOPZ   SHORT-LABEL
 		CX = CX - 1;
-		if (CX && ZF) EIP += FetchImmSByte;
+		if (CX && ZF) EIP += __fi8_i;
 		else          EIP += 2;
 		return;
 	case 0xE2: // LOOP  SHORT-LABEL
 		CX = CX - 1;
-		if (CX) EIP += FetchImmSByte;
+		if (CX) EIP += __fi8_i;
 		else    EIP += 2;
 		return;
 	case 0xE3: // JCXZ  SHORT-LABEL
-		if (CX == 0) EIP += FetchImmSByte;
+		if (CX == 0) EIP += __fi8_i;
 		else         EIP += 2;
 		return;
 	/*case 0xE4: // IN AL, IMM8
@@ -1787,19 +1787,19 @@ void exec(ubyte op) {
 		return;*/
 	case 0xE8: // CALL NEAR-PROC
 		push(IP);
-		EIP += FetchImmSWord; // Direct within segment
+		EIP += __fi16_i; // Direct within segment
 		return;
 	case 0xE9: // JMP    NEAR-LABEL
-		EIP += FetchImmSWord; // ±32 KB
+		EIP += __fi16_i; // ±32 KB
 		return;
 	case 0xEA: // JMP  FAR-LABEL
 		// Any segment, any fragment, 5 byte instruction.
 		// EAh (LO-IP) (HI-IP) (LO-CS) (HI-CS)
-		IP = FetchImmWord;
-		CS = FetchImmWord(2);
+		IP = __fu16_i;
+		CS = __fu16_i(2);
 		return;
 	case 0xEB: // JMP  SHORT-LABEL
-		EIP += FetchImmSByte; // ±128 B
+		EIP += __fi8_i; // ±128 B
 		return;
 	/*case 0xEC: // IN AL, DX
 

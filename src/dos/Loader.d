@@ -133,7 +133,7 @@ int ExecLoad(char* path) {
 			if (Verbose)
 				puts(" #   seg: off -> data");
 			for (int i; i < mzh.e_crlc; ++i) {
-				const ushort data = FetchWord(cip + (r[i].seg << 4) + r[i].off);
+				const ushort data = __fu16(cip + (r[i].seg << 4) + r[i].off);
 				if (Verbose)
 					printf("%2d  %04X:%04X -> %04X\n", i, r[i].seg, r[i].off, data);
 				CS += cast(ushort)(CS + r[i].seg); // temporarily cheat

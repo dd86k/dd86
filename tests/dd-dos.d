@@ -52,7 +52,7 @@ unittest
     DS = CS = 0x400;
     DX = EIP = 0x20;
     EIP = (0x400 << 4) + 0x20;
-    InsertString("OK\n$");
+    __istr("OK\n$");
     AH = 9;
     Raise(0x21);
     assert(AL == 0x24);
@@ -97,7 +97,7 @@ unittest
 
     /*write("INT 21h->39_00h: ");
     DS = CS; DX = IP;
-    InsertString("TESTDIR\0");
+    __istr("TESTDIR\0");
     AH = 0x39;
     Raise(0x21);
     assert(exists("TESTDIR"));
@@ -114,7 +114,7 @@ unittest
     // CREATE/TRUNC FILE
 
     write("INT 21h->3C_00h: ");
-    InsertString("TESTFILE\0");
+    __istr("TESTFILE\0");
     CL = 0; // No attributes
     AH = 0x3C;
     Raise(0x21);

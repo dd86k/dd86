@@ -7,67 +7,67 @@ unittest
 	import core.stdc.string : memset;
 	writeln("----- Interpreter (8086/i486)");
 
-	Initiate;
+	init;
 	CS = 0;
 
 	writeln("-- [ Help functions ]");
 
-	write("InsertByte : ");
+	write("__iu8 : ");
 	uint ip = get_ip;
-	InsertByte(0xFF, ip);
+	__iu8(0xFF, ip);
 	assert(MEMORY[ip]     == 0xFF);
 	assert(MEMORY[ip + 1] == 0);
-	InsertByte(0x12, ip + 2);
+	__iu8(0x12, ip + 2);
 	assert(MEMORY[ip + 2] == 0x12);
 	writeln("OK");
 
-	write("InsertWord : ");
-	InsertWord(0x100, ip);
+	write("__iu16 : ");
+	__iu16(0x100, ip);
 	assert(MEMORY[ip]     == 0);
 	assert(MEMORY[ip + 1] == 1);
-	InsertWord(0xABCD, ip);
+	__iu16(0xABCD, ip);
 	assert(MEMORY[ip]     == 0xCD);
 	assert(MEMORY[ip + 1] == 0xAB);
-	InsertWord(0x5678, 4);
+	__iu16(0x5678, 4);
 	assert(MEMORY[4] == 0x78);
 	assert(MEMORY[5] == 0x56);
 	writeln("OK");
 	
-	write("InsertDWord : ");
-	InsertDWord(0xAABBCCFF, ip + 1);
+	write("__iu32 : ");
+	__iu32(0xAABBCCFF, ip + 1);
 	assert(MEMORY[ip + 1] == 0xFF);
 	assert(MEMORY[ip + 2] == 0xCC);
 	assert(MEMORY[ip + 3] == 0xBB);
 	assert(MEMORY[ip + 4] == 0xAA);
 	writeln("OK");
 
-	write("InsertString: ");
-	InsertString("AB$");
+	write("__istr: ");
+	__istr("AB$");
 	assert(MEMORY[ip .. ip + 3] == "AB$");
-	InsertString("QWERTY", ip + 10);
+	__istr("QWERTY", ip + 10);
 	assert(MEMORY[ip + 10 .. ip + 16] == "QWERTY");
 	writeln("OK");
 
-	write("InsertWString: ");
-	InsertWString("Heck"w);
+	write("__iwstr: ");
+	__iwstr("Heck"w);
 	assert(MEMORY[ip     .. ip + 1] == "H"w);
 	assert(MEMORY[ip + 2 .. ip + 3] == "e"w);
 	assert(MEMORY[ip + 4 .. ip + 5] == "c"w);
 	assert(MEMORY[ip + 6 .. ip + 7] == "k"w);
 	writeln("OK");
 
-	write("InsertArray: ");
+	write("__iarr: ");
 	ubyte[2] ar = [ 0xAA, 0xBB ];
-	InsertArray(cast(ubyte*)ar, 2, get_ip);
+	__iarr(cast(ubyte*)ar, 2, get_ip);
 	assert(MEMORY[ip .. ip + 2] == [ 0xAA, 0xBB ]);
 	writeln("OK");
 
 	write("Fetch : ");
-	InsertWord(0xAAFF, ip + 1);
-	assert(FetchImmWord == 0xAAFF);
-	assert(FetchWord(ip + 1) == 0xAAFF);
-	assert(FetchImmSWord == cast(short)0xAAFF);
-	assert(FetchSWord(ip + 1) == cast(short)0xAAFF);
+	__iu16(0xAAFF, ip + 1);
+	assert(__fu16_i == 0xAAFF);
+	assert(__fu16(ip + 1) == 0xAAFF);
+	assert(__fi16_i == cast(short)0xAAFF);
+	assert(__fi16(ip + 1) == cast(short)0xAAFF);
 	writeln("OK");
 
 	writeln("\n----- [ Registers ]");
@@ -131,67 +131,67 @@ unittest
 
 	write("MOV (Registers) : ");
 
-	InsertByte(0x1, EIP + 1);
+	__iu8(0x1, EIP + 1);
 	exec(0xB0); // MOV AL, 1
 	assert(AL == 1);
 
-	InsertByte(0x2, EIP + 1);
+	__iu8(0x2, EIP + 1);
 	exec(0xB1); // MOV CL, 2
 	assert(CL == 2);
 
-	InsertByte(0x3, EIP + 1);
+	__iu8(0x3, EIP + 1);
 	exec(0xB2); // MOV DL, 3
 	assert(DL == 3);
 
-	InsertByte(0x4, EIP + 1);
+	__iu8(0x4, EIP + 1);
 	exec(0xB3); // MOV BL, 4
 	assert(BL == 4);
 
-	InsertByte(0x5, EIP + 1);
+	__iu8(0x5, EIP + 1);
 	exec(0xB4); // MOV AH, 5
 	assert(AH == 5);
 
-	InsertByte(0x6, EIP + 1);
+	__iu8(0x6, EIP + 1);
 	exec(0xB5); // MOV CH, 6
 	assert(CH == 6);
 
-	InsertByte(0x7, EIP + 1);
+	__iu8(0x7, EIP + 1);
 	exec(0xB6); // MOV DH, 7
 	assert(DH == 7);
 
-	InsertByte(0x8, EIP + 1);
+	__iu8(0x8, EIP + 1);
 	exec(0xB7); // MOV BH, 8
 	assert(BH == 8);
 
-	InsertWord(0x1112, EIP + 1); // [ 0x12, 0x11 ]
+	__iu16(0x1112, EIP + 1); // [ 0x12, 0x11 ]
 	exec(0xB8); // MOV AX, 1112h
 	assert(AX == 0x1112);
 
-	InsertWord(0x1113, EIP + 1);
+	__iu16(0x1113, EIP + 1);
 	exec(0xB9); // MOV CX, 1113h
 	assert(CX == 0x1113);
 
-	InsertWord(0x1114, EIP + 1);
+	__iu16(0x1114, EIP + 1);
 	exec(0xBA); // MOV DX, 1114h
 	assert(DX == 0x1114);
 
-	InsertWord(0x1115, EIP + 1);
+	__iu16(0x1115, EIP + 1);
 	exec(0xBB); // MOV BX, 1115h
 	assert(BX == 0x1115);
 
-	InsertWord(0x1116, EIP + 1);
+	__iu16(0x1116, EIP + 1);
 	exec(0xBC); // MOV SP, 1116h
 	assert(SP == 0x1116);
 
-	InsertWord(0x1117, EIP + 1);
+	__iu16(0x1117, EIP + 1);
 	exec(0xBD); // MOV BP, 1117h
 	assert(BP == 0x1117);
 
-	InsertWord(0x1118, EIP + 1);
+	__iu16(0x1118, EIP + 1);
 	exec(0xBE); // MOV SI, 1118h
 	assert(SI == 0x1118);
 
-	InsertWord(0x1119, EIP + 1);
+	__iu16(0x1119, EIP + 1);
 	exec(0xBF); // MOV DI, 1119h
 	assert(DI == 0x1119);
 
@@ -227,12 +227,12 @@ unittest
 
 	write("OR (AL/AX) : ");
 
-	InsertByte(0xF0, EIP + 1);
+	__iu8(0xF0, EIP + 1);
 	AL = 0xF;
 	exec(0xC); // OR AL, 3
 	assert(AL == 0xFF);
 
-	InsertWord(0xFF00, EIP + 1);
+	__iu16(0xFF00, EIP + 1);
 	exec(0xD); // OR AX, F0h
 	assert(AX == 0xFFFF);
 
@@ -240,12 +240,12 @@ unittest
 
 	write("XOR (AL/AX) : ");
 
-	InsertByte(5, EIP + 1);
+	__iu8(5, EIP + 1);
 	AL = 0xF;
 	exec(0x34); // XOR AL, 5
 	assert(AL == 0xA);
 
-	InsertWord(0xFF00, EIP + 1);
+	__iu16(0xFF00, EIP + 1);
 	AX = 0xAAFF;
 	exec(0x35); // XOR AX, FF00h
 	assert(AX == 0x55FF);
@@ -316,36 +316,36 @@ unittest
 
 	AX = 0xDAD;
 	exec(0x50);
-	assert(AX == FetchWord(get_ad(SS, SP)));
+	assert(AX == __fu16(get_ad(SS, SP)));
 	push(AX);
-	assert(AX == FetchWord(get_ad(SS, SP)));
+	assert(AX == __fu16(get_ad(SS, SP)));
 
 	CX = 0x4488;
 	exec(0x51);
-	assert(CX == FetchWord(get_ad(SS, SP)));
+	assert(CX == __fu16(get_ad(SS, SP)));
 
 	DX = 0x4321;
 	exec(0x52);
-	assert(DX == FetchWord(get_ad(SS, SP)));
+	assert(DX == __fu16(get_ad(SS, SP)));
 
 	BX = 0x1234;
 	exec(0x53);
-	assert(BX == FetchWord(get_ad(SS, SP)));
+	assert(BX == __fu16(get_ad(SS, SP)));
 
 	exec(0x54);
-	assert(SP == FetchWord(get_ad(SS, SP)) - 2);
+	assert(SP == __fu16(get_ad(SS, SP)) - 2);
 
 	BP = 0xFBAC;
 	exec(0x55);
-	assert(BP == FetchWord(get_ad(SS, SP)));
+	assert(BP == __fu16(get_ad(SS, SP)));
 
 	SI = 0xF00F;
 	exec(0x56);
-	assert(SI == FetchWord(get_ad(SS, SP)));
+	assert(SI == __fu16(get_ad(SS, SP)));
 
 	DI = 0xB0B;
 	exec(0x57);
-	assert(DI == FetchWord(get_ad(SS, SP)));
+	assert(DI == __fu16(get_ad(SS, SP)));
 
 	writeln("OK");
 
@@ -545,7 +545,7 @@ unittest
 	ES = 0x200; DI = 0x200;        
 	AX = 0xACDC;
 	exec(0xAB);
-	assert(FetchWord(get_ad(ES, DI - 2)) == 0xACDC);
+	assert(__fu16(get_ad(ES, DI - 2)) == 0xACDC);
 
 	writeln("OK");
 
@@ -568,10 +568,10 @@ unittest
 
 	AX = 0;
 	DS = 0x40; SI = 0x80;
-	InsertWord(0x48AA, get_ad(DS, SI));
+	__iu16(0x48AA, get_ad(DS, SI));
 	exec(0xAD);
 	assert(AX == 0x48AA);
-	InsertWord(0x65BB, get_ad(DS, SI));
+	__iu16(0x65BB, get_ad(DS, SI));
 	exec(0xAD);
 	assert(AX == 0x65BB);
 
@@ -583,7 +583,7 @@ unittest
 
 	ES = CS = 0x400; DI = 0x20; IP = 0x20;
 	EIP = get_ip;
-	InsertString("Hello!");
+	__istr("Hello!");
 	AL = 'H';
 	exec(0xAE);
 	assert(ZF);
@@ -596,7 +596,7 @@ unittest
 	write("SCASW : ");
 
 	CS = 0x800; ES = 0x800; EIP = 0x30; DI = 0x30;
-	InsertWord(0xFE22, get_ad(ES, DI));
+	__iu16(0xFE22, get_ad(ES, DI));
 	AX = 0xFE22;
 	exec(0xAF);
 	assert(ZF);
@@ -612,9 +612,9 @@ unittest
 	write("CMPS : ");
 
 	CS = ES = 0xF00; DI = EIP = 0x100;
-	InsertString("HELL", get_ip);
+	__istr("HELL", get_ip);
 	CS = DS = 0xF00; SI = EIP = 0x110;
-	InsertString("HeLL", get_ip);
+	__istr("HeLL", get_ip);
 	exec(0xA6);
 	assert(ZF);
 	exec(0xA6);
@@ -629,9 +629,9 @@ unittest
 	write("CMPSW : ");
 
 	CS = ES = 0xF00; DI = EIP = 0x100;
-	InsertWString("HELL"w, get_ip);
+	__iwstr("HELL"w, get_ip);
 	CS = DS = 0xF00; SI = EIP = 0x110;
-	InsertWString("HeLL"w, get_ip);
+	__iwstr("HeLL"w, get_ip);
 	exec(0xA7);
 	assert(ZF);
 	exec(0xA7);

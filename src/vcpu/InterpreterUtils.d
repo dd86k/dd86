@@ -18,21 +18,21 @@ import core.stdc.wchar_ : wchar_t, wcscpy;
  * Notes: Uses MOD and RM fields.
  */
 extern (C)
-uint GetEA(ubyte rm) {
+uint get_ea(ubyte rm) {
 	switch (rm & RM_MOD) { // MOD
 	case RM_MOD_00: // MOD 00, Memory Mode, no displacement
 		switch (Seg) {
 		case SEG_CS:
-			debug puts("MOD_00, GetEA::SEG_CS");
+			debug puts("MOD_00, get_ea::SEG_CS");
 			break;
 		case SEG_DS:
-			debug puts("MOD_00, GetEA::SEG_DS");
+			debug puts("MOD_00, get_ea::SEG_DS");
 			break;
 		case SEG_ES:
-			debug puts("MOD_00, GetEA::SEG_ES");
+			debug puts("MOD_00, get_ea::SEG_ES");
 			break;
 		case SEG_SS:
-			debug puts("MOD_00, GetEA::SEG_SS");
+			debug puts("MOD_00, get_ea::SEG_SS");
 			break;
 		default:
 			switch (rm & RM_RM) { // R/M
@@ -56,7 +56,7 @@ uint GetEA(ubyte rm) {
 				return DI;
 			case 0b110:
 				debug puts("EA:0:6");
-				return FetchImmWord(1); // DIRECT ADDRESS
+				return __fu16_i(1); // DIRECT ADDRESS
 			case 0b111:
 				debug puts("EA:0:7");
 				return BX;
@@ -71,43 +71,43 @@ uint GetEA(ubyte rm) {
 	case RM_MOD_10: // MOD 10, Memory Mode, 16-bit displacement follows
 		switch (Seg) {
 		case SEG_CS:
-			debug puts("MOD_10, GetEA::SEG_CS");
+			debug puts("MOD_10, get_ea::SEG_CS");
 			break;
 		case SEG_DS:
-			debug puts("MOD_10, GetEA::SEG_DS");
+			debug puts("MOD_10, get_ea::SEG_DS");
 			break;
 		case SEG_ES:
-			debug puts("MOD_10, GetEA::SEG_ES");
+			debug puts("MOD_10, get_ea::SEG_ES");
 			break;
 		case SEG_SS:
-			debug puts("MOD_10, GetEA::SEG_SS");
+			debug puts("MOD_10, get_ea::SEG_SS");
 			break;
 		default:
 			switch (rm & RM_RM) { // R/M
 			case 0:
 				debug puts("EA:2:0");
-				return SI + BX + FetchImmWord(1);
+				return SI + BX + __fu16_i(1);
 			case RM_RM_001:
 				debug puts("EA:2:1");
-				return DI + BX + FetchImmWord(1);
+				return DI + BX + __fu16_i(1);
 			case RM_RM_010:
 				debug puts("EA:2:2");
-				return SI + BP + FetchImmWord(1);
+				return SI + BP + __fu16_i(1);
 			case RM_RM_011:
 				debug puts("EA:2:3");
-				return DI + BP + FetchImmWord(1);
+				return DI + BP + __fu16_i(1);
 			case RM_RM_100:
 				debug puts("EA:2:4");
-				return SI + FetchImmWord(1);
+				return SI + __fu16_i(1);
 			case RM_RM_101:
 				debug puts("EA:2:5");
-				return DI + FetchImmWord(1);
+				return DI + __fu16_i(1);
 			case RM_RM_110:
 				debug puts("EA:2:6");
-				return BP + FetchImmWord(1);
+				return BP + __fu16_i(1);
 			case RM_RM_111:
 				debug puts("EA:2:7");
-				return BX + FetchImmWord(1);
+				return BX + __fu16_i(1);
 			default:
 			}
 		}
@@ -194,65 +194,69 @@ uint GetEA(ubyte rm) {
  *****************************************************************************/
 
 /**
- * Insert data in memory (uses memcpy)
+ * Insert data in MEMORY
  * Params:
  *   ops = Data
  *   size = Data size
  *   offset = Memory location
  */
 extern (C)
-void InsertArray(void* ops, size_t size, size_t offset) {
+void __iarr(void* ops, size_t size, size_t offset) {
 	memcpy(cast(void*)MEMORY + offset, ops, size);
 }
 
 /**
- * Insert a BYTE in memory.
+ * Insert a BYTE in MEMORY
  * Params:
  *   op = BYTE value
  *   addr = Memory address
  */
 extern (C)
-void InsertByte(ubyte op, int addr) {
+void __iu8(ubyte op, int addr) {
 	MEMORY[addr] = op;
 }
+
 /**
- * Insert a WORD in memory.
+ * Insert a WORD in MEMORY
  * Params:
  *   op = WORD value (will be casted)
  *   addr = Memory address
  */
 extern (C)
-void InsertWord(int data, int addr) { // int promotion ;-)
+void __iu16(int data, int addr) {
 	*cast(ushort*)(cast(void*)MEMORY + addr) = cast(ushort)data;
 }
+
 /**
- * Insert a DWORD in memory.
+ * Insert a DWORD in MEMORY
  * Params:
  *   op = DWORD value
  *   addr = Memory address
  */
 extern (C)
-void InsertDWord(uint op, int addr) {
+void __iu32(uint op, int addr) {
 	*cast(uint*)(cast(void*)MEMORY + addr) = op;
 }
+
 /**
- * Insert an ASCIZ string in memory.
+ * Insert an ASCIZ string in MEMORY
  * Params:
  *   data = String value
  *   addr = Memory address, default being CS:IP
  */
 extern (C)
-void InsertString(immutable(char)* data, size_t addr = EIP) {
+void __istr(immutable(char)* data, size_t addr = EIP) {
 	strcpy(cast(char*)MEMORY + addr, data);
 }
+
 /**
- * Insert a wide string, null-terminated, in memory.
+ * Insert a wide string, null-terminated in MEMORY
  * Params:
  *   data = Wide wtring data
  *   addr = Memory Address (EIP by default)
  */
 extern (C)
-void InsertWString(immutable(wchar)[] data, size_t addr = EIP) {
+void __iwstr(immutable(wchar)[] data, size_t addr = EIP) {
 	wcscpy(cast(wchar_t*)(cast(ubyte*)MEMORY + addr), cast(wchar_t*)data);
 }
 
@@ -261,31 +265,33 @@ void InsertWString(immutable(wchar)[] data, size_t addr = EIP) {
  *****************************************************************************/
 
 /**
- * Fetch an immediate BYTE at CS:IP+n+1
- * Params: off = Optional offset (+1)
+ * Fetch an immediate BYTE at EIP+1+n
+ * Params: n = Optional offset (+1)
  * Returns: BYTE
  */
 extern (C)
-ubyte FetchImmByte(int off = 0) {
-	return MEMORY[EIP + 1 + off];
+ubyte __fu8_i(int n = 0) {
+	return MEMORY[EIP + 1 + n];
 }
+
 /**
- * Fetch an immediate WORD at CS:IP+n+1
- * Params: off = Optional offset (+1)
+ * Fetch an immediate WORD at EIP+1+n
+ * Params: n = Optional offset (+1)
  * Returns: WORD
  */
 extern (C)
-ushort FetchImmWord(uint off = 0) {
-	return *cast(ushort*)(cast(ubyte*)MEMORY + EIP + 1 + off);
+ushort __fu16_i(uint n = 0) {
+	return *cast(ushort*)(cast(ubyte*)MEMORY + EIP + 1 + n);
 }
+
 /**
- * Fetch an immediate signed WORD at CS:IP+n+1
- * Params: off = Optional offset (+1)
+ * Fetch an immediate signed WORD at EIP+1+n
+ * Params: n = Optional offset (+1)
  * Returns: signed WORD
  */
 extern (C)
-short FetchImmSWord(uint off = 0) {
-	return *cast(short*)(cast(ubyte*)MEMORY + EIP + off + 1);
+short __fi16_i(uint n = 0) {
+	return *cast(short*)(cast(ubyte*)MEMORY + EIP + 1 + n);
 }
 
 /**
@@ -295,46 +301,46 @@ short FetchImmSWord(uint off = 0) {
  */
 extern (C)
 pragma(inline, true)
-ubyte FetchByte(uint addr) {
+ubyte __fu8(uint addr) {
 	return MEMORY[addr];
 }
+
 /**
  * Fetch a signed byte (byte).
  * Returns: Signed BYTE
  */
 extern (C)
 pragma(inline, true)
-byte FetchImmSByte() {
+byte __fi8_i() {
 	return cast(byte)MEMORY[EIP + 1];
 }
 
 /**
- * Fetch a WORD from memory
+ * Fetch a WORD from MEMORY
  * Params: addr = Memory address
  * Returns: WORD
  */
 extern (C)
-pragma(inline, true)
-ushort FetchWord(uint addr) {
+ushort __fu16(uint addr) {
 	return *cast(ushort*)(cast(ubyte*)MEMORY + addr);
 }
+
 /**
- * Fetch a DWORD from memory
+ * Fetch a DWORD from MEMORY
  * Params: addr = Memory address
  * Returns: DWORD
  */
 extern (C)
-pragma(inline, true)
-uint FetchDWord(uint addr) {
+uint __fu32(uint addr) {
 	return *cast(uint*)(cast(ubyte*)MEMORY + addr);
 }
+
 /**
  * Fetch a signed WORD from memory
  * Params: addr = Memory address
  * Returns: signed WORD
  */
 extern (C)
-pragma(inline, true)
-short FetchSWord(uint addr) {
+short __fi16(uint addr) {
 	return *cast(short*)(cast(ubyte*)MEMORY + addr);
 }
