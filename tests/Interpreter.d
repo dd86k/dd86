@@ -1,27 +1,27 @@
 module InterpreterTests;
 
 import Interpreter, InterpreterUtils, std.stdio, vdos;
+import unitutils;
 
 unittest
 {
 	import core.stdc.string : memset;
-	writeln("----- Interpreter (8086/i486)");
+	section("Interpreter (8086/i486)");
 
 	init;
 	CS = 0;
-
-	writeln("-- [ Help functions ]");
-
-	write("__iu8 : ");
 	uint ip = get_ip;
+
+	sub("InterpreterUtils");
+
+	test("__iu8");
 	__iu8(0xFF, ip);
 	assert(MEMORY[ip]     == 0xFF);
-	assert(MEMORY[ip + 1] == 0);
 	__iu8(0x12, ip + 2);
 	assert(MEMORY[ip + 2] == 0x12);
-	writeln("OK");
+	OK;
 
-	write("__iu16 : ");
+	test("__iu16");
 	__iu16(0x100, ip);
 	assert(MEMORY[ip]     == 0);
 	assert(MEMORY[ip + 1] == 1);
@@ -31,85 +31,129 @@ unittest
 	__iu16(0x5678, 4);
 	assert(MEMORY[4] == 0x78);
 	assert(MEMORY[5] == 0x56);
-	writeln("OK");
+	OK;
 	
-	write("__iu32 : ");
-	__iu32(0xAABBCCFF, ip + 1);
-	assert(MEMORY[ip + 1] == 0xFF);
-	assert(MEMORY[ip + 2] == 0xCC);
-	assert(MEMORY[ip + 3] == 0xBB);
-	assert(MEMORY[ip + 4] == 0xAA);
-	writeln("OK");
+	test("__iu32");
+	__iu32(0xAABBCCFF, ip);
+	assert(MEMORY[ip    ] == 0xFF);
+	assert(MEMORY[ip + 1] == 0xCC);
+	assert(MEMORY[ip + 2] == 0xBB);
+	assert(MEMORY[ip + 3] == 0xAA);
+	OK;
 
-	write("__istr: ");
+	test("__fu8");
+	__iu8(0xAC, ip + 1);
+	assert(__fu8(ip + 1) == 0xAC);
+	OK;
+
+	test("__fu8_i");
+	assert(__fu8_i == 0xAC);
+	OK;
+
+	/*test("__fi8");
+	assert(__fi8(ip + 1) == cast(byte)0xAC);
+	OK;*/
+
+	test("__fi8_i");
+	assert(__fi8_i == cast(byte)0xAC);
+	OK;
+
+	test("__fu16");
+	__iu16(0xAAFF, ip + 1);
+	assert(__fu16(ip + 1) == 0xAAFF);
+	OK;
+
+	test("__fi16");
+	assert(__fi16(ip + 1) == cast(short)0xAAFF);
+	OK;
+
+	test("__fu16_i");
+	assert(__fu16_i == 0xAAFF);
+	OK;
+
+	test("__fi16_i");
+	assert(__fi16_i == cast(short)0xAAFF);
+	OK;
+
+	test("__fu32");
+	__iu32(0xDCBA_FF00, ip + 1);
+	assert(__fu32(ip + 1) == 0xDCBA_FF00);
+	OK;
+
+	/*test("__fu32_i");
+	assert(__fu32_i == 0xDCBA_FF00);
+	OK;*/
+
+	test("__istr");
 	__istr("AB$");
 	assert(MEMORY[ip .. ip + 3] == "AB$");
 	__istr("QWERTY", ip + 10);
 	assert(MEMORY[ip + 10 .. ip + 16] == "QWERTY");
-	writeln("OK");
+	OK;
 
-	write("__iwstr: ");
+	test("__iwstr");
 	__iwstr("Heck"w);
 	assert(MEMORY[ip     .. ip + 1] == "H"w);
 	assert(MEMORY[ip + 2 .. ip + 3] == "e"w);
 	assert(MEMORY[ip + 4 .. ip + 5] == "c"w);
 	assert(MEMORY[ip + 6 .. ip + 7] == "k"w);
-	writeln("OK");
+	OK;
 
-	write("__iarr: ");
+	test("__iarr");
 	ubyte[2] ar = [ 0xAA, 0xBB ];
-	__iarr(cast(ubyte*)ar, 2, get_ip);
+	__iarr(cast(ubyte*)ar, 2, ip);
 	assert(MEMORY[ip .. ip + 2] == [ 0xAA, 0xBB ]);
-	writeln("OK");
+	OK;
 
-	write("Fetch : ");
-	__iu16(0xAAFF, ip + 1);
-	assert(__fu16_i == 0xAAFF);
-	assert(__fu16(ip + 1) == 0xAAFF);
-	assert(__fi16_i == cast(short)0xAAFF);
-	assert(__fi16(ip + 1) == cast(short)0xAAFF);
-	writeln("OK");
+	section("Registers");
+	
+	EAX = 0xFF_0201;
+	EBX = 0xFF_0201;
+	ECX = 0xFF_0201;
+	EDX = 0xFF_0201;
 
-	writeln("\n----- [ Registers ]");
-
-	AX = 0x0201;
-	BX = 0x0201;
-	CX = 0x0201;
-	DX = 0x0201;
-	EIP = 0x0050;
-	write("AL/AH : ");
+	test("AL/AH");
 	assert(AL == 1);
 	assert(AH == 2);
-	writeln("OK");
-	write("BL/BH : ");
+	OK;
+
+	test("BL/BH");
 	assert(BL == 1);
 	assert(BH == 2);
-	writeln("OK");
-	write("CL/CH : ");
+	OK;
+
+	test("CL/CH");
 	assert(CL == 1);
 	assert(CH == 2);
-	writeln("OK");
-	write("DL/DH : ");
+	OK;
+
+	test("DL/DH");
 	assert(DL == 1);
 	assert(DH == 2);
-	writeln("OK");
-	write("AX : ");
-	assert(AX == 0x0201);
-	writeln("OK");
-	write("BX : ");
-	assert(BX == 0x0201);
-	writeln("OK");
-	write("CX : ");
-	assert(CX == 0x0201);
-	writeln("OK");
-	write("DX : ");
-	assert(DX == 0x0201);
-	writeln("OK");
-	write("IP : ");
-	assert(IP == 0x0050);
-	writeln("OK");
+	OK;
 
-	write("FLAG: ");
+	test("AX");
+	assert(AX == 0x0201);
+	OK;
+
+	test("BX");
+	assert(BX == 0x0201);
+	OK;
+
+	test("CX");
+	assert(CX == 0x0201);
+	OK;
+
+	test("DX");
+	assert(DX == 0x0201);
+	OK;
+
+	EIP = 0x0F50;
+	test("IP");
+	assert(IP == 0x0F50);
+	OK;
+
+	test("FLAG");
 	FLAG = 0xFFFF;
 	assert(SF); assert(ZF); assert(AF); assert(PF); assert(CF);
 	assert(OF); assert(DF); assert(IF); assert(TF);
@@ -120,16 +164,16 @@ unittest
 	assert(!OF); assert(!DF); assert(!IF); assert(!TF);
 	assert(FLAGB == 0);
 	assert(FLAG == 0);
-	writeln("OK");
+	OK;
 
-	writeln("\n-- [ General instructions ]");
+	sub("General instructions");
 
 	// MOV
 
 	CS = 0; IP = 0x100;
 	EIP = get_ip;
 
-	write("MOV (Registers) : ");
+	test("MOV (REG)");
 
 	__iu8(0x1, EIP + 1);
 	exec(0xB0); // MOV AL, 1
@@ -195,13 +239,13 @@ unittest
 	exec(0xBF); // MOV DI, 1119h
 	assert(DI == 0x1119);
 
-	writeln("OK");
+	OK;
 
 	// MOV - ModR/M
 
 	// MOV R/M16, REG16
 
-	/*write("MOV R/M16, REG16 : ");
+	/*test("MOV R/M16, REG16");
 	{
 		ubyte mod = 0; // AX
 		Insert(0x134A, 10);
@@ -213,19 +257,19 @@ unittest
 
 		mod = 1;
 	}
-	writeln("OK");*/
+	OK;*/
 
 	// MOV REG8, R/M8
 
-	//write("MOV REG8, R/M8 : ");
+	//test("MOV REG8, R/M8");
 
 
 
-	//writeln("OK");
+	//OK;
 
 	// OR
 
-	write("OR (AL/AX) : ");
+	test("OR (AL/AX)");
 
 	__iu8(0xF0, EIP + 1);
 	AL = 0xF;
@@ -236,9 +280,9 @@ unittest
 	exec(0xD); // OR AX, F0h
 	assert(AX == 0xFFFF);
 
-	writeln("OK");
+	OK;
 
-	write("XOR (AL/AX) : ");
+	test("XOR (AL/AX)");
 
 	__iu8(5, EIP + 1);
 	AL = 0xF;
@@ -250,21 +294,21 @@ unittest
 	exec(0x35); // XOR AX, FF00h
 	assert(AX == 0x55FF);
 
-	writeln("OK");
+	OK;
 
 	// OR - ModR/M
 
-	//write("OR (R/M) : ");
+	//test("OR (R/M)");
 
 
 
-	//writeln("OK");
+	//OK;
 
 	// INC
 
-	write("INC : ");
+	test("INC");
 
-	fullreset(); CS = 0;
+	fullreset; CS = 0;
 	exec(0x40);
 	assert(AX == 1);
 	exec(0x41);
@@ -282,11 +326,11 @@ unittest
 	exec(0x47);
 	assert(DI == 1);
 
-	writeln("OK");
+	OK;
 	
 	// DEC
 
-	write("DEC : ");
+	test("DEC");
 
 	exec(0x48);
 	assert(AX == 0);
@@ -305,11 +349,11 @@ unittest
 	exec(0x4F);
 	assert(DI == 0);
 
-	writeln("OK");
+	OK;
 
 	// PUSH
 
-	write("PUSH : ");
+	test("PUSH");
 
 	SS = 0x100;
 	SP = 0x60;
@@ -347,11 +391,11 @@ unittest
 	exec(0x57);
 	assert(DI == __fu16(get_ad(SS, SP)));
 
-	writeln("OK");
+	OK;
 
 	// POP
 
-	write("POP : ");
+	test("POP");
 
 	SS = 0x100;
 	SP = 0x20;
@@ -381,11 +425,11 @@ unittest
 	exec(0x5F);
 	assert(DI == 0xFFAA);
 
-	writeln("OK");
+	OK;
 
 	// XCHG
 
-	write("XCHG : ");
+	test("XCHG");
 
 	// Nevertheless, let's test the Program Counter
 	{
@@ -436,11 +480,11 @@ unittest
 	assert(AX == 0xAABB);
 	assert(DI == 0xFAB);
 
-	writeln("OK");
+	OK;
 
 	// GRP1
 
-	/*write("GRP1 ADD : ");
+	/*test("GRP1 ADD");
 
 	AX = 6;
 	BX = 6;
@@ -481,9 +525,9 @@ unittest
 	exec(0x80);
 	assert(BH == 0x16);
 
-	writeln("OK");*/
+	OK;*/
 
-	/*write("GRP1 OR : ");
+	/*test("GRP1 OR");
 	{
 
 	}
@@ -493,7 +537,7 @@ unittest
 
 	// CS:
 
-	/*write("CS Override : ");
+	/*test("CS Override");
 	{
 
 	}
@@ -501,7 +545,7 @@ unittest
 
 	// CBW
 
-	write("CBW : ");
+	test("CBW");
 
 	AL = 0;
 	exec(0x98);
@@ -510,11 +554,11 @@ unittest
 	exec(0x98);
 	assert(AH == 0xFF);
 
-	writeln("OK");
+	OK;
 
 	// CWD
 
-	write("CWD : ");
+	test("CWD");
 
 	AX = 0;
 	exec(0x99);
@@ -523,36 +567,53 @@ unittest
 	exec(0x99);
 	assert(DX == 0xFFFF);
 
-	writeln("OK");
+	OK;
+
+	test("TEST AL,IMM8");
+
+	AL = 0b1100;
+	__iu8(0b1100, EIP + 1);
+	exec(0xA8);
+	assert(!CF);
+	assert(PF);
+	assert(!AF);
+	assert(!ZF);
+	assert(!SF);
+
+	AL = 0xF0;
+	__iu8(0x0F, EIP + 1);
+	exec(0xA8);
+	assert(!CF);
+	assert(!PF);
+	assert(!AF);
+	assert(ZF);
+	assert(!SF);
+
+	OK;
 
 	// -- STRING INSTRUCTIONS --
 	
-	writeln("\n-- [ String instructions ]");
+	sub("String instructions");
 
 	// STOS
 
-	write("STOSB : ");
-
+	test("STOSB");
 	ES = 0x20; DI = 0x20;        
 	AL = 'Q';
 	exec(0xAA);
 	assert(MEMORY[get_ad(ES, DI - 1)] == 'Q');
+	OK;
 
-	writeln("OK");
-
-	write("STOSW : ");
-
+	test("STOSW");
 	ES = 0x200; DI = 0x200;        
 	AX = 0xACDC;
 	exec(0xAB);
 	assert(__fu16(get_ad(ES, DI - 2)) == 0xACDC);
-
-	writeln("OK");
+	OK;
 
 	// LODS
 
-	write("LODSB : ");
-
+	test("LODSB");
 	AL = 0;
 	DS = 0xA0; SI = 0x200;
 	MEMORY[get_ad(DS, SI)] = 'H';
@@ -561,11 +622,9 @@ unittest
 	MEMORY[get_ad(DS, SI)] = 'e';
 	exec(0xAC);
 	assert(AL == 'e');
+	OK;
 
-	writeln("OK");
-
-	write("LODSW : ");
-
+	test("LODSW");
 	AX = 0;
 	DS = 0x40; SI = 0x80;
 	__iu16(0x48AA, get_ad(DS, SI));
@@ -574,13 +633,11 @@ unittest
 	__iu16(0x65BB, get_ad(DS, SI));
 	exec(0xAD);
 	assert(AX == 0x65BB);
-
-	writeln("OK");
+	OK;
 
 	// SCAS
 
-	write("SCASB : ");
-
+	test("SCASB");
 	ES = CS = 0x400; DI = 0x20; IP = 0x20;
 	EIP = get_ip;
 	__istr("Hello!");
@@ -590,11 +647,9 @@ unittest
 	AL = '1';
 	exec(0xAE);
 	assert(!ZF);
+	OK;
 
-	writeln("OK");
-
-	write("SCASW : ");
-
+	test("SCASW");
 	CS = 0x800; ES = 0x800; EIP = 0x30; DI = 0x30;
 	__iu16(0xFE22, get_ad(ES, DI));
 	AX = 0xFE22;
@@ -602,15 +657,13 @@ unittest
 	assert(ZF);
 	exec(0xAF);
 	assert(!ZF);
-
-	writeln("OK");
+	OK;
 
 	DF = 0;
 
 	// CMPS
 
-	write("CMPS : ");
-
+	test("CMPS");
 	CS = ES = 0xF00; DI = EIP = 0x100;
 	__istr("HELL", get_ip);
 	CS = DS = 0xF00; SI = EIP = 0x110;
@@ -623,11 +676,9 @@ unittest
 	assert(ZF);
 	exec(0xA6);
 	assert(ZF);
+	OK;
 
-	writeln("OK");
-
-	write("CMPSW : ");
-
+	test("CMPSW");
 	CS = ES = 0xF00; DI = EIP = 0x100;
 	__iwstr("HELL"w, get_ip);
 	CS = DS = 0xF00; SI = EIP = 0x110;
@@ -640,6 +691,5 @@ unittest
 	assert(ZF);
 	exec(0xA7);
 	assert(ZF);
-
-	writeln("OK");
+	OK;
 }

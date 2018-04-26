@@ -1,18 +1,27 @@
 module UtilitiesTests;
 
-import Interpreter : MEMORY;
-import std.stdio, vdos, Utilities;
-import core.stdc.string : memcpy;
+import Utilities, InterpreterUtils;
+import unitutils;
 
 unittest
 {
-    writeln("\n----- Utilities");
+    section("Utilities");
 
-    const uint pos = 10;
-    char* s = cast(char*)"Hello\0";
-    memcpy(cast(void*)MEMORY + pos, s, 6);
+    test("MemString");
+    __istr("Hello", 10);
+    assert(MemString(10) == "Hello");
+    OK;
 
-    write("MemString(uint) : ");
-    assert(MemString(pos) == "Hello");
-    writeln("OK");
+    test("bswap16");
+    assert(bswap16(0xAAFF) == 0xFFAA);
+    OK;
+    test("bswap32");
+    assert(bswap32(0xAABB_FFEE) == 0xEEFF_BBAA);
+    OK;
+    test("bswap64");
+    assert(
+        bswap64(0xAABBCCDD_11223344) ==
+        0x44332211_DDCCBBAA
+    );
+    OK;
 }

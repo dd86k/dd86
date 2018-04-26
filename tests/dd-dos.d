@@ -1,10 +1,11 @@
 module vdosTests;
 
 import Interpreter, InterpreterUtils, std.stdio, vdos, std.file : exists;
+import unitutils;
 
 unittest
 {
-    writeln("\n----- DD-DOS (MS-DOS, IBM PC)");
+    section("DD-DOS (MS-DOS, IBM PC)");
 
     /*
      * Hardware (and/or BIOS)
@@ -12,7 +13,7 @@ unittest
 
     // MEMORY SIZE
 
-    write("INT 12h: ");
+    test("INT 12h");
     Raise(0x12);
     assert(MEMORYSIZE / 1024 == AX);
     writeln("OK  (", AX, " KB)");
@@ -23,7 +24,7 @@ unittest
 
     // FAST CONSOLE OUTPUT (DOS)
 
-    write("INT 29h: ");
+    test("INT 29h");
     AL = 'O';
     Raise(0x29);
     AL = 'K';
@@ -37,7 +38,7 @@ unittest
 
     // FAST CONSOLE OUTPUT (MS-DOS)
 
-    write("INT 21h->02_00h: ");
+    test("INT 21h->02_00h");
     AH = 2;
     DL = 'O';
     Raise(0x21);
@@ -48,10 +49,10 @@ unittest
 
     // PRINT STRING
 
-    write("INT 21h->09_00h: ");
+    test("INT 21h->09_00h");
     DS = CS = 0x400;
-    DX = EIP = 0x20;
-    EIP = (0x400 << 4) + 0x20;
+    DX = 0x20; IP = 0x20;
+    EIP = get_ip;
     __istr("OK\n$");
     AH = 9;
     Raise(0x21);
@@ -59,10 +60,9 @@ unittest
 
     // GET DATE
 
-    write("INT 21h->2A_00h: ");
+    test("INT 21h->2A_00h");
     AH = 0x2A;
     Raise(0x21);
-    write("(WD D/M/Y) ");
     switch (AL) {
     case 0, 7: write("Sunday"); break;
     case 1: write("Monday"); break;
@@ -71,49 +71,49 @@ unittest
     case 4: write("Thursday"); break;
     case 5: write("Friday"); break;
     case 6: write("Saturday"); break;
-    default:
+    default: assert(0);
     }
-    writefln(" %d/%d/%d", DL, DH, CX);
+    writefln(" %d-%02d-%02d", CX, DH, DL);
 
     // GET TIME
 
-    write("INT 21h->2C_00h: ");
+    test("INT 21h->2C_00h");
     AH = 0x2C;
     Raise(0x21);
-    writefln("(H:M:S.MS) %d:%d:%d.%d", CH, CL, DH, DL);
+    writefln("%d:%d:%d.%d", CH, CL, DH, DL);
 
     // GET VERSION
 
-    write("INT 21h->30_00h: ");
+    test("INT 21h->30_00h");
     AL = 0;
     AH = 0x30;
     Raise(0x21);
     assert(AH == DOS_MINOR_VERSION);
     assert(AL == DOS_MAJOR_VERSION);
     assert(BH == OEM_ID.IBM);
-    writeln("OK");
+    OK;
 
     // CREATE SUBDIRECTORY
 
-    /*write("INT 21h->39_00h: ");
+    /*test("INT 21h->39_00h");
     DS = CS; DX = IP;
     __istr("TESTDIR\0");
     AH = 0x39;
     Raise(0x21);
     assert(exists("TESTDIR"));
-    writeln("OK");
+    OK;
 
     // REMOVE SUBDIRECTORY
 
-    write("INT 21h->3A_00h: ");
+    test("INT 21h->3A_00h");
     AH = 0x3A;
     Raise(0x21);
     assert(!exists("TESTDIR"));
-    writeln("OK");
+    OK;
 
     // CREATE/TRUNC FILE
 
-    write("INT 21h->3C_00h: ");
+    test("INT 21h->3C_00h");
     __istr("TESTFILE\0");
     CL = 0; // No attributes
     AH = 0x3C;
@@ -121,7 +121,7 @@ unittest
     assert(exists("TESTFILE"));
     //CL = 32; // Archive
     //Raise(0x21); // On TESTFILE again
-    writeln("OK");
+    OK;
 
     // OPEN FILE
 
@@ -133,18 +133,20 @@ unittest
 
     // DELETE FILE
 
-    write("INT 21h->41_00h: ");
+    test("INT 21h->41_00h");
     CL = 0;
     AH = 0x41;
     Raise(0x21);
     assert(!exists("TESTFILE"));
-    writeln("OK");*/
+    OK;*/
 
     // GET FREE DISK SPACE
 
-    /*write("INT 21h->36_00h: ");
+    /*test("INT 21h->36_00h");
     DL = 2; // C:
     AH = 0x36;
     Raise(0x21);
-    writeln("OK");*/
+    OK;*/
+
+    writeln; // usually run last so unittest results have their own line
 }
