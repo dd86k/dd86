@@ -105,7 +105,7 @@ unittest
 	assert(MEMORY[ip .. ip + 2] == [ 0xAA, 0xBB ]);
 	OK;
 
-	section("Registers");
+	sub("Registers");
 	
 	EAX = 0xFF_0201;
 	EBX = 0xFF_0201;
