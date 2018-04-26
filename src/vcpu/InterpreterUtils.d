@@ -190,20 +190,50 @@ uint get_ea(ubyte rm) {
 }
 
 /*****************************************************************************
- * Insert
+ * Flag utils
  *****************************************************************************/
 
 /**
- * Insert data in MEMORY
- * Params:
- *   ops = Data
- *   size = Data size
- *   offset = Memory location
+ * Handle result for GROUP1 (UNSIGNED BYTE)
+ * OF, SF, ZF, AF, CF, and PF affected
+ * Params: r = Operation result
  */
 extern (C)
-void __iarr(void* ops, size_t size, size_t offset) {
-	memcpy(cast(void*)MEMORY + offset, ops, size);
+void __hflag8_1(int r) {
+	CF = (r & 0x100) != 0;
+	SF = (r & 0x80) != 0;
+	AF = (r & 0b1_0000) != 0;
+	ZF = r == 0;
+	OF = CF || r < 0;
+	r ^= r >> 1;
+	r ^= r >> 2;
+	r ^= r >> 4;
+	PF = cast(ubyte)r;
 }
+
+/**
+ * Handle result for GROUP1 (UNSIGNED WORD)
+ * OF, SF, ZF, AF, CF, and PF affected
+ * Params: r = Operation result
+ */
+extern (C)
+void __hflag16_1(int r) {
+	CF = (r & 0x1_0000) != 0;
+	SF = (r & 0x8_000) != 0;
+	AF = (r & 0b1_0000_0000) != 0;
+	ZF = r == 0;
+	OF = CF || r < 0;
+	r ^= r >> 1;
+	r ^= r >> 2;
+	r ^= r >> 4;
+	r ^= r >> 8;
+	//r ^= r >> 16;
+	PF = cast(ubyte)r;
+}
+
+/*****************************************************************************
+ * Insert
+ *****************************************************************************/
 
 /**
  * Insert a BYTE in MEMORY
@@ -212,6 +242,7 @@ void __iarr(void* ops, size_t size, size_t offset) {
  *   addr = Memory address
  */
 extern (C)
+pragma(inline, true)
 void __iu8(ubyte op, int addr) {
 	MEMORY[addr] = op;
 }
@@ -239,10 +270,22 @@ void __iu32(uint op, int addr) {
 }
 
 /**
+ * Insert data in MEMORY
+ * Params:
+ *   ops = Data
+ *   size = Data size
+ *   offset = Memory location
+ */
+extern (C)
+void __iarr(void* ops, size_t size, size_t offset) {
+	memcpy(cast(void*)MEMORY + offset, ops, size);
+}
+
+/**
  * Insert an ASCIZ string in MEMORY
  * Params:
  *   data = String value
- *   addr = Memory address, default being CS:IP
+ *   addr = Memory address, default: CS:IP
  */
 extern (C)
 void __istr(immutable(char)* data, size_t addr = EIP) {
@@ -250,7 +293,7 @@ void __istr(immutable(char)* data, size_t addr = EIP) {
 }
 
 /**
- * Insert a wide string, null-terminated in MEMORY
+ * Insert a null-terminated wide string in MEMORY
  * Params:
  *   data = Wide wtring data
  *   addr = Memory Address (EIP by default)
@@ -265,6 +308,51 @@ void __iwstr(immutable(wchar)[] data, size_t addr = EIP) {
  *****************************************************************************/
 
 /**
+ * Fetch an unsigned byte (ubyte).
+ * Params: addr = Memory address
+ * Returns: BYTE
+ */
+extern (C)
+pragma(inline, true)
+ubyte __fu8(uint addr) {
+	return MEMORY[addr];
+}
+
+/**
+ * Fetch a WORD from MEMORY
+ * Params: addr = Memory address
+ * Returns: WORD
+ */
+extern (C)
+ushort __fu16(uint addr) {
+	return *cast(ushort*)(cast(ubyte*)MEMORY + addr);
+}
+
+/**
+ * Fetch a signed WORD from memory
+ * Params: addr = Memory address
+ * Returns: signed WORD
+ */
+extern (C)
+short __fi16(uint addr) {
+	return *cast(short*)(cast(ubyte*)MEMORY + addr);
+}
+
+/**
+ * Fetch a DWORD from MEMORY
+ * Params: addr = Memory address
+ * Returns: DWORD
+ */
+extern (C)
+uint __fu32(uint addr) {
+	return *cast(uint*)(cast(ubyte*)MEMORY + addr);
+}
+
+/*****************************************************************************
+ * Fetch immediates
+ *****************************************************************************/
+
+/**
  * Fetch an immediate BYTE at EIP+1+n
  * Params: n = Optional offset (+1)
  * Returns: BYTE
@@ -272,6 +360,16 @@ void __iwstr(immutable(wchar)[] data, size_t addr = EIP) {
 extern (C)
 ubyte __fu8_i(int n = 0) {
 	return MEMORY[EIP + 1 + n];
+}
+
+/**
+ * Fetch a signed byte (byte).
+ * Returns: Signed BYTE
+ */
+extern (C)
+pragma(inline, true)
+byte __fi8_i() {
+	return cast(byte)MEMORY[EIP + 1];
 }
 
 /**
@@ -292,55 +390,4 @@ ushort __fu16_i(uint n = 0) {
 extern (C)
 short __fi16_i(uint n = 0) {
 	return *cast(short*)(cast(ubyte*)MEMORY + EIP + 1 + n);
-}
-
-/**
- * Fetch an unsigned byte (ubyte).
- * Params: addr = Memory address
- * Returns: BYTE
- */
-extern (C)
-pragma(inline, true)
-ubyte __fu8(uint addr) {
-	return MEMORY[addr];
-}
-
-/**
- * Fetch a signed byte (byte).
- * Returns: Signed BYTE
- */
-extern (C)
-pragma(inline, true)
-byte __fi8_i() {
-	return cast(byte)MEMORY[EIP + 1];
-}
-
-/**
- * Fetch a WORD from MEMORY
- * Params: addr = Memory address
- * Returns: WORD
- */
-extern (C)
-ushort __fu16(uint addr) {
-	return *cast(ushort*)(cast(ubyte*)MEMORY + addr);
-}
-
-/**
- * Fetch a DWORD from MEMORY
- * Params: addr = Memory address
- * Returns: DWORD
- */
-extern (C)
-uint __fu32(uint addr) {
-	return *cast(uint*)(cast(ubyte*)MEMORY + addr);
-}
-
-/**
- * Fetch a signed WORD from memory
- * Params: addr = Memory address
- * Returns: signed WORD
- */
-extern (C)
-short __fi16(uint addr) {
-	return *cast(short*)(cast(ubyte*)MEMORY + addr);
 }

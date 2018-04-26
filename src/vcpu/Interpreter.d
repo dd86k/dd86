@@ -295,11 +295,11 @@ private enum : ushort {
 __gshared ubyte
 OF, /// Bit 11, Overflow Flag
 DF, /// Bit 10, Direction Flag
-IF, /// Bit  9, Interrupt Enable Flag
+IF, /// Bit  9, Interrupt Flag
 TF, /// Bit  8, Trap Flag
 SF, /// Bit  7, Sign Flag
 ZF, /// Bit  6, Zero Flag
-AF, /// Bit  4, Auxiliary Carry Flag (aka Adjust Flag)
+AF, /// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
 PF, /// Bit  2, Parity Flag
 CF; /// Bit  0, Carry Flag
 
@@ -417,18 +417,15 @@ uint epop() {
 	FLAGB = cast(ubyte)flag;
 }
 
+/// Preferred Segment register
+__gshared ubyte Seg;
 enum : ubyte { // Segment override (for Seg)
 	SEG_NONE, /// Default, only exists to "reset" the preference.
-	SEG_CS, /// CS
-	SEG_DS, /// DS
-	SEG_ES, /// ES
-	SEG_SS  /// SS
+	SEG_CS, /// CS segment
+	SEG_DS, /// DS segment
+	SEG_ES, /// ES segment
+	SEG_SS  /// SS segment
 }
-/// Preferred Segment register
-__gshared ubyte Seg; // See above enumeration
-
-//TODO: Step function for increasing IP value (and StepL for multiple steps)
-//      This would assure CS:IP/EIP proper incrementing depending on mode
 
 // Rest of the source here is solely this function.
 /**
@@ -513,21 +510,20 @@ void exec(ubyte op) {
 
 		return;
 	}
-	case 0x04: // ADD AL, IMM8
-		AL = AL + __fu8(get_ip);
-		SF = CF = (AL & 0x80) != 0;
-		PF = (AL & 1) != 0;
-		AF = (AL & 0x10) != 0;
-		ZF = AL == 0;
-		//TODO: OF
-		//OF = 
+	case 0x04: { // ADD AL, IMM8
+		int a = AL + __fu8_i;
+		__hflag8_1(a);
+		AL = a;
 		EIP += 2;
 		return;
-	case 0x05: // ADD AX, IMM16
-		AX = AX + __fu16(get_ip);
-		//TODO: Fill
+	}
+	case 0x05: { // ADD AX, IMM16
+		int a = AX + __fu16_i;
+		__hflag16_1(a);
+		AX = a;
 		EIP += 2;
 		return;
+	}
 	case 0x06: // PUSH ES
 		push(ES);
 		++EIP;
@@ -1424,10 +1420,7 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0xA8: { // TEST AL, IMM8
-		const int r = AL & __fu8_i;
-		//TODO: TEST ZF SF PF
-
-		CF = OF = 0;
+		__hflag8_1(AL & __fu8_i);
 		EIP += 2;
 		return;
 	}
