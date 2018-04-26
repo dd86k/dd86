@@ -1,4 +1,4 @@
-# DD-DOS, A Small DOS Virtual Machine
+# DD-DOS, Small DOS Virtual Machine
 
 ```
 _______ _______        _______  ______  _______
@@ -8,7 +8,7 @@ _______ _______        _______  ______  _______
 |______/|______/       |______/\______/\______/
 ```
 
-dd-dos aims to be a simple compatibility layer, like NTVDM, as a multi-platform virtual machine.
+dd-dos aims to be a simple emulation layer, like NTVDM, as a multi-platform virtual machine.
 
 Interested? Head over to the [Wiki](https://github.com/dd86k/dd-dos/wiki).
 
