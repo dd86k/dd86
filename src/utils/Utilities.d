@@ -23,49 +23,19 @@ char[] MemString(uint pos) {
 }
 
 /**
- * Compare constant string. This function is mostly to compare constant strings.
- * Note: 
- * Params:
- *   a = Input string
- *   b = Constant string
- *   c = String length
- * Returns: 0 if same, 1 if different.
- */
-extern (C)
-int _strcmp_c(char* a, immutable(char)* b, size_t c) {
-	while (--c)
-		if (*--a != *--b) return 1;
-	return 0;
-}
-
-/**
- * Compare constant string. This function is mostly used in vshell
- * Note: 
- * Params:
- *   a = Input string
- *   b = Constant string
- *   c = String length
- * Returns: 0 if same, 1 if different.
- */
-extern (C)
-int _argcmp_s(char* a, immutable(char)* b) {
-	while (*a != ' ' && *a != 0) {
-		if (*a != *b) return 0;
-		++a; ++b;
-	}
-	return 1;
-}
-
-/**
  * Byte swap a 2-byte number.
  * Params: num = 2-byte number to swap.
  * Returns: Byte swapped number.
  */
-extern (C)
 ushort bswap16(ushort num) {
-	version (X86) asm { naked;
-		xchg AH, AL;
-		ret;
+	version (X86) {
+		version (Windows) asm { naked;
+			xchg AH, AL;
+			ret;
+		} else asm { naked; // System V AMD64 ABI
+			xchg AH, AL;
+			ret;
+		}
 	} else version (X86_64) {
 		version (Windows) asm { naked;
 			mov AX, CX;
@@ -89,7 +59,6 @@ ushort bswap16(ushort num) {
  * Params: num = 4-byte number to swap.
  * Returns: Byte swapped number.
  */
-extern (C)
 uint bswap32(uint num) {
 	version (X86) asm { naked;
 		bswap EAX;
@@ -117,23 +86,25 @@ uint bswap32(uint num) {
  * Params: num = 8-byte number to swap.
  * Returns: Byte swapped number.
  */
-extern (C)
 ulong bswap64(ulong num) {
 	version (X86) {
-		version (Windows) {
-			asm { // Temporary solution
+		version (Windows) asm { naked;
 			// Likely due to a PUSH/POP argument handling, broken in DMD 2.074.0?
 			//TODO: Check for v2.079.0
-				lea EDI, num;
-				mov EAX, [EDI];
-				mov EDX, [EDI+4];
-				bswap EAX;
-				bswap EDX;
-				xchg EAX, EDX;
-				mov [EDI], EAX;
-				mov [EDI+4], EDX;
-			}
-			return num;
+
+			//bswap EAX;
+			//bswap EDX;
+			//xchg EAX, EDX;
+			//ret;
+
+			lea EDI, num;
+			mov EAX, [EDI];
+			mov EDX, [EDI+4];
+			bswap EAX;
+			bswap EDX;
+			xchg EAX, EDX;
+			mov [EDI], EAX;
+			mov [EDI+4], EDX;
 		} else asm { naked; // System V
 			xchg EAX, EDX;
 			bswap EDX;
