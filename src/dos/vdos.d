@@ -430,7 +430,7 @@ void panic(immutable(char)* r) {
 /// Params: code = Interrupt byte
 extern (C)
 void Raise(ubyte code) {
-	debug printf("[dbug] INTERRUPT: 0x%d\n", code);
+	debug printf("[dbug] INTERRUPT: 0x%02X\n", code);
 
 	// REAL-MODE
 	//const inum = code << 2;
