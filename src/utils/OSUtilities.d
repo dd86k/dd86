@@ -11,6 +11,11 @@ module OSUtilities;
 
 version (Windows) {
 	private import core.sys.windows.windows;
+} else {
+// Temporary -betterC fix, confirmed on DMD 2.079.0+ (linux)
+// stat is extern (D) for some stupid reason
+import core.sys.posix.sys.stat : stat, stat_t;
+extern (C) int stat(char*, stat_t*);
 }
 
 /**

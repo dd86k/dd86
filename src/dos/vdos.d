@@ -92,9 +92,9 @@ enum
  *    7            wrap at end of line
  */
 
-// Temporary -betterC fix, confirmed on DMD 2.079.0+ (Windows)
+// Temporary -betterC fix, confirmed on DMD 2.079.0+ (Windows+linux)
 // putchar is extern (D) for some stupid reason
-version (Windows) extern (C) void putchar(int);
+extern (C) void putchar(int);
 
 enum _BUFS = 127; // maximum in MS-DOS 5.0
 
