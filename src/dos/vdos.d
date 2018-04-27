@@ -835,7 +835,7 @@ void Raise(ubyte code) {
 		 * Return: AL (00h if successful, FFh (invalid) if failed)
 		 */
 		case 0x2B:
-
+			AL = 0xFF;
 			break;
 		/*
 		 * 2Ch - Get system time.
@@ -857,18 +857,19 @@ void Raise(ubyte code) {
 				DH = cast(ubyte)s.wSecond;
 				DL = cast(ubyte)s.wMilliseconds;
 			} else version (Posix) {
-				import core.sys.posix.time : tm, time_t, time, localtime;
-				import core.time : timeval, gettimeofday;
-				//TODO: Only use gettimeofday
-				time_t r; tm* s;
-				time(&r);
-				s = localtime(&r);
+				import core.sys.posix.time : tm, localtime;
+				import core.sys.posix.sys.time : timeval, gettimeofday;
+				//TODO: Consider moving gettimeofday(2) to clock_gettime(2)
+				//      https://linux.die.net/man/2/gettimeofday
+				//      gettimeofday is deprecated since POSIX.2008
+				__gshared tm* s;
+				__gshared timeval tv;
+				gettimeofday(&tv, null);
+				s = localtime(&tv.tv_sec);
 
 				CH = cast(ubyte)s.tm_hour;
 				CL = cast(ubyte)s.tm_min;
 				DH = cast(ubyte)s.tm_sec;
-				timeval tv;
-				gettimeofday(&tv, null);
 				AL = cast(ubyte)tv.tv_usec;
 			} else {
 				static assert(0, "Implement INT 21h AH=2Ch");
@@ -884,7 +885,7 @@ void Raise(ubyte code) {
 		 * Return: AL (00h if successful, FFh if failed (invalid))
 		 */
 		case 0x2D:
-
+			AL = 0xFF;
 			break;
 		/*
 		 * 2Eh - Set verify flag.
@@ -894,7 +895,7 @@ void Raise(ubyte code) {
 		 * Notes:
 		 * - Default state at boot is off.
 		 * - When on, all disk writes are verified provided the device driver
-		 *     supports read-after-write verification.
+		 *   supports read-after-write verification.
 		 */
 		case 0x2E:
 
@@ -905,7 +906,7 @@ void Raise(ubyte code) {
 		 * Return:
 		 *   AL (Major version, DOS 1.x = 00h)
 		 *   AH (Minor version)
-		 *   BL:CX (24bit user serial* if DOS<5 or AL=0)
+		 *   BL:CX (24-bit user serial* if DOS<5 or AL=0)
 		 *   BH (MS-DOS OEM number if DOS 5+ and AL=1)
 		 *   BH (Version flag bit 3: DOS is in ROM, other: reserved (0))
 		 *
@@ -926,7 +927,7 @@ void Raise(ubyte code) {
 			break;
 		/*
 		 * 36h - Get free disk space.
-		 * Input: DL (Drive number, A: = 0)
+		 * Input: DL (Drive number, e.g. A = 0, B = 1, etc.)
 		 * Return:
 		 *   AX (FFFFh = invalid drive)
 		 * or
@@ -958,7 +959,26 @@ void Raise(ubyte code) {
 		 *   Buffer at DS:DX filled
 		 *
 		 * BUFFER:
-		 * http://www.ctyme.com/intr/rb-2773.htm#Table1399
+		 * Offset  Size    Description
+		 * 00h     WORD    date format (see #01398)
+		 * 02h  5  BYTEs   ASCIZ currency symbol string
+		 * 07h  2  BYTEs   ASCIZ thousands separator
+		 * 09h  2  BYTEs   ASCIZ decimal separator
+		 * 0Bh  2  BYTEs   ASCIZ date separator
+		 * 0Dh  2  BYTEs   ASCIZ time separator
+		 * 0Fh     BYTE    currency format
+		 *   bit 2 = set if currency symbol replaces decimal point
+		 *   bit 1 = number of spaces between value and currency symbol
+		 *   bit 0 = 0 if currency symbol precedes value
+		 *           1 if currency symbol follows value
+		 * 10h     BYTE    number of digits after decimal in currency
+		 * 11h     BYTE    time format
+		 *   bit 0 = 0 if 12-hour clock
+		 *       1 if 24-hour clock
+		 * 12h     DWORD   address of case map routine
+		 *   (FAR CALL, AL = character to map to upper case [>= 80h])
+		 * 16h  2  BYTEs   ASCIZ data-list separator
+		 * 18h 10  BYTEs   reserved
 		 */
 		case 0x38:
 
@@ -977,9 +997,9 @@ void Raise(ubyte code) {
 		 *     that it is not possible to make that directory the current
 		 *     directory because the path would exceed 64 characters.
 		 */
-		case 0x39: {
+		case 0x39:
+
 			break;
-		}
 		/*
 		 * 3Ah - Remove subdirectory.
 		 * Input: DS:DX (ASCIZ path)
@@ -990,9 +1010,9 @@ void Raise(ubyte code) {
 		 * Notes:
 		 * - Subdirectory must be empty.
 		 */
-		case 0x3A: {
+		case 0x3A:
+
 			break;
-		}
 		/*
 		 * 3Bh - Set current directory.
 		 * Input: DS:DX (ASCIZ path (maximum 64 Bytes))
@@ -1030,9 +1050,9 @@ void Raise(ubyte code) {
 		 *     H = Hidden
 		 * 0 - R = Read-only
 		 */
-		case 0x3C: {
+		case 0x3C:
+
 			break;
-		}
 		/*
 		 * 3Dh - Open file.
 		 * Input:
@@ -1125,9 +1145,9 @@ void Raise(ubyte code) {
 		 * - Deleting a file which is currently open may lead to filesystem
 		 *     corruption.
 		 */
-		case 0x41: {
+		case 0x41:
+
 			break;
-		}
 		/*
 		 * 42h - Set current file position.
 		 * Input:
@@ -1205,9 +1225,9 @@ void Raise(ubyte code) {
 		 *     as large as possible. DOS 2.1-6.0 coalesces any free blocks
 		 *     immediately following the block to be resized.
 		 */
-		/*case 0x4A:
+		case 0x4A:
 
-			break;*/
+			break;
 		/*
 		 * 4Bh - Load/execute program
 		 * Input:
@@ -1343,8 +1363,8 @@ void Raise(ubyte code) {
 	default: break;
 	}
 
-	IP = pop();
-	CS = pop();
+	IP = pop;
+	CS = pop;
 	IF = TF = 1;
-	FLAG = pop();
+	FLAG = pop;
 }
