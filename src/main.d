@@ -6,7 +6,7 @@ import core.stdc.stdio;
 import core.stdc.stdlib : exit;
 import core.stdc.string : strcmp;
 import vdos : APP_VERSION, BANNER, EnterShell;
-import Interpreter : init, Verbose, CpuSleep, run;
+import vcpu : init, Verbose, CpuSleep, run;
 import Loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;

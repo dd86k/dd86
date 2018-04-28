@@ -1,18 +1,18 @@
-module InterpreterTests;
+module vcpuTests;
 
-import Interpreter, InterpreterUtils, std.stdio, vdos;
+import vcpu, vcpuutils, std.stdio, vdos;
 import unitutils;
 
 unittest
 {
 	import core.stdc.string : memset;
-	section("Interpreter (8086/i486)");
+	section("vcpu (8086/i486)");
 
 	init;
 	CS = 0;
 	uint ip = get_ip;
 
-	sub("InterpreterUtils");
+	sub("vcpuutils");
 
 	test("__iu8");
 	__iu8(0xFF, ip);

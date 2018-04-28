@@ -1,10 +1,10 @@
 /*
- * InterpreterUtils.d : Interpreter utilities.
+ * vcpuutils.d : vcpu utilities.
  */
 
-module InterpreterUtils;
+module vcpuutils;
 
-import Interpreter;
+import vcpu;
 import Logger;
 import core.stdc.stdio : printf, puts;
 import core.stdc.string : memcpy, strcpy;

@@ -6,7 +6,7 @@ module Loader;
 
 import core.stdc.stdio;
 import core.stdc.stdlib : malloc, free;
-import vdos, Interpreter, InterpreterUtils, Logger;
+import vdos, vcpu, vcpuutils, Logger;
 import Codes;
 
 private enum ERESWDS = 16; /// RESERVED WORDS

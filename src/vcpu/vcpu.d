@@ -1,15 +1,15 @@
 /*
- * Interpreter.d: Legacy machine code interpreter.
+ * vcpu.d: Legacy machine code interpreter.
  * 
  * Right now it's closest to an 8086 (REAL-MODE)
  * I hope to make it closer to an i486 whenever possible.
  */
 
-module Interpreter;
+module vcpu;
 
 import core.stdc.stdlib : exit; // Temporary
 import core.stdc.stdio : printf, puts;
-import vdos, InterpreterUtils;
+import vdos, vcpuutils;
 debug import Logger : logexec;
 
 /// Initial and maximum amount of memory if not specified in settings.
@@ -46,7 +46,7 @@ void init() {
 extern (C)
 void run() {
 	if (Verbose)
-		puts("[INFO] Interpreter::Run");
+		puts("[INFO] vcpu::Run");
 
 	while (RLEVEL) {
 		EIP = get_ip;

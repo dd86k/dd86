@@ -1,6 +1,6 @@
 module vdosTests;
 
-import Interpreter, InterpreterUtils, std.stdio, vdos, std.file : exists;
+import vcpu, vcpuutils, std.stdio, vdos, std.file : exists;
 import unitutils;
 
 unittest

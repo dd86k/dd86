@@ -1,6 +1,6 @@
 module UtilitiesTests;
 
-import Utilities, InterpreterUtils;
+import Utilities, vcpuutils;
 import unitutils;
 
 unittest

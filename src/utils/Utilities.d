@@ -4,7 +4,7 @@
 
 module Utilities;
 
-import Interpreter : MEMORY;
+import vcpu : MEMORY;
 import core.stdc.string : strlen;
 
 /**

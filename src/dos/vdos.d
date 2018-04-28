@@ -8,7 +8,7 @@ import core.stdc.stdio;
 import core.stdc.string;
 import core.stdc.stdlib : malloc, free;
 import Loader : ExecLoad;
-import Interpreter, ddcon, Logger, Codes, Utilities, OSUtilities;
+import vcpu, ddcon, Logger, Codes, Utilities, OSUtilities;
 
 debug {
 pragma(msg, `
@@ -164,7 +164,7 @@ START:
 
 	// C
 
-	if (strcmp("cd") == 0 || strcmp("chdir") == 0) {
+	if (strcmp(*argv, "cd") == 0 || strcmp(*argv, "chdir") == 0) {
 		if (argc > 1) {
 			if (strcmp(argv[1], "/?") == 0) {
 				puts(
