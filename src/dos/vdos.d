@@ -110,6 +110,7 @@ enum _BUFS = 127; // maximum in MS-DOS 5.0
 extern (C)
 char** sargs(const char* t, int* argc) {
 	int j, a;
+	// Might move the allocation outside
 	char** argv = cast(char**)malloc(_BUFS * size_t.sizeof); // sizeof(char *)
 	
 	size_t sl = strlen(t);
@@ -247,10 +248,8 @@ VER       Show DD-DOS and MS-DOS version`
 			int nzc; /// Convential (<640K) non-zero
 			for (int i; i < MEMORYSIZE; ++i) {
 				if (i < 0xA_0000) {
-					if (MEMORY[i])
-						++nzc;
-				} else if (MEMORY[i])
-					++nzt;
+					if (MEMORY[i]) ++nzc;
+				} else if (MEMORY[i]) ++nzt;
 			}
 			printf(
 				"Memory Type             Zero +    Data =   Total\n" ~
@@ -289,7 +288,7 @@ By default, MEM will show memory usage`
 	if (strcmp(*argv, "time") == 0) {
 		AH = 0x2C;
 		Raise(0x21);
-		printf("It is currently %02d:%02d:%02d,%02d\n", CH, CL, DH, DL);
+		printf("It is currently %02d:%02d:%02d.%02d\n", CH, CL, DH, DL);
 		goto END;
 	}
 
@@ -305,16 +304,14 @@ By default, MEM will show memory usage`
 
 	if (strcmp(*argv, "??") == 0) {
 		puts(
-`
-?diag       Print diagnostic information screen
+`?diag       Print diagnostic information screen
 ?load FILE  Load an executable FILE into memory
 ?p          Toggle performance mode
 ?panic      Manually panic
 ?r          Print interpreter registers info
 ?run        Start the interpreter at current CS:IP values
 ?s          Print stack (Not implemented)
-?v          Toggle verbose mode
-`
+?v          Toggle verbose mode`
 		);
 		goto END;
 	}
