@@ -146,9 +146,9 @@ void EnterShell() {
 	__gshared char[_BUFS] inb; /// internal input buffer
 	__gshared char** argv; /// argument vector
 	__gshared int argc; /// argument count
-	//TODO: Print user-prompt ($PROMPT)
+	//TODO: Print $PROMPT
 START:
-	if (getcwd_dd(cast(char*)cwb))
+	if (gcwd(cast(char*)cwb))
 		printf("\n%s%% ", cast(char*)cwb);
 	else // just-in-case
 		fputs("\n% ", stdout);
@@ -160,11 +160,11 @@ START:
 	argv = sargs(cast(char*)inb, &argc);
 
 	//TODO: TREE, DIR
+	//TODO: lowercase
 
 	// C
 
-	if (strcmp(*argv, "cd") == 0 ||
-		strcmp(*argv, "chdir") == 0) {
+	if (strcmp("cd") == 0 || strcmp("chdir") == 0) {
 		if (argc > 1) {
 			if (strcmp(argv[1], "/?") == 0) {
 				puts(
@@ -176,7 +176,7 @@ By default, CD will display the current working directory`
 				);
 			} else {
 				if (pisdir(argv[1])) {
-					setcwd_dd(argv[1]);
+					scwd(argv[1]);
 				} else {
 					puts("Directory not found or entry is not a directory");
 				}

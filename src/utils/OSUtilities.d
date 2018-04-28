@@ -24,7 +24,7 @@ extern (C) int stat(char*, stat_t*);
  * Returns: 0 on success
  */
 extern (C)
-int setcwd_dd(char* p) {
+int scwd(char* p) {
 	version (Windows) {
 		return SetCurrentDirectoryA(p) != 0;
 	}
@@ -40,8 +40,7 @@ int setcwd_dd(char* p) {
  * Returns: non-zero on success
  */
 extern (C)
-int getcwd_dd(char* p) {
-	//TODO: Fix getcwd (remake probs)
+int gcwd(char* p) {
 	version (Windows) {
 		return GetCurrentDirectoryA(255, p);
 	}
