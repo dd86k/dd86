@@ -458,7 +458,6 @@ void Raise(ubyte code) {
 		 *   DL (Column, 0 is top)
 		 */
 		case 0x02:
-			//TODO: Figure out "page" (Page buffer?)
 			SetPos(DH, DL);
 			break;
 		/*
@@ -496,7 +495,7 @@ void Raise(ubyte code) {
 		break;
 	case 0x11: { // BIOS - Get equipement list
 		// Number of 16K banks of RAM on motherboard (PC only).
-		int ax = 0b10000; // VGA
+		int ax = 0b10000; // VGA //TODO: CHECK ON VIDEO MODE!
 		/*if (FloppyDiskInstalled) {
 			ax |= 1;
 			// Bit 6-7 = Number of floppy drives
@@ -507,7 +506,7 @@ void Raise(ubyte code) {
 		break;
 	}
 	case 0x12: // BIOS - Get memory size
-		AX = cast(int)(MEMORYSIZE / 1024);
+		AX = MEMORYSIZE / 1024;
 		break;
 	case 0x13: // DISK operations
 
