@@ -4,7 +4,7 @@
 
 module Utilities;
 
-import vcpu : MEMORY;
+import vcpu : MEMORY, MEMORYSIZE;
 import core.stdc.string : strlen;
 
 /**
@@ -17,41 +17,51 @@ extern (C)
 char[] MemString(uint pos) {
 //TODO: Check overflows
     return cast(char[])
-		MEMORY[
-			pos..pos + strlen(cast(char*)MEMORY + pos)
-		];
+		MEMORY[pos..pos + strlen(cast(char*)MEMORY + pos)];
 }
+
+/// Maximum string length
+//private enum STRING_MAX = 0x100; // Seems like a decent maximum length
+/// Global string buffer, mostly used with mstring.
+/// Avoids pre-allocating other strings.
+//__gshared char[STRING_MAX] __GBUF;
+
+/**
+ * Fetch a string from MEMORY into an input buffer. If the function reaches
+ * STRING_MAX, the function returns -2.
+ * Params:
+ *   c = Input buffer
+ *   p = Memory position
+ * Returns:
+ *   On sucess, the function returns the number of characters read
+ *   On failure, the function returns a negative value
+ *     -1 = Memory Overflow
+ *     -2 = STRING_MAX Overflow
+ */
+/*extern (C)
+int mstring(char* c, int p) {
+	if (p < 0 || p > MEMORYSIZE) return -1;
+	int r; /// Result
+	char* m = cast(char*)MEMORY + p;
+	while (*m != 0) {
+		if (p >= MEMORYSIZE) return -1;
+		if (r > STRING_MAX) return -2;
+		*c = *m;
+		++c; ++m;
+		++p; ++c; ++r;
+	}
+	return r;
+}*/
 
 /**
  * Byte swap a 2-byte number.
  * Params: num = 2-byte number to swap.
  * Returns: Byte swapped number.
  */
-ushort bswap16(ushort num) {
-	version (X86) {
-		version (Windows) asm { naked;
-			xchg AH, AL;
-			ret;
-		} else asm { naked; // System V AMD64 ABI
-			xchg AH, AL;
-			ret;
-		}
-	} else version (X86_64) {
-		version (Windows) asm { naked;
-			mov AX, CX;
-			xchg AL, AH;
-			ret;
-		} else asm { naked; // System V AMD64 ABI
-			mov EAX, EDI;
-			xchg AL, AH;
-			ret;
-		}
-	} else {
-		if (num) {
-			ubyte* p = cast(ubyte*)&num;
-			return p[1] | p[0] << 8;
-		} else return num;
-	}
+pragma(inline, true)
+extern (C)
+ushort bswap16(ushort n) {
+	return (n >> 8) | (n & 0xFF) << 8;
 }
 
 /**
@@ -59,26 +69,12 @@ ushort bswap16(ushort num) {
  * Params: num = 4-byte number to swap.
  * Returns: Byte swapped number.
  */
-uint bswap32(uint num) {
-	version (X86) asm { naked;
-		bswap EAX;
-		ret;
-	} else version (X86_64) {
-		version (Windows) asm { naked;
-			mov EAX, ECX;
-			bswap EAX;
-			ret;
-		} else asm { naked; // System V AMD64 ABI
-			mov RAX, RDI;
-			bswap EAX;
-			ret;
-		}
-	} else {
-		if (num) {
-			ubyte* p = cast(ubyte*)&num;
-			return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
-		} else return 0;
-	}
+pragma(inline, true)
+extern (C)
+uint bswap32(uint n) {
+	return
+		(n >> 24) | (n & 0xFF_0000) >> 8 |
+		(n & 0xFF00) << 8 | (n << 24);
 }
 
 /**
@@ -86,60 +82,34 @@ uint bswap32(uint num) {
  * Params: num = 8-byte number to swap.
  * Returns: Byte swapped number.
  */
-ulong bswap64(ulong num) {
-	version (X86) {
-		version (Windows) asm { naked;
-			// Likely due to a PUSH/POP argument handling, broken in DMD 2.074.0?
-			//TODO: Check for v2.079.0
-
-			//bswap EAX;
-			//bswap EDX;
-			//xchg EAX, EDX;
-			//ret;
-
-			lea EDI, num;
-			mov EAX, [EDI];
-			mov EDX, [EDI+4];
-			bswap EAX;
-			bswap EDX;
-			xchg EAX, EDX;
-			mov [EDI], EAX;
-			mov [EDI+4], EDX;
-		} else asm { naked; // System V
-			xchg EAX, EDX;
-			bswap EDX;
-			bswap EAX;
-			ret;
-		}
-	} else version (X86_64) {
-		version (Windows) asm { naked;
-			mov RAX, RCX;
-			bswap RAX;
-			ret;
-		} else asm { naked; // System V AMD64 ABI
-			mov RAX, RDI;
-			bswap RAX;
-			ret;
-		}
-	} else {
-		if (num) {
-			ubyte* p = cast(ubyte*)&num;
-			ubyte c = *p;
-			*p = *(p + 7);
-			*(p + 7) = c;
-
-			c = *(p + 1);
-			*(p + 1) = *(p + 6);
-			*(p + 6) = c;
-
-			c = *(p + 2);
-			*(p + 2) = *(p + 5);
-			*(p + 5) = c;
-
-			c = *(p + 3);
-			*(p + 3) = *(p + 4);
-			*(p + 4) = c;
-		}
-		return num;
+pragma(inline, true)
+extern (C)
+ulong bswap64(ulong n) {
+	ubyte* p = cast(ubyte*)&n;
+	version (DigitarMars) { // Compiler optimized
+		ubyte c = *p;
+		*p = *(p + 7);
+		*(p + 7) = c;
+		c = *(p + 1);
+		*(p + 1) = *(p + 6);
+		*(p + 6) = c;
+		c = *(p + 2);
+		*(p + 2) = *(p + 5);
+		*(p + 5) = c;
+		c = *(p + 3);
+		*(p + 3) = *(p + 4);
+		*(p + 4) = c;
+	} else { // LDC
+		uint i = *cast(uint*)&n;
+		ubyte* ip = cast(ubyte*)&i;
+		*(p + 0) = *(p + 7);
+		*(p + 1) = *(p + 6);
+		*(p + 2) = *(p + 5);
+		*(p + 3) = *(p + 4);
+		*(p + 4) = *(ip + 3);
+		*(p + 5) = *(ip + 2);
+		*(p + 6) = *(ip + 1);
+		*(p + 7) = *(ip + 0);
 	}
+	return n;
 }

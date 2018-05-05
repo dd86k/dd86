@@ -12,6 +12,11 @@ unittest
     assert(MemString(10) == "Hello");
     OK;
 
+    //test("mstring");
+    //assert(mstring(cast(char*)__GBUF, 10) > 0);
+    //assert(__GBUF[0..2] == "He");
+    //OK;
+
     test("bswap16");
     assert(bswap16(0xAAFF) == 0xFFAA);
     OK;
