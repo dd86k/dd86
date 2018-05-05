@@ -23,6 +23,7 @@ enum BUILD_TYPE = "RELEASE";
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
+
 version (CRuntime_Bionic) {
 	pragma(msg, "Using Bionic C Runtime");
 	enum C_RUNTIME = "Bionic";
@@ -79,19 +80,6 @@ enum
 	ARCHIVE = 32,
 	SHAREABLE = 128;
 
-/*
- * ANSI.txt@L160 :
- * Parameter     Parameter Function
- *    0            40 x 25 black and white
- *    1            40 x 25 color
- *    2            80 x 25 black and white
- *    3            80 x 25 color
- *    4            320 x 200 color
- *    5            320 x 200 black and white
- *    6            640 x 200 black and white
- *    7            wrap at end of line
- */
-
 // Temporary -betterC fix, confirmed on DMD 2.079.0+ (Windows+linux)
 // putchar is extern (D) for some stupid reason
 extern (C) void putchar(int);
@@ -100,19 +88,17 @@ enum _BUFS = 127; // maximum in MS-DOS 5.0
 
 /**
  * CLI argument splitter, supports quoting.
- * This function uses a malloc call.
+ * This function use multiple malloc calls, which are not freed.
  * Params:
- *   t = user input
- *   argc = argument count pointer
+ *   t = User input
+ *   argv = Argument vector buffer
  * Returns: argument vector string array
- * Notes: Original function by Nuke928. Modified by dd86k.
+ * Notes: Original function by Nuke928. Heavily modified by dd86k.
  */
 extern (C)
-char** sargs(const char* t, int* argc) {
+int sargs(const char* t, char** argv) {
 	int j, a;
-	// Might move the allocation outside
-	char** argv = cast(char**)malloc(_BUFS * size_t.sizeof); // sizeof(char *)
-	
+
 	size_t sl = strlen(t);
 
 	for (int i = 0; i <= sl; ++i) {
@@ -135,20 +121,25 @@ char** sargs(const char* t, int* argc) {
 			++a;
 		}
 	}
-	*argc = --a;
 
-	return argv;
+	return --a;
 }
 
-/// Enter virtual shell
+/**
+ * Enter virtual shell (vDOS)
+ * This function allocates memory on the heap and frees when exiting.
+ */
 extern (C)
 void EnterShell() {
-	__gshared char[255] cwb; /// internal current working directory buffer
-	__gshared char[_BUFS] inb; /// internal input buffer
+	__gshared char* cwb; /// internal current working directory buffer
+	__gshared char* inb; /// internal input buffer
 	__gshared char** argv; /// argument vector
 	__gshared int argc; /// argument count
-	//TODO: Print $PROMPT
+	inb = cast(char*)malloc(_BUFS);
+	cwb = cast(char*)malloc(255);
+	argv = cast(char**)malloc(_BUFS * size_t.sizeof); // sizeof(char *)
 START:
+	//TODO: Print $PROMPT
 	if (gcwd(cast(char*)cwb))
 		printf("\n%s%% ", cast(char*)cwb);
 	else // just-in-case
@@ -157,8 +148,7 @@ START:
 	fgets(cast(char*)inb, _BUFS, stdin);
 	if (inb[0] == '\n') goto START;
 
-	argc = 0;
-	argv = sargs(cast(char*)inb, &argc);
+	argc = sargs(cast(char*)inb, argv);
 
 	//TODO: TREE, DIR
 	//TODO: lowercase
@@ -216,6 +206,8 @@ By default, CD will display the current working directory`
 
 	if (strcmp(*argv, "exit") == 0) {
 		free(argv);
+		free(cwb);
+		free(inb);
 		return;
 	}
 
@@ -367,7 +359,6 @@ By default, MEM will show memory usage`
 
 	puts("Bad command or file name");
 END:
-	free(argv);
 	goto START;
 }
 
@@ -506,7 +497,7 @@ void Raise(ubyte code) {
 		break;
 	}
 	case 0x12: // BIOS - Get memory size
-		AX = MEMORYSIZE / 1024;
+		AX = cast(int)(MEMORYSIZE) / 1024;
 		break;
 	case 0x13: // DISK operations
 
