@@ -202,9 +202,9 @@ extern (C)
 void __hflag8_1(int r) {
 	CF = (r & 0x100) != 0;
 	SF = (r & 0x80) != 0;
-	AF = (r & 0b1_0000) != 0;
+	AF = (r & 0x10) != 0;
 	ZF = r == 0;
-	OF = CF || r < 0;
+	OF = r > 0xFF || r < 0;
 	r ^= r >> 1;
 	r ^= r >> 2;
 	r ^= r >> 4;
@@ -219,15 +219,15 @@ void __hflag8_1(int r) {
 extern (C)
 void __hflag16_1(int r) {
 	CF = (r & 0x1_0000) != 0;
-	SF = (r & 0x8_000) != 0;
-	AF = (r & 0b1_0000_0000) != 0;
+	SF = (r & 0x8000) != 0;
+	AF = (r & 0x100) != 0;
 	ZF = r == 0;
-	OF = CF || r < 0;
+	OF = r > 0xFFFF || r < 0;
 	r ^= r >> 1;
 	r ^= r >> 2;
 	r ^= r >> 4;
 	r ^= r >> 8;
-	//r ^= r >> 16;
+	//r ^= r >> 16; // 32-bit
 	PF = cast(ubyte)r;
 }
 
