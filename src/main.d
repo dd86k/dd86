@@ -6,7 +6,7 @@ import core.stdc.stdio;
 import core.stdc.stdlib : exit;
 import core.stdc.string : strcmp;
 import vdos : APP_VERSION, BANNER, EnterShell;
-import vcpu : init, Verbose, CpuSleep, run;
+import vcpu : init, Verbose, cpu_sleep, run;
 import Loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;
@@ -31,84 +31,88 @@ extern (C)
 void help() {
 	puts(
 `A DOS virtual machine
-Usage:
-  dd-dos [OPTIONS] [EXEC [EXECARGS]]
+USAGE
+  dd-dos [-VPN] [FILE [FILEARGS]]
+  dd-dos {-v|--version|-h|--help}
 
 OPTIONS
-  -P, --perf       Do not sleep between cycles (fast!)
-  -N, --nobanner   Removes starting message and banner
-  -V, --verbose    Set verbose mode
-  -v, --version    Print version screen and exit
-  -h, --help       This help information.`
+  -P       Do not sleep between cycles
+  -N       Remove starting messages and banner
+  -V       Toggle verbose mode for session
+  -v, --version    Print version screen, then exit
+  -h, --help       Print help screen, then exit`
 	);
 	exit(0);
 }
 
 extern (C)
-void sarg(char* a) {
-	while (*++a) {
-		switch (*a) {
-		case 'P': --CpuSleep; break;
-		case 'N': --banner; break;
-		case 'V': ++Verbose; break;
-		case '-': --args; break;
-		case 'h': help; break;
-		case 'v': _version; break;
-		default:
-			printf("Invalid parameter: -%c\n", *a);
-			exit(1);
-		}
-	}
-}
-
-extern (C)
-void larg(char* a) {
-	if (strcmp(a, "help") == 0)
-		help;
-	if (strcmp(a, "version") == 0)
-		_version;
-
-	printf("Unknown parameter: --%s\n", a);
-	exit(1);
-}
-
-private __gshared byte args = 1;
-private __gshared byte banner = 1;
-
-extern (C)
 private int main(int argc, char** argv) {
-	__gshared char* prog; // Possible program to start
+	__gshared byte args = 1;
+	__gshared byte arg_banner = 1;
+	__gshared char* prog; /// FILE, COM or EXE to start
+//	__gshared char* args; /// FILEARGS, MUST not be over 127 characters
+//	__gshared size_t arg_i; /// Argument length incrementor
+
+	// CLI
 
 	while (--argc >= 1) {
 		++argv;
 		if (args) {
-			if ((*argv)[1] == '-') { // long arguments
-				larg(*argv + 2); continue;
-			} else if ((*argv)[0] == '-') { // short arguments
-				sarg(*argv); continue;
+			if ((*argv) + 1 == '-') { // long arguments
+				char* a = (*argv) + 2;
+				if (strcmp(a, "help") == 0)
+					help;
+				if (strcmp(a, "version") == 0)
+					_version;
+
+				printf("Unknown parameter: --%s\n", a);
+				return 1;
+			} else if (**argv == '-') { // short arguments
+				char* a = *argv;
+				while (*++a) {
+					switch (*a) {
+					case 'P': --cpu_sleep; break;
+					case 'N': --arg_banner; break;
+					case 'v': ++Verbose; break;
+					case '-': --args; break;
+					case 'h': help; break;
+					case 'V': _version; break;
+					default:
+						printf("Invalid parameter: -%c\n", *a);
+						exit(1);
+					}
+				}
+				continue;
 			}
 		}
 
-		if (cast(int)prog == 0) prog = *argv;
+		if (cast(int)prog == 0)
+			prog = *argv;
+		//TODO: Else, append program arguments (strcmp)
+		//      Don't forget to null it after while loop, keep arg_i updated
 	}
 
-	if (banner)
-		puts("DD-DOS is starting...");
+	// Pre-boot
 
 	if (Verbose) {
-		debug
-			log("Debug mode: ON");
-		else
-			log("Verbose mode: ON");
+		debug log("-- DEBUG BUILD");
+		else  log("-- VERBOSE MODE ON");
 		if (!CpuSleep)
-			log("Maximum performance: ON");
+			log("-- SLEEP MODE OFF");
 	}
+
+	if (arg_banner)
+		puts("DD-DOS is starting...");
+
+	// Initiating
 
 	InitConsole; // ddcon
 	init; // dd-dos
 
-	if (banner)
+	if (arg_banner)
 		puts(BANNER); // Defined in vdos.d
+
+	// DD-DOS
 
 	if (cast(int)prog) {
 		if (pexist(prog)) {

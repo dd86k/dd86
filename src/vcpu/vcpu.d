@@ -64,7 +64,7 @@ void run() {
  * tl;dr: Emulates CALL deep-ness.
  */
 __gshared short RLEVEL = 1;
-__gshared byte CpuSleep = 1; /// Is vcpu sleeping between cycles?
+__gshared byte cpu_sleep = 1; /// Is vcpu sleeping between cycles?
 /// Is Verbose mode set?
 debug __gshared byte Verbose = 1;
 else  __gshared byte Verbose = 0;
@@ -86,6 +86,7 @@ extern (C)
 uint get_ad(int s, int o) {
 	return (s << 4) + o;
 }
+
 /**
  * Get next instruction location
  * Returns: CS:IP effective address
