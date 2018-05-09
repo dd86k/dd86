@@ -15,9 +15,9 @@ import OSUtilities : pexist;
 extern (C)
 private void _version() {
 	printf(
-		"dd-dos v" ~ APP_VERSION ~ "  (" ~ __TIMESTAMP__ ~ ")" ~
-		"Copyright (c) 2017-2018 dd86k, using MIT license" ~
-		"Project page: <https://github.com/dd86k/dd-dos>" ~
+		"dd-dos v" ~ APP_VERSION ~ "  (" ~ __TIMESTAMP__ ~ ")\n" ~
+		"Copyright (c) 2017-2018 dd86k, using MIT license\n" ~
+		"Project page: <https://github.com/dd86k/dd-dos>\n" ~
 		"Compiler: " ~ __VENDOR__ ~ " v%d\n\n" ~
 		`Credits
 dd86k -- Original author and developer
@@ -58,8 +58,8 @@ private int main(int argc, char** argv) {
 	while (--argc >= 1) {
 		++argv;
 		if (args) {
-			if ((*argv) + 1 == '-') { // long arguments
-				char* a = (*argv) + 2;
+			if (*(*argv + 1) == '-') { // long arguments
+				char* a = *(argv) + 2;
 				if (strcmp(a, "help") == 0)
 					help;
 				if (strcmp(a, "version") == 0)
@@ -97,7 +97,7 @@ private int main(int argc, char** argv) {
 	if (Verbose) {
 		debug log("-- DEBUG BUILD");
 		else  log("-- VERBOSE MODE ON");
-		if (!CpuSleep)
+		if (!cpu_sleep)
 			log("-- SLEEP MODE OFF");
 	}
 

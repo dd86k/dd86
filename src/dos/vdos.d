@@ -326,8 +326,8 @@ By default, MEM will show memory usage`
 		goto END;
 	}
 	if (strcmp(*argv, "?p") == 0) {
-		CpuSleep = !CpuSleep;
-		printf("CpuSleep mode: %s\n", CpuSleep ? "ON" : cast(char*)"OFF");
+		cpu_sleep = !cpu_sleep;
+		printf("CpuSleep mode: %s\n", cpu_sleep ? "ON" : cast(char*)"OFF");
 		goto END;
 	}
 	if (strcmp(*argv, "?r") == 0) {

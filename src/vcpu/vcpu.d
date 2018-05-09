@@ -52,7 +52,7 @@ void run() {
 		EIP = get_ip;
 		debug logexec(CS, IP, MEMORY[EIP]);
 		exec(MEMORY[EIP]);
-		//if (CpuSleep) SLEEP(1);
+		//if (cpu_sleep) SLEEP(1);
 	}
 }
 
