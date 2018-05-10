@@ -6,13 +6,13 @@ import unitutils;
 unittest
 {
 	import core.stdc.string : memset;
-	section("vcpu (8086/i486)");
+	section("Interpreter (vcpu.d) 8086 Mode");
 
 	init;
 	CS = 0;
 	uint ip = get_ip;
 
-	sub("vcpuutils");
+	sub("Interpreter Utilities (vcpuutils.d)");
 
 	test("__iu8");
 	__iu8(0xFF, ip);
@@ -104,6 +104,8 @@ unittest
 	__iarr(cast(ubyte*)ar, 2, ip);
 	assert(MEMORY[ip .. ip + 2] == [ 0xAA, 0xBB ]);
 	OK;
+
+	//TODO: get_ea tests
 
 	sub("Registers");
 	
@@ -207,7 +209,7 @@ unittest
 	exec(0xB7); // MOV BH, 8
 	assert(BH == 8);
 
-	__iu16(0x1112, EIP + 1); // [ 0x12, 0x11 ]
+	__iu16(0x1112, EIP + 1);
 	exec(0xB8); // MOV AX, 1112h
 	assert(AX == 0x1112);
 
@@ -574,20 +576,33 @@ unittest
 	AL = 0b1100;
 	__iu8(0b1100, EIP + 1);
 	exec(0xA8);
-	assert(!CF);
 	assert(PF);
-	assert(!AF);
-	assert(!ZF);
-	assert(!SF);
+	assert(ZF == 0);
+	assert(SF == 0);
+	assert(CF == 0);
+	assert(OF == 0);
 
 	AL = 0xF0;
 	__iu8(0x0F, EIP + 1);
 	exec(0xA8);
-	assert(!CF);
-	assert(!PF);
-	assert(!AF);
+	assert(PF);
 	assert(ZF);
-	assert(!SF);
+	assert(SF == 0);
+	assert(CF == 0);
+	assert(OF == 0);
+
+	OK;
+
+	test("TEST AX,IMM16");
+
+	AX = 0xAA00;
+	__iu16(0xAA00, EIP + 1);
+	exec(0xA9);
+	assert(PF);
+	assert(ZF == 0);
+	assert(SF);
+	assert(CF == 0);
+	assert(OF == 0);
 
 	OK;
 

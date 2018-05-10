@@ -39,7 +39,8 @@ buildType "bench" {
   targetType "executable"
   buildOptions "unittests"
 
-  excludedSourceFiles "src/main.d"
   sourcePaths "bench/"
   importPaths "bench/"
+  sourceFiles "tests/unitutils.d"
+  excludedSourceFiles "src/main.d"
 }
