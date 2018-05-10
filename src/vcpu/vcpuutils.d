@@ -15,10 +15,10 @@ import core.stdc.wchar_ : wchar_t, wcscpy;
  * Takes account of the preferred segment register.
  * Params: rm = R/M BYTE
  * Returns: Effective Address
- * Notes: Uses MOD and RM fields.
+ * Notes: MOD and RM fields are used
  */
 extern (C)
-uint get_ea(ubyte rm) {
+uint get_ea(ubyte rm) { //TODO: Add default parameter wide=0
 	switch (rm & RM_MOD) { // MOD
 	case RM_MOD_00: // MOD 00, Memory Mode, no displacement
 		switch (Seg) {
@@ -36,38 +36,50 @@ uint get_ea(ubyte rm) {
 			break;
 		default:
 			switch (rm & RM_RM) { // R/M
-			case 0:
-				debug puts("EA:0:0");
+			case RM_RM_000: debug puts("EA:0:0");
 				return SI + BX;
-			case 0b001:
-				debug puts("EA:0:1");
+			case RM_RM_001: debug puts("EA:0:1");
 				return DI + BX;
-			case 0b010:
-				debug puts("EA:0:2");
+			case RM_RM_010: debug puts("EA:0:2");
 				return SI + BP;
-			case 0b011:
-				debug puts("EA:0:3");
+			case RM_RM_011: debug puts("EA:0:3");
 				return DI + BP;
-			case 0b100:
-				debug puts("EA:0:4");
+			case RM_RM_100: debug puts("EA:0:4");
 				return SI;
-			case 0b101:
-				debug puts("EA:0:5");
+			case RM_RM_101: debug puts("EA:0:5");
 				return DI;
-			case 0b110:
-				debug puts("EA:0:6");
-				return __fu16_i(1); // DIRECT ADDRESS
-			case 0b111:
-				debug puts("EA:0:7");
+			case RM_RM_110: debug puts("EA:0:6");
+				return __fu16_i(1); // DIRECT ADDRESS, immediate follows
+			case RM_RM_111: debug puts("EA:0:7");
 				return BX;
 			default:
 			}
 		}
 		break; // MOD 00
-	case RM_MOD_01: // MOD 01, Memory Mode, 8-bit displacement follows
+	case RM_MOD_01: { // MOD 01, Memory Mode, 8-bit displacement follows
 		debug puts("EA:1:_");
+		switch (rm & RM_RM) {
+		case RM_RM_000: debug puts("EA:1:0");
+			return SI + BX + __fi8_i(1);
+		case RM_RM_001: debug puts("EA:1:1");
+			return DI + BX + __fi8_i(1);
+		case RM_RM_010: debug puts("EA:1:2");
+			return SI + BP + __fi8_i(1);
+		case RM_RM_011: debug puts("EA:1:3");
+			return DI + BP + __fi8_i(1);
+		case RM_RM_100: debug puts("EA:1:4");
+			return SI + __fi8_i(1);
+		case RM_RM_101: debug puts("EA:1:5");
+			return DI + __fi8_i(1);
+		case RM_RM_110: debug puts("EA:1:6");
+			return BP + __fi8_i(1);
+		case RM_RM_111: debug puts("EA:1:7");
+			return BX + __fi8_i(1);
+		default:
+		}
 		EIP += 1;
 		break; // MOD 01
+	}
 	case RM_MOD_10: // MOD 10, Memory Mode, 16-bit displacement follows
 		switch (Seg) {
 		case SEG_CS:
@@ -86,103 +98,36 @@ uint get_ea(ubyte rm) {
 			switch (rm & RM_RM) { // R/M
 			case 0:
 				debug puts("EA:2:0");
-				return SI + BX + __fu16_i(1);
+				return SI + BX + __fi16_i(1);
 			case RM_RM_001:
 				debug puts("EA:2:1");
-				return DI + BX + __fu16_i(1);
+				return DI + BX + __fi16_i(1);
 			case RM_RM_010:
 				debug puts("EA:2:2");
-				return SI + BP + __fu16_i(1);
+				return SI + BP + __fi16_i(1);
 			case RM_RM_011:
 				debug puts("EA:2:3");
-				return DI + BP + __fu16_i(1);
+				return DI + BP + __fi16_i(1);
 			case RM_RM_100:
 				debug puts("EA:2:4");
-				return SI + __fu16_i(1);
+				return SI + __fi16_i(1);
 			case RM_RM_101:
 				debug puts("EA:2:5");
-				return DI + __fu16_i(1);
+				return DI + __fi16_i(1);
 			case RM_RM_110:
 				debug puts("EA:2:6");
-				return BP + __fu16_i(1);
+				return BP + __fi16_i(1);
 			case RM_RM_111:
 				debug puts("EA:2:7");
-				return BX + __fu16_i(1);
+				return BX + __fi16_i(1);
 			default:
 			}
 		}
 		EIP += 2;
 		break; // MOD 10
 	case RM_MOD_11: // MOD 11, Register Mode
-		debug printf("[dbug] EA:3:REG::%d", rm & RM_REG);
-		debug printf("[dbug] EA:3:SEG::%d", Seg);
-		switch (rm & RM_REG) {
-		case RM_REG_000: 
-			switch (Seg) {
-			case SEG_CS: return get_ad(CS, AX);
-			case SEG_DS: return get_ad(DS, AX);
-			case SEG_ES: return get_ad(ES, AX);
-			case SEG_SS: return get_ad(SS, AX);
-			default: return AX;
-			}
-		case RM_REG_001:
-			switch (Seg) {
-			case SEG_CS: return get_ad(CS, CX);
-			case SEG_DS: return get_ad(DS, CX);
-			case SEG_ES: return get_ad(ES, CX);
-			case SEG_SS: return get_ad(SS, CX);
-			default: return CX;
-			}
-		case RM_REG_010:
-			switch (Seg) {
-			case SEG_CS: return get_ad(CS, DX);
-			case SEG_DS: return get_ad(DS, DX);
-			case SEG_ES: return get_ad(ES, DX);
-			case SEG_SS: return get_ad(SS, DX);
-			default: return DX;
-			}
-		case RM_REG_011:
-			switch (Seg) {
-			case SEG_CS: return get_ad(CS, BX);
-			case SEG_DS: return get_ad(DS, BX);
-			case SEG_ES: return get_ad(ES, BX);
-			case SEG_SS: return get_ad(SS, BX);
-			default: return BX;
-			}
-		case RM_REG_100:
-			switch (Seg) {
-			case SEG_CS: return get_ad(CS, SP);
-			case SEG_DS: return get_ad(DS, SP);
-			case SEG_ES: return get_ad(ES, SP);
-			case SEG_SS: return get_ad(SS, SP);
-			default: return SP;
-			}
-		case RM_REG_101:
-			switch (Seg) {
-			case SEG_CS: return get_ad(CS, BP);
-			case SEG_DS: return get_ad(DS, BP);
-			case SEG_ES: return get_ad(ES, BP);
-			case SEG_SS: return get_ad(SS, BP);
-			default: return BP;
-			}
-		case RM_REG_110:
-			switch (Seg) {
-			case SEG_CS: return get_ad(CS, SI);
-			case SEG_DS: return get_ad(DS, SI);
-			case SEG_ES: return get_ad(ES, SI);
-			case SEG_SS: return get_ad(SS, SI);
-			default: return SI;
-			}
-		case RM_REG_111:
-			switch (Seg) {
-			case SEG_CS: return get_ad(CS, DI);
-			case SEG_DS: return get_ad(DS, DI);
-			case SEG_ES: return get_ad(ES, DI);
-			case SEG_SS: return get_ad(SS, DI);
-			default: return DI;
-			}
-		default: return -1; // Temporary
-		}
+		debug puts("EA:3:_");
+		break;
 	default:
 	}
 
@@ -398,8 +343,8 @@ ubyte __fu8_i(int n = 0) {
  */
 extern (C)
 pragma(inline, true)
-byte __fi8_i() {
-	return cast(byte)MEMORY[EIP + 1];
+byte __fi8_i(int n = 0) {
+	return cast(byte)MEMORY[EIP + 1 + n];
 }
 
 /**

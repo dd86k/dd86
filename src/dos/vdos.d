@@ -16,13 +16,16 @@ pragma(msg, `
 | DEBUG BUILD |
 +-------------+
 `);
-enum BUILD_TYPE = "DEBUG";
+enum BUILD_TYPE = "DEBUG"; /// For printing purposes
 } else {
-enum BUILD_TYPE = "RELEASE";
+enum BUILD_TYPE = "RELEASE"; /// For printing purposes
 }
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
+
+version (BigEndian)
+	pragma(msg, "WARNING: DD-DOS has not been tested on big-endian platforms!");
 
 version (CRuntime_Bionic) {
 	pragma(msg, "Using Bionic C Runtime");

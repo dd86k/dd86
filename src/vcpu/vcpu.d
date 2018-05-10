@@ -39,7 +39,7 @@ void init() {
 	CLp = cast(ubyte*)CXp;
 	DLp = cast(ubyte*)DXp;
 
-	IP = 0x100; // Temporary
+	IP = 0x100; // Temporary, should be FFFF
 }
 
 /// Start the emulator at CS:IP (usually 0000h:0100h)
@@ -84,6 +84,7 @@ __gshared size_t MEMORYSIZE = INIT_MEM;
  * Returns: SEG:ADDR Location
  */
 extern (C)
+pragma(inline, true)
 uint get_ad(int s, int o) {
 	return (s << 4) + o;
 }
@@ -93,6 +94,7 @@ uint get_ad(int s, int o) {
  * Returns: CS:IP effective address
  */
 extern (C)
+pragma(inline, true)
 uint get_ip() {
 	return get_ad(CS, IP);
 }

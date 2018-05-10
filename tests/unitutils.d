@@ -14,3 +14,6 @@ void sub(string s) {
 void OK() {
 	writeln("OK");
 }
+void TODO() {
+	writeln("TODO");
+}

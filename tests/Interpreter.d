@@ -10,9 +10,9 @@ unittest
 
 	init;
 	CS = 0;
-	uint ip = get_ip;
 
 	sub("Interpreter Utilities (vcpuutils.d)");
+	uint ip = get_ip;
 
 	test("__iu8");
 	__iu8(0xFF, ip);
@@ -105,10 +105,8 @@ unittest
 	assert(MEMORY[ip .. ip + 2] == [ 0xAA, 0xBB ]);
 	OK;
 
-	//TODO: get_ea tests
-
 	sub("Registers");
-	
+
 	EAX = 0xFF_0201;
 	EBX = 0xFF_0201;
 	ECX = 0xFF_0201;
@@ -167,6 +165,80 @@ unittest
 	assert(FLAGB == 0);
 	assert(FLAG == 0);
 	OK;
+
+	__iu16(0x1020, EIP + 2); // low:20h
+	SI = 0x50; DI = 0x50;
+	BX = 0x30; BP = 0x30;
+	sub("Effective Address (MOD=00)");
+	writeln("MOD  R/M");
+	test("00   000"); assert(get_ea(0b00_000_000) == 0x80); OK;
+	test("00   001"); assert(get_ea(0b00_000_001) == 0x80); OK;
+	test("00   010"); assert(get_ea(0b00_000_010) == 0x80); OK;
+	test("00   011"); assert(get_ea(0b00_000_011) == 0x80); OK;
+	test("00   100"); assert(get_ea(0b00_000_100) == 0x50); OK;
+	test("00   101"); assert(get_ea(0b00_000_101) == 0x50); OK;
+	test("00   110"); assert(get_ea(0b00_000_110) == 0x1020); OK;
+	test("00   111"); assert(get_ea(0b00_000_111) == 0x30); OK;
+	test("00   CS"); TODO;
+	test("00   DS"); TODO;
+	test("00   ES"); TODO;
+	test("00   SS"); TODO;
+	sub("Effective Address (MOD=01)");
+	writeln("MOD  R/M");
+	test("01   000"); assert(get_ea(0b01_000_000) == 0xA0); OK;
+	test("01   001"); assert(get_ea(0b01_000_001) == 0xA0); OK;
+	test("01   010"); assert(get_ea(0b01_000_010) == 0xA0); OK;
+	test("01   011"); assert(get_ea(0b01_000_011) == 0xA0); OK;
+	test("01   100"); assert(get_ea(0b01_000_100) == 0x70); OK;
+	test("01   101"); assert(get_ea(0b01_000_101) == 0x70); OK;
+	test("01   110"); assert(get_ea(0b01_000_110) == 0x50); OK;
+	test("01   111"); assert(get_ea(0b01_000_111) == 0x50); OK;
+	test("01   CS"); TODO;
+	test("01   DS"); TODO;
+	test("01   ES"); TODO;
+	test("01   SS"); TODO;
+	sub("Effective Address (MOD=10)");
+	writeln("MOD  R/M");
+	test("10   000"); assert(get_ea(0b10_000_000) == 0x10A0); OK;
+	test("10   001"); assert(get_ea(0b10_000_001) == 0x10A0); OK;
+	test("10   010"); assert(get_ea(0b10_000_010) == 0x10A0); OK;
+	test("10   011"); assert(get_ea(0b10_000_011) == 0x10A0); OK;
+	test("10   100"); assert(get_ea(0b10_000_100) == 0x1070); OK;
+	test("10   101"); assert(get_ea(0b10_000_101) == 0x1070); OK;
+	test("10   110"); assert(get_ea(0b10_000_110) == 0x1050); OK;
+	test("10   111"); assert(get_ea(0b10_000_111) == 0x1050); OK;
+	test("10   CS"); TODO;
+	test("10   DS"); TODO;
+	test("10   ES"); TODO;
+	test("10   SS"); TODO;
+	sub("Effective Address (MOD=11)");
+	writeln("MOD  R/M");
+	test("11   000"); TODO;
+	test("11   001"); TODO;
+	test("11   010"); TODO;
+	test("11   011"); TODO;
+	test("11   100"); TODO;
+	test("11   101"); TODO;
+	test("11   110"); TODO;
+	test("11   111"); TODO;
+	test("11   CS"); TODO;
+	test("11   DS"); TODO;
+	test("11   ES"); TODO;
+	test("11   SS"); TODO;
+	sub("Effective Address (MOD=11+W)");
+	writeln("MOD  R/M");
+	test("11   000"); TODO;
+	test("11   001"); TODO;
+	test("11   010"); TODO;
+	test("11   011"); TODO;
+	test("11   100"); TODO;
+	test("11   101"); TODO;
+	test("11   110"); TODO;
+	test("11   111"); TODO;
+	test("11   CS"); TODO;
+	test("11   DS"); TODO;
+	test("11   ES"); TODO;
+	test("11   SS"); TODO;
 
 	sub("General instructions");
 
