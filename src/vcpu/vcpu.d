@@ -57,17 +57,18 @@ void run() {
 }
 
 /**
- * Runnning level. Used to determine the "level of execution", such as the
+ * Runnning level.
+ * Used to determine the "level of execution", such as the
  * "deepness" of a program. When a program terminates, its RLEVEL is decreased.
  * If RLEVEL reaches 0, the emulator either stops, or returns to the virtual
  * shell. Starts at 1.
  * tl;dr: Emulates CALL deep-ness.
  */
 __gshared short RLEVEL = 1;
-__gshared byte cpu_sleep = 1; /// Is vcpu sleeping between cycles?
+__gshared ubyte cpu_sleep = 1; /// Is vcpu sleeping between cycles?
 /// Is Verbose mode set?
-debug __gshared byte Verbose = 1;
-else  __gshared byte Verbose = 0;
+debug __gshared ubyte Verbose = 1;
+else  __gshared ubyte Verbose = 0;
 
 /// Main memory brank. MEMORYSIZE's default: INIT_MEM
 // Currently pre-allocated until I do a setting to make that variable
@@ -333,7 +334,7 @@ enum : ubyte {
 	RM_MOD_01 = 64,  /// MOD 01, Memory Mode, 8-bit displacement
 	RM_MOD_10 = 128, /// MOD 10, Memory Mode, 16-bit displacement
 	RM_MOD_11 = 192, /// MOD 11, Register Mode
-	RM_MOD = 192, /// Used for masking the MOD bits
+	RM_MOD = 192, /// Used for masking the MOD bits (11 000 00)
 
 	RM_REG_000 = 0,  /// AX
 	RM_REG_001 = 8,  /// CX
@@ -343,7 +344,7 @@ enum : ubyte {
 	RM_REG_101 = 40, /// BP
 	RM_REG_110 = 48, /// SI
 	RM_REG_111 = 56, /// DI
-	RM_REG = 56, /// Used for masking the REG bits
+	RM_REG = 56, /// Used for masking the REG bits (00 111 000)
 
 	RM_RM_000 = 0, /// R/M 000 bits
 	RM_RM_001 = 1, /// R/M 001 bits
@@ -353,7 +354,7 @@ enum : ubyte {
 	RM_RM_101 = 5, /// R/M 101 bits
 	RM_RM_110 = 6, /// R/M 110 bits
 	RM_RM_111 = 7, /// R/M 111 bits
-	RM_RM = 7, /// Used for masking the R/M bits
+	RM_RM = 7, /// Used for masking the R/M bits (00 000 111)
 }
 
 /**
@@ -365,6 +366,7 @@ void push(ushort value) {
 	SP = SP - 2;
 	__iu16(value, get_ad(SS, SP));
 }
+
 /**
  * Push a DWORD value into memory.
  * Params: value = DWORD value
@@ -374,6 +376,7 @@ void epush(uint value) {
 	SP = SP - 2;
 	__iu32(value, get_ad(SS, SP));
 }
+
 /**
  * Pop a WORD value from stack.
  * Returns: WORD value
@@ -384,8 +387,9 @@ ushort pop() {
 	SP = SP + 2;
 	return __fu16(addr);
 }
+
 /**
- * Pop a WORD value from stack.
+ * Pop a DWORD value from stack.
  * Returns: WORD value
  */
 extern (C)
@@ -1390,10 +1394,11 @@ void exec(ubyte op) {
 		const int t =
 			MEMORY[get_ad(DS, SI)] - MEMORY[get_ad(ES, DI)];
 		//TODO: CMPS PF
-		ZF = t == 0;
+		__hflag8_1(t);
+		/*ZF = t == 0;
 		AF = (t & 0x10) != 0;
 		CF = SF = (t & 0x80) != 0;
-		OF = (t < 0) || (t > 0xFF);
+		OF = (t < 0) || (t > 0xFF);*/
 		if (DF) {
 			DI = DI - 1;
 			SI = SI - 1;
@@ -1407,10 +1412,11 @@ void exec(ubyte op) {
 		const int t =
 			__fu16(get_ad(DS, SI)) - __fu16(get_ad(ES, DI));
 		//TODO: CMPSW PF
-		ZF = t == 0;
+		__hflag16_1(t);
+		/*ZF = t == 0;
 		AF = (t & 0x10) != 0;
 		CF = SF = (t & 0x80) != 0;
-		OF = (t < 0) || (t > 0xFFFF);
+		OF = (t < 0) || (t > 0xFFFF);*/
 		if (DF) {
 			DI = DI - 2;
 			SI = SI - 2;
@@ -1421,15 +1427,12 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0xA8: { // TEST AL, IMM8
-		__hflag8_1(AL & __fu8_i);
+		__hflag8_t(AL & __fu8_i);
 		EIP += 2;
 		return;
 	}
 	case 0xA9: { // TEST AX, IMM16
-		const int r = AX & __fu16_i;
-		//TODO: TEST ZF SF PF
-
-		CF = OF = 0;
+		__hflag16_t(AX & __fu16_i);
 		EIP += 3;
 		return;
 	}
@@ -1544,12 +1547,12 @@ void exec(ubyte op) {
 		EIP += 3;
 		return;
 	case 0xC2: // RET IMM16 (NEAR)
-		IP = pop();
+		IP = pop;
 		SP = cast(ushort)(SP + __fu16_i);
 		//EIP += 3; ?
 		return;
 	case 0xC3: // RET (NEAR)
-		IP = pop();
+		IP = pop;
 		return;
 	case 0xC4: // LES REG16, MEM16
 // Load into REG and ES
@@ -1560,35 +1563,31 @@ void exec(ubyte op) {
 
 		return;
 	case 0xC6: { // MOV MEM8, IMM8
-		// MOD 000 R/M only
 		const ubyte rm = __fu8_i;
-		const ubyte imm = __fu8_i(1);
-		if (rm & 38) { // 111 000
-			//TODO: Raise GP
+		if (rm & RM_REG) { // No register operation allowed
+			//TODO: Raise #GP
 		} else {
-
+			__iu8(__fu8_i(1), get_ea(rm));
 		}
 		return;
 	}
 	case 0xC7: { // MOV MEM16, IMM16
-		// MOD 000 R/M only
 		const ubyte rm = __fu8_i;
-		const ushort imm = __fu16_i(1);
-		if (rm & 38) { // 111 000
-			//TODO: Raise GP
+		if (rm & RM_REG) { // No register operation allowed
+			//TODO: Raise #GP
 		} else {
-
+			__iu16(__fu16_i(1), get_ea(rm));
 		}
 		return;
 	}
 	case 0xCA: // RET IMM16 (FAR)
-		IP = pop();
-		CS = pop();
+		IP = pop;
+		CS = pop;
 		SP = SP + __fu16_i;
 		return;
 	case 0xCB: // RET (FAR)
-		IP = pop();
-		CS = pop();
+		IP = pop;
+		CS = pop;
 		return;
 	case 0xCC: // INT 3
 		Raise(3);
@@ -1734,7 +1733,7 @@ void exec(ubyte op) {
 		AH = 0;
 		++EIP;
 		return;
-	// D6 is illegal under 8086
+	// D6h is illegal under 8086
 	case 0xD7: // XLAT SOURCE-TABLE
 		AL = MEMORY[get_ad(DS, BX) + AL];
 		return;
@@ -1812,8 +1811,7 @@ void exec(ubyte op) {
 
 		return;*/
 	case 0xF2: // REPNE/REPNZ
-_F2_CX:
-		if (CX) {
+_F2_CX:	if (CX) {
 			//TODO: Finish REPNE/REPNZ properly?
 			exec(0xA6);
 			CX = CX - 1;

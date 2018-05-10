@@ -231,6 +231,36 @@ void __hflag16_1(int r) {
 	PF = cast(ubyte)r;
 }
 
+/**
+ * Handle result for TEST (BYTE)
+ * SF, ZF, and PF affected
+ * OF, CF cleared
+ * AF undefined
+ */
+extern (C)
+void __hflag8_t(int r) {
+	ZF = r == 0;
+	SF = (r & 0x80) != 0;
+	ubyte b = cast(ubyte)r;
+	PF = ~(b ^ b) != 0; // XNOR(TEMP[0:7]);
+	OF = CF = 0;
+}
+
+/**
+ * Handle result for TEST (WORD)
+ * SF, ZF, and PF affected
+ * OF, CF cleared
+ * AF undefined
+ */
+extern (C)
+void __hflag16_t(int r) {
+	ZF = r == 0;
+	SF = (r & 0x8000) != 0;
+	ubyte b = cast(ubyte)r;
+	PF = ~(b ^ b) != 0; // XNOR(TEMP[0:7]);
+	OF = CF = 0;
+}
+
 /*****************************************************************************
  * Insert
  *****************************************************************************/
