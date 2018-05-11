@@ -80,7 +80,7 @@ unittest
     test("INT 21h->2C_00h");
     AH = 0x2C;
     Raise(0x21);
-    writefln("%d:%d:%d.%d", CH, CL, DH, DL);
+    writefln("%02d:%02d:%02d.%d", CH, CL, DH, DL);
 
     // GET VERSION
 
