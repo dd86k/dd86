@@ -10,9 +10,9 @@ unittest
 
 	init;
 	CS = 0;
+	uint ip = get_ip;
 
 	sub("Interpreter Utilities (vcpuutils.d)");
-	uint ip = get_ip;
 
 	test("__iu8");
 	__iu8(0xFF, ip);
@@ -32,7 +32,7 @@ unittest
 	assert(MEMORY[4] == 0x78);
 	assert(MEMORY[5] == 0x56);
 	OK;
-	
+
 	test("__iu32");
 	__iu32(0xAABBCCFF, ip);
 	assert(MEMORY[ip    ] == 0xFF);
@@ -171,14 +171,14 @@ unittest
 	BX = 0x30; BP = 0x30;
 	sub("Effective Address (MOD=00)");
 	writeln("MOD  R/M");
-	test("00   000"); assert(get_ea(0b00_000_000) == 0x80); OK;
-	test("00   001"); assert(get_ea(0b00_000_001) == 0x80); OK;
-	test("00   010"); assert(get_ea(0b00_000_010) == 0x80); OK;
-	test("00   011"); assert(get_ea(0b00_000_011) == 0x80); OK;
-	test("00   100"); assert(get_ea(0b00_000_100) == 0x50); OK;
-	test("00   101"); assert(get_ea(0b00_000_101) == 0x50); OK;
-	test("00   110"); assert(get_ea(0b00_000_110) == 0x1020); OK;
-	test("00   111"); assert(get_ea(0b00_000_111) == 0x30); OK;
+	test("00   000"); assert(get_ea(0b000) == 0x80); OK;
+	test("00   001"); assert(get_ea(0b001) == 0x80); OK;
+	test("00   010"); assert(get_ea(0b010) == 0x80); OK;
+	test("00   011"); assert(get_ea(0b011) == 0x80); OK;
+	test("00   100"); assert(get_ea(0b100) == 0x50); OK;
+	test("00   101"); assert(get_ea(0b101) == 0x50); OK;
+	test("00   110"); assert(get_ea(0b110) == 0x1020); OK;
+	test("00   111"); assert(get_ea(0b111) == 0x30); OK;
 	test("00   CS"); TODO;
 	test("00   DS"); TODO;
 	test("00   ES"); TODO;

@@ -13,9 +13,9 @@ import core.stdc.wchar_ : wchar_t, wcscpy;
 /**
  * Get effective address from a R/M byte.
  * Takes account of the preferred segment register.
+ * MOD and RM fields are used, and Seg is reset (SEG_NONE) (TODO latter).
  * Params: rm = R/M BYTE
  * Returns: Effective Address
- * Notes: MOD and RM fields are used
  */
 extern (C)
 uint get_ea(ubyte rm) { //TODO: Add default parameter wide=0
