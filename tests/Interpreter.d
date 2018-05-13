@@ -10,40 +10,40 @@ unittest
 
 	init;
 	CS = 0;
-	uint ip = get_ip;
+	EIP = get_ip;
 
 	sub("Interpreter Utilities (vcpuutils.d)");
 
 	test("__iu8");
-	__iu8(0xFF, ip);
-	assert(MEMORY[ip]     == 0xFF);
-	__iu8(0x12, ip + 2);
-	assert(MEMORY[ip + 2] == 0x12);
+	__iu8(0xFF, EIP);
+	assert(MEMORY[EIP]     == 0xFF);
+	__iu8(0x12, EIP + 2);
+	assert(MEMORY[EIP + 2] == 0x12);
 	OK;
 
 	test("__iu16");
-	__iu16(0x100, ip);
-	assert(MEMORY[ip]     == 0);
-	assert(MEMORY[ip + 1] == 1);
-	__iu16(0xABCD, ip);
-	assert(MEMORY[ip]     == 0xCD);
-	assert(MEMORY[ip + 1] == 0xAB);
+	__iu16(0x100, EIP);
+	assert(MEMORY[EIP]     == 0);
+	assert(MEMORY[EIP + 1] == 1);
+	__iu16(0xABCD, EIP);
+	assert(MEMORY[EIP]     == 0xCD);
+	assert(MEMORY[EIP + 1] == 0xAB);
 	__iu16(0x5678, 4);
 	assert(MEMORY[4] == 0x78);
 	assert(MEMORY[5] == 0x56);
 	OK;
 
 	test("__iu32");
-	__iu32(0xAABBCCFF, ip);
-	assert(MEMORY[ip    ] == 0xFF);
-	assert(MEMORY[ip + 1] == 0xCC);
-	assert(MEMORY[ip + 2] == 0xBB);
-	assert(MEMORY[ip + 3] == 0xAA);
+	__iu32(0xAABBCCFF, EIP);
+	assert(MEMORY[EIP    ] == 0xFF);
+	assert(MEMORY[EIP + 1] == 0xCC);
+	assert(MEMORY[EIP + 2] == 0xBB);
+	assert(MEMORY[EIP + 3] == 0xAA);
 	OK;
 
 	test("__fu8");
-	__iu8(0xAC, ip + 1);
-	assert(__fu8(ip + 1) == 0xAC);
+	__iu8(0xAC, EIP + 1);
+	assert(__fu8(EIP + 1) == 0xAC);
 	OK;
 
 	test("__fu8_i");
@@ -51,7 +51,7 @@ unittest
 	OK;
 
 	/*test("__fi8");
-	assert(__fi8(ip + 1) == cast(byte)0xAC);
+	assert(__fi8(EIP + 1) == cast(byte)0xAC);
 	OK;*/
 
 	test("__fi8_i");
@@ -59,12 +59,12 @@ unittest
 	OK;
 
 	test("__fu16");
-	__iu16(0xAAFF, ip + 1);
-	assert(__fu16(ip + 1) == 0xAAFF);
+	__iu16(0xAAFF, EIP + 1);
+	assert(__fu16(EIP + 1) == 0xAAFF);
 	OK;
 
 	test("__fi16");
-	assert(__fi16(ip + 1) == cast(short)0xAAFF);
+	assert(__fi16(EIP + 1) == cast(short)0xAAFF);
 	OK;
 
 	test("__fu16_i");
@@ -76,8 +76,8 @@ unittest
 	OK;
 
 	test("__fu32");
-	__iu32(0xDCBA_FF00, ip + 1);
-	assert(__fu32(ip + 1) == 0xDCBA_FF00);
+	__iu32(0xDCBA_FF00, EIP + 1);
+	assert(__fu32(EIP + 1) == 0xDCBA_FF00);
 	OK;
 
 	/*test("__fu32_i");
@@ -86,31 +86,31 @@ unittest
 
 	test("__istr");
 	__istr("AB$");
-	assert(MEMORY[ip .. ip + 3] == "AB$");
-	__istr("QWERTY", ip + 10);
-	assert(MEMORY[ip + 10 .. ip + 16] == "QWERTY");
+	assert(MEMORY[EIP .. EIP + 3] == "AB$");
+	__istr("QWERTY", EIP + 10);
+	assert(MEMORY[EIP + 10 .. EIP + 16] == "QWERTY");
 	OK;
 
 	test("__iwstr");
 	__iwstr("Heck"w);
-	assert(MEMORY[ip     .. ip + 1] == "H"w);
-	assert(MEMORY[ip + 2 .. ip + 3] == "e"w);
-	assert(MEMORY[ip + 4 .. ip + 5] == "c"w);
-	assert(MEMORY[ip + 6 .. ip + 7] == "k"w);
+	assert(MEMORY[EIP     .. EIP + 1] == "H"w);
+	assert(MEMORY[EIP + 2 .. EIP + 3] == "e"w);
+	assert(MEMORY[EIP + 4 .. EIP + 5] == "c"w);
+	assert(MEMORY[EIP + 6 .. EIP + 7] == "k"w);
 	OK;
 
 	test("__iarr");
 	ubyte[2] ar = [ 0xAA, 0xBB ];
-	__iarr(cast(ubyte*)ar, 2, ip);
-	assert(MEMORY[ip .. ip + 2] == [ 0xAA, 0xBB ]);
+	__iarr(cast(ubyte*)ar, 2, EIP);
+	assert(MEMORY[EIP .. EIP + 2] == [ 0xAA, 0xBB ]);
 	OK;
 
 	sub("Registers");
 
-	EAX = 0xFF_0201;
-	EBX = 0xFF_0201;
-	ECX = 0xFF_0201;
-	EDX = 0xFF_0201;
+	EAX =
+	EBX =
+	ECX =
+	EDX = 0x0201;
 
 	test("AL/AH");
 	assert(AL == 1);
@@ -249,7 +249,6 @@ unittest
 	// MOV
 
 	CS = 0; IP = 0x100;
-	EIP = get_ip;
 
 	test("MOV (REG)");
 
