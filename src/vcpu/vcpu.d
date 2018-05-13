@@ -10,7 +10,7 @@ module vcpu;
 import core.stdc.stdlib : exit; // Temporary
 import core.stdc.stdio : printf, puts;
 import vdos, vcpuutils;
-debug import Logger : logexec;
+import Logger; // crit and logexec
 
 /// Initial and maximum amount of memory if not specified in settings.
 enum INIT_MEM = 0x4_0000;
@@ -39,14 +39,14 @@ void init() {
 	CLp = cast(ubyte*)CXp;
 	DLp = cast(ubyte*)DXp;
 
-	IP = 0x100; // Temporary, should be FFFF
+	IP = 0x100; // Temporary, should be FFFFh
 }
 
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
 void run() {
 	if (Verbose)
-		puts("[INFO] vcpu::Run");
+		info("vcpu::run");
 
 	while (RLEVEL) {
 		EIP = get_ip;
@@ -331,12 +331,13 @@ CF; /// Bit  0, Carry Flag
 	CF = flag & MASK_CF;
 }
 
+//TODO: aliases (RM_RM_000 -> RM_RM_A?)
 enum : ubyte {
 	RM_MOD_00 = 0,   /// MOD 00, Memory Mode, no displacement
 	RM_MOD_01 = 64,  /// MOD 01, Memory Mode, 8-bit displacement
 	RM_MOD_10 = 128, /// MOD 10, Memory Mode, 16-bit displacement
 	RM_MOD_11 = 192, /// MOD 11, Register Mode
-	RM_MOD = 192, /// Used for masking the MOD bits (11 000 00)
+	RM_MOD = 192, /// Used for masking the MOD bits (11 000 000)
 
 	RM_REG_000 = 0,  /// AX
 	RM_REG_001 = 8,  /// CX
@@ -1178,7 +1179,7 @@ void exec(ubyte op) {
 			break; // MOD 01
 		case RM_MOD_10:
 
-			debug puts("89h MOD 10");
+			debug _debug("89h MOD 10");
 			EIP += 2;
 			break; // MOD 10
 		case RM_MOD_11:
@@ -1958,10 +1959,7 @@ _F2_CX:	if (CX) {
 		break;
 	default: // Illegal instruction
 		//TODO: Raise vector on illegal op
-		
-		panic("INVALID OPERATION CODE");
-
-		exit(0); // Temporary
+		crit("INVALID OPERATION CODE"); // Temporary
 		return;
 	}
 }

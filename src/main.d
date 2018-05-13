@@ -95,10 +95,10 @@ private int main(int argc, char** argv) {
 	// Pre-boot
 
 	if (Verbose) {
-		debug log("-- DEBUG BUILD");
-		else  log("-- VERBOSE MODE ON");
+		debug info("-- DEBUG BUILD");
+		else  info("-- VERBOSE MODE ON");
 		if (!cpu_sleep)
-			log("-- SLEEP MODE OFF");
+			info("-- SLEEP MODE OFF");
 	}
 
 	if (arg_banner)

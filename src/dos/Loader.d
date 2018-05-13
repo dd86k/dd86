@@ -65,7 +65,7 @@ int ExecLoad(char* path) {
 	if (fsize == 0) {
 		fclose(f);
 		if (Verbose)
-			log("File is zero length");
+			info("File is zero length");
 		AL = E_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
 		return E_BAD_FORMAT;
 	}
@@ -79,7 +79,7 @@ int ExecLoad(char* path) {
 
 	switch (sig) {
 	case MZ_MAGIC: // Party time!
-		if (Verbose) log("LOADING MZ");
+		if (Verbose) info("LOADING MZ");
 
 		// ** Header is read for initial register values
 		__gshared mz_hdr mzh;
@@ -92,10 +92,10 @@ int ExecLoad(char* path) {
 		//TODO: LOW/HIGH MEMORY
 		if (mzh.e_minalloc && mzh.e_maxalloc) { // Low memory
 			if (Verbose)
-				log("LOAD LOW MEM");
+				info("LOAD LOW MEM");
 		} else { // High memory
 			if (Verbose)
-				log("LOAD HIGH MEM");
+				info("LOAD HIGH MEM");
 		}
 
 		// Shouldn't it be there _multiple_ code segments in some cases?
@@ -146,7 +146,7 @@ int ExecLoad(char* path) {
 			free(r);
 		} else {
 			if (Verbose)
-				log("No relocations");
+				info("No relocations");
 		}+/
 
 		// ** Setup registers
@@ -174,7 +174,7 @@ int ExecLoad(char* path) {
 			AL = E_BAD_FORMAT; //TODO: Verify code
 			return E_BAD_FORMAT;
 		}
-		if (Verbose) log("LOADING COM");
+		if (Verbose) info("LOADING COM");
 
 		fseek(f, 0, SEEK_SET);
 		fread(memloc, fsize, 1, f);

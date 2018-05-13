@@ -212,29 +212,33 @@ unittest
 	test("10   ES"); TODO;
 	test("10   SS"); TODO;
 	sub("Effective Address (MOD=11)");
+	AX = 0x2040; CX = 0x2141;
+	DX = 0x2242; BX = 0x2343;
+	SP = 0x2030; BP = 0x2131;
+	SI = 0x2232; DI = 0x2333;
 	writeln("MOD  R/M");
-	test("11   000"); TODO;
-	test("11   001"); TODO;
-	test("11   010"); TODO;
-	test("11   011"); TODO;
-	test("11   100"); TODO;
-	test("11   101"); TODO;
-	test("11   110"); TODO;
-	test("11   111"); TODO;
+	test("11   000"); assert(get_ea(0b11_000_000) == 0x40); OK; // AL
+	test("11   001"); assert(get_ea(0b11_000_001) == 0x41); OK; // CL
+	test("11   010"); assert(get_ea(0b11_000_010) == 0x42); OK; // DL
+	test("11   011"); assert(get_ea(0b11_000_011) == 0x43); OK; // BL
+	test("11   100"); assert(get_ea(0b11_000_100) == 0x20); OK; // AH
+	test("11   101"); assert(get_ea(0b11_000_101) == 0x21); OK; // CH
+	test("11   110"); assert(get_ea(0b11_000_110) == 0x22); OK; // DH
+	test("11   111"); assert(get_ea(0b11_000_111) == 0x23); OK; // BH
 	test("11   CS"); TODO;
 	test("11   DS"); TODO;
 	test("11   ES"); TODO;
 	test("11   SS"); TODO;
 	sub("Effective Address (MOD=11+W)");
 	writeln("MOD  R/M");
-	test("11   000"); TODO;
-	test("11   001"); TODO;
-	test("11   010"); TODO;
-	test("11   011"); TODO;
-	test("11   100"); TODO;
-	test("11   101"); TODO;
-	test("11   110"); TODO;
-	test("11   111"); TODO;
+	test("11   000"); assert(get_ea(0b11_000_000, 1) == 0x2040); OK; // AX
+	test("11   001"); assert(get_ea(0b11_000_001, 1) == 0x2141); OK; // CX
+	test("11   010"); assert(get_ea(0b11_000_010, 1) == 0x2242); OK; // DX
+	test("11   011"); assert(get_ea(0b11_000_011, 1) == 0x2343); OK; // BX
+	test("11   100"); assert(get_ea(0b11_000_100, 1) == 0x2030); OK; // SP
+	test("11   101"); assert(get_ea(0b11_000_101, 1) == 0x2131); OK; // BP
+	test("11   110"); assert(get_ea(0b11_000_110, 1) == 0x2232); OK; // SI
+	test("11   111"); assert(get_ea(0b11_000_111, 1) == 0x2333); OK; // DI
 	test("11   CS"); TODO;
 	test("11   DS"); TODO;
 	test("11   ES"); TODO;

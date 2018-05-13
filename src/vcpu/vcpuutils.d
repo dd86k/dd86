@@ -18,62 +18,62 @@ import core.stdc.wchar_ : wchar_t, wcscpy;
  * Returns: Effective Address
  */
 extern (C)
-uint get_ea(ubyte rm) { //TODO: Add default parameter wide=0
+uint get_ea(ubyte rm, ubyte wide = 0) {
 	switch (rm & RM_MOD) { // MOD
 	case RM_MOD_00: // MOD 00, Memory Mode, no displacement
 		switch (Seg) {
 		case SEG_CS:
-			debug puts("MOD_00, get_ea::SEG_CS");
+			debug _debug("MOD_00, get_ea::SEG_CS");
 			break;
 		case SEG_DS:
-			debug puts("MOD_00, get_ea::SEG_DS");
+			debug _debug("MOD_00, get_ea::SEG_DS");
 			break;
 		case SEG_ES:
-			debug puts("MOD_00, get_ea::SEG_ES");
+			debug _debug("MOD_00, get_ea::SEG_ES");
 			break;
 		case SEG_SS:
-			debug puts("MOD_00, get_ea::SEG_SS");
+			debug _debug("MOD_00, get_ea::SEG_SS");
 			break;
 		default:
 			switch (rm & RM_RM) { // R/M
-			case RM_RM_000: debug puts("EA:0:0");
+			case RM_RM_000: debug _debug("EA:0:0");
 				return SI + BX;
-			case RM_RM_001: debug puts("EA:0:1");
+			case RM_RM_001: debug _debug("EA:0:1");
 				return DI + BX;
-			case RM_RM_010: debug puts("EA:0:2");
+			case RM_RM_010: debug _debug("EA:0:2");
 				return SI + BP;
-			case RM_RM_011: debug puts("EA:0:3");
+			case RM_RM_011: debug _debug("EA:0:3");
 				return DI + BP;
-			case RM_RM_100: debug puts("EA:0:4");
+			case RM_RM_100: debug _debug("EA:0:4");
 				return SI;
-			case RM_RM_101: debug puts("EA:0:5");
+			case RM_RM_101: debug _debug("EA:0:5");
 				return DI;
-			case RM_RM_110: debug puts("EA:0:6");
+			case RM_RM_110: debug _debug("EA:0:6");
 				return __fu16_i(1); // DIRECT ADDRESS, immediate follows
-			case RM_RM_111: debug puts("EA:0:7");
+			case RM_RM_111: debug _debug("EA:0:7");
 				return BX;
 			default:
 			}
 		}
 		break; // MOD 00
 	case RM_MOD_01: { // MOD 01, Memory Mode, 8-bit displacement follows
-		debug puts("EA:1:_");
+		debug _debug("EA:1:_");
 		switch (rm & RM_RM) {
-		case RM_RM_000: debug puts("EA:1:0");
+		case RM_RM_000: debug _debug("EA:1:0");
 			return SI + BX + __fi8_i(1);
-		case RM_RM_001: debug puts("EA:1:1");
+		case RM_RM_001: debug _debug("EA:1:1");
 			return DI + BX + __fi8_i(1);
-		case RM_RM_010: debug puts("EA:1:2");
+		case RM_RM_010: debug _debug("EA:1:2");
 			return SI + BP + __fi8_i(1);
-		case RM_RM_011: debug puts("EA:1:3");
+		case RM_RM_011: debug _debug("EA:1:3");
 			return DI + BP + __fi8_i(1);
-		case RM_RM_100: debug puts("EA:1:4");
+		case RM_RM_100: debug _debug("EA:1:4");
 			return SI + __fi8_i(1);
-		case RM_RM_101: debug puts("EA:1:5");
+		case RM_RM_101: debug _debug("EA:1:5");
 			return DI + __fi8_i(1);
-		case RM_RM_110: debug puts("EA:1:6");
+		case RM_RM_110: debug _debug("EA:1:6");
 			return BP + __fi8_i(1);
-		case RM_RM_111: debug puts("EA:1:7");
+		case RM_RM_111: debug _debug("EA:1:7");
 			return BX + __fi8_i(1);
 		default:
 		}
@@ -83,42 +83,42 @@ uint get_ea(ubyte rm) { //TODO: Add default parameter wide=0
 	case RM_MOD_10: // MOD 10, Memory Mode, 16-bit displacement follows
 		switch (Seg) {
 		case SEG_CS:
-			debug puts("MOD_10, get_ea::SEG_CS");
+			debug _debug("MOD_10, get_ea::SEG_CS");
 			break;
 		case SEG_DS:
-			debug puts("MOD_10, get_ea::SEG_DS");
+			debug _debug("MOD_10, get_ea::SEG_DS");
 			break;
 		case SEG_ES:
-			debug puts("MOD_10, get_ea::SEG_ES");
+			debug _debug("MOD_10, get_ea::SEG_ES");
 			break;
 		case SEG_SS:
-			debug puts("MOD_10, get_ea::SEG_SS");
+			debug _debug("MOD_10, get_ea::SEG_SS");
 			break;
 		default:
 			switch (rm & RM_RM) { // R/M
 			case 0:
-				debug puts("EA:2:0");
+				debug _debug("EA:2:0");
 				return SI + BX + __fi16_i(1);
 			case RM_RM_001:
-				debug puts("EA:2:1");
+				debug _debug("EA:2:1");
 				return DI + BX + __fi16_i(1);
 			case RM_RM_010:
-				debug puts("EA:2:2");
+				debug _debug("EA:2:2");
 				return SI + BP + __fi16_i(1);
 			case RM_RM_011:
-				debug puts("EA:2:3");
+				debug _debug("EA:2:3");
 				return DI + BP + __fi16_i(1);
 			case RM_RM_100:
-				debug puts("EA:2:4");
+				debug _debug("EA:2:4");
 				return SI + __fi16_i(1);
 			case RM_RM_101:
-				debug puts("EA:2:5");
+				debug _debug("EA:2:5");
 				return DI + __fi16_i(1);
 			case RM_RM_110:
-				debug puts("EA:2:6");
+				debug _debug("EA:2:6");
 				return BP + __fi16_i(1);
 			case RM_RM_111:
-				debug puts("EA:2:7");
+				debug _debug("EA:2:7");
 				return BX + __fi16_i(1);
 			default:
 			}
@@ -126,13 +126,38 @@ uint get_ea(ubyte rm) { //TODO: Add default parameter wide=0
 		EIP += 2;
 		break; // MOD 10
 	case RM_MOD_11: // MOD 11, Register Mode
-		debug puts("EA:3:_");
-		break;
+		if (wide)
+			switch (rm & RM_RM) {
+			case RM_RM_000: return AX;
+			case RM_RM_001: return CX;
+			case RM_RM_010: return DX;
+			case RM_RM_011: return BX;
+			case RM_RM_100: return SP;
+			case RM_RM_101: return BP;
+			case RM_RM_110: return SI;
+			case RM_RM_111: return DI;
+			default:
+			}
+		else
+			switch (rm & RM_RM) {
+			case RM_RM_000: return AL;
+			case RM_RM_001: return CL;
+			case RM_RM_010: return DL;
+			case RM_RM_011: return BL;
+			case RM_RM_100: return AH;
+			case RM_RM_101: return CH;
+			case RM_RM_110: return DH;
+			case RM_RM_111: return BH;
+			default:
+			}
+		break; // MOD 11
 	default:
 	}
 
 	return -1; // Temporary until switch
 }
+
+//TODO: get_ea32
 
 /*****************************************************************************
  * Flag utils
