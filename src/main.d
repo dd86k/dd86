@@ -6,7 +6,7 @@ import core.stdc.stdio;
 import core.stdc.stdlib : exit;
 import core.stdc.string : strcmp;
 import vdos : APP_VERSION, BANNER, EnterShell;
-import vcpu : init, Verbose, cpu_sleep, run;
+import vcpu : init, cpu_sleep, run;
 import Loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;
@@ -15,9 +15,9 @@ import OSUtilities : pexist;
 extern (C)
 private void _version() {
 	printf(
-		"dd-dos v" ~ APP_VERSION ~ "  (" ~ __TIMESTAMP__ ~ ")\n" ~
-		"Copyright (c) 2017-2018 dd86k, using MIT license\n" ~
-		"Project page: <https://github.com/dd86k/dd-dos>\n" ~
+		"Copyright (c) 2017-2018 dd86k, MIT license\n" ~
+		"Project page: <https://github.com/dd86k/dd-dos>\n\n" ~
+		"dd-dos " ~ APP_VERSION ~ "  (" ~ __TIMESTAMP__ ~ ")\n" ~
 		"Compiler: " ~ __VENDOR__ ~ " v%d\n\n" ~
 		`Credits
 dd86k -- Original author and developer
@@ -38,8 +38,8 @@ USAGE
 OPTIONS
   -P       Do not sleep between cycles
   -N       Remove starting messages and banner
-  -V       Toggle verbose mode for session
-  -v, --version    Print version screen, then exit
+  -v       Increase verbosity level
+  -V, --version    Print version screen, then exit
   -h, --help       Print help screen, then exit`
 	);
 	exit(0);
@@ -94,12 +94,10 @@ private int main(int argc, char** argv) {
 
 	// Pre-boot
 
-	if (Verbose) {
-		debug info("-- DEBUG BUILD");
-		else  info("-- VERBOSE MODE ON");
-		if (!cpu_sleep)
-			info("-- SLEEP MODE OFF");
-	}
+	debug info("-- DEBUG BUILD");
+	else  info("-- VERBOSE MODE ON");
+	if (!cpu_sleep)
+		info("-- SLEEP MODE OFF");
 
 	if (arg_banner)
 		puts("DD-DOS is starting...");

@@ -64,8 +64,7 @@ int ExecLoad(char* path) {
 
 	if (fsize == 0) {
 		fclose(f);
-		if (Verbose)
-			info("File is zero length");
+		info("File is zero length");
 		AL = E_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
 		return E_BAD_FORMAT;
 	}
@@ -79,7 +78,7 @@ int ExecLoad(char* path) {
 
 	switch (sig) {
 	case MZ_MAGIC: // Party time!
-		if (Verbose) info("LOADING MZ");
+		info("LOADING MZ");
 
 		// ** Header is read for initial register values
 		__gshared mz_hdr mzh;
@@ -91,11 +90,9 @@ int ExecLoad(char* path) {
 		// ** Copy code section from exe into memory
 		//TODO: LOW/HIGH MEMORY
 		if (mzh.e_minalloc && mzh.e_maxalloc) { // Low memory
-			if (Verbose)
-				info("LOAD LOW MEM");
+			info("LOAD LOW MEM");
 		} else { // High memory
-			if (Verbose)
-				info("LOAD HIGH MEM");
+			info("LOAD HIGH MEM");
 		}
 
 		// Shouldn't it be there _multiple_ code segments in some cases?
@@ -107,19 +104,18 @@ int ExecLoad(char* path) {
 			csize -= PAGE - mzh.e_cblp;
 
 		if (csize >= SEG_SIZE) { // Section too large?
-			if (Verbose)
-				error("Executable code size too big (>64K)");
+			error("Executable code size too big (>64K)");
 			return -1; //TODO: check error code (for AL)
 		}
 
 		debug {
-			printf("[dbug] STRUCT SIZE: %d\n", mzh.sizeof);
-			printf("[dbug] HEADER SIZE: %d\n", hsize);
-			printf("[dbug] CODE SIZE : %d\n", csize);
-			printf("[dbug] CS: %d\n", CS);
-			printf("[dbug] IP: %d\n", IP);
-			printf("[dbug] SS: %d\n", SS);
-			printf("[dbug] SP: %d\n", SP);
+			printf("STRUCT SIZE: %d\n", mzh.sizeof);
+			printf("HEADER SIZE: %d\n", hsize);
+			printf("CODE SIZE : %d\n", csize);
+			printf("CS: %d\n", CS);
+			printf("IP: %d\n", IP);
+			printf("SS: %d\n", SS);
+			printf("SP: %d\n", SP);
 		}
 		fseek(f, cstart, SEEK_SET); // Seek to start of first code segment
 		fread(memloc, csize, 1, f); // read code segment into MEMORY
@@ -170,11 +166,11 @@ int ExecLoad(char* path) {
 	default:
 		if (fsize > 0xFF00) { // Size - PSP
 			fclose(f);
-			if (Verbose) error("COM file too large");
+			error("COM file too large");
 			AL = E_BAD_FORMAT; //TODO: Verify code
 			return E_BAD_FORMAT;
 		}
-		if (Verbose) info("LOADING COM");
+		info("LOADING COM");
 
 		fseek(f, 0, SEEK_SET);
 		fread(memloc, fsize, 1, f);

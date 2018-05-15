@@ -324,8 +324,14 @@ By default, MEM will show memory usage`
 		goto END;
 	}
 	if (strcmp(*argv, "?v") == 0) {
-		Verbose = !Verbose;
-		printf("Verbose mode: %s\n", Verbose ? "ON" : cast(char*)"OFF");
+		printf("Verbose set to ");
+		if (Verbose) {
+			Verbose = L_SILENCE;
+			puts("SILENCE");
+		} else {
+			Verbose = L_DEBUG;
+			puts("DEBUG");
+		}
 		goto END;
 	}
 	if (strcmp(*argv, "?p") == 0) {

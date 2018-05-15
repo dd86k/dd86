@@ -45,8 +45,7 @@ void init() {
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
 void run() {
-	if (Verbose)
-		info("vcpu::run");
+	info("vcpu::run");
 
 	while (RLEVEL) {
 		EIP = get_ip;
@@ -66,9 +65,6 @@ void run() {
  */
 __gshared short RLEVEL = 1;
 __gshared ubyte cpu_sleep = 1; /// Is vcpu sleeping between cycles?
-/// Is Verbose mode set?
-debug __gshared ubyte Verbose = 1;
-else  __gshared ubyte Verbose = 0;
 
 /// Main memory brank. MEMORYSIZE's default: INIT_MEM
 // Currently pre-allocated until I do a setting to make that variable

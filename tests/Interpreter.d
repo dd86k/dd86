@@ -703,7 +703,7 @@ unittest
 
 	// LODS
 
-	test("LODSB");
+	test("LODS"); // of dosh
 	AL = 0;
 	DS = 0xA0; SI = 0x200;
 	MEMORY[get_ad(DS, SI)] = 'H';
@@ -727,7 +727,7 @@ unittest
 
 	// SCAS
 
-	test("SCASB");
+	test("SCAS");
 	ES = CS = 0x400; DI = 0x20; IP = 0x20;
 	EIP = get_ip;
 	__istr("Hello!");
