@@ -139,7 +139,7 @@ void EnterShell() {
 	__gshared char** argv; /// argument vector
 	__gshared int argc; /// argument count
 	inb = cast(char*)malloc(_BUFS);
-	cwb = cast(char*)malloc(255);
+	cwb = cast(char*)malloc(255); //TODO: Consider merging inb into cwb, memory savings
 	argv = cast(char**)malloc(_BUFS * size_t.sizeof); // sizeof(char *)
 START:
 	//TODO: Print $PROMPT
@@ -149,7 +149,7 @@ START:
 		fputs("\n% ", stdout);
 
 	fgets(cast(char*)inb, _BUFS, stdin);
-	if (inb[0] == '\n') goto START;
+	if (*inb == '\n') goto START;
 
 	argc = sargs(cast(char*)inb, argv);
 
@@ -250,7 +250,7 @@ VER       Show DD-DOS and MS-DOS version`
 				"Memory Type             Zero +    Data =   Total\n" ~
 				"-------------------  -------   -------   -------\n" ~
 				"Conventional         %6dK   %6dK   %6dK\n" ~
-				"Extended (DD-DOS)    %6dK   %6dK   %6dK\n" ~
+				"Extended             %6dK   %6dK   %6dK\n" ~
 				"-------------------  -------   -------   -------\n" ~
 				"Total                %6dK   %6dK   %6dK\n",
 				(ct - nzc) / 1024, nzc / 1024, ct / 1024,
@@ -290,8 +290,8 @@ By default, MEM will show memory usage`
 	// V
 
 	if (strcmp(*argv, "ver") == 0) {
-		printf("\nDD-DOS Version %s\nMS-DOS Version %d.%d\n\n",
-			cast(char*)APP_VERSION, MajorVersion, MinorVersion);
+		printf("\nDD-DOS Version "~APP_VERSION~"\nMS-DOS Version %d.%d\n",
+			MajorVersion, MinorVersion);
 		goto END;
 	}
 
@@ -374,13 +374,13 @@ END:
 extern (C)
 void print_regs() {
 	printf(
-`EIP=%08X  (%04X:%04X)
+`EIP=%08X  (%04X:%04X=%08X)
 EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X
-SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  SS=%04X
+SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  
 `,
-		EIP, CS, IP,
+		EIP, CS, IP, get_ip,
 		EAX, EBX, ECX, EDX,
-		SP, BP, SI, DI, CS, DS, ES, SS
+		SS, SP, BP, SI, DI, CS, DS, ES
 	);
 	printf("FLAG=");
 	if (OF) printf(" OF");
@@ -397,26 +397,32 @@ SP=%04X  BP=%04X  SI=%04X  DI=%04X  CS=%04X  DS=%04X  ES=%04X  SS=%04X
 
 extern (C)
 void print_stack() {
-	puts("print_stack::Not implemented.");
+	puts("print_stack::Not implemented");
 }
 
 extern (C)
-void panic(immutable(char)* r) {
-	enum RANGE = 20;
+void panic(immutable(char)* msg) {
+	enum RANGE = 22;
 
-	printf("\n[ !! ] PANIC: %s\n\n", r);
-	print_regs;
-	print_stack;
-	printf("CODE:");
+	Clear;
+	printf(
+		"\n\nA fatal exception occured, which DD-DOS couldn't recover.\n" ~
+		"Message: %s\n\nEXEC:",
+		msg
+	);
 	__gshared int i = RANGE;
-	ubyte* p = cast(ubyte*)MEMORY + get_ip - 4;
+	ubyte* p = cast(ubyte*)MEMORY + get_ip - 6;
 	while (--i) {
 		if (i == (RANGE - 5))
-			printf(" <%02X>", *p);
+			printf(" >%02X<", *p);
 		else
 			printf(" %02X", *p);
 		++p;
 	}
+	printf("\n--\n");
+	print_regs;
+	printf("--\n");
+	print_stack;
 }
 
 /*

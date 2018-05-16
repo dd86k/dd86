@@ -46,12 +46,11 @@ void init() {
 extern (C)
 void run() {
 	info("vcpu::run");
-
 	while (RLEVEL) {
 		EIP = get_ip;
 		debug logexec(CS, IP, MEMORY[EIP]);
 		exec(MEMORY[EIP]);
-		//if (cpu_sleep) SLEEP(1);
+		//if (cpu_sleep) SLEEP;
 	}
 }
 
@@ -61,14 +60,14 @@ void run() {
  * "deepness" of a program. When a program terminates, its RLEVEL is decreased.
  * If RLEVEL reaches 0, the emulator either stops, or returns to the virtual
  * shell. Starts at 1.
- * tl;dr: Emulates CALL deep-ness.
+ * tl;dr: Emulates CALLs
  */
 __gshared short RLEVEL = 1;
-__gshared ubyte cpu_sleep = 1; /// Is vcpu sleeping between cycles?
+/// If set, the vcpu sleeps for this amount of time in hecto-seconds
+__gshared ubyte cpu_sleep = 1;
 
 /// Main memory brank. MEMORYSIZE's default: INIT_MEM
-// Currently pre-allocated until I do a setting to make that variable
-__gshared ubyte[INIT_MEM] MEMORY;
+__gshared ubyte[INIT_MEM] MEMORY; // It's planned to move to a malloc
 /// Current memory MEMORY size. Default: INIT_MEM
 __gshared size_t MEMORYSIZE = INIT_MEM;
 
@@ -105,7 +104,7 @@ void reset() {
 	// Empty Queue Bus
 }
 
-/// resets the entire vcpu. Does not refer to the RESET instruction!
+/// Resets the entire vcpu. Does not refer to the RESET instruction!
 extern (C)
 void fullreset() {
 	reset();
@@ -1019,7 +1018,7 @@ void exec(ubyte op) {
 		return;
 	case 0x80: { // GRP1 R/M8, IMM8
 		const ubyte rm = __fu8_i; // Get ModR/M byte
-		const ubyte im = __fu8_i(2); // 8-bit Immediate after modr/m
+		const ubyte im = __fu8_i(1); // 8-bit Immediate after modr/m
 		switch (rm & RM_MOD) {
 		case RM_MOD_00: // No displacement
 			switch (rm & RM_REG) { // REG

@@ -107,10 +107,10 @@ private int main(int argc, char** argv) {
 	InitConsole; // ddcon
 	init; // dd-dos
 
+	// DD-DOS
+
 	if (arg_banner)
 		puts(BANNER); // Defined in vdos.d
-
-	// DD-DOS
 
 	if (cast(int)prog) {
 		if (pexist(prog)) {

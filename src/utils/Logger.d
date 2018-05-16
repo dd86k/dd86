@@ -17,11 +17,11 @@ public __gshared ubyte Verbose = L_INFO;
 else
 public __gshared ubyte Verbose = L_CRIT;
 
-//TODO: template?
+//TODO: Figure out template to avoid re-typing debug everytime
 debug void _debug(immutable(char)* msg) {
 	printf("[....] %s\n", msg);
 }
-
+//TODO: See above
 debug void logexec(ushort seg, ushort ip, ubyte op) {
 	printf("[ VM ] %04X:%04X  %02Xh\n", seg, ip, op);
 }
