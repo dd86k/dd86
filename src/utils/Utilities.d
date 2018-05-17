@@ -53,6 +53,19 @@ int mstring(char* c, int p) {
 	return r;
 }*/
 
+extern (C)
+void lowercase(char* c) {
+	while (*c) {
+		switch (*c) {
+		case 'A': .. case 'Z':
+			*c = cast(char)(*c + 32);
+			break;
+		default:
+		}
+		++c;
+	}
+}
+
 /**
  * Byte swap a 2-byte number.
  * Params: num = 2-byte number to swap.

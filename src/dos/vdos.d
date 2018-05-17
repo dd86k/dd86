@@ -155,6 +155,7 @@ START:
 
 	//TODO: TREE, DIR
 	//TODO: lowercase
+	lowercase(*argv);
 
 	// C
 
