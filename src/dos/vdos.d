@@ -66,7 +66,7 @@ enum OEM_ID { // Used for INT 21h AH=30 so far.
 	IBM, Compaq, MSPackagedProduct, ATnT, ZDS
 }
 
-enum DOS_MAJOR_VERSION = 2, /// Default reported major DOS version
+enum DOS_MAJOR_VERSION = 5, /// Default reported major DOS version
 	 DOS_MINOR_VERSION = 0; /// Default reported minor DOS version
 
 __gshared ubyte MajorVersion = DOS_MAJOR_VERSION; /// Alterable reported major version
@@ -87,7 +87,9 @@ enum
 // putchar is extern (D) for some stupid reason
 extern (C) void putchar(int);
 
-enum _BUFS = 127; // maximum in MS-DOS 5.0
+// While maximum in MS-DOS 5.0 seems to be 127, 255 feels like a little more
+// breathable
+enum _BUFS = 255;
 
 /**
  * CLI argument splitter, supports quoting.
@@ -134,17 +136,15 @@ int sargs(const char* t, char** argv) {
  */
 extern (C)
 void EnterShell() {
-	__gshared char* cwb; /// internal current working directory buffer
-	__gshared char* inb; /// internal input buffer
+	__gshared char* inb; /// internal input buffer, also used for CWD buffering
 	__gshared char** argv; /// argument vector
 	__gshared int argc; /// argument count
 	inb = cast(char*)malloc(_BUFS);
-	cwb = cast(char*)malloc(255); //TODO: Consider merging inb into cwb, memory savings
 	argv = cast(char**)malloc(_BUFS * size_t.sizeof); // sizeof(char *)
 START:
 	//TODO: Print $PROMPT
-	if (gcwd(cast(char*)cwb))
-		printf("\n%s%% ", cast(char*)cwb);
+	if (gcwd(cast(char*)inb))
+		printf("\n%s%% ", cast(char*)inb);
 	else // just-in-case
 		fputs("\n% ", stdout);
 
@@ -154,7 +154,6 @@ START:
 	argc = sargs(cast(char*)inb, argv);
 
 	//TODO: TREE, DIR
-	//TODO: lowercase
 	lowercase(*argv);
 
 	// C
@@ -177,7 +176,9 @@ By default, CD will display the current working directory`
 				}
 			}
 		} else {
-			puts(cast(char*)cwb);
+			if (gcwd(cast(char*)inb))
+				puts(cast(char*)inb);
+			else puts("E: Error getting CWD");
 		}
 		goto END;
 	}
@@ -210,7 +211,6 @@ By default, CD will display the current working directory`
 
 	if (strcmp(*argv, "exit") == 0) {
 		free(argv);
-		free(cwb);
 		free(inb);
 		return;
 	}

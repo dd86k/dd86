@@ -47,7 +47,7 @@ extern (C)
 void run() {
 	info("vcpu::run");
 	while (RLEVEL) {
-		EIP = get_ip;
+		EIP = get_ip; // _Very important_ to pre-calculate CS:IP into EIP
 		debug logexec(CS, IP, MEMORY[EIP]);
 		exec(MEMORY[EIP]);
 		//if (cpu_sleep) SLEEP;
@@ -456,52 +456,21 @@ void exec(ubyte op) {
 	}
 	case 0x01: { // ADD R/M16, REG16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
-		switch (rm & RM_MOD) {
-		case RM_MOD_00:
-			switch (rm & RM_REG) {
-			case RM_REG_000: // AX
-				__iu16(__fu16(addr) + AX, addr);
-				break;
-			case RM_REG_001: // CX
-				__iu16(__fu16(addr) + CX, addr);
-				break;
-			case RM_REG_010: // DX
-				__iu16(__fu16(addr) + DX, addr);
-				break;
-			case RM_REG_011: // BX
-				__iu16(__fu16(addr) + BX, addr);
-				break;
-			case RM_REG_100: // SP
-				__iu16(__fu16(addr) + SP, addr);
-				break;
-			case RM_REG_101: // BP
-				__iu16(__fu16(addr) + BP, addr);
-				break;
-			case RM_REG_110: // SI
-				__iu16(__fu16(addr) + SI, addr);
-				break;
-			case RM_REG_111: // DI
-				__iu16(__fu16(addr) + DI, addr);
-				break;
-			default:
-			}
-			break; // MOD 00
-		case RM_MOD_01:
-
-			EIP += 1;
-			break; // MOD 01
-		case RM_MOD_10:
-
-			EIP += 2;
-			break; // MOD 10
-		case RM_MOD_11:
-			switch (rm & RM_REG) {
-			default:
-			}
-			break; // MOD 11
+		const uint addr = get_ea(rm, 1);
+		int r = __fu16(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r += AX; break;
+		case RM_REG_001: r += CX; break;
+		case RM_REG_010: r += DX; break;
+		case RM_REG_011: r += BX; break;
+		case RM_REG_100: r += SP; break;
+		case RM_REG_101: r += BP; break;
+		case RM_REG_110: r += SI; break;
+		case RM_REG_111: r += DI; break;
 		default:
 		}
+		__hflag16_1(r);
+		__iu16(r, addr);
 		EIP += 2;
 		return;
 	}
@@ -678,11 +647,11 @@ void exec(ubyte op) {
 
 		return;
 	case 0x24: // AND AL, IMM8
-		AL = AL & __fu8(get_ip);
+		AL = AL & __fu8_i;
 		EIP += 2;
 		return;
 	case 0x25: // AND AX, IMM16
-		AX = AX & __fu16(get_ip);
+		AX = AX & __fu16_i;
 		EIP += 3;
 		return;
 	case 0x26: // ES: (Segment override prefix)

@@ -85,9 +85,8 @@ ushort bswap16(ushort n) {
 pragma(inline, true)
 extern (C)
 uint bswap32(uint n) {
-	return
-		(n >> 24) | (n & 0xFF_0000) >> 8 |
-		(n & 0xFF00) << 8 | (n << 24);
+	return  (n >> 24) | (n & 0xFF_0000) >> 8 |
+			(n & 0xFF00) << 8 | (n << 24);
 }
 
 /**
