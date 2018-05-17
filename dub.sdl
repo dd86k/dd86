@@ -24,6 +24,12 @@ buildType "release-nobounds" {
   dflags "-betterC"
 }
 
+buildType "release-inline" {
+  targetType "executable"
+  buildOptions "releaseMode" "noBoundsCheck" "optimize" "inline"
+  dflags "-betterC"
+}
+
 buildType "unittest" {
   targetName "tests"
   targetType "executable"
