@@ -411,19 +411,69 @@ unittest
 	test("ADD SI, R/M16"); TODO;
 	test("ADD DI, R/M16"); TODO;
 	test("ADD R/M16, AX");
-	__iu8(0b11_000_000, EIP + 1);
-	__iu16(23, EIP + 2);
+	CX = 0x200; // address
 	AX = 22;
+	__iu8(0b11_000_001, EIP + 1);
+	__iu16(23, CX);
 	exec(0x01);
-	assert(__fu16(AX) == 55);
+	assert(__fu16(CX) == 45);
 	OK;
-	test("ADD R/M16, CX"); TODO;
-	test("ADD R/M16, DX"); TODO;
-	test("ADD R/M16, BX"); TODO;
-	test("ADD R/M16, SP"); TODO;
-	test("ADD R/M16, BP"); TODO;
-	test("ADD R/M16, SI"); TODO;
-	test("ADD R/M16, DI"); TODO;
+	test("ADD R/M16, CX");
+	CX = 23;
+	AX = 0x200; // address
+	__iu8(0b11_001_000, EIP + 1);
+	__iu16(23, AX);
+	exec(0x01);
+	assert(__fu16(AX) == 46);
+	OK;
+	test("ADD R/M16, DX");
+	CX = 0x200; // address
+	DX = 24;
+	__iu8(0b11_010_001, EIP + 1);
+	__iu16(23, CX);
+	exec(0x01);
+	assert(__fu16(CX) == 47);
+	OK;
+	test("ADD R/M16, BX");
+	CX = 0x200; // address
+	BX = 25;
+	__iu8(0b11_011_001, EIP + 1);
+	__iu16(23, CX);
+	exec(0x01);
+	assert(__fu16(CX) == 48);
+	OK;
+	test("ADD R/M16, SP");
+	CX = 0x200; // address
+	SP = 26;
+	__iu8(0b11_100_001, EIP + 1);
+	__iu16(23, CX);
+	exec(0x01);
+	assert(__fu16(CX) == 49);
+	OK;
+	test("ADD R/M16, BP");
+	CX = 0x200; // address
+	BP = 27;
+	__iu8(0b11_101_001, EIP + 1);
+	__iu16(23, CX);
+	exec(0x01);
+	assert(__fu16(CX) == 50);
+	OK;
+	test("ADD R/M16, SI");
+	CX = 0x200; // address
+	SI = 28;
+	__iu8(0b11_110_001, EIP + 1);
+	__iu16(23, CX);
+	exec(0x01);
+	assert(__fu16(CX) == 51);
+	OK;
+	test("ADD R/M16, DI");
+	CX = 0x200; // address
+	DI = 29;
+	__iu8(0b11_111_001, EIP + 1);
+	__iu16(23, CX);
+	exec(0x01);
+	assert(__fu16(CX) == 52);
+	OK;
 
 	// GRP1
 
