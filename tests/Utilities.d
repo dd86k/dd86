@@ -1,5 +1,3 @@
-module UtilitiesTests;
-
 import Utilities, vcpuutils;
 import unitutils;
 

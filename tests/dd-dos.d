@@ -1,5 +1,3 @@
-module vdosTests;
-
 import vcpu, vcpuutils, std.stdio, vdos, std.file : exists;
 import unitutils;
 

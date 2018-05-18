@@ -4,17 +4,18 @@
 
 module vcpuutils;
 
-import vcpu;
-import Logger;
 import core.stdc.stdio : printf, puts;
 import core.stdc.string : memcpy, strcpy;
 import core.stdc.wchar_ : wchar_t, wcscpy;
+import vcpu;
 
 /**
  * Get effective address from a R/M byte.
  * Takes account of the preferred segment register.
  * MOD and RM fields are used, and Seg is reset (SEG_NONE) (TODO latter).
- * Params: rm = R/M BYTE
+ * Params:
+ *   rm = R/M BYTE
+ *   wide = wide bit set in opcode
  * Returns: Effective Address
  */
 extern (C)
@@ -154,7 +155,7 @@ uint get_ea(ubyte rm, ubyte wide = 0) {
 	default:
 	}
 
-	return -1; // Temporary until switch
+	return 0;
 }
 
 //TODO: get_ea32

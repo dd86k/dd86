@@ -1,5 +1,3 @@
-module vcpuTests;
-
 import vcpu, vcpuutils, std.stdio, vdos;
 import unitutils;
 
@@ -413,12 +411,12 @@ unittest
 	test("ADD SI, R/M16"); TODO;
 	test("ADD DI, R/M16"); TODO;
 	test("ADD R/M16, AX");
-	/*__iu8(0b11_000_000, EIP + 1);
+	__iu8(0b11_000_000, EIP + 1);
 	__iu16(23, EIP + 2);
 	AX = 22;
 	exec(0x01);
 	assert(__fu16(AX) == 55);
-	OK;*/ TODO;
+	OK;
 	test("ADD R/M16, CX"); TODO;
 	test("ADD R/M16, DX"); TODO;
 	test("ADD R/M16, BX"); TODO;
