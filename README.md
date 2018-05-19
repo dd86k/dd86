@@ -10,9 +10,7 @@ _______ _______        _______  ______  _______
 
 dd-dos aims to be a simple emulation layer, like NTVDM, as a multi-platform virtual machine.
 
-Interested? The [Wiki](https://github.com/dd86k/dd-dos/wiki) is here for you!
-
-The Wiki also contains the DD-DOS Technical Reference Manual.
+Interested? You can visit the [Wiki](https://github.com/dd86k/dd-dos/wiki)! It also contains the DD-DOS Technical Reference Manual.
 
 # Credits
 
