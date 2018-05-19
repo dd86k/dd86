@@ -4,11 +4,11 @@ import core.stdc.stdio;
 
 enum {
 	L_SILENCE = 0, /// Complete silence
-	L_CRIT, /// Non-recoverable errors, program stopped
-	L_ERROR, /// Recovarable error, flow halted
-	L_WARN, /// Flow may be halted in the near future
-	L_INFO, /// Informal message, can be a little verbose!
-	L_DEBUG /// Usually unused, and the debug 
+	L_CRIT = 1, /// Non-recoverable errors, program stopped
+	L_ERROR = 2, /// Recovarable error, flow halted
+	L_WARN = 3, /// Flow may be halted in the near future
+	L_INFO = 4, /// Informal message, can be a little verbose!
+	L_DEBUG = 5 /// Usually unused, and the debug 
 }
 
 /// Verbosity level
@@ -48,9 +48,8 @@ void error(immutable(char)* msg) {
 }
 
 void crit(immutable(char)* msg, ubyte code = 0xff) {
-	if (Verbose < L_CRIT) return;
 	import core.stdc.stdlib : exit;
 	import vdos : panic;
-	panic(msg);
+	if (Verbose >= L_CRIT) panic(msg);
 	exit(code);
 }

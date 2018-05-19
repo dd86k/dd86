@@ -236,7 +236,7 @@ VER       Show DD-DOS and MS-DOS version`
 
 	if (strcmp(*argv, "mem") == 0) {
 		if (strcmp(argv[1], "/stats") == 0) {
-			const bool ext = MEMORYSIZE > 0xA_0000; // extended?
+			const ubyte ext = MEMORYSIZE > 0xA_0000; // extended?
 			const size_t ct = ext ? 0xA_0000 : MEMORYSIZE; /// convential memsize
 			const size_t tt = MEMORYSIZE - ct; /// total memsize excluding convential
 

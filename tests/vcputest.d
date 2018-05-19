@@ -391,14 +391,69 @@ unittest
 	test("ADD CH, R/M8"); TODO;
 	test("ADD DH, R/M8"); TODO;
 	test("ADD BH, R/M8"); TODO;
-	test("ADD R/M8, AL"); TODO;
-	test("ADD R/M8, CL"); TODO;
-	test("ADD R/M8, DL"); TODO;
-	test("ADD R/M8, BL"); TODO;
-	test("ADD R/M8, AH"); TODO;
-	test("ADD R/M8, CH"); TODO;
-	test("ADD R/M8, DH"); TODO;
-	test("ADD R/M8, BH"); TODO;
+	test("ADD R/M8, AL");
+	CL = 0x20; // address
+	AL = 12;
+	__iu8(0b11_000_001, EIP + 1);
+	__iu8(13, CL);
+	exec(0x00);
+	assert(__fu8(CL) == 25);
+	OK;
+	test("ADD R/M8, CL");
+	CL = 13;
+	AL = 0x20; // address
+	__iu8(0b11_001_000, EIP + 1);
+	__iu8(16, AL);
+	exec(0x00);
+	assert(__fu8(AL) == 29);
+	OK;
+	test("ADD R/M8, DL");
+	CL = 0x20; // address
+	DL = 12;
+	__iu8(0b11_010_001, EIP + 1);
+	__iu8(23, CL);
+	exec(0x00);
+	assert(__fu8(CL) == 35);
+	OK;
+	test("ADD R/M8, BL");
+	CL = 0x20; // address
+	BL = 12;
+	__iu8(0b11_011_001, EIP + 1);
+	__iu8(4, CL);
+	exec(0x00);
+	assert(__fu8(CL) == 16);
+	OK;
+	test("ADD R/M8, AH");
+	CL = 0x20; // address
+	AH = 12;
+	__iu8(0b11_100_001, EIP + 1);
+	__iu8(4, CL);
+	exec(0x00);
+	assert(__fu8(CL) == 16);
+	OK;
+	test("ADD R/M8, CH");
+	CX = 0x04_20; // address:20h
+	__iu8(0b11_101_001, EIP + 1);
+	__iu8(52, CL);
+	exec(0x00);
+	assert(__fu8(CL) == 56);
+	OK;
+	test("ADD R/M8, DH");
+	CL = 0x20; // address
+	DH = 12;
+	__iu8(0b11_110_001, EIP + 1);
+	__iu8(22, CL);
+	exec(0x00);
+	assert(__fu8(CL) == 34);
+	OK;
+	test("ADD R/M8, BH");
+	CL = 0x20; // address
+	BH = 56;
+	__iu8(0b11_111_001, EIP + 1);
+	__iu8(4, CL);
+	exec(0x00);
+	assert(__fu8(CL) == 60);
+	OK;
 
 	// MOV R/M16, REG16
 
@@ -932,4 +987,8 @@ unittest
 	exec(0xA7);
 	assert(ZF);
 	OK;
+
+	test("GRP1 R/M8, IMM8");
+	
+	TODO;
 }

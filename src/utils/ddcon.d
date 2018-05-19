@@ -346,7 +346,7 @@ void SetPos(int x, int y) {
  * Returns: A KeyInfo structure.
  */
 extern (C)
-KeyInfo ReadKey(bool echo = false) {
+KeyInfo ReadKey(ubyte echo = false) {
 	KeyInfo k;
 	version (Windows) { // Sort of is like .NET's ReadKey
 		__gshared INPUT_RECORD ir;
@@ -662,11 +662,11 @@ struct KeyInfo
 	/// Scan code.
 	ushort scanCode;
 	/// If either CTRL was held down.
-	bool ctrl;
+	ubyte ctrl;
 	/// If either ALT was held down.
-	bool alt;
+	ubyte alt;
 	/// If SHIFT was held down.
-	bool shift;
+	ubyte shift;
 }
 /*
 struct MouseInfo

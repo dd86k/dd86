@@ -450,8 +450,23 @@ void exec(ubyte op) {
 	 */
 	switch (op) {
 	case 0x00: { // ADD R/M8, REG8
-
-		++EIP; // Temporary
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r += AL; break;
+		case RM_REG_001: r += CL; break;
+		case RM_REG_010: r += DL; break;
+		case RM_REG_011: r += BL; break;
+		case RM_REG_100: r += AH; break;
+		case RM_REG_101: r += CH; break;
+		case RM_REG_110: r += DH; break;
+		case RM_REG_111: r += BH; break;
+		default:
+		}
+		__hflag8_1(r);
+		__iu8(cast(ubyte)r, addr);
+		EIP += 2;
 		return;
 	}
 	case 0x01: { // ADD R/M16, REG16
@@ -567,7 +582,7 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0x17: // POP SS
-		SS = pop();
+		SS = pop;
 		++EIP;
 		return;
 	case 0x18: // SBB R/M8, REG8
@@ -601,42 +616,14 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0x1F: // POP DS
-		DS = pop();
+		DS = pop;
 		++EIP;
 		return;
 	case 0x20: // AND R/M8, REG8
 
 		return;
 	case 0x21: { // AND R/M16, REG16
-		const ubyte rm = __fu8_i;
-		const int ea = get_ea(rm);
-		switch (rm & RM_MOD) {
-		case RM_MOD_00:
 
-			break;
-		case RM_MOD_01:
-
-			break;
-		case RM_MOD_10:
-			switch (rm & RM_REG) {
-			
-			case RM_REG_001: // CX
-				switch (rm & RM_RM) {
-				case RM_RM_011: // 
-					
-					break;
-				default:
-				}
-				break;
-
-			default:
-			}
-			break;
-		case RM_MOD_11:
-
-			break;
-		default:
-		}
 		EIP += 2;
 		return;
 	}
@@ -690,11 +677,11 @@ void exec(ubyte op) {
 
 		return;
 	case 0x2C: // SUB AL, IMM8
-		AL = AL - __fu8(get_ip);
+		AL = AL - __fu8(EIP);
 		EIP += 2;
 		return;
 	case 0x2D: // SUB AX, IMM16
-		AX = AX - __fu16(get_ip);
+		AX = AX - __fu16(EIP);
 		EIP += 3;
 		return;
 	case 0x2E: // CS:
@@ -765,6 +752,7 @@ void exec(ubyte op) {
 
 		return;
 	case 0x3C: { // CMP AL, IMM8
+	//TODO: Flag handle function
 		const ubyte b = __fu8_i;
 		const int r = AL - b;
 		CF = SF = (r & 0x80) != 0;
@@ -776,6 +764,7 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x3D: { // CMP AX, IMM16
+	//TODO: Flag handle function
 		const ushort w = __fu16_i;
 		const int r = AL - w;
 		SF = (r & 0x8000) != 0;
@@ -804,73 +793,99 @@ void exec(ubyte op) {
 		return;
 	case 0x40: { // INC AX
 		const int r = AX + 1;
-		ZF = r == 0;
-		SF = (r & 0x8000) != 0;
-		AF = (r & 0x10) != 0;
-		//PF =
-		//OF =
+		__hflag16_2(r);
 		AX = r;
 		++EIP;
 		return;
 	}
 	case 0x41: // INC CX
-		CX = CX + 1;
+		const int r = CX + 1;
+		__hflag16_2(r);
+		CX = r;
 		++EIP;
 		return;
 	case 0x42: // INC DX
-		DX = DX + 1;
+		const int r = DX + 1;
+		__hflag16_2(r);
+		DX = r;
 		++EIP;
 		return;
 	case 0x43: // INC BX
-		BX = BX + 1;
+		const int r = BX + 1;
+		__hflag16_2(r);
+		BX = r;
 		++EIP;
 		return;
 	case 0x44: // INC SP
-		SP = SP + 1;
+		const int r = SP + 1;
+		__hflag16_2(r);
+		SP = r;
 		++EIP;
 		return;
 	case 0x45: // INC BP
-		BP = BP + 1;
+		const int r = BP + 1;
+		__hflag16_2(r);
+		BP = r;
 		++EIP;
 		return;
 	case 0x46: // INC SI
-		SI = SI + 1;
+		const int r = SI + 1;
+		__hflag16_2(r);
+		SI = r;
 		++EIP;
 		return;
 	case 0x47: // INC DI
-		DI = DI + 1;
+		const int r = DI + 1;
+		__hflag16_2(r);
+		DI = r;
 		++EIP;
 		return;
 	case 0x48: // DEC AX
-		AX = AX - 1;
+		const int r = AX - 1;
+		__hflag16_2(r);
+		AX = r;
 		++EIP;
 		return;
 	case 0x49: // DEC CX
-		CX = CX - 1;
+		const int r = CX - 1;
+		__hflag16_2(r);
+		CX = r;
 		++EIP;
 		return;
 	case 0x4A: // DEC DX
-		DX = DX - 1;
+		const int r = DX - 1;
+		__hflag16_2(r);
+		DX = r;
 		++EIP;
 		return;
 	case 0x4B: // DEC BX
-		BX = BX - 1;
+		const int r = BX - 1;
+		__hflag16_2(r);
+		BX = r;
 		++EIP;
 		return;
 	case 0x4C: // DEC SP
-		SP = SP - 1;
+		const int r = SP - 1;
+		__hflag16_2(r);
+		SP = r;
 		++EIP;
 		return;
 	case 0x4D: // DEC BP
-		BP = BP - 1;
+		const int r = BP - 1;
+		__hflag16_2(r);
+		BP = r;
 		++EIP;
 		return;
 	case 0x4E: // DEC SI
-		SI = SI - 1;
+		const int r = SI - 1;
+		__hflag16_2(r);
+		SI = r;
 		++EIP;
 		return;
 	case 0x4F: // DEC DI
-		DI = DI - 1;
+		const int r = DI - 1;
+		__hflag16_2(r);
+		DI = r;
 		++EIP;
 		return;
 	case 0x50: // PUSH AX
@@ -987,68 +1002,40 @@ void exec(ubyte op) {
 		return;
 	case 0x80: { // GRP1 R/M8, IMM8
 		const ubyte rm = __fu8_i; // Get ModR/M byte
+		const int addr = get_ea(rm);
 		const ubyte im = __fu8_i(1); // 8-bit Immediate after modr/m
-		switch (rm & RM_MOD) {
-		case RM_MOD_00: // No displacement
-			switch (rm & RM_REG) { // REG
-			case RM_REG_000: // 000 - ADD
-				switch (rm & RM_RM) {
-				case RM_RM_000:
-					AL = AL + im;
-					break;
-				case RM_RM_001:
-					CL = CL + im;
-					break;
-				case RM_RM_010:
-					DL = DL + im;
-					break;
-				case RM_RM_011:
-					BL = BL + im;
-					break;
-				case RM_RM_100:
-					AH = AH + im;
-					break;
-				case RM_RM_101:
-					CH = CH + im;
-					break;
-				case RM_RM_110:
-					DH = DH + im;
-					break;
-				case RM_RM_111:
-					BH = BH + im;
-					break;
-				default:
-				}
-				break;
-			case RM_REG_001: // 001 - OR
-
-				break;
-			case RM_REG_010: // 010 - ADC
-
-				break;
-			case RM_REG_011: // 011 - SBB
-
-				break;
-			case RM_REG_100: // 100 - AND
-
-				break;
-			case RM_REG_101: // 101 - SUB
-
-				break;
-			case RM_REG_110: // 110 - XOR
-
-				break;
-			case RM_REG_111: // 111 - CMP
-
-				break;
-			default:
-			}
-			break; // case 0
-		case RM_MOD_01: // 8-bit displacement
-
-			break; // case 01
+		__gshared int r;
+		switch (rm & RM_REG) { // REG
+		case RM_REG_000: // 000 - ADD
+			r = __fu8(addr) + im;
+			__hflag8_1(r);
+			break;
+		case RM_REG_001: // 001 - OR
+			r = __fu8(addr) | im;
+			__hflag8_3(r);
+			break;
+		case RM_REG_010: // 010 - ADC
+		//TODO: 80h ADC
+			break;
+		case RM_REG_011: // 011 - SBB
+		//TODO: 80h SBB
+			break;
+		case RM_REG_100: // 100 - AND
+			r = __fu8(addr) & im;
+			__hflag8_1(r);
+			break;
+		case RM_REG_101: // 101 - SUB
+		case RM_REG_111: // 111 - CMP
+			r = __fu8(addr) - im;
+			__hflag8_1(r);
+			break;
+		case RM_REG_110: // 110 - XOR
+			r = __fu8(addr) ^ im;
+			__hflag8_3(r);
+			break;
 		default:
 		}
+		__iu8(r, addr);
 		EIP += 3;
 		return;
 	}
@@ -1394,12 +1381,12 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0xA8: { // TEST AL, IMM8
-		__hflag8_t(AL & __fu8_i);
+		__hflag8_3(AL & __fu8_i);
 		EIP += 2;
 		return;
 	}
 	case 0xA9: { // TEST AX, IMM16
-		__hflag16_t(AX & __fu16_i);
+		__hflag16_3(AX & __fu16_i);
 		EIP += 3;
 		return;
 	}

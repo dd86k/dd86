@@ -8,6 +8,7 @@ import core.stdc.stdio : printf, puts;
 import core.stdc.string : memcpy, strcpy;
 import core.stdc.wchar_ : wchar_t, wcscpy;
 import vcpu;
+debug import Logger;
 
 /**
  * Get effective address from a R/M byte.
@@ -176,15 +177,13 @@ void __hflag8_1(int r) {
 	AF = (r & 0x10) != 0;
 	ZF = r == 0;
 	OF = r > 0xFF || r < 0;
-	r ^= r >> 1;
-	r ^= r >> 2;
-	r ^= r >> 4;
-	PF = cast(ubyte)r;
+	PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0;
 }
 
 /**
  * Handle result for GROUP1 (UNSIGNED WORD)
- * OF, SF, ZF, AF, CF, and PF affected
+ * OF, SF, ZF, AF, and PF affected
+ * CF undefined
  * Params: r = Operation result
  */
 extern (C)
@@ -194,12 +193,37 @@ void __hflag16_1(int r) {
 	AF = (r & 0x100) != 0;
 	ZF = r == 0;
 	OF = r > 0xFFFF || r < 0;
-	r ^= r >> 1;
-	r ^= r >> 2;
-	r ^= r >> 4;
-	r ^= r >> 8;
-	//r ^= r >> 16; // 32-bit
-	PF = cast(ubyte)r;
+	PF = ~(cast(ushort)r ^ cast(ushort)r) != 0;
+}
+
+/**
+ * Handle result for GROUP2 (UNSIGNED BYTE)
+ * OF, SF, ZF, AF, and PF affected
+ * CF undefined
+ * Params: r = Operation result
+ */
+extern (C)
+void __hflag8_2(int r) {
+	SF = (r & 0x80) != 0;
+	AF = (r & 0x10) != 0;
+	ZF = r == 0;
+	OF = r > 0xFF || r < 0;
+	PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0;
+}
+
+/**
+ * Handle result for GROUP2 (UNSIGNED WORD)
+ * OF, SF, ZF, AF, and PF affected
+ * CF undefined
+ * Params: r = Operation result
+ */
+extern (C)
+void __hflag16_2(int r) {
+	SF = (r & 0x8000) != 0;
+	AF = (r & 0x100) != 0;
+	ZF = r == 0;
+	OF = r > 0xFFFF || r < 0;
+	PF = ~(cast(ushort)r ^ cast(ushort)r) != 0;
 }
 
 /**
@@ -209,11 +233,10 @@ void __hflag16_1(int r) {
  * AF undefined
  */
 extern (C)
-void __hflag8_t(int r) {
+void __hflag8_3(int r) {
 	ZF = r == 0;
 	SF = (r & 0x80) != 0;
-	ubyte b = cast(ubyte)r;
-	PF = ~(b ^ b) != 0; // XNOR(TEMP[0:7]);
+	PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0; // XNOR(TEMP[0:7]);
 	OF = CF = 0;
 }
 
@@ -224,7 +247,7 @@ void __hflag8_t(int r) {
  * AF undefined
  */
 extern (C)
-void __hflag16_t(int r) {
+void __hflag16_3(int r) {
 	ZF = r == 0;
 	SF = (r & 0x8000) != 0;
 	ubyte b = cast(ubyte)r;
@@ -244,8 +267,8 @@ void __hflag16_t(int r) {
  */
 extern (C)
 pragma(inline, true)
-void __iu8(ubyte op, int addr) {
-	MEMORY[addr] = op;
+void __iu8(int op, int addr) {
+	MEMORY[addr] = cast(ubyte)op;
 }
 
 /**

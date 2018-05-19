@@ -32,8 +32,8 @@ void help() {
 	puts(
 `A DOS virtual machine
 USAGE
-  dd-dos [-VPN] [FILE [FILEARGS]]
-  dd-dos {-v|--version|-h|--help}
+  dd-dos [-vPN] [FILE [FILEARGS]]
+  dd-dos {-V|--version|-h|--help}
 
 OPTIONS
   -P       Do not sleep between cycles
@@ -94,8 +94,16 @@ private int main(int argc, char** argv) {
 
 	// Pre-boot
 
-	debug info("-- DEBUG BUILD");
-	else  info("-- VERBOSE MODE ON");
+	switch (Verbose) {
+	case L_SILENCE, L_CRIT, L_ERROR: break;
+	case L_WARN: info("-- Log level: L_WARN"); break;
+	case L_INFO: info("-- Log level: L_INFO"); break;
+	case L_DEBUG: info("-- Log level: L_DEBUG"); break;
+	default:
+		printf("E: Unknown log level: %d\n", Verbose);
+		return 1;
+	}
+
 	if (!cpu_sleep)
 		info("-- SLEEP MODE OFF");
 
