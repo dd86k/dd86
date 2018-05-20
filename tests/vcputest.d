@@ -248,117 +248,255 @@ unittest
 
 	CS = 0; IP = 0x100;
 
-	test("MOV REG, IMM8");
-
+	test("MOV REG8, IMM8");
 	__iu8(0x1, EIP + 1);
 	exec(0xB0); // MOV AL, 1
 	assert(AL == 1);
-
 	__iu8(0x2, EIP + 1);
 	exec(0xB1); // MOV CL, 2
 	assert(CL == 2);
-
 	__iu8(0x3, EIP + 1);
 	exec(0xB2); // MOV DL, 3
 	assert(DL == 3);
-
 	__iu8(0x4, EIP + 1);
 	exec(0xB3); // MOV BL, 4
 	assert(BL == 4);
-
 	__iu8(0x5, EIP + 1);
 	exec(0xB4); // MOV AH, 5
 	assert(AH == 5);
-
 	__iu8(0x6, EIP + 1);
 	exec(0xB5); // MOV CH, 6
 	assert(CH == 6);
-
 	__iu8(0x7, EIP + 1);
 	exec(0xB6); // MOV DH, 7
 	assert(DH == 7);
-
 	__iu8(0x8, EIP + 1);
 	exec(0xB7); // MOV BH, 8
 	assert(BH == 8);
-
 	OK;
-	test("MOV REG, IMM16");
 
+	test("MOV REG16, IMM16");
 	__iu16(0x1112, EIP + 1);
 	exec(0xB8); // MOV AX, 1112h
 	assert(AX == 0x1112);
-
 	__iu16(0x1113, EIP + 1);
 	exec(0xB9); // MOV CX, 1113h
 	assert(CX == 0x1113);
-
 	__iu16(0x1114, EIP + 1);
 	exec(0xBA); // MOV DX, 1114h
 	assert(DX == 0x1114);
-
 	__iu16(0x1115, EIP + 1);
 	exec(0xBB); // MOV BX, 1115h
 	assert(BX == 0x1115);
-
 	__iu16(0x1116, EIP + 1);
 	exec(0xBC); // MOV SP, 1116h
 	assert(SP == 0x1116);
-
 	__iu16(0x1117, EIP + 1);
 	exec(0xBD); // MOV BP, 1117h
 	assert(BP == 0x1117);
-
 	__iu16(0x1118, EIP + 1);
 	exec(0xBE); // MOV SI, 1118h
 	assert(SI == 0x1118);
-
 	__iu16(0x1119, EIP + 1);
 	exec(0xBF); // MOV DI, 1119h
 	assert(DI == 0x1119);
-
 	OK;
 
 	// MOV REG8, R/M8
 
-	// Reminder: Testing only the DESTINATION and SOURCE REG field here
-	// respectively
+	test("MOV R/M8, REG8");
+	AL = 34;
+	__iu8(0b11_000_000, EIP + 1);
+	exec(0x88);
+	assert(__fu8(AL) == 34);
+	CL = 77;
+	__iu8(0b11_001_000, EIP + 1);
+	exec(0x88);
+	assert(__fu8(AL) == 77);
+	DL = 123;
+	__iu8(0b11_010_000, EIP + 1);
+	exec(0x88);
+	assert(__fu8(AL) == 123);
+	BL = 231;
+	__iu8(0b11_011_000, EIP + 1);
+	exec(0x88);
+	assert(__fu8(AL) == 231);
+	AH = 88;
+	__iu8(0b11_100_000, EIP + 1);
+	exec(0x88);
+	assert(__fu8(AL) == 88);
+	CH = 32;
+	__iu8(0b11_101_000, EIP + 1);
+	exec(0x88);
+	assert(__fu8(AL) == 32);
+	DH = 32;
+	__iu8(0b11_110_000, EIP + 1);
+	exec(0x88);
+	assert(__fu8(AL) == 32);
+	BH = 42;
+	__iu8(0b11_111_000, EIP + 1);
+	exec(0x88);
+	assert(__fu8(AL) == 42);
+	OK;
 
-	test("MOV AL, R/M8"); TODO;
-	test("MOV CL, R/M8"); TODO;
-	test("MOV DL, R/M8"); TODO;
-	test("MOV BL, R/M8"); TODO;
-	test("MOV AH, R/M8"); TODO;
-	test("MOV CH, R/M8"); TODO;
-	test("MOV DH, R/M8"); TODO;
-	test("MOV BH, R/M8"); TODO;
-	test("MOV R/M8, AL"); TODO;
-	test("MOV R/M8, CL"); TODO;
-	test("MOV R/M8, DL"); TODO;
-	test("MOV R/M8, BL"); TODO;
-	test("MOV R/M8, AH"); TODO;
-	test("MOV R/M8, CH"); TODO;
-	test("MOV R/M8, DH"); TODO;
-	test("MOV R/M8, BH"); TODO;
+	test("MOV REG8, R/M8");
+	AL = 56;
+	__iu8(AL, AL);
+	__iu8(0b11_000_000, EIP + 1);
+	exec(0x8A);
+	assert(AL == 56);
+	CL = 152;
+	__iu8(CL, AL);
+	__iu8(0b11_001_000, EIP + 1);
+	exec(0x8A);
+	assert(CL == 152);
+	DL = 159;
+	__iu8(DL, AL);
+	__iu8(0b11_010_000, EIP + 1);
+	exec(0x8A);
+	assert(DL == 159);
+	BL = 129;
+	__iu8(BL, AL);
+	__iu8(0b11_011_000, EIP + 1);
+	exec(0x8A);
+	assert(BL == 129);
+	AH = 176;
+	__iu8(AH, AL);
+	__iu8(0b11_100_000, EIP + 1);
+	exec(0x8A);
+	assert(AH == 176);
+	CH = 166;
+	__iu8(CH, AL);
+	__iu8(0b11_101_000, EIP + 1);
+	exec(0x8A);
+	assert(CH == 166);
+	DH = 198;
+	__iu8(DH, AL);
+	__iu8(0b11_110_000, EIP + 1);
+	exec(0x8A);
+	assert(DH == 198);
+	BH = 111;
+	__iu8(BH, AL);
+	__iu8(0b11_111_000, EIP + 1);
+	exec(0x8A);
+	assert(BH == 111);
+	OK;
 
 	// MOV R/M16, REG16
 
-	test("MOV AX, R/M16"); TODO;
-	test("MOV CX, R/M16"); TODO;
-	test("MOV DX, R/M16"); TODO;
-	test("MOV BX, R/M16"); TODO;
-	test("MOV SP, R/M16"); TODO;
-	test("MOV BP, R/M16"); TODO;
-	test("MOV SI, R/M16"); TODO;
-	test("MOV DI, R/M16"); TODO;
-	test("MOV R/M16, AX"); TODO;
-	test("MOV R/M16, CX"); TODO;
-	test("MOV R/M16, DX"); TODO;
-	test("MOV R/M16, BX"); TODO;
-	test("MOV R/M16, SP"); TODO;
-	test("MOV R/M16, BP"); TODO;
-	test("MOV R/M16, SI"); TODO;
-	test("MOV R/M16, DI"); TODO;
+	test("MOV R/M16, REG16");
+	AX = 344;
+	__iu8(0b11_000_000, EIP + 1);
+	exec(0x89);
+	assert(__fu16(AX) == 344);
+	CX = 777;
+	__iu8(0b11_001_000, EIP + 1);
+	exec(0x89);
+	assert(__fu16(AX) == 777);
+	DX = 1234;
+	__iu8(0b11_010_000, EIP + 1);
+	exec(0x89);
+	assert(__fu16(AX) == 1234);
+	BX = 2311;
+	__iu8(0b11_011_000, EIP + 1);
+	exec(0x89);
+	assert(__fu16(AX) == 2311);
+	SP = 8888;
+	__iu8(0b11_100_000, EIP + 1);
+	exec(0x89);
+	assert(__fu16(AX) == 8888);
+	BP = 3200;
+	__iu8(0b11_101_000, EIP + 1);
+	exec(0x89);
+	assert(__fu16(AX) == 3200);
+	SI = 3244;
+	__iu8(0b11_110_000, EIP + 1);
+	exec(0x89);
+	assert(__fu16(AX) == 3244);
+	DI = 4212;
+	__iu8(0b11_111_000, EIP + 1);
+	exec(0x89);
+	assert(__fu16(AX) == 4212);
+	OK;
+
+	test("MOV REG16, R/M16");
+	AX = 5600;
+	__iu16(AX, AX);
+	__iu8(0b11_000_000, EIP + 1);
+	exec(0x8B);
+	assert(AX == 5600);
+	CX = 1520;
+	__iu16(CX, AX);
+	__iu8(0b11_001_000, EIP + 1);
+	exec(0x8B);
+	assert(CX == 1520);
+	DX = 1590;
+	__iu16(DX, AX);
+	__iu8(0b11_010_000, EIP + 1);
+	exec(0x8B);
+	assert(DX == 1590);
+	BX = 1290;
+	__iu16(BX, AX);
+	__iu8(0b11_011_000, EIP + 1);
+	exec(0x8B);
+	assert(BX == 1290);
+	SP = 1760;
+	__iu16(SP, AX);
+	__iu8(0b11_100_000, EIP + 1);
+	exec(0x8B);
+	assert(SP == 1760);
+	BP = 1660;
+	__iu16(BP, AX);
+	__iu8(0b11_101_000, EIP + 1);
+	exec(0x8B);
+	assert(BP == 1660);
+	SI = 1984;
+	__iu16(SI, AX);
+	__iu8(0b11_110_000, EIP + 1);
+	exec(0x8B);
+	assert(SI == 1984);
+	DI = 1110;
+	__iu16(DI, AX);
+	__iu8(0b11_111_000, EIP + 1);
+	exec(0x8B);
+	assert(DI == 1110);
+	OK;
+
+	test("MOV R/M16, SEGREG");
+	CS = 123; DS = 124; ES = 125; SS = 126;
+	AX = 0x4440; // address
+	__iu8(0b11_101_000, EIP + 1);
+	exec(0x8C);
+	assert(__fu16(AX) == CS);
+	__iu8(0b11_111_000, EIP + 1);
+	exec(0x8C);
+	assert(__fu16(AX) == DS);
+	__iu8(0b11_100_000, EIP + 1);
+	exec(0x8C);
+	assert(__fu16(AX) == ES);
+	__iu8(0b11_110_000, EIP + 1);
+	exec(0x8C);
+	assert(__fu16(AX) == SS);
+	OK;
+
+	test("MOV SEGREG, R/M16");
+	__iu8(0b11_101_000, EIP + 1);
+	__iu16(8922, AX);
+	exec(0x8E);
+	assert(CS == 8922);
+	__iu8(0b11_111_000, EIP + 1);
+	__iu16(4932, AX);
+	exec(0x8E);
+	assert(DS == 4932);
+	__iu8(0b11_100_000, EIP + 1);
+	__iu16(7632, AX);
+	exec(0x8E);
+	assert(ES == 7632);
+	__iu8(0b11_110_000, EIP + 1);
+	__iu16(9999, AX);
+	exec(0x8E);
+	assert(SS == 9999);
+	OK;
 
 	// -- ADD
 
@@ -383,70 +521,49 @@ unittest
 	// Reminder: Testing only the DESTINATION and SOURCE REG field here
 	// respectively
 
-	test("ADD AL, R/M8"); TODO;
-	test("ADD CL, R/M8"); TODO;
-	test("ADD DL, R/M8"); TODO;
-	test("ADD BL, R/M8"); TODO;
-	test("ADD AH, R/M8"); TODO;
-	test("ADD CH, R/M8"); TODO;
-	test("ADD DH, R/M8"); TODO;
-	test("ADD BH, R/M8"); TODO;
-	test("ADD R/M8, AL");
+	test("ADD REG8, R/M8"); TODO;
+	test("ADD R/M8, REG8");
 	CL = 0x20; // address
 	AL = 12;
 	__iu8(0b11_000_001, EIP + 1);
 	__iu8(13, CL);
 	exec(0x00);
 	assert(__fu8(CL) == 25);
-	OK;
-	test("ADD R/M8, CL");
 	CL = 13;
 	AL = 0x20; // address
 	__iu8(0b11_001_000, EIP + 1);
 	__iu8(16, AL);
 	exec(0x00);
 	assert(__fu8(AL) == 29);
-	OK;
-	test("ADD R/M8, DL");
 	CL = 0x20; // address
 	DL = 12;
 	__iu8(0b11_010_001, EIP + 1);
 	__iu8(23, CL);
 	exec(0x00);
 	assert(__fu8(CL) == 35);
-	OK;
-	test("ADD R/M8, BL");
 	CL = 0x20; // address
 	BL = 12;
 	__iu8(0b11_011_001, EIP + 1);
 	__iu8(4, CL);
 	exec(0x00);
 	assert(__fu8(CL) == 16);
-	OK;
-	test("ADD R/M8, AH");
 	CL = 0x20; // address
 	AH = 12;
 	__iu8(0b11_100_001, EIP + 1);
 	__iu8(4, CL);
 	exec(0x00);
 	assert(__fu8(CL) == 16);
-	OK;
-	test("ADD R/M8, CH");
 	CX = 0x04_20; // address:20h
 	__iu8(0b11_101_001, EIP + 1);
 	__iu8(52, CL);
 	exec(0x00);
 	assert(__fu8(CL) == 56);
-	OK;
-	test("ADD R/M8, DH");
 	CL = 0x20; // address
 	DH = 12;
 	__iu8(0b11_110_001, EIP + 1);
 	__iu8(22, CL);
 	exec(0x00);
 	assert(__fu8(CL) == 34);
-	OK;
-	test("ADD R/M8, BH");
 	CL = 0x20; // address
 	BH = 56;
 	__iu8(0b11_111_001, EIP + 1);
@@ -457,71 +574,50 @@ unittest
 
 	// MOV R/M16, REG16
 
-	test("ADD AX, R/M16"); TODO;
-	test("ADD CX, R/M16"); TODO;
-	test("ADD DX, R/M16"); TODO;
-	test("ADD BX, R/M16"); TODO;
-	test("ADD SP, R/M16"); TODO;
-	test("ADD BP, R/M16"); TODO;
-	test("ADD SI, R/M16"); TODO;
-	test("ADD DI, R/M16"); TODO;
-	test("ADD R/M16, AX");
+	test("ADD REG16, R/M16"); TODO;
+	test("ADD R/M16, REG16");
 	CX = 0x200; // address
 	AX = 22;
 	__iu8(0b11_000_001, EIP + 1);
 	__iu16(23, CX);
 	exec(0x01);
 	assert(__fu16(CX) == 45);
-	OK;
-	test("ADD R/M16, CX");
 	CX = 23;
 	AX = 0x200; // address
 	__iu8(0b11_001_000, EIP + 1);
 	__iu16(23, AX);
 	exec(0x01);
 	assert(__fu16(AX) == 46);
-	OK;
-	test("ADD R/M16, DX");
 	CX = 0x200; // address
 	DX = 24;
 	__iu8(0b11_010_001, EIP + 1);
 	__iu16(23, CX);
 	exec(0x01);
 	assert(__fu16(CX) == 47);
-	OK;
-	test("ADD R/M16, BX");
 	CX = 0x200; // address
 	BX = 25;
 	__iu8(0b11_011_001, EIP + 1);
 	__iu16(23, CX);
 	exec(0x01);
 	assert(__fu16(CX) == 48);
-	OK;
-	test("ADD R/M16, SP");
 	CX = 0x200; // address
 	SP = 26;
 	__iu8(0b11_100_001, EIP + 1);
 	__iu16(23, CX);
 	exec(0x01);
 	assert(__fu16(CX) == 49);
-	OK;
-	test("ADD R/M16, BP");
 	CX = 0x200; // address
 	BP = 27;
 	__iu8(0b11_101_001, EIP + 1);
 	__iu16(23, CX);
 	exec(0x01);
 	assert(__fu16(CX) == 50);
-	OK;
-	test("ADD R/M16, SI");
 	CX = 0x200; // address
 	SI = 28;
 	__iu8(0b11_110_001, EIP + 1);
 	__iu16(23, CX);
 	exec(0x01);
 	assert(__fu16(CX) == 51);
-	OK;
-	test("ADD R/M16, DI");
 	CX = 0x200; // address
 	DI = 29;
 	__iu8(0b11_111_001, EIP + 1);
@@ -592,44 +688,15 @@ unittest
 
 	// MOV REG8, R/M8
 
-	// Reminder: Testing only the DESTINATION and SOURCE REG field here
-	// respectively
-
-	test("OR AL, R/M8"); TODO;
-	test("OR CL, R/M8"); TODO;
-	test("OR DL, R/M8"); TODO;
-	test("OR BL, R/M8"); TODO;
-	test("OR AH, R/M8"); TODO;
-	test("OR CH, R/M8"); TODO;
-	test("OR DH, R/M8"); TODO;
-	test("OR BH, R/M8"); TODO;
-	test("OR R/M8, AL"); TODO;
-	test("OR R/M8, CL"); TODO;
-	test("OR R/M8, DL"); TODO;
-	test("OR R/M8, BL"); TODO;
-	test("OR R/M8, AH"); TODO;
-	test("OR R/M8, CH"); TODO;
-	test("OR R/M8, DH"); TODO;
-	test("OR R/M8, BH"); TODO;
+	test("OR REG8, R/M8"); TODO;
+	test("OR R/M8, REG8"); TODO;
 
 	// MOV R/M16, REG16
 
-	test("OR AX, R/M16"); TODO;
-	test("OR CX, R/M16"); TODO;
-	test("OR DX, R/M16"); TODO;
-	test("OR BX, R/M16"); TODO;
-	test("OR SP, R/M16"); TODO;
-	test("OR BP, R/M16"); TODO;
-	test("OR SI, R/M16"); TODO;
-	test("OR DI, R/M16"); TODO;
-	test("OR R/M16, AX"); TODO;
-	test("OR R/M16, CX"); TODO;
-	test("OR R/M16, DX"); TODO;
-	test("OR R/M16, BX"); TODO;
-	test("OR R/M16, SP"); TODO;
-	test("OR R/M16, BP"); TODO;
-	test("OR R/M16, SI"); TODO;
-	test("OR R/M16, DI"); TODO;
+	test("OR REG16, R/M16"); TODO;
+	test("OR R/M16, REG16"); TODO;
+
+	// XOR
 
 	test("XOR AL, IMM8");
 	__iu8(5, EIP + 1);
@@ -852,7 +919,6 @@ unittest
 	// TEST
 
 	test("TEST AL, IMM8");
-
 	AL = 0b1100;
 	__iu8(0b1100, EIP + 1);
 	exec(0xA8);
@@ -861,7 +927,6 @@ unittest
 	assert(SF == 0);
 	assert(CF == 0);
 	assert(OF == 0);
-
 	AL = 0xF0;
 	__iu8(0x0F, EIP + 1);
 	exec(0xA8);
@@ -870,11 +935,9 @@ unittest
 	assert(SF == 0);
 	assert(CF == 0);
 	assert(OF == 0);
-
 	OK;
 
 	test("TEST AX, IMM16");
-
 	AX = 0xAA00;
 	__iu16(0xAA00, EIP + 1);
 	exec(0xA9);
@@ -883,7 +946,144 @@ unittest
 	assert(SF);
 	assert(CF == 0);
 	assert(OF == 0);
+	OK;
 
+	test("TEST R/M8, REG8");
+	AL = 0x60; // address
+	CL = 40;
+	__iu8(0b11_001_000, EIP+1);
+	__iu8(20, AL);
+	exec(0x85);
+	assert(ZF);
+	OK;
+	test("TEST R/M16, REG16");
+	AX = 0x600; // address
+	CX = 400;
+	__iu8(0b11_001_000, EIP+1);
+	__iu16(200, AL);
+	exec(0x86);
+	assert(ZF);
+	OK;
+
+	test("GRP1_8 -- ADD");
+	AL = 0x40;
+	__iu8(10, AL);
+	__iu8(0b11_000_000, EIP+1);
+	__iu8(20, EIP+2);
+	exec(0x80);
+	assert(__fu8(AL) == 30);
+	OK;
+	test("GRP1_8 -- OR");
+	AL = 0x40;
+	__iu8(0b1100_0011, AL);
+	__iu8(0b11_001_000, EIP+1);
+	__iu8(0b0011_0000, EIP+2);
+	exec(0x80);
+	assert(__fu8(AL) == 0b1111_0011);
+	OK;
+	test("GRP1_8 -- ADC"); TODO;
+	test("GRP1_8 -- SBB"); TODO;
+	test("GRP1_8 -- AND");
+	AL = 0x40;
+	__iu8(0b0011_0011, AL);
+	__iu8(0b11_100_000, EIP+1);
+	__iu8(0b0011_0000, EIP+2);
+	exec(0x80);
+	assert(__fu8(AL) == 0b0011_0000);
+	OK;
+	test("GRP1_8 -- SUB/CMP");
+	AL = 0x40;
+	__iu8(40, AL);
+	__iu8(0b11_101_000, EIP+1);
+	__iu8(20, EIP+2);
+	exec(0x80);
+	assert(__fu8(AL) == 20);
+	OK;
+	test("GRP1_8 -- XOR");
+	AL = 0x40;
+	__iu8(40, AL);
+	__iu8(0b11_110_000, EIP+1);
+	__iu8(20, EIP+2);
+	exec(0x80);
+	assert(__fu8(AL) == 60);
+	OK;
+	test("GRP1_16 -- ADD");
+	AX = 0x400;
+	__iu16(40, AX);
+	__iu8(0b11_000_000, EIP+1);
+	__iu16(222, EIP+2);
+	exec(0x81);
+	assert(__fu16(AX) == 262);
+	OK;
+	test("GRP1_16 -- OR");
+	AX = 0x400;
+	__iu16(40, AX);
+	__iu8(0b11_001_000, EIP+1);
+	__iu16(222, EIP+2);
+	exec(0x81);
+	assert(__fu16(AX) == 254);
+	OK;
+	test("GRP1_16 -- ADC"); TODO;
+	test("GRP1_16 -- SBB"); TODO;
+	test("GRP1_16 -- AND");
+	AX = 0x400;
+	__iu16(40, AX);
+	__iu8(0b11_100_000, EIP+1);
+	__iu16(222, EIP+2);
+	exec(0x81);
+	assert(__fu16(AX) == 8);
+	OK;
+	test("GRP1_16 -- SUB/CMP");
+	AX = 0x400;
+	__iu16(222, AX);
+	__iu8(0b11_101_000, EIP+1);
+	__iu16(40, EIP+2);
+	exec(0x81);
+	assert(__fu16(AX) == 182);
+	OK;
+	test("GRP1_16 -- XOR");
+	AX = 0x400;
+	__iu16(222, AX);
+	__iu8(0b11_110_000, EIP+1);
+	__iu16(40, EIP+2);
+	exec(0x81);
+	assert(__fu16(AX) == 246);
+	OK;
+	test("GRP2_8 -- ADD");
+	AL = 0x40;
+	__iu8(40, AL);
+	__iu8(0b11_000_000, EIP+1);
+	__iu8(20, EIP+2);
+	exec(0x82);
+	assert(__fu8(AL) == 60);
+	OK;
+	test("GRP2_8 -- ADC"); TODO;
+	test("GRP2_8 -- SBB"); TODO;
+	test("GRP2_8 -- SUB/CMP");
+	AL = 0x40;
+	__iu8(40, AL);
+	__iu8(0b11_101_000, EIP+1);
+	__iu8(20, EIP+2);
+	exec(0x82);
+	assert(__fu8(AL) == 20);
+	OK;
+	test("GRP2_16 -- ADD");
+	AX = 0x400;
+	__iu16(400, AX);
+	__iu8(0b11_000_000, EIP+1);
+	__iu16(200, EIP+2);
+	exec(0x83);
+	assert(__fu16(AX) == 600);
+	OK;
+	test("GRP2_16 -- ADC"); TODO;
+	test("GRP2_16 -- SBB"); TODO;
+	test("GRP2_16 -- SUB/CMP");
+	AX = 0x400;
+	__iu16(400, AX);
+	__iu8(0b11_101_000, EIP+1);
+	__iu16(200, EIP+2);
+	exec(0x83);
+	assert(__fu16(AX) == 200);
 	OK;
 
 	// -- STRING INSTRUCTIONS --
@@ -987,8 +1187,4 @@ unittest
 	exec(0xA7);
 	assert(ZF);
 	OK;
-
-	test("GRP1 R/M8, IMM8");
-	
-	TODO;
 }

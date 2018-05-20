@@ -1,6 +1,6 @@
 import std.stdio;
 
-enum SPACES = 18;
+enum SPACES = 20;
 
 void test(string s) {
 	writef("%-*s: ", SPACES, s);
