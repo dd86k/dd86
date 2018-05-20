@@ -450,12 +450,13 @@ void exec(ubyte op) {
 	 */
 	//TODO: Consider having four __gshared variables to use as "buffer" instead
 	//      of making a lot of stack variables, 2 ubytes and 2 ushorts.
+	//      __gshared ubyte b1, b2; __gshared ushort w1, w2;
 	switch (op) {
 	case 0x00: { // ADD R/M8, REG8
 		const ubyte rm = __fu8_i;
 		const uint addr = get_ea(rm);
 		int r = __fu8(addr);
-		switch (rm & RM_REG) {
+		switch (rm & RM_REG) { 
 		case RM_REG_000: r += AL; break;
 		case RM_REG_001: r += CL; break;
 		case RM_REG_010: r += DL; break;
@@ -467,7 +468,7 @@ void exec(ubyte op) {
 		default:
 		}
 		__hflag8_1(r);
-		__iu8(cast(ubyte)r, addr);
+		__iu8(r, addr);
 		EIP += 2;
 		return;
 	}
@@ -537,14 +538,20 @@ void exec(ubyte op) {
 
 		return;
 	}
-	case 0x0C: // OR AL, IMM8
-		AL = AL | __fu8_i;
+	case 0x0C: { // OR AL, IMM8
+		int r = AL | __fu8_i;
+		__hflag8_3(r);
+		AX = r;
 		EIP += 2;
 		return;
-	case 0x0D: // OR AX, IMM16
-		AX = AX | __fu16_i;
+	}
+	case 0x0D: { // OR AX, IMM16
+		int r = AX | __fu16_i;
+		__hflag16_3(r);
+		AX = r;
 		EIP += 3;
 		return;
+	}
 	case 0x0E: // PUSH CS
 		push(CS);
 		++EIP;
@@ -567,6 +574,7 @@ void exec(ubyte op) {
 	}
 	case 0x14: { // ADC AL, IMM8
 		int t = AL + __fu8_i;
+		__hflag8_3(t);
 		if (CF) ++t;
 		AL = t;
 		EIP += 2;
@@ -574,6 +582,7 @@ void exec(ubyte op) {
 	}
 	case 0x15: { // ADC AX, IMM16
 		int t = AX + __fu16_i;
+		__hflag16_3(t);
 		if (CF) ++t;
 		AX = t;
 		EIP += 3;
@@ -601,13 +610,15 @@ void exec(ubyte op) {
 		return;
 	case 0x1C: { // SBB AL, IMM8
 		int t = AL - __fu8_i;
+		__hflag8_3(t);
 		if (CF) --t;
 		AL = t;
 		EIP += 2;
 		return;
 	}
 	case 0x1D: { // SBB AX, IMM16
-		int t = AX - __fu8_i;
+		int t = AX - __fu16_i;
+		__hflag16_3(t);
 		if (CF) --t;
 		AX = t;
 		EIP += 3;
@@ -635,14 +646,20 @@ void exec(ubyte op) {
 	case 0x23: // AND REG16, R/M16
 
 		return;
-	case 0x24: // AND AL, IMM8
-		AL = AL & __fu8_i;
+	case 0x24: { // AND AL, IMM8
+		int r = AL & __fu8_i;
+		__hflag8_3(r);
+		AL = r;
 		EIP += 2;
 		return;
-	case 0x25: // AND AX, IMM16
-		AX = AX & __fu16_i;
+	}
+	case 0x25: { // AND AX, IMM16
+		int r = AX & __fu16_i;
+		__hflag16_3(r);
+		AX = r;
 		EIP += 3;
 		return;
+	}
 	case 0x26: // ES: (Segment override prefix)
 		Seg = SEG_ES;
 		++EIP;
@@ -678,14 +695,20 @@ void exec(ubyte op) {
 	case 0x2B: // SUB REG16, R/M16
 
 		return;
-	case 0x2C: // SUB AL, IMM8
-		AL = AL - __fu8(EIP);
+	case 0x2C: { // SUB AL, IMM8
+		int r = AL - __fu8_i;
+		__hflag8_1(r);
+		AL = r;
 		EIP += 2;
 		return;
-	case 0x2D: // SUB AX, IMM16
-		AX = AX - __fu16(EIP);
+	}
+	case 0x2D: { // SUB AX, IMM16
+		int r = AX - __fu16_i;
+		__hflag16_1(r);
+		AX = r;
 		EIP += 3;
 		return;
+	}
 	case 0x2E: // CS:
 		Seg = SEG_CS;
 		++EIP;
@@ -721,14 +744,20 @@ void exec(ubyte op) {
 	case 0x33: // XOR REG16, R/M16
 
 		return;
-	case 0x34: // XOR AL, IMM8
-		AL = AL ^ __fu8_i;
+	case 0x34: { // XOR AL, IMM8
+		int r = AL ^ __fu8_i;
+		__hflag8_3(r);
+		AL = r;
 		EIP += 2;
 		return;
-	case 0x35: // XOR AX, IMM16
-		AX = AX ^ __fu16_i;
+	}
+	case 0x35: { // XOR AX, IMM16
+		int r = AX ^ __fu16_i;
+		__hflag16_3(r);
+		AX = r;
 		EIP += 3;
 		return;
+	}
 	case 0x36: // SS:
 		Seg = SEG_SS;
 		++EIP;
@@ -754,27 +783,12 @@ void exec(ubyte op) {
 
 		return;
 	case 0x3C: { // CMP AL, IMM8
-	//TODO: Flag handle function
-		const ubyte b = __fu8_i;
-		const int r = AL - b;
-		CF = SF = (r & 0x80) != 0;
-		OF = r < 0;
-		ZF = r == 0;
-		AF = (r & 0x10) != 0; //((AL & 0b1000) - (b & 0b1000)) < 0;
-		//PF =
+		__hflag8_1(AL - __fu8_i);
 		EIP += 2;
 		return;
 	}
 	case 0x3D: { // CMP AX, IMM16
-	//TODO: Flag handle function
-		const ushort w = __fu16_i;
-		const int r = AL - w;
-		SF = (r & 0x8000) != 0;
-		OF = r < 0;
-		ZF = r == 0;
-		//AF = 
-		//PF =
-		//CF =
+		__hflag16_1(AX - __fu16_i);
 		EIP += 3;
 		return;
 	}
@@ -800,96 +814,111 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	}
-	case 0x41: // INC CX
+	case 0x41: { // INC CX
 		const int r = CX + 1;
 		__hflag16_2(r);
 		CX = r;
 		++EIP;
 		return;
-	case 0x42: // INC DX
+	}
+	case 0x42: { // INC DX
 		const int r = DX + 1;
 		__hflag16_2(r);
 		DX = r;
 		++EIP;
 		return;
-	case 0x43: // INC BX
+	}
+	case 0x43: { // INC BX
 		const int r = BX + 1;
 		__hflag16_2(r);
 		BX = r;
 		++EIP;
 		return;
-	case 0x44: // INC SP
+	}
+	case 0x44: { // INC SP
 		const int r = SP + 1;
 		__hflag16_2(r);
 		SP = r;
 		++EIP;
 		return;
-	case 0x45: // INC BP
+	}
+	case 0x45: { // INC BP
 		const int r = BP + 1;
 		__hflag16_2(r);
 		BP = r;
 		++EIP;
 		return;
-	case 0x46: // INC SI
+	}
+	case 0x46: { // INC SI
 		const int r = SI + 1;
 		__hflag16_2(r);
 		SI = r;
 		++EIP;
 		return;
-	case 0x47: // INC DI
+	}
+	case 0x47: { // INC DI
 		const int r = DI + 1;
 		__hflag16_2(r);
 		DI = r;
 		++EIP;
 		return;
-	case 0x48: // DEC AX
+	}
+	case 0x48: { // DEC AX
 		const int r = AX - 1;
 		__hflag16_2(r);
 		AX = r;
 		++EIP;
 		return;
-	case 0x49: // DEC CX
+	}
+	case 0x49: { // DEC CX
 		const int r = CX - 1;
 		__hflag16_2(r);
 		CX = r;
 		++EIP;
 		return;
-	case 0x4A: // DEC DX
+	}
+	case 0x4A: { // DEC DX
 		const int r = DX - 1;
 		__hflag16_2(r);
 		DX = r;
 		++EIP;
 		return;
-	case 0x4B: // DEC BX
+	}
+	case 0x4B: { // DEC BX
 		const int r = BX - 1;
 		__hflag16_2(r);
 		BX = r;
 		++EIP;
 		return;
-	case 0x4C: // DEC SP
+	}
+	case 0x4C: { // DEC SP
 		const int r = SP - 1;
 		__hflag16_2(r);
 		SP = r;
 		++EIP;
 		return;
-	case 0x4D: // DEC BP
+	}
+	case 0x4D: { // DEC BP
 		const int r = BP - 1;
 		__hflag16_2(r);
 		BP = r;
 		++EIP;
 		return;
-	case 0x4E: // DEC SI
+	}
+	case 0x4E: { // DEC SI
 		const int r = SI - 1;
 		__hflag16_2(r);
 		SI = r;
 		++EIP;
 		return;
-	case 0x4F: // DEC DI
+	}
+	case 0x4F: { // DEC DI
 		const int r = DI - 1;
 		__hflag16_2(r);
 		DI = r;
 		++EIP;
 		return;
+	}
 	case 0x50: // PUSH AX
 		push(AX);
 		++EIP;
@@ -1294,7 +1323,7 @@ void exec(ubyte op) {
 	case 0x8D: // LEA REG16, MEM16
 
 		return;
-	case 0x8E: // MOV SEGREG, R/M16
+	case 0x8E: { // MOV SEGREG, R/M16
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 		const byte rm = __fu8_i;
 		const int ea = get_ea(rm, 1);
@@ -1316,6 +1345,7 @@ void exec(ubyte op) {
 		}
 		EIP += 2;
 		return;
+	}
 	case 0x8F: { // POP R/M16
 		const byte rm = __fu8_i;
 		if (rm & RM_REG) { // REG MUST be 000
@@ -1388,9 +1418,9 @@ void exec(ubyte op) {
 		IP = __fu16_i(2);
 		return;
 	case 0x9B: // WAIT
-	//TODO: WAIT
 	/* Causes the processor to check for and handle pending, unmasked,
 	   floating-point exceptions before proceeding.*/
+	//TODO: WAIT
 		++EIP;
 		return;
 	case 0x9C: // PUSHF
@@ -1398,7 +1428,7 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0x9D: // POPF
-		FLAG = pop();
+		FLAG = pop;
 		++EIP;
 		return;
 	case 0x9E: // SAHF (AH to Flags)
@@ -1410,7 +1440,7 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0xA0: // MOV AL, MEM8
-		AL = MEMORY[__fu8_i];
+		AL = __fu8(__fu8_i);
 		EIP += 2;
 		return;
 	case 0xA1: // MOV AX, MEM16
@@ -1418,10 +1448,12 @@ void exec(ubyte op) {
 		EIP += 3;
 		return;
 	case 0xA2: // MOV MEM8, AL
-		MEMORY[__fu8_i] = AL;
+		__iu8(AL, __fu8_i);
+		EIP += 2;
 		return;
 	case 0xA3: // MOV MEM16, AX
 		__iu16(AX, __fu16_i);
+		EIP += 3;
 		return;
 	case 0xA4: // MOVS DEST-STR8, SRC-STR8
 
@@ -1430,14 +1462,8 @@ void exec(ubyte op) {
 
 		return;
 	case 0xA6: { // CMPS DEST-STR8, SRC-STR8
-		const int t =
-			MEMORY[get_ad(DS, SI)] - MEMORY[get_ad(ES, DI)];
-		//TODO: CMPS PF
+		const int t = __fu8(get_ad(DS, SI)) - __fu8(get_ad(ES, DI));
 		__hflag8_1(t);
-		/*ZF = t == 0;
-		AF = (t & 0x10) != 0;
-		CF = SF = (t & 0x80) != 0;
-		OF = (t < 0) || (t > 0xFF);*/
 		if (DF) {
 			DI = DI - 1;
 			SI = SI - 1;
@@ -1448,14 +1474,8 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0xA7: { // CMPSW DEST-STR16, SRC-STR16
-		const int t =
-			__fu16(get_ad(DS, SI)) - __fu16(get_ad(ES, DI));
-		//TODO: CMPSW PF
+		const int t = __fu16(get_ad(DS, SI)) - __fu16(get_ad(ES, DI));
 		__hflag16_1(t);
-		/*ZF = t == 0;
-		AF = (t & 0x10) != 0;
-		CF = SF = (t & 0x80) != 0;
-		OF = (t < 0) || (t > 0xFFFF);*/
 		if (DF) {
 			DI = DI - 2;
 			SI = SI - 2;
@@ -1476,48 +1496,34 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0xAA: // STOS DEST-STR8
-		MEMORY[get_ad(ES, DI)] = AL;
-		if (DF == 0) DI = DI + 1;
-		else         DI = DI - 1;
+		__iu8(AL, get_ad(ES, DI));
+		DI = DF ? DI - 1 : DI + 1;
 		++EIP;
 		return;
 	case 0xAB: // STOS DEST-STR16
 		__iu16(AX, get_ad(ES, DI));
-		if (DF == 0) DI = DI + 2;
-		else         DI = DI - 2;
+		DI = DF ? DI - 2 : DI + 2;
 		++EIP;
 		return;
 	case 0xAC: // LODS SRC-STR8
-		AL = MEMORY[get_ad(DS, SI)];
-		if (DF == 0) SI = SI + 1;
-		else         SI = SI - 1;
+		AL = __fu8(get_ad(DS, SI));
+		SI = DF ? SI - 1 : SI + 1;
 		++EIP;
 		return;
 	case 0xAD: // LODS SRC-STR16
 		AX = __fu16(get_ad(DS, SI));
-		if (DF == 0) SI = SI + 2;
-		else         SI = SI - 2;
+		SI = DF ? SI - 2 : SI + 2;
 		++EIP;
 		return;
 	case 0xAE: { // SCAS DEST-STR8
-		const int r = AL - MEMORY[get_ad(ES, DI)];
-		//TODO: SCAS OF, PF
-		ZF = r == 0;
-		AF = (r & 0x10) != 0;
-		CF = SF = (r & 0x80) != 0;
-		if (DF == 0) DI = DI + 1;
-		else         DI = DI - 1;
+		__hflag8_1(AL - __fu8(get_ad(ES, DI)));
+		DI = DF ? DI - 1 : DI + 1;
 		++EIP;
 		return;
 	}
 	case 0xAF: { // SCAS DEST-STR16
-		const int r = AX - __fu16(get_ad(ES, DI));
-		//TODO: SCAS OF, PF
-		ZF = r == 0;
-		AF = (r & 0x10) != 0;
-		CF = SF = (r & 0x80) != 0;
-		if (DF == 0) DI = DI + 2;
-		else         DI = DI - 2;
+		__hflag16_1(AX - __fu16(get_ad(ES, DI)));
+		DI = DF ? DI - 2 : DI + 2;
 		++EIP;
 		return;
 	}
@@ -1594,17 +1600,18 @@ void exec(ubyte op) {
 		IP = pop;
 		return;
 	case 0xC4: // LES REG16, MEM16
-// Load into REG and ES
+		// Load into REG and ES
 		
 		return;
 	case 0xC5: // LDS REG16, MEM16
-// Load into REG and DS
+		// Load into REG and DS
 
 		return;
 	case 0xC6: { // MOV MEM8, IMM8
 		const ubyte rm = __fu8_i;
 		if (rm & RM_REG) { // No register operation allowed
 			//TODO: Raise #GP
+			crit("Invalid ModR/M for MOV MEM8");
 		} else {
 			__iu8(__fu8_i(1), get_ea(rm));
 		}
@@ -1614,6 +1621,7 @@ void exec(ubyte op) {
 		const ubyte rm = __fu8_i;
 		if (rm & RM_REG) { // No register operation allowed
 			//TODO: Raise #GP
+			crit("Invalid ModR/M for MOV MEM16");
 		} else {
 			__iu16(__fu16_i(1), get_ea(rm));
 		}
@@ -1641,12 +1649,13 @@ void exec(ubyte op) {
 		++EIP; //TODO: Check: is this correct?
 		return;
 	case 0xCF: // IRET
-		IP = pop();
-		CS = pop();
-		FLAG = pop();
+		//Note: Usually unused since Raise handles both INT entry and exit
+		IP = pop;
+		CS = pop;
+		FLAG = pop;
 		++EIP;
 		return;
-	case 0xD0: // GRP2 R/M8, 1
+	case 0xD0: { // GRP2 R/M8, 1
 		/*byte rm; // Get ModR/M byte
 		switch (rm & 0b00111000) {
 		case 0b00000000: // 000 - ROL
@@ -1675,6 +1684,7 @@ void exec(ubyte op) {
 			break;
 		}*/
 		return;
+	}
 	case 0xD1: // GRP2 R/M16, 1
 		/*byte rm; // Get ModR/M byte
 		switch (rm & 0b00111000) {
@@ -1774,7 +1784,7 @@ void exec(ubyte op) {
 		return;
 	// D6h is illegal under 8086
 	case 0xD7: // XLAT SOURCE-TABLE
-		AL = MEMORY[get_ad(DS, BX) + AL];
+		AL = __fu8(get_ad(DS, BX) + AL);
 		return;
 	/*case 0xD8: // ESC OPCODE, SOURCE
 	case 0xD9: // 1101 1XXX - MOD YYY R/M

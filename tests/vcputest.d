@@ -4,7 +4,7 @@ import unitutils;
 unittest
 {
 	import core.stdc.string : memset;
-	section("Interpreter (vcpu.d) 8086 Mode");
+	section("Interpreter (vcpu.d) -- 8086");
 
 	init;
 	CS = 0;
@@ -164,83 +164,64 @@ unittest
 	assert(FLAG == 0);
 	OK;
 
+	sub("ModR/M");
 	__iu16(0x1020, EIP + 2); // low:20h
 	SI = 0x50; DI = 0x50;
 	BX = 0x30; BP = 0x30;
-	sub("Effective Address (MOD=00)");
-	writeln("MOD  R/M");
-	test("00   000"); assert(get_ea(0b000) == 0x80); OK;
-	test("00   001"); assert(get_ea(0b001) == 0x80); OK;
-	test("00   010"); assert(get_ea(0b010) == 0x80); OK;
-	test("00   011"); assert(get_ea(0b011) == 0x80); OK;
-	test("00   100"); assert(get_ea(0b100) == 0x50); OK;
-	test("00   101"); assert(get_ea(0b101) == 0x50); OK;
-	test("00   110"); assert(get_ea(0b110) == 0x1020); OK;
-	test("00   111"); assert(get_ea(0b111) == 0x30); OK;
-	test("00   CS"); TODO;
-	test("00   DS"); TODO;
-	test("00   ES"); TODO;
-	test("00   SS"); TODO;
-	sub("Effective Address (MOD=01)");
-	writeln("MOD  R/M");
-	test("01   000"); assert(get_ea(0b01_000_000) == 0xA0); OK;
-	test("01   001"); assert(get_ea(0b01_000_001) == 0xA0); OK;
-	test("01   010"); assert(get_ea(0b01_000_010) == 0xA0); OK;
-	test("01   011"); assert(get_ea(0b01_000_011) == 0xA0); OK;
-	test("01   100"); assert(get_ea(0b01_000_100) == 0x70); OK;
-	test("01   101"); assert(get_ea(0b01_000_101) == 0x70); OK;
-	test("01   110"); assert(get_ea(0b01_000_110) == 0x50); OK;
-	test("01   111"); assert(get_ea(0b01_000_111) == 0x50); OK;
-	test("01   CS"); TODO;
-	test("01   DS"); TODO;
-	test("01   ES"); TODO;
-	test("01   SS"); TODO;
-	sub("Effective Address (MOD=10)");
-	writeln("MOD  R/M");
-	test("10   000"); assert(get_ea(0b10_000_000) == 0x10A0); OK;
-	test("10   001"); assert(get_ea(0b10_000_001) == 0x10A0); OK;
-	test("10   010"); assert(get_ea(0b10_000_010) == 0x10A0); OK;
-	test("10   011"); assert(get_ea(0b10_000_011) == 0x10A0); OK;
-	test("10   100"); assert(get_ea(0b10_000_100) == 0x1070); OK;
-	test("10   101"); assert(get_ea(0b10_000_101) == 0x1070); OK;
-	test("10   110"); assert(get_ea(0b10_000_110) == 0x1050); OK;
-	test("10   111"); assert(get_ea(0b10_000_111) == 0x1050); OK;
-	test("10   CS"); TODO;
-	test("10   DS"); TODO;
-	test("10   ES"); TODO;
-	test("10   SS"); TODO;
-	sub("Effective Address (MOD=11)");
+	test("ModR/M (MOD=00)");
+	assert(get_ea(0b000) == 0x80);
+	assert(get_ea(0b001) == 0x80);
+	assert(get_ea(0b010) == 0x80);
+	assert(get_ea(0b011) == 0x80);
+	assert(get_ea(0b100) == 0x50);
+	assert(get_ea(0b101) == 0x50);
+	assert(get_ea(0b110) == 0x1020);
+	assert(get_ea(0b111) == 0x30);
+	OK;
+	test("ModR/M (MOD=01)");
+	assert(get_ea(0b01_000_000) == 0xA0);
+	assert(get_ea(0b01_000_001) == 0xA0);
+	assert(get_ea(0b01_000_010) == 0xA0);
+	assert(get_ea(0b01_000_011) == 0xA0);
+	assert(get_ea(0b01_000_100) == 0x70);
+	assert(get_ea(0b01_000_101) == 0x70);
+	assert(get_ea(0b01_000_110) == 0x50);
+	assert(get_ea(0b01_000_111) == 0x50);
+	OK;
+	test("ModR/M (MOD=10)");
+	assert(get_ea(0b10_000_000) == 0x10A0);
+	assert(get_ea(0b10_000_001) == 0x10A0);
+	assert(get_ea(0b10_000_010) == 0x10A0);
+	assert(get_ea(0b10_000_011) == 0x10A0);
+	assert(get_ea(0b10_000_100) == 0x1070);
+	assert(get_ea(0b10_000_101) == 0x1070);
+	assert(get_ea(0b10_000_110) == 0x1050);
+	assert(get_ea(0b10_000_111) == 0x1050);
+	OK;
+	test("ModR/M (MOD=11)");
 	AX = 0x2040; CX = 0x2141;
 	DX = 0x2242; BX = 0x2343;
 	SP = 0x2030; BP = 0x2131;
 	SI = 0x2232; DI = 0x2333;
-	writeln("MOD  R/M");
-	test("11   000"); assert(get_ea(0b11_000_000) == 0x40); OK; // AL
-	test("11   001"); assert(get_ea(0b11_000_001) == 0x41); OK; // CL
-	test("11   010"); assert(get_ea(0b11_000_010) == 0x42); OK; // DL
-	test("11   011"); assert(get_ea(0b11_000_011) == 0x43); OK; // BL
-	test("11   100"); assert(get_ea(0b11_000_100) == 0x20); OK; // AH
-	test("11   101"); assert(get_ea(0b11_000_101) == 0x21); OK; // CH
-	test("11   110"); assert(get_ea(0b11_000_110) == 0x22); OK; // DH
-	test("11   111"); assert(get_ea(0b11_000_111) == 0x23); OK; // BH
-	test("11   CS"); TODO;
-	test("11   DS"); TODO;
-	test("11   ES"); TODO;
-	test("11   SS"); TODO;
-	sub("Effective Address (MOD=11+W)");
-	writeln("MOD  R/M");
-	test("11   000"); assert(get_ea(0b11_000_000, 1) == 0x2040); OK; // AX
-	test("11   001"); assert(get_ea(0b11_000_001, 1) == 0x2141); OK; // CX
-	test("11   010"); assert(get_ea(0b11_000_010, 1) == 0x2242); OK; // DX
-	test("11   011"); assert(get_ea(0b11_000_011, 1) == 0x2343); OK; // BX
-	test("11   100"); assert(get_ea(0b11_000_100, 1) == 0x2030); OK; // SP
-	test("11   101"); assert(get_ea(0b11_000_101, 1) == 0x2131); OK; // BP
-	test("11   110"); assert(get_ea(0b11_000_110, 1) == 0x2232); OK; // SI
-	test("11   111"); assert(get_ea(0b11_000_111, 1) == 0x2333); OK; // DI
-	test("11   CS"); TODO;
-	test("11   DS"); TODO;
-	test("11   ES"); TODO;
-	test("11   SS"); TODO;
+	assert(get_ea(0b11_000_000) == 0x40); // AL
+	assert(get_ea(0b11_000_001) == 0x41); // CL
+	assert(get_ea(0b11_000_010) == 0x42); // DL
+	assert(get_ea(0b11_000_011) == 0x43); // BL
+	assert(get_ea(0b11_000_100) == 0x20); // AH
+	assert(get_ea(0b11_000_101) == 0x21); // CH
+	assert(get_ea(0b11_000_110) == 0x22); // DH
+	assert(get_ea(0b11_000_111) == 0x23); // BH
+	OK;
+	test("ModR/M (MOD=11+W)");
+	assert(get_ea(0b11_000_000, 1) == 0x2040); // AX
+	assert(get_ea(0b11_000_001, 1) == 0x2141); // CX
+	assert(get_ea(0b11_000_010, 1) == 0x2242); // DX
+	assert(get_ea(0b11_000_011, 1) == 0x2343); // BX
+	assert(get_ea(0b11_000_100, 1) == 0x2030); // SP
+	assert(get_ea(0b11_000_101, 1) == 0x2131); // BP
+	assert(get_ea(0b11_000_110, 1) == 0x2232); // SI
+	assert(get_ea(0b11_000_111, 1) == 0x2333); // DI
+	OK;
 
 	sub("General instructions");
 
@@ -1085,6 +1066,8 @@ unittest
 	exec(0x83);
 	assert(__fu16(AX) == 200);
 	OK;
+
+	test("XLAT SOURCE-TABLE"); TODO;
 
 	// -- STRING INSTRUCTIONS --
 	

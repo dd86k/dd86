@@ -402,17 +402,18 @@ void print_stack() {
 }
 
 extern (C)
-void panic(immutable(char)* msg) {
+void panic(immutable(char)* msg,
+		immutable(char)* mod = cast(immutable(char)*)__MODULE__, int line = __LINE__) {
 	enum RANGE = 22;
-
 	Clear;
 	printf(
-		"\n\nA fatal exception occured, which DD-DOS couldn't recover.\n" ~
-		"Message: %s\n\nEXEC:",
-		msg
+		"\nA fatal exception occured, which DD-DOS couldn't recover.\n" ~
+		"Below you'll find debugging information regarding the crash.\n" ~
+		"\nMessage: %s\n\n--\nMODULE: %s@L%d\nEXEC:",
+		msg, mod, line
 	);
 	__gshared int i = RANGE;
-	ubyte* p = cast(ubyte*)MEMORY + get_ip - 6;
+	ubyte* p = cast(ubyte*)MEMORY + EIP - 6;
 	while (--i) {
 		if (i == (RANGE - 5))
 			printf(" >%02X<", *p);
@@ -422,8 +423,8 @@ void panic(immutable(char)* msg) {
 	}
 	printf("\n--\n");
 	print_regs;
-	printf("--\n");
-	print_stack;
+	/*printf("--\n"); Temporary commented until print_stack is impelented
+	print_stack;*/
 }
 
 /*
