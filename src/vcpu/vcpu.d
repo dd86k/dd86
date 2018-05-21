@@ -291,6 +291,8 @@ private enum : ushort {
 	// i486
 }
 
+// Flags are bytes because single flags are affected a lot more often than
+// flag-whole operations, like PUSHF.
 __gshared ubyte
 CF, /// Bit  0, Carry Flag
 PF, /// Bit  2, Parity Flag
@@ -428,6 +430,7 @@ enum : ubyte { // Segment override (for Seg)
 	SEG_DS, /// DS segment
 	SEG_ES, /// ES segment
 	SEG_SS  /// SS segment
+	// i486
 }
 
 // Rest of the source here is solely this function.
@@ -448,9 +451,10 @@ void exec(ubyte op) {
 	 * The number suffix represents instruction width, such as 16 represents
 	 * 16-bit immediate values.
 	 */
-	//TODO: Consider having four __gshared variables to use as "buffer" instead
-	//      of making a lot of stack variables, 2 ubytes and 2 ushorts.
-	//      __gshared ubyte b1, b2; __gshared ushort w1, w2;
+	//TODO: To reduce stack usage, consider using "global" variables.
+	//__gshared ubyte rm, im8; // modrm byte and 8-bit immediate
+	//__gshared ushort im16; // 16-bit immediate
+	//__gshared uint r1, addr1; // result and ea address
 	switch (op) {
 	case 0x00: { // ADD R/M8, REG8
 		const ubyte rm = __fu8_i;
@@ -1440,7 +1444,7 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0xA0: // MOV AL, MEM8
-		AL = __fu8(__fu8_i);
+		AL = __fu8(__fu16_i);
 		EIP += 2;
 		return;
 	case 0xA1: // MOV AX, MEM16
@@ -1448,7 +1452,7 @@ void exec(ubyte op) {
 		EIP += 3;
 		return;
 	case 0xA2: // MOV MEM8, AL
-		__iu8(AL, __fu8_i);
+		__iu8(AL, __fu16_i);
 		EIP += 2;
 		return;
 	case 0xA3: // MOV MEM16, AX

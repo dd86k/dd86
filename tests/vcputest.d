@@ -229,6 +229,32 @@ unittest
 
 	CS = 0; IP = 0x100;
 
+	test("MOV MEM8, AL");
+	AL = 143;
+	__iu16(0x4000, EIP + 1);
+	exec(0xA2);
+	assert(__fu8(0x4000) == 143);
+	OK;
+	test("MOV MEM16, AX");
+	AX = 1430;
+	__iu16(0x4000, EIP + 1);
+	exec(0xA3);
+	assert(__fu16(0x4000) == 1430);
+	OK;
+
+	test("MOV AL, MEM8");
+	__iu8(167, 0x8000);
+	__iu16(0x8000, EIP + 1);
+	exec(0xA0);
+	assert(AL == 167);
+	OK;
+	test("MOV AX, MEM16");
+	__iu16(1670, 0x8000);
+	__iu16(0x8000, EIP + 1);
+	exec(0xA1);
+	assert(AX == 1670);
+	OK;
+
 	test("MOV REG8, IMM8");
 	__iu8(0x1, EIP + 1);
 	exec(0xB0); // MOV AL, 1
