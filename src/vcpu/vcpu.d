@@ -292,7 +292,7 @@ private enum : ushort {
 }
 
 __gshared ubyte
-CF  /// Bit  0, Carry Flag
+CF, /// Bit  0, Carry Flag
 PF, /// Bit  2, Parity Flag
 AF, /// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
 ZF, /// Bit  6, Zero Flag
