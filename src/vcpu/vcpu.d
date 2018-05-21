@@ -107,7 +107,7 @@ void reset() {
 /// Resets the entire vcpu. Does not refer to the RESET instruction!
 extern (C)
 void fullreset() {
-	reset();
+	reset;
 	EAX = EBX = ECX = EDX =
 	EBP = ESP = EDI = ESI = 0;
 }
@@ -273,9 +273,9 @@ private __gshared ushort* IPp;
 /// Params: v = Set IP value
 @property void IP(int v) { *IPp = cast(ushort)v; }
 
-/*
+/**********************************************************
  * FLAGS
- */
+ **********************************************************/
 
 /// Flag mask
 private enum : ushort {
@@ -292,15 +292,15 @@ private enum : ushort {
 }
 
 __gshared ubyte
-OF, /// Bit 11, Overflow Flag
-DF, /// Bit 10, Direction Flag
-IF, /// Bit  9, Interrupt Flag
-TF, /// Bit  8, Trap Flag
-SF, /// Bit  7, Sign Flag
-ZF, /// Bit  6, Zero Flag
-AF, /// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
+CF  /// Bit  0, Carry Flag
 PF, /// Bit  2, Parity Flag
-CF; /// Bit  0, Carry Flag
+AF, /// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
+ZF, /// Bit  6, Zero Flag
+SF, /// Bit  7, Sign Flag
+TF, /// Bit  8, Trap Flag
+IF, /// Bit  9, Interrupt Flag
+DF, /// Bit 10, Direction Flag
+OF; /// Bit 11, Overflow Flag
 
 /**
  * Get FLAG as WORD.
@@ -324,6 +324,29 @@ CF; /// Bit  0, Carry Flag
 	AF = flag & MASK_AF;
 	PF = flag & MASK_PF;
 	CF = flag & MASK_CF;
+}
+
+/**
+ * Get FLAG as WORD.
+ * Returns: FLAG (WORD)
+ */
+@property ushort FLAG() {
+	ushort b = FLAGB;
+	if (OF) b |= MASK_OF;
+	if (DF) b |= MASK_DF;
+	if (IF) b |= MASK_IF;
+	if (TF) b |= MASK_TF;
+	return b;
+}
+
+/// Set FLAG as WORD.
+/// Params: flag = FLAG word
+@property void FLAG(ushort flag) {
+	OF = (flag & MASK_OF) != 0;
+	DF = (flag & MASK_DF) != 0;
+	IF = (flag & MASK_IF) != 0;
+	TF = (flag & MASK_TF) != 0;
+	FLAGB = cast(ubyte)flag;
 }
 
 //TODO: aliases (RM_RM_000 -> RM_RM_A?)
@@ -395,29 +418,6 @@ uint epop() {
 	const uint addr = get_ad(SS, SP);
 	SP = SP + 2;
 	return __fu32(addr);
-}
-
-/**
- * Get FLAG as WORD.
- * Returns: FLAG (WORD)
- */
-@property ushort FLAG() {
-	ushort b = FLAGB;
-	if (OF) b |= MASK_OF;
-	if (DF) b |= MASK_DF;
-	if (IF) b |= MASK_IF;
-	if (TF) b |= MASK_TF;
-	return b;
-}
-
-/// Set FLAG as WORD.
-/// Params: flag = FLAG word
-@property void FLAG(ushort flag) {
-	OF = (flag & MASK_OF) != 0;
-	DF = (flag & MASK_DF) != 0;
-	IF = (flag & MASK_IF) != 0;
-	TF = (flag & MASK_TF) != 0;
-	FLAGB = cast(ubyte)flag;
 }
 
 /// Preferred Segment register

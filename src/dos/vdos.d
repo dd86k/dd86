@@ -384,16 +384,16 @@ CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X
 		CS, DS, ES, SS, SP, BP, SI, DI,
 	);
 	printf("FLAG=");
-	if (OF) printf(" OF");
-	if (DF) printf(" DF");
-	if (IF) printf(" IF");
-	if (TF) printf(" TF");
-	if (SF) printf(" SF");
-	if (ZF) printf(" ZF");
-	if (AF) printf(" AF");
-	if (PF) printf(" PF");
-	if (CF) printf(" CF");
-	printf(" (%Xh)\n", FLAG);
+	if (OF) printf("OF ");
+	if (DF) printf("DF ");
+	if (IF) printf("IF ");
+	if (TF) printf("TF ");
+	if (SF) printf("SF ");
+	if (ZF) printf("ZF ");
+	if (AF) printf("AF ");
+	if (PF) printf("PF ");
+	if (CF) printf("CF ");
+	printf("(%Xh)\n", FLAG);
 }
 
 extern (C)
