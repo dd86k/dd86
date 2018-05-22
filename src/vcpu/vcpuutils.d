@@ -255,6 +255,28 @@ void __hflag16_3(int r) {
 	OF = CF = 0;
 }
 
+/**
+ * Handle result for MUL (BYTE)
+ * OF, CF affected
+ * SF, ZF, AF, PF undefined
+ */
+extern (C)
+void __hflag8_4(int r) {
+	OF = r > 0xFF || r < 0;
+	CF = cast(ubyte)(r & 0x100);
+}
+
+/**
+ * Handle result for MUL (WORD)
+ * OF, CF affected
+ * SF, ZF, AF, PF undefined
+ */
+extern (C)
+void __hflag16_4(int r) {
+	OF = r > 0xFFFF || r < 0;
+	CF = cast(ubyte)(r & 0x1_0000);
+}
+
 /*****************************************************************************
  * Insert
  *****************************************************************************/
@@ -340,6 +362,17 @@ extern (C)
 pragma(inline, true)
 ubyte __fu8(uint addr) {
 	return MEMORY[addr];
+}
+
+/**
+ * Fetch an unsigned byte (ubyte).
+ * Params: addr = Memory address
+ * Returns: BYTE
+ */
+extern (C)
+pragma(inline, true)
+byte __fi8(uint addr) {
+	return cast(byte)MEMORY[addr];
 }
 
 /**

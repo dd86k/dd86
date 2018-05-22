@@ -1466,8 +1466,9 @@ void exec(ubyte op) {
 
 		return;
 	case 0xA6: { // CMPS DEST-STR8, SRC-STR8
-		const int t = __fu8(get_ad(DS, SI)) - __fu8(get_ad(ES, DI));
-		__hflag8_1(t);
+		__hflag8_1(
+			__fu8(get_ad(DS, SI)) - __fu8(get_ad(ES, DI))
+		);
 		if (DF) {
 			DI = DI - 1;
 			SI = SI - 1;
@@ -1478,8 +1479,9 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0xA7: { // CMPSW DEST-STR16, SRC-STR16
-		const int t = __fu16(get_ad(DS, SI)) - __fu16(get_ad(ES, DI));
-		__hflag16_1(t);
+		__hflag16_1(
+			__fu16(get_ad(DS, SI)) - __fu16(get_ad(ES, DI))
+		);
 		if (DF) {
 			DI = DI - 2;
 			SI = SI - 2;
@@ -1819,7 +1821,7 @@ void exec(ubyte op) {
 		if (CX == 0) EIP += __fi8_i;
 		else         EIP += 2;
 		return;
-	/*case 0xE4: // IN AL, IMM8
+	case 0xE4: // IN AL, IMM8
 
 		return;
 	case 0xE5: // IN AX, IMM8
@@ -1830,7 +1832,7 @@ void exec(ubyte op) {
 		return;
 	case 0xE7: // OUT AX, IMM8
 
-		return;*/
+		return;
 	case 0xE8: // CALL NEAR-PROC
 		push(IP);
 		EIP += __fi16_i; // Direct within segment
@@ -1847,7 +1849,7 @@ void exec(ubyte op) {
 	case 0xEB: // JMP  SHORT-LABEL
 		EIP += __fi8_i; // ±128 B
 		return;
-	/*case 0xEC: // IN AL, DX
+	case 0xEC: // IN AL, DX
 
 		return;
 	case 0xED: // IN AX, DX
@@ -1859,7 +1861,7 @@ void exec(ubyte op) {
 	case 0xEF: // OUT AX, DX
 
 		return;
-	case 0xF0: // LOCK (prefix)
+	/*case 0xF0: // LOCK (prefix)
 // http://qcd.phys.cmu.edu/QCDcluster/intel/vtune/reference/vc160.htm
 
 		return;*/
@@ -1882,64 +1884,92 @@ _F2_CX:	if (CX) {
 		CF = !CF;
 		++EIP;
 		return;
-	case 0xF6: // GRP3a R/M8, IMM8
-		/*byte rm; // Get ModR/M byte
-		switch (rm & 0b00111000) {
-		case 0b00000000: // 000 - TEST
-
-		break;
-		case 0b00010000: // 010 - NOT
-
-		break;
-		case 0b00011000: // 011 - NEG
-
-		break;
-		case 0b00100000: // 100 - MUL
-
-		break;
-		case 0b00101000: // 101 - IMUL
-
-		break;
-		case 0b00110000: // 110 - DIV
-
-		break;
-		case 0b00111000: // 111 - IDIV
-
-		break;
+	case 0xF6: { // GRP3 R/M8, IMM8
+		ubyte rm = __fu8_i; // Get ModR/M byte
+		int addr = get_ea(rm);
+		ubyte im = __fu8_i(1);
+		int r;
+		switch (rm & RM_REG) {
+		case RM_REG_000: // 000 - TEST
+			__hflag8_1(im & __fu8(addr));
+			break;
+		case RM_REG_010: // 010 - NOT
+			__iu8(~im, addr);
+			break;
+		case RM_REG_011: // 011 - NEG
+			r = -__fu8(addr);
+			CF = cast(ubyte)r;
+			__iu8(r, addr);
+			break;
+		case RM_REG_100: // 100 - MUL
+			r = im * __fu8(addr);
+			__hflag8_4(r);
+			__iu8(r, addr);
+			break;
+		case RM_REG_101: // 101 - IMUL
+			r = im * __fi8(addr);
+			__hflag8_4(r);
+			__iu8(r, addr);
+			break;
+		case RM_REG_110: // 110 - DIV
+			r = im / __fu8(addr);
+			__hflag8_4(r);
+			__iu8(r, addr);
+			break;
+		case RM_REG_111: // 111 - IDIV
+			r = im / __fi8(addr);
+			__hflag8_4(r);
+			__iu8(r, addr);
+			break;
 		default:
-
-		break;
-		}*/
+			crit("Invalid ModR/M on GRP3_8");
+		}
+		EIP += 2;
 		return;
-	case 0xF7: // GRP3b R/M16, IMM16
-		/*byte rm; // Get ModR/M byte
-		switch (rm & 0b00111000) {
-		case 0b00000000: // 000 - TEST
-
-		break;
-		case 0b00010000: // 010 - NOT
-
-		break;
-		case 0b00011000: // 011 - NEG
-
-		break;
-		case 0b00100000: // 100 - MUL
-
-		break;
-		case 0b00101000: // 101 - IMUL
-
-		break;
-		case 0b00110000: // 110 - DIV
-
-		break;
-		case 0b00111000: // 111 - IDIV
-
-		break;
+	}
+	case 0xF7: { // GRP3 R/M16, IMM16
+		ubyte rm = __fu8_i; // Get ModR/M byte
+		int addr = get_ea(rm);
+		ushort im = __fu16_i(1);
+		int r;
+		switch (rm & RM_REG) {
+		case RM_REG_000: // 000 - TEST
+			__hflag16_1(im & __fu16(addr));
+			break;
+		case RM_REG_010: // 010 - NOT
+			__iu16(~im, addr);
+			break;
+		case RM_REG_011: // 011 - NEG
+			r = -__fu16(addr);
+			CF = cast(ubyte)r;
+			__iu16(r, addr);
+			break;
+		case RM_REG_100: // 100 - MUL
+			r = im * __fu16(addr);
+			__hflag16_4(r);
+			__iu16(r, addr);
+			break;
+		case RM_REG_101: // 101 - IMUL
+			r = im * __fi16(addr);
+			__hflag16_4(r);
+			__iu16(r, addr);
+			break;
+		case RM_REG_110: // 110 - DIV
+			r = im / __fu16(addr);
+			__hflag16_4(r);
+			__iu16(r, addr);
+			break;
+		case RM_REG_111: // 111 - IDIV
+			r = im / __fi16(addr);
+			__hflag16_4(r);
+			__iu16(r, addr);
+			break;
 		default:
-
-		break;
-		}*/
+			crit("Invalid ModR/M on GRP3_8");
+		}
+		EIP += 2;
 		return;
+	}
 	case 0xF8: // CLC
 		CF = 0;
 		++EIP;

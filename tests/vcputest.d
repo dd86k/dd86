@@ -223,6 +223,16 @@ unittest
 	assert(get_ea(0b11_000_111, 1) == 0x2333); // DI
 	OK;
 
+	sub("Flag instructions");
+
+	test("CLC"); exec(0xF8); assert(CF == 0); OK;
+	test("STC"); exec(0xF9); assert(CF); OK;
+	test("CMC"); exec(0xF5); assert(CF == 0); OK;
+	test("CLI"); exec(0xFA); assert(IF == 0); OK;
+	test("STI"); exec(0xFB); assert(IF); OK;
+	test("CLD"); exec(0xFC); assert(DF == 0); OK;
+	test("STD"); exec(0xFD); assert(DF); OK;
+
 	sub("General instructions");
 
 	// -- MOV
@@ -521,13 +531,6 @@ unittest
 	assert(AX == 1204);
 	OK;
 
-	// ADD + R/M
-
-	// MOV REG8, R/M8
-
-	// Reminder: Testing only the DESTINATION and SOURCE REG field here
-	// respectively
-
 	test("ADD REG8, R/M8"); TODO;
 	test("ADD R/M8, REG8");
 	CL = 0x20; // address
@@ -632,51 +635,6 @@ unittest
 	exec(0x01);
 	assert(__fu16(CX) == 52);
 	OK;
-
-	// GRP1
-
-	/*test("GRP1 ADD");
-
-	AX = 6;
-	BX = 6;
-	CX = 6;
-	DX = 6;
-	InsertImm(0x10, 3);
-	InsertImm(0);
-	exec(0x80);
-	assert(AL == 0x16);
-	IP -= 3;
-	InsertImm(0b001);
-	exec(0x80);
-	assert(CL == 0x16);
-	IP -= 3;
-	InsertImm(0b010);
-	exec(0x80);
-	assert(DL == 0x16);
-	IP -= 3;
-	InsertImm(0b011);
-	exec(0x80);
-	assert(BL == 0x16);
-	IP -= 3;
-	InsertImm(0b100);
-	writefln("AH::%X", AH);
-	exec(0x80);
-	writefln("AH::%X", AH);
-	assert(AH == 0x16);
-	IP -= 3;
-	InsertImm(0b101);
-	exec(0x80);
-	assert(CH == 0x16);
-	IP -= 3;
-	InsertImm(0b110);
-	exec(0x80);
-	assert(DH == 0x16);
-	IP -= 3;
-	InsertImm(0b111);
-	exec(0x80);
-	assert(BH == 0x16);
-
-	OK;*/
 
 	// -- OR
 
@@ -893,23 +851,15 @@ unittest
 
 	OK;
 
-	/*test("GRP1 OR");
-	{
-
-	}
-	writeln("TODO");*/
-
 	// CBW
 
 	test("CBW");
-
 	AL = 0;
 	exec(0x98);
 	assert(AH == 0);
 	AL = 0xFF;
 	exec(0x98);
 	assert(AH == 0xFF);
-
 	OK;
 
 	// CWD
@@ -972,7 +922,9 @@ unittest
 	assert(ZF);
 	OK;
 
-	test("GRP1_8 -- ADD");
+	sub("Group1 8");
+
+	test("ADD");
 	AL = 0x40;
 	__iu8(10, AL);
 	__iu8(0b11_000_000, EIP+1);
@@ -980,7 +932,7 @@ unittest
 	exec(0x80);
 	assert(__fu8(AL) == 30);
 	OK;
-	test("GRP1_8 -- OR");
+	test("OR");
 	AL = 0x40;
 	__iu8(0b1100_0011, AL);
 	__iu8(0b11_001_000, EIP+1);
@@ -988,9 +940,9 @@ unittest
 	exec(0x80);
 	assert(__fu8(AL) == 0b1111_0011);
 	OK;
-	test("GRP1_8 -- ADC"); TODO;
-	test("GRP1_8 -- SBB"); TODO;
-	test("GRP1_8 -- AND");
+	test("ADC"); TODO;
+	test("SBB"); TODO;
+	test("AND");
 	AL = 0x40;
 	__iu8(0b0011_0011, AL);
 	__iu8(0b11_100_000, EIP+1);
@@ -998,7 +950,7 @@ unittest
 	exec(0x80);
 	assert(__fu8(AL) == 0b0011_0000);
 	OK;
-	test("GRP1_8 -- SUB/CMP");
+	test("SUB/CMP");
 	AL = 0x40;
 	__iu8(40, AL);
 	__iu8(0b11_101_000, EIP+1);
@@ -1006,7 +958,7 @@ unittest
 	exec(0x80);
 	assert(__fu8(AL) == 20);
 	OK;
-	test("GRP1_8 -- XOR");
+	test("XOR");
 	AL = 0x40;
 	__iu8(40, AL);
 	__iu8(0b11_110_000, EIP+1);
@@ -1014,7 +966,10 @@ unittest
 	exec(0x80);
 	assert(__fu8(AL) == 60);
 	OK;
-	test("GRP1_16 -- ADD");
+
+	sub("Group1 16");
+
+	test("ADD");
 	AX = 0x400;
 	__iu16(40, AX);
 	__iu8(0b11_000_000, EIP+1);
@@ -1022,7 +977,7 @@ unittest
 	exec(0x81);
 	assert(__fu16(AX) == 262);
 	OK;
-	test("GRP1_16 -- OR");
+	test("OR");
 	AX = 0x400;
 	__iu16(40, AX);
 	__iu8(0b11_001_000, EIP+1);
@@ -1030,9 +985,9 @@ unittest
 	exec(0x81);
 	assert(__fu16(AX) == 254);
 	OK;
-	test("GRP1_16 -- ADC"); TODO;
-	test("GRP1_16 -- SBB"); TODO;
-	test("GRP1_16 -- AND");
+	test("ADC"); TODO;
+	test("SBB"); TODO;
+	test("AND");
 	AX = 0x400;
 	__iu16(40, AX);
 	__iu8(0b11_100_000, EIP+1);
@@ -1040,7 +995,7 @@ unittest
 	exec(0x81);
 	assert(__fu16(AX) == 8);
 	OK;
-	test("GRP1_16 -- SUB/CMP");
+	test("SUB/CMP");
 	AX = 0x400;
 	__iu16(222, AX);
 	__iu8(0b11_101_000, EIP+1);
@@ -1048,7 +1003,7 @@ unittest
 	exec(0x81);
 	assert(__fu16(AX) == 182);
 	OK;
-	test("GRP1_16 -- XOR");
+	test("XOR");
 	AX = 0x400;
 	__iu16(222, AX);
 	__iu8(0b11_110_000, EIP+1);
@@ -1056,7 +1011,10 @@ unittest
 	exec(0x81);
 	assert(__fu16(AX) == 246);
 	OK;
-	test("GRP2_8 -- ADD");
+
+	sub("Group2 8");
+
+	test("ADD");
 	AL = 0x40;
 	__iu8(40, AL);
 	__iu8(0b11_000_000, EIP+1);
@@ -1064,9 +1022,9 @@ unittest
 	exec(0x82);
 	assert(__fu8(AL) == 60);
 	OK;
-	test("GRP2_8 -- ADC"); TODO;
-	test("GRP2_8 -- SBB"); TODO;
-	test("GRP2_8 -- SUB/CMP");
+	test("ADC"); TODO;
+	test("SBB"); TODO;
+	test("SUB/CMP");
 	AL = 0x40;
 	__iu8(40, AL);
 	__iu8(0b11_101_000, EIP+1);
@@ -1074,7 +1032,10 @@ unittest
 	exec(0x82);
 	assert(__fu8(AL) == 20);
 	OK;
-	test("GRP2_16 -- ADD");
+
+	sub("Group2 16");
+
+	test("ADD");
 	AX = 0x400;
 	__iu16(400, AX);
 	__iu8(0b11_000_000, EIP+1);
@@ -1082,9 +1043,9 @@ unittest
 	exec(0x83);
 	assert(__fu16(AX) == 600);
 	OK;
-	test("GRP2_16 -- ADC"); TODO;
-	test("GRP2_16 -- SBB"); TODO;
-	test("GRP2_16 -- SUB/CMP");
+	test("ADC"); TODO;
+	test("SBB"); TODO;
+	test("SUB/CMP");
 	AX = 0x400;
 	__iu16(400, AX);
 	__iu8(0b11_101_000, EIP+1);
@@ -1093,7 +1054,20 @@ unittest
 	assert(__fu16(AX) == 200);
 	OK;
 
-	test("XLAT SOURCE-TABLE"); TODO;
+	//sub("Group3 RM8");
+
+
+
+	sub("Array intructions");
+
+	test("XLAT SOURCE-TABLE");
+	AL = 10;
+	DS = 0x400;
+	BX = 0x20;
+	__iu8(36, get_ad(DS, BX) + AL);
+	exec(0xD7);
+	assert(AL == 36);
+	OK;
 
 	// -- STRING INSTRUCTIONS --
 	
@@ -1101,7 +1075,7 @@ unittest
 
 	// STOS
 
-	test("STOSB");
+	test("STOS");
 	ES = 0x20; DI = 0x20;        
 	AL = 'Q';
 	exec(0xAA);

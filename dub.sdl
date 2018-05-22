@@ -6,6 +6,12 @@ copyright "Copyright © dd86k 2017-2018"
 license "MIT"
 homepage "https://github.com/dd86k/dd-dos"
 
+buildType "diag" {
+  targetType "executable"
+  buildOptions "debugMode" "debugInfoC"
+  dflags "-betterC" "-transition=all" "-vgc" "-vtls" "-v"
+}
+
 buildType "debug" {
   targetType "executable"
   buildOptions "debugMode" "debugInfoC"
