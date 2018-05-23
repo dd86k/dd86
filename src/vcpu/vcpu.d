@@ -46,7 +46,7 @@ void init() {
 extern (C)
 void run() {
 	info("vcpu::run");
-	while (RLEVEL) {
+	while (RLEVEL > 0) {
 		EIP = get_ip; // _Very important_ to pre-calculate CS:IP into EIP
 		debug logexec(CS, IP, MEMORY[EIP]);
 		exec(MEMORY[EIP]);
@@ -359,14 +359,14 @@ enum : ubyte {
 	RM_MOD_11 = 192, /// MOD 11, Register Mode
 	RM_MOD = 192, /// Used for masking the MOD bits (11 000 000)
 
-	RM_REG_000 = 0,  /// AX
-	RM_REG_001 = 8,  /// CX
-	RM_REG_010 = 16, /// DX
-	RM_REG_011 = 24, /// BX
-	RM_REG_100 = 32, /// SP
-	RM_REG_101 = 40, /// BP
-	RM_REG_110 = 48, /// SI
-	RM_REG_111 = 56, /// DI
+	RM_REG_000 = 0,  /// AL/AX
+	RM_REG_001 = 8,  /// CL/CX
+	RM_REG_010 = 16, /// DL/DX
+	RM_REG_011 = 24, /// BL/BX
+	RM_REG_100 = 32, /// AH/SP
+	RM_REG_101 = 40, /// CH/BP
+	RM_REG_110 = 48, /// DH/SI
+	RM_REG_111 = 56, /// BH/DI
 	RM_REG = 56, /// Used for masking the REG bits (00 111 000)
 
 	RM_RM_000 = 0, /// R/M 000 bits
