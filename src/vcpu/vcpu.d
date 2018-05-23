@@ -451,10 +451,6 @@ void exec(ubyte op) {
 	 * The number suffix represents instruction width, such as 16 represents
 	 * 16-bit immediate values.
 	 */
-	//TODO: To reduce stack usage, consider using "global" variables.
-	//__gshared ubyte rm, im8; // modrm byte and 8-bit immediate
-	//__gshared ushort im16; // 16-bit immediate
-	//__gshared uint r1, addr1; // result and ea address
 	switch (op) {
 	case 0x00: { // ADD R/M8, REG8
 		const ubyte rm = __fu8_i;
