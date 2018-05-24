@@ -1882,19 +1882,20 @@ _F2_CX:	if (CX) {
 		return;
 	case 0xF6: { // GRP3 R/M8, IMM8
 		ubyte rm = __fu8_i; // Get ModR/M byte
-		int addr = get_ea(rm);
 		ubyte im = __fu8_i(1);
+		int addr = get_ea(rm);
 		int r;
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - TEST
 			__hflag8_1(im & __fu8(addr));
 			break;
 		case RM_REG_010: // 010 - NOT
-			__iu8(~im, addr);
+			__iu8(~__fu8(addr), addr);
 			break;
 		case RM_REG_011: // 011 - NEG
 			r = -__fu8(addr);
 			CF = cast(ubyte)r;
+			__hflag8_2(r);
 			__iu8(r, addr);
 			break;
 		case RM_REG_100: // 100 - MUL
@@ -1903,30 +1904,34 @@ _F2_CX:	if (CX) {
 			__iu8(r, addr);
 			break;
 		case RM_REG_101: // 101 - IMUL
-			r = im * __fi8(addr);
+			r = cast(ubyte)(cast(byte)im * __fi8(addr));
 			__hflag8_4(r);
 			__iu8(r, addr);
 			break;
 		case RM_REG_110: // 110 - DIV
-			r = im / __fu8(addr);
-			__hflag8_4(r);
-			__iu8(r, addr);
+		//TODO: Check if im == 0 (#DE), DIV
+			ubyte d = __fu8(addr);
+			r = AX / d;
+			AH = cast(ubyte)(AX % d);
+			AL = cast(ubyte)(r);
 			break;
 		case RM_REG_111: // 111 - IDIV
-			r = im / __fi8(addr);
-			__hflag8_4(r);
-			__iu8(r, addr);
+		//TODO: Check if im == 0 (#DE), IDIV
+			byte d = __fi8(addr);
+			r = cast(short)AX / d;
+			AH = cast(short)AX % d;
+			AL = cast(ubyte)r;
 			break;
 		default:
 			crit("Invalid ModR/M on GRP3_8");
 		}
-		EIP += 2;
+		EIP += 3;
 		return;
 	}
 	case 0xF7: { // GRP3 R/M16, IMM16
 		ubyte rm = __fu8_i; // Get ModR/M byte
-		int addr = get_ea(rm);
 		ushort im = __fu16_i(1);
+		int addr = get_ea(rm, 1);
 		int r;
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - TEST
@@ -1963,7 +1968,7 @@ _F2_CX:	if (CX) {
 		default:
 			crit("Invalid ModR/M on GRP3_8");
 		}
-		EIP += 2;
+		EIP += 4;
 		return;
 	}
 	case 0xF8: // CLC

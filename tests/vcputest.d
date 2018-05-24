@@ -1048,15 +1048,67 @@ unittest
 	test("SUB/CMP");
 	AX = 0x400;
 	__iu16(400, AX);
-	__iu8(0b11_101_000, EIP+1);
-	__iu16(200, EIP+2);
+	__iu8(0b11_101_000, EIP + 1);
+	__iu16(200, EIP + 2);
 	exec(0x83);
 	assert(__fu16(AX) == 200);
 	OK;
 
-	//sub("Group3 RM8");
-
-
+	sub("Group3 8");
+	test("TEST");
+	AL = 130;
+	__iu8(0xAF, AL);
+	__iu8(0b11_000_000, EIP + 1);
+	__iu8(0xF, EIP + 2);
+	exec(0xF6);
+	assert(ZF == 0 && OF == 0);
+	OK;
+	test("NOT");
+	__iu8(0b11_010_000, EIP + 1);
+	__iu8(0xF, AL);
+	exec(0xF6);
+	assert(__fu8(AL) == 0xF0);
+	OK;
+	test("NOT");
+	__iu8(0b11_011_000, EIP + 1);
+	__iu8(0xF, AL);
+	exec(0xF6);
+	assert(__fu8(AL) == 0xF1);
+	assert(ZF == 0);
+	assert(OF == 0);
+	OK;
+	test("MUL");
+	__iu8(0b11_100_000, EIP + 1);
+	__iu8(2, EIP + 2);
+	__iu8(4, AL);
+	exec(0xF6);
+	assert(__fu8(AL) == 8);
+	assert(ZF == 0);
+	OK;
+	test("IMUL");
+	__iu8(0b11_101_000, EIP + 1);
+	__iu8(-2, EIP + 2);
+	__iu8(4, AL);
+	exec(0xF6);
+	assert(__fu8(AL) == 0xF8); // -8 as BYTE
+	assert(ZF == 0);
+	OK;
+	test("DIV");
+	AX = 12;
+	__iu8(0b11_110_000, EIP + 1);
+	__iu8(8, AL);
+	exec(0xF6);
+	assert(AL == 1);
+	assert(AH == 4);
+	OK;
+	test("IDIV");
+	AX = 0xFFF4; // -12
+	__iu8(0b11_111_000, EIP + 1);
+	__iu8(8, AL);
+	exec(0xF6);
+	assert(AL == 0xFF);
+	assert(AH == 0xFC);
+	OK;
 
 	sub("Array intructions");
 
