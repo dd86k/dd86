@@ -71,6 +71,11 @@ __gshared ubyte[INIT_MEM] MEMORY; // It's planned to move to a malloc
 /// Current memory MEMORY size. Default: INIT_MEM
 __gshared size_t MEMORYSIZE = INIT_MEM;
 
+enum CPU_MODE : ubyte {
+	i8086,
+	i486
+}
+
 /**
  * Get memory address out of a segment and a register value.
  * Params:
@@ -109,7 +114,7 @@ extern (C)
 void fullreset() {
 	reset;
 	EAX = EBX = ECX = EDX =
-	EBP = ESP = EDI = ESI = 0;
+		EBP = ESP = EDI = ESI = 0;
 }
 
 /// Generic register
@@ -277,6 +282,19 @@ private __gshared ushort* IPp;
  * FLAGS
  **********************************************************/
 
+// Flags are bytes because single flags are affected a lot more often than
+// flag-whole operations, like PUSHF.
+__gshared ubyte
+CF, /// Bit  0, Carry Flag
+PF, /// Bit  2, Parity Flag
+AF, /// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
+ZF, /// Bit  6, Zero Flag
+SF, /// Bit  7, Sign Flag
+TF, /// Bit  8, Trap Flag
+IF, /// Bit  9, Interrupt Flag
+DF, /// Bit 10, Direction Flag
+OF; /// Bit 11, Overflow Flag
+
 /// Flag mask
 private enum : ushort {
 	MASK_CF = 1,
@@ -290,19 +308,6 @@ private enum : ushort {
 	MASK_OF = 0x800
 	// i486
 }
-
-// Flags are bytes because single flags are affected a lot more often than
-// flag-whole operations, like PUSHF.
-__gshared ubyte
-CF, /// Bit  0, Carry Flag
-PF, /// Bit  2, Parity Flag
-AF, /// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
-ZF, /// Bit  6, Zero Flag
-SF, /// Bit  7, Sign Flag
-TF, /// Bit  8, Trap Flag
-IF, /// Bit  9, Interrupt Flag
-DF, /// Bit 10, Direction Flag
-OF; /// Bit 11, Overflow Flag
 
 /**
  * Get FLAG as WORD.
@@ -351,7 +356,6 @@ OF; /// Bit 11, Overflow Flag
 	FLAGB = cast(ubyte)flag;
 }
 
-//TODO: aliases (RM_RM_000 -> RM_RM_A?)
 enum : ubyte {
 	RM_MOD_00 = 0,   /// MOD 00, Memory Mode, no displacement
 	RM_MOD_01 = 64,  /// MOD 01, Memory Mode, 8-bit displacement
@@ -435,8 +439,8 @@ enum : ubyte { // Segment override (for Seg)
 
 // Rest of the source here is solely this function.
 /**
- * Execute an operation code, acts like the ALU from an Intel 8086.
- * Params: op = Operation Code
+ * Execute an 8086 opcode
+ * Params: op = 8086 opcode
  */
 extern (C)
 void exec(ubyte op) {
@@ -1315,23 +1319,23 @@ void exec(ubyte op) {
 			__iu16(DS, ea);
 			break;
 		default: // when 100_000 is clear
-			crit("Invalid ModR/M for SEGREG->");
+			crit("Invalid ModR/M for SEGREG->RM");
 		}
 		EIP += 2;
 		return;
 	}
 	case 0x8D: { // LEA REG16, MEM16
 		ubyte rm = __fu8_i;
-		int addr = gea_ea(rm);
+		int addr = get_ea(rm);
 		switch (rm & RM_REG) {
-		case RM_REG_000: AX = cast(ushort)addr;
-		case RM_REG_001: CX = cast(ushort)addr;
-		case RM_REG_010: DX = cast(ushort)addr;
-		case RM_REG_011: BX = cast(ushort)addr;
-		case RM_REG_100: BP = cast(ushort)addr;
-		case RM_REG_101: SP = cast(ushort)addr;
-		case RM_REG_110: SI = cast(ushort)addr;
-		case RM_REG_111: DI = cast(ushort)addr;
+		case RM_REG_000: AX = cast(ushort)addr; break;
+		case RM_REG_001: CX = cast(ushort)addr; break;
+		case RM_REG_010: DX = cast(ushort)addr; break;
+		case RM_REG_011: BX = cast(ushort)addr; break;
+		case RM_REG_100: BP = cast(ushort)addr; break;
+		case RM_REG_101: SP = cast(ushort)addr; break;
+		case RM_REG_110: SI = cast(ushort)addr; break;
+		case RM_REG_111: DI = cast(ushort)addr; break;
 		default: // Never happens
 		}
 		EIP += 2;
@@ -1355,7 +1359,7 @@ void exec(ubyte op) {
 			DS = __fu16(ea);
 			break;
 		default: // when 100_000 is clear
-			crit("Invalid ModR/M for SEGREG<-");
+			crit("Invalid ModR/M for SEGREG<-RM");
 		}
 		EIP += 2;
 		return;

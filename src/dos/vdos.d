@@ -50,7 +50,6 @@ version (CRuntime_Bionic) {
 	enum C_RUNTIME = "UNKNOWN";
 }
 
-
 enum APP_VERSION = "0.0.0-0"; /// Application version
 
 enum BANNER = `
@@ -405,9 +404,8 @@ extern (C)
 void panic(immutable(char)* msg,
 		immutable(char)* mod = cast(immutable(char)*)__MODULE__, int line = __LINE__) {
 	enum RANGE = 22;
-	Clear;
 	printf(
-		"\nA fatal exception occured, which DD-DOS couldn't recover.\n" ~
+		"\n\nA fatal exception occured, which DD-DOS couldn't recover.\n" ~
 		"Below you'll find debugging information regarding the crash.\n" ~
 		"\nMessage: %s\n\n--\nMODULE: %s@L%d\nEXEC:",
 		msg, mod, line
@@ -423,7 +421,7 @@ void panic(immutable(char)* msg,
 	}
 	printf("\n--\n");
 	print_regs;
-	/*printf("--\n"); Temporary commented until print_stack is impelented
+	/*printf("--\n"); Temporary commented until print_stack is implemented
 	print_stack;*/
 }
 
