@@ -1320,9 +1320,23 @@ void exec(ubyte op) {
 		EIP += 2;
 		return;
 	}
-	case 0x8D: // LEA REG16, MEM16
-
+	case 0x8D: { // LEA REG16, MEM16
+		ubyte rm = __fu8_i;
+		int addr = gea_ea(rm);
+		switch (rm & RM_REG) {
+		case RM_REG_000: AX = cast(ushort)addr;
+		case RM_REG_001: CX = cast(ushort)addr;
+		case RM_REG_010: DX = cast(ushort)addr;
+		case RM_REG_011: BX = cast(ushort)addr;
+		case RM_REG_100: BP = cast(ushort)addr;
+		case RM_REG_101: SP = cast(ushort)addr;
+		case RM_REG_110: SI = cast(ushort)addr;
+		case RM_REG_111: DI = cast(ushort)addr;
+		default: // Never happens
+		}
+		EIP += 2;
 		return;
+	}
 	case 0x8E: { // MOV SEGREG, R/M16
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 		const byte rm = __fu8_i;

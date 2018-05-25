@@ -922,6 +922,8 @@ unittest
 	assert(ZF);
 	OK;
 
+	test("LEA REG16, MEM16"); TODO;
+
 	sub("Group1 8");
 
 	test("ADD");
@@ -1109,6 +1111,8 @@ unittest
 	assert(AL == 0xFF);
 	assert(AH == 0xFC);
 	OK;
+
+	sub("Group3 16"); TODO;
 
 	sub("Array intructions");
 
