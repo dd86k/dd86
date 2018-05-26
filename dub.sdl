@@ -9,37 +9,38 @@ homepage "https://github.com/dd86k/dd-dos"
 buildType "diag" {
   targetType "executable"
   buildOptions "debugMode" "debugInfoC"
-  dflags "-betterC" "-transition=all" "-vgc" "-vtls" "-v"
+  dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v"
 }
 
 buildType "debug" {
   targetType "executable"
   buildOptions "debugMode" "debugInfoC"
-  dflags "-betterC"
+  dflags "-betterC" "-transition=intpromote"
 }
 
 buildType "release" {
   targetType "executable"
   buildOptions "releaseMode" "optimize"
-  dflags "-betterC"
+  dflags "-betterC" "-transition=intpromote"
 }
 
 buildType "release-nobounds" {
   targetType "executable"
   buildOptions "releaseMode" "noBoundsCheck" "optimize"
-  dflags "-betterC"
+  dflags "-betterC" "-transition=intpromote"
 }
 
 buildType "release-inline" {
   targetType "executable"
   buildOptions "releaseMode" "noBoundsCheck" "optimize" "inline"
-  dflags "-betterC"
+  dflags "-betterC" "-transition=intpromote"
 }
 
 buildType "unittest" {
   targetName "tests"
   targetType "executable"
   buildOptions "unittests"
+  dflags "-transition=intpromote"
 
   excludedSourceFiles "src/main.d"
   sourcePaths "tests/"

@@ -84,8 +84,8 @@ int ExecLoad(char* path) {
 		__gshared mz_hdr mzh;
 		fread(&mzh, mzh.sizeof, 1, f);
 		//CS = 0; IP = 0; // Temporary
-		//CS = CS + mzh.e_cs; // Relative
-		//IP = mzh.e_ip;
+		CS = cast(ushort)(CS + mzh.e_cs); // Relative
+		IP = mzh.e_ip;
 
 		// ** Copy code section from exe into memory
 		//TODO: LOW/HIGH MEMORY

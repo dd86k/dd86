@@ -1911,7 +1911,7 @@ _F2_CX:	if (CX) {
 			__iu8(~__fu8(addr), addr);
 			break;
 		case RM_REG_011: // 011 - NEG
-			r = -__fu8(addr);
+			r = cast(ubyte)-__fu8(addr);
 			CF = cast(ubyte)r;
 			__hflag8_2(r);
 			__iu8(r, addr);

@@ -1071,7 +1071,7 @@ unittest
 	exec(0xF6);
 	assert(__fu8(AL) == 0xF0);
 	OK;
-	test("NOT");
+	test("NEG");
 	__iu8(0b11_011_000, EIP + 1);
 	__iu8(0xF, AL);
 	exec(0xF6);
