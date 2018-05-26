@@ -403,7 +403,7 @@ void print_stack() {
 extern (C)
 void panic(immutable(char)* msg,
 		immutable(char)* mod = cast(immutable(char)*)__MODULE__, int line = __LINE__) {
-	enum RANGE = 22;
+	enum RANGE = 22, PAD = 5;
 	printf(
 		"\n\nA fatal exception occured, which DD-DOS couldn't recover.\n" ~
 		"Below you'll find debugging information regarding the crash.\n" ~
@@ -411,9 +411,9 @@ void panic(immutable(char)* msg,
 		msg, mod, line
 	);
 	__gshared int i = RANGE;
-	ubyte* p = cast(ubyte*)MEMORY + EIP - 6;
+	ubyte* p = cast(ubyte*)MEMORY + EIP - PAD;
 	while (--i) {
-		if (i == (RANGE - 5))
+		if (i == (RANGE - PAD - 1))
 			printf(" >%02X<", *p);
 		else
 			printf(" %02X", *p);
@@ -433,7 +433,7 @@ void panic(immutable(char)* msg,
 /// Params: code = Interrupt byte
 extern (C)
 void Raise(ubyte code) {
-	debug printf("[dbug] INTERRUPT: 0x%02X\n", code);
+	debug printf("[dbug] INTERRUPT: %02Xh\n", code);
 
 	// REAL-MODE
 	//const inum = code << 2;

@@ -64,7 +64,7 @@ int ExecLoad(char* path) {
 
 	if (fsize == 0) {
 		fclose(f);
-		info("File is zero length");
+		warn("Executable file is zero length");
 		AL = E_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
 		return E_BAD_FORMAT;
 	}
@@ -72,9 +72,6 @@ int ExecLoad(char* path) {
 	__gshared ushort sig; /// signature
 	fseek(f, 0, SEEK_SET);
 	fread(&sig, 2, 1, f);
-
-	int cip = get_ip;
-	ubyte* memloc = cast(ubyte*)MEMORY + cip;
 
 	switch (sig) {
 	case MZ_MAGIC: // Party time!
@@ -86,6 +83,7 @@ int ExecLoad(char* path) {
 		//CS = 0; IP = 0; // Temporary
 		CS = cast(ushort)(CS + mzh.e_cs); // Relative
 		IP = mzh.e_ip;
+		EIP = get_ip;
 
 		// ** Copy code section from exe into memory
 		//TODO: LOW/HIGH MEMORY
@@ -97,7 +95,7 @@ int ExecLoad(char* path) {
 
 		// Shouldn't it be there _multiple_ code segments in some cases?
 		const uint hsize = mzh.e_cparh * PARAGRAPH; /// Header size
-		const uint cstart = hsize + (mz_rlc.sizeof * mzh.e_crlc); /// code section start
+		const uint codebase = hsize + (mz_rlc.sizeof * mzh.e_crlc); /// code section start
 		uint csize = mzh.e_cp * PAGE; /// image code size
 
 		if (mzh.e_cblp) // Adjust csize for last bytes in page (DJGPP)
@@ -117,33 +115,42 @@ int ExecLoad(char* path) {
 			printf("SS: %d\n", SS);
 			printf("SP: %d\n", SP);
 		}
-		fseek(f, cstart, SEEK_SET); // Seek to start of first code segment
-		fread(memloc, csize, 1, f); // read code segment into MEMORY
+
+		fseek(f, codebase, SEEK_SET); // Seek to start of first code segment
+		fread(cast(ubyte*)MEMORY + EIP, csize, 1, f); // read code segment into MEMORY
 
 		// ** Read relocation table and adjust far pointers in memory
-		/+if (mzh.e_crlc) {
-		//TODO: Adjust pointers in memory
+		if (mzh.e_crlc) {
+			/*
+				1. Read pointer from table
+				2. Calculate address
+				3. Fetch word from address
+				4. Add the image's CS field to that word
+				5. Write the word (sum) back to address
+			*/
 			if (Verbose)
 				printf("[INFO] Relocation: %d\n", mzh.e_crlc);
-			fseek(f, mzh.e_lfarlc, SEEK_SET);
-			const int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
-			mz_rlc* r = cast(mz_rlc*)malloc(rs); /// Relocation table
-			fread(r, rs, 1, f); // Read whole table
-			if (Verbose)
-				puts(" #   seg: off -> data");
-			for (int i; i < mzh.e_crlc; ++i) {
-				const ushort data = __fu16(get_ea + (r[i].seg << 4) + r[i].off);
-				if (Verbose)
-					printf("%2d  %04X:%04X -> %04X\n", i, r[i].seg, r[i].off, data);
-				CS += cast(ushort)(CS + r[i].seg); // temporarily cheat
-				IP = cast(ushort)(IP + r[i].off); // ditto
-				//SetWord((r[i].seg << 4) + r[i].off, r[i].refseg);
-			}
+			fseek(f, mzh.e_lfarlc, SEEK_SET); // 1.
+			int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
+			mz_rlc* r = cast(mz_rlc*)malloc(rs); /// Relocation table pointer
+			fread(r, rs, 1, f); // Read whole relocation table
+
+			int i;
+			debug puts(" #    seg: off -> data");
+			do {
+				int addr = get_ad(r.seg, r.off); // 2.
+				const ushort data = __fu16(addr); // 3.
+				debug printf("%2d   %04X:%04X -> %04X+%04X\n",
+					i, r.seg, r.off, mzh.e_cs, data
+				);
+				__iu16(mzh.e_cs + data, addr); // 4. & 5.
+				++r; ++i;
+			} while (--mzh.e_crlc);
 			free(r);
 		} else {
 			if (Verbose)
 				info("No relocations");
-		}+/
+		}
 
 		// ** Setup registers
 		// AL      drive letter
@@ -151,29 +158,29 @@ int ExecLoad(char* path) {
 		// DS:ES   Points to PSP
 		// SS:SP   Stack pointer (from EXE header)
 
-		AL = 2;
+		AL = 2; // C: for now
 		AH = 0;
+		DS = CS; ES = IP;
 		SS = cast(ushort)(SS + mzh.e_ss); // Relative
-		SP = SP + mzh.e_sp;
-		SS = mzh.e_ss;
+		SP = mzh.e_sp;
 
 		// ** Make PSP
-		//MakePSP(get_ip, "test");
+		//MakePSP(EIP - 0x100, ...);
 
-		// ** Jump to CS:IP+0x0100, relative to start of program
-		EIP += 0x100; // cheapest CALL for the moment
+		// ** Jump to CS:IP+0100h, relative to start of program
+		//EIP += 0x100; // Unecessary since we loaded code segment directly at CS:IP
 		break; // case MZ
 	default:
 		if (fsize > 0xFF00) { // Size - PSP
 			fclose(f);
-			error("COM file too large");
+			error("COM file too large (>FF00h)");
 			AL = E_BAD_FORMAT; //TODO: Verify code
 			return E_BAD_FORMAT;
 		}
 		info("LOADING COM");
 
 		fseek(f, 0, SEEK_SET);
-		fread(memloc, fsize, 1, f);
+		fread(cast(ubyte*)MEMORY + get_ip, fsize, 1, f);
 
 		//MakePSP(_comp - 0x100, "TEST");
 		AL = 0;
