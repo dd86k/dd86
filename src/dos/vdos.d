@@ -403,14 +403,14 @@ void print_stack() {
 extern (C)
 void panic(immutable(char)* msg,
 		immutable(char)* mod = cast(immutable(char)*)__MODULE__, int line = __LINE__) {
-	enum RANGE = 22, PAD = 5;
+	enum RANGE = 22, PAD = 7;
 	printf(
 		"\n\nA fatal exception occured, which DD-DOS couldn't recover.\n" ~
 		"Below you'll find debugging information regarding the crash.\n" ~
 		"\nMessage: %s\n\n--\nMODULE: %s@L%d\nEXEC:",
 		msg, mod, line
 	);
-	__gshared int i = RANGE;
+	int i = RANGE;
 	ubyte* p = cast(ubyte*)MEMORY + EIP - PAD;
 	while (--i) {
 		if (i == (RANGE - PAD - 1))
@@ -529,14 +529,12 @@ void Raise(ubyte code) {
 			if (AH) ZF = 0; // Keystroke available*/
 		}
 			break;
-
 		case 2: // SHIFT
 			// Bit | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0
 			// Des | I | C | N | S | A | C | L | R
 			// Insert, Capslock, Numlock, Scrolllock, Alt, Ctrl, Left, Right
 			// AL = (flag)
 			break;
-
 		default:
 			
 			break;

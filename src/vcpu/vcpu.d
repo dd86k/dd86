@@ -40,6 +40,7 @@ void init() {
 	DLp = cast(ubyte*)DXp;
 
 	IP = 0x100; // Temporary, should be FFFFh
+	CS = 0x100; // Temporary
 }
 
 /// Start the emulator at CS:IP (usually 0000h:0100h)

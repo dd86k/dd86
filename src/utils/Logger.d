@@ -8,7 +8,7 @@ enum {
 	L_ERROR = 2, /// Recovarable error, flow halted
 	L_WARN = 3, /// Flow may be halted in the near future
 	L_INFO = 4, /// Informal message, can be a little verbose!
-	L_DEBUG = 5 /// Usually unused, and the debug 
+	L_DEBUG = 5 /// Usually unused
 }
 
 /// Verbosity level

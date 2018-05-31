@@ -33,8 +33,8 @@ private struct mz_hdr { align(1):
 
 /// MS_DOS EXE Relocation structure
 private struct mz_rlc { align(1): // For AL=03h
-	ushort off; /// Offset
-	ushort seg; /// Segment of relocation
+	ushort offset; /// Offset
+	ushort segment; /// Segment of relocation
 }
 
 /// MZ file magic
@@ -56,7 +56,7 @@ private enum {
  * Notes: Refer to EXEC2BIN.ASM from MS-DOS 2.0 for details, at EXELOAD.
  */
 int ExecLoad(char* path) {
-	FILE* f = fopen(path, "rb");
+	FILE* f = fopen(path, "rb"); /// file handle
 	fseek(f, 0, SEEK_END);
 	int fsize = cast(int)ftell(f); // who the hell would have a >2G exec to run in DOS
 
@@ -78,7 +78,7 @@ int ExecLoad(char* path) {
 		info("LOADING MZ");
 
 		// ** Header is read for initial register values
-		__gshared mz_hdr mzh;
+		__gshared mz_hdr mzh; /// MZ header structure variable
 		fread(&mzh, mzh.sizeof, 1, f);
 		//CS = 0; IP = 0; // Temporary
 		CS = cast(ushort)(CS + mzh.e_cs); // Relative
@@ -86,64 +86,61 @@ int ExecLoad(char* path) {
 		EIP = get_ip;
 
 		// ** Copy code section from exe into memory
-		//TODO: LOW/HIGH MEMORY
-		if (mzh.e_minalloc && mzh.e_maxalloc) { // Low memory
+		/*if (mzh.e_minalloc && mzh.e_maxalloc) { // Low memory
 			info("LOAD LOW MEM");
 		} else { // High memory
 			info("LOAD HIGH MEM");
-		}
+		}*/
 
 		// Shouldn't it be there _multiple_ code segments in some cases?
 		const uint hsize = mzh.e_cparh * PARAGRAPH; /// Header size
-		const uint codebase = hsize + (mz_rlc.sizeof * mzh.e_crlc); /// code section start
-		uint csize = mzh.e_cp * PAGE; /// image code size
+		const uint codebase = hsize;// + (mz_rlc.sizeof * mzh.e_crlc); /// code section start
+		uint csize = (mzh.e_cp & 0x7FF) * PAGE; /// image code size and limit address to 1M
 
-		if (mzh.e_cblp) // Adjust csize for last bytes in page (DJGPP)
+		if (mzh.e_cblp) // Adjust code size for last bytes in page (DJGPP)
 			csize -= PAGE - mzh.e_cblp;
 
-		if (csize >= SEG_SIZE) { // Section too large?
-			error("Executable code size too big (>64K)");
-			return -1; //TODO: check error code (for AL)
-		}
-
 		debug {
+			printf("RELOC TABLE: %d -- %d B\n", mzh.e_lfarlc,  mz_rlc.sizeof * mzh.e_crlc);
 			printf("STRUCT SIZE: %d\n", mzh.sizeof);
 			printf("HEADER SIZE: %d\n", hsize);
-			printf("CODE SIZE : %d\n", csize);
-			printf("CS: %d\n", CS);
-			printf("IP: %d\n", IP);
-			printf("SS: %d\n", SS);
-			printf("SP: %d\n", SP);
+			printf("CODE : %d -- %d B\n", codebase, csize);
+			printf("CS -- e_cs: %4Xh -- %4Xh\n", CS, mzh.e_cs);
+			printf("IP -- e_ip: %4Xh -- %4Xh\n", IP, mzh.e_ip);
+			printf("SS -- e_ss: %4Xh -- %4Xh\n", SS, mzh.e_ss);
+			printf("SP -- e_sp: %4Xh -- %4Xh\n", SP, mzh.e_sp);
 		}
 
 		fseek(f, codebase, SEEK_SET); // Seek to start of first code segment
-		fread(cast(ubyte*)MEMORY + EIP, csize, 1, f); // read code segment into MEMORY
+		fread(cast(ubyte*)MEMORY + EIP, csize, 1, f); // read code segment into MEMORY at CS:IP
+
+		__istr("test", get_ad(DS, DX));
 
 		// ** Read relocation table and adjust far pointers in memory
 		if (mzh.e_crlc) {
 			/*
-				1. Read pointer from table
-				2. Calculate address
-				3. Fetch word from address
-				4. Add the image's CS field to that word
+				1. Read entry from table
+				2. Calculate address effective address
+				3. Fetch word from calculated address
+				4. Add the image's CS field to the word
 				5. Write the word (sum) back to address
 			*/
 			if (Verbose)
-				printf("[INFO] Relocation: %d\n", mzh.e_crlc);
+				printf("[INFO] Relocation(s): %d\n", mzh.e_crlc);
 			fseek(f, mzh.e_lfarlc, SEEK_SET); // 1.
 			int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
 			mz_rlc* r = cast(mz_rlc*)malloc(rs); /// Relocation table pointer
 			fread(r, rs, 1, f); // Read whole relocation table
 
 			int i;
-			debug puts(" #    seg: off -> data");
+			debug puts(" #    seg: off -> loadseg");
 			do {
-				int addr = get_ad(r.seg, r.off); // 2.
-				const ushort data = __fu16(addr); // 3.
-				debug printf("%2d   %04X:%04X -> %04X+%04X\n",
-					i, r.seg, r.off, mzh.e_cs, data
+				int addr = get_ad(r.segment, r.offset); // 2.
+				const ushort loadseg = __fu16(addr); /// 3. Load segment
+				debug printf("%2d   %04X:%04X -> cs:%04X+CS:%04X = %04X\n",
+					i, r.segment, r.offset, mzh.e_cs, CS, loadseg
 				);
-				__iu16(mzh.e_cs + data, addr); // 4. & 5.
+				__iu16(mzh.e_cs + loadseg, addr); // 4. & 5.
 				++r; ++i;
 			} while (--mzh.e_crlc);
 			free(r);
