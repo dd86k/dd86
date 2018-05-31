@@ -355,9 +355,9 @@ By default, MEM will show memory usage`
 		printf(
 			"Current MS-DOS version: %d.%d\n" ~
 			"Compiled MS-DOS version: %d.%d\n" ~
-			"vDOS version: " ~ APP_VERSION ~ "\n" ~
+			"DD-DOS version: " ~ APP_VERSION ~ "\n" ~
 			"Compiler: " ~ __VENDOR__ ~ " v%d\n" ~
-			"C Runtime: " ~ C_RUNTIME ~ "\n" ~
+			"C Runtime: " ~ C_RUNTIME ~ " Runtime\n" ~
 			"Build type: " ~ BUILD_TYPE ~ "\n",
 			MajorVersion, MinorVersion,
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION,
