@@ -97,7 +97,7 @@ enum _BUFS = 255;
  *   t = User input
  *   argv = Argument vector buffer
  * Returns: argument vector string array
- * Notes: Original function by Nuke928. Heavily modified by dd86k.
+ * Notes: Original function by Nuke928. Modified by dd86k.
  */
 extern (C)
 int sargs(const char* t, char** argv) {

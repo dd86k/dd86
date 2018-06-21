@@ -69,7 +69,7 @@ int ExecLoad(char* path) {
 		return E_BAD_FORMAT;
 	}
 
-	__gshared ushort sig; /// signature
+	__gshared ushort sig = void; /// signature
 	fseek(f, 0, SEEK_SET);
 	fread(&sig, 2, 1, f);
 
@@ -78,9 +78,9 @@ int ExecLoad(char* path) {
 		info("LOADING MZ");
 
 		// ** Header is read for initial register values
-		__gshared mz_hdr mzh; /// MZ header structure variable
+		__gshared mz_hdr mzh = void; /// MZ header structure variable
 		fread(&mzh, mzh.sizeof, 1, f);
-		//CS = 0; IP = 0; // Temporary
+		CS = 0x1000; IP = 0x1000; // Temporary!
 		CS = cast(ushort)(CS + mzh.e_cs); // Relative
 		IP = mzh.e_ip;
 		EIP = get_ip;
@@ -102,29 +102,27 @@ int ExecLoad(char* path) {
 
 		debug {
 			printf("RELOC TABLE: %d -- %d B\n", mzh.e_lfarlc,  mz_rlc.sizeof * mzh.e_crlc);
-			printf("STRUCT SIZE: %d\n", mzh.sizeof);
-			printf("HEADER SIZE: %d\n", hsize);
-			printf("CODE : %d -- %d B\n", codebase, csize);
-			printf("CS -- e_cs: %4Xh -- %4Xh\n", CS, mzh.e_cs);
-			printf("IP -- e_ip: %4Xh -- %4Xh\n", IP, mzh.e_ip);
-			printf("SS -- e_ss: %4Xh -- %4Xh\n", SS, mzh.e_ss);
-			printf("SP -- e_sp: %4Xh -- %4Xh\n", SP, mzh.e_sp);
+			printf("STURCT STRUCT SIZE: %d\n", mzh.sizeof);
+			printf("EXE HEADER SIZE: %d\n", hsize);
+			printf("CODE: %d -- %d B\n", codebase, csize);
+			printf("CS: %4Xh -- e_cs: %4Xh\n", CS, mzh.e_cs);
+			printf("IP: %4Xh -- e_ip: %4Xh\n", IP, mzh.e_ip);
+			printf("SS: %4Xh -- e_ss: %4Xh\n", SS, mzh.e_ss);
+			printf("SP: %4Xh -- e_sp: %4Xh\n", SP, mzh.e_sp);
 		}
 
 		fseek(f, codebase, SEEK_SET); // Seek to start of first code segment
-		fread(cast(ubyte*)MEMORY + EIP, csize, 1, f); // read code segment into MEMORY at CS:IP
-
-		__istr("test", get_ad(DS, DX));
+		fread(cast(ubyte*)MEMORY + get_ip, csize, 1, f); // read code segment into MEMORY at CS:IP
 
 		// ** Read relocation table and adjust far pointers in memory
 		if (mzh.e_crlc) {
 			/*
-				1. Read entry from table
-				2. Calculate address effective address
-				3. Fetch word from calculated address
-				4. Add the image's CS field to the word
-				5. Write the word (sum) back to address
-			*/
+			 * 1. Read entry from table
+			 * 2. Calculate address effective address
+			 * 3. Fetch word from calculated address
+			 * 4. Add the image's CS field to the word
+			 * 5. Write the word (sum) back to address
+			 */
 			if (Verbose)
 				printf("[INFO] Relocation(s): %d\n", mzh.e_crlc);
 			fseek(f, mzh.e_lfarlc, SEEK_SET); // 1.
