@@ -1,11 +1,11 @@
 /*
- * OSUtilities.d : Basic OS utilities
+ * utils_os.d : Basic OS utilities
  *
  * Includes OS utilities, such as changing/getting the current working
  * directory, setting/getting file attributes, directory walkers, etc.
  */
 
-module OSUtilities;
+module utils_os;
 
 //TODO: File/directory walker
 

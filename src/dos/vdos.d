@@ -8,7 +8,7 @@ import core.stdc.stdio;
 import core.stdc.string;
 import core.stdc.stdlib : malloc, free;
 import Loader : ExecLoad;
-import vcpu, ddcon, Logger, Codes, Utilities, OSUtilities;
+import vcpu, ddcon, Logger, Codes, Utilities, utils_os;
 
 debug {
 pragma(msg, `
@@ -913,7 +913,7 @@ void Raise(ubyte code) {
 		 * *Most versions do not use this.
 		 */
 		case 0x30:
-			BH = AL == 0 ? OEM_ID.IBM : 1;
+			BH = AL == 0 ? OEM_ID.IBM : 0;
 			AL = MajorVersion;
 			AH = MinorVersion;
 			break;

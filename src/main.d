@@ -10,7 +10,7 @@ import vcpu : init, cpu_sleep, run;
 import Loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;
-import OSUtilities : pexist;
+import utils_os : pexist;
 
 extern (C)
 private void _version() {
