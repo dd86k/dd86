@@ -66,10 +66,10 @@ enum OEM_ID { // Used for INT 21h AH=30 so far.
 }
 
 enum DOS_MAJOR_VERSION = 5, /// Default major DOS version
-	 DOS_MINOR_VERSION = 0; /// Default minor DOS version
+	DOS_MINOR_VERSION = 0; /// Default minor DOS version
 
-__gshared ubyte MajorVersion = DOS_MAJOR_VERSION; /// Alterable major version
-__gshared ubyte MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
+__gshared ubyte MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
+	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
 
 /// File/Folder attribute. See INT 21h AH=3Ch
 // Trivia: Did you know Windows still use these values today?
@@ -88,10 +88,10 @@ enum _BUFS = 255;
 
 /**
  * CLI argument splitter, supports quoting.
- * This function use multiple malloc calls, which are not freed.
+ * This function use multiple malloc calls, which must be freed by the caller.
  * Params:
  *   t = User input
- *   argv = Argument vector buffer
+ *   argv = argument vector buffer
  * Returns: argument vector string array
  * Notes: Original function by Nuke928. Modified by dd86k.
  */
@@ -144,7 +144,7 @@ START:
 		fputs("\n% ", stdout);
 
 	fgets(cast(char*)inb, _BUFS, stdin);
-	if (*inb == '\n') goto START;
+	if (*inb == '\n') goto START; // Empty?
 
 	argc = sargs(cast(char*)inb, argv);
 
