@@ -1,8 +1,8 @@
 /**
- * Utilities.d: Generic utilities
+ * utils.d: Generic utilities
  */
 
-module Utilities;
+module utils;
 
 import vcpu : MEMORY, MEMORYSIZE;
 import core.stdc.string : strlen;

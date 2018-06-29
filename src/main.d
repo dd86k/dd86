@@ -3,7 +3,6 @@
  */
 
 import core.stdc.stdio;
-import core.stdc.stdlib : exit;
 import core.stdc.string : strcmp;
 import vdos : APP_VERSION, BANNER, EnterShell;
 import vcpu : init, cpu_sleep, run;
@@ -24,25 +23,23 @@ dd86k -- Original author and developer
 `,
 		__VERSION__
 	);
-	exit(0);
 }
 
 extern (C)
 void help() {
 	puts(
-`A DOS virtual machine
+`A DOS virtual machine and emulation layer
 USAGE
-  dd-dos [-vPN] [FILE [FILEARGS]]
-  dd-dos {-V|--version|-h|--help}
+	dd-dos [-vPN] [FILE [FILEARGS]]
+	dd-dos {-V|--version|-h|--help}
 
 OPTIONS
-  -P       Do not sleep between cycles
-  -N       Remove starting messages and banner
-  -v       Increase verbosity level
-  -V, --version    Print version screen, then exit
-  -h, --help       Print help screen, then exit`
+	-P	Do not sleep between cycles
+	-N	Remove starting messages and banner
+	-v	Increase verbosity level
+	-V, --version  Print version screen, then exit
+	-h, --help     Print help screen, then exit`
 	);
-	exit(0);
 }
 
 extern (C)
@@ -60,10 +57,14 @@ private int main(int argc, char** argv) {
 		if (args) {
 			if (*(*argv + 1) == '-') { // long arguments
 				char* a = *(argv) + 2;
-				if (strcmp(a, "help") == 0)
+				if (strcmp(a, "help") == 0) {
 					help;
-				if (strcmp(a, "version") == 0)
+					return 0;
+				}
+				if (strcmp(a, "version") == 0) {
 					_version;
+					return 0;
+				}
 
 				printf("Unknown parameter: --%s\n", a);
 				return 1;
@@ -75,11 +76,11 @@ private int main(int argc, char** argv) {
 					case 'N': --arg_banner; break;
 					case 'v': ++Verbose; break;
 					case '-': --args; break;
-					case 'h': help; break;
-					case 'V': _version; break;
+					case 'h': help; return 0;
+					case 'V': _version; return 0;
 					default:
 						printf("Invalid parameter: -%c\n", *a);
-						exit(1);
+						return 1;
 					}
 				}
 				continue;
@@ -95,10 +96,10 @@ private int main(int argc, char** argv) {
 	// Pre-boot
 
 	switch (Verbose) {
-	case L_SILENCE, L_CRIT, L_ERROR: break;
-	case L_WARN: info("-- Log level: L_WARN"); break;
-	case L_INFO: info("-- Log level: L_INFO"); break;
-	case L_DEBUG: info("-- Log level: L_DEBUG"); break;
+	case LOG_SILENCE, LOG_CRIT, LOG_ERROR: break;
+	case LOG_WARN: info("-- Log level: LOG_WARN"); break;
+	case LOG_INFO: info("-- Log level: LOG_INFO"); break;
+	case LOG_DEBUG: info("-- Log level: LOG_DEBUG"); break;
 	default:
 		printf("E: Unknown log level: %d\n", Verbose);
 		return 1;

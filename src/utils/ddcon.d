@@ -11,7 +11,7 @@ module ddcon;
 
 import ddc;
 
-private import core.stdc.stdio;
+private import core.stdc.stdio : printf;
 private alias sys = core.stdc.stdlib.system;
 
 version (Windows) {

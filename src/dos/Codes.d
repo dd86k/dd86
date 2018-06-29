@@ -1,9 +1,12 @@
 /*
- * codes.d: Error codes. Mostly extracted from DOSSYM.ASM
- *          You MUST keep the space indentation between errors codes/assignations
+ * codes.d: Error codes used for vDOS and DD-DOS. Mostly extracted from DOSSYM.ASM
  */
 
 module Codes;
+
+/*
+ * DOS
+ */
 
 enum : ubyte {
 	E_NONE                  = 0,
@@ -27,6 +30,12 @@ enum : ubyte {
 	E_NO_MORE_FILES         = 18,
 }
 
-enum {
-	PANIC_MSG_MANUAL = "MANUAL PANIC"
+/*
+ * DD-DOS Critical Error Codes
+ */
+
+enum : ushort {
+	PANIC_UNKNOWN = 0xFF,
+
+	PANIC_MANUAL = 0xDEAD,
 }

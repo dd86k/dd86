@@ -1,14 +1,14 @@
 /*
- * dd-dos.d: Operating system, shell, system and hardware interrupts handler
+ * dd-dos.d: virtual OS, shell, and interrupt handler (layer part)
  */
 
 module vdos;
 
-import core.stdc.stdio;
-import core.stdc.string;
+import core.stdc.stdio : printf, puts, fputs, fgets, stdin, stdout;
+import core.stdc.string : strcmp, strncpy, strlen;
 import core.stdc.stdlib : malloc, free;
 import Loader : ExecLoad;
-import vcpu, ddcon, Logger, Codes, Utilities, utils_os, ddc;
+import vcpu, ddcon, Logger, Codes, utils, utils_os, ddc;
 
 debug {
 pragma(msg, `
@@ -22,7 +22,7 @@ enum BUILD_TYPE = "RELEASE"; /// For printing purposes
 }
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
-pragma(msg, "Reporting MS-DOS ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
+pragma(msg, "Default MS-DOS version: ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
 version (BigEndian)
 	pragma(msg, "WARNING: DD-DOS has not been tested on big-endian platforms!");
@@ -50,7 +50,7 @@ version (CRuntime_Bionic) {
 	enum C_RUNTIME = "UNKNOWN";
 }
 
-enum APP_VERSION = "0.0.0-0"; /// Application version
+enum APP_VERSION = "0.0.0-0"; /// DD-DOS version
 
 enum BANNER = `
 _______ _______        _______  ______  _______
@@ -322,11 +322,16 @@ By default, MEM will show memory usage`
 	if (strcmp(*argv, "?v") == 0) {
 		printf("Verbose set to ");
 		if (Verbose) {
-			Verbose = L_SILENCE;
+			Verbose = LOG_SILENCE;
 			puts("SILENCE");
 		} else {
-			Verbose = L_DEBUG;
-			puts("DEBUG");
+			debug {
+				Verbose = LOG_DEBUG;
+				puts("DEBUG");
+			} else {
+				Verbose = LOG_INFO;
+				puts("INFO");
+			}
 		}
 		goto END;
 	}
@@ -344,7 +349,7 @@ By default, MEM will show memory usage`
 		goto END;
 	}
 	if (strcmp(*argv, "?panic") == 0) {
-		panic(PANIC_MSG_MANUAL);
+		panic(PANIC_MANUAL);
 		goto END;
 	}
 	if (strcmp(*argv, "?diag") == 0) {
@@ -362,7 +367,9 @@ By default, MEM will show memory usage`
 		goto END;
 	}
 
+	// 
 	puts("Bad command or file name");
+
 END:
 	goto START;
 }
@@ -397,14 +404,16 @@ void print_stack() {
 }
 
 extern (C)
-void panic(immutable(char)* msg,
+void panic(ushort code,
 		immutable(char)* mod = cast(immutable(char)*)__MODULE__, int line = __LINE__) {
 	enum RANGE = 22, PAD = 7;
 	printf(
-		"\n\nA fatal exception occured, which DD-DOS couldn't recover.\n" ~
+		"\n\n\n\n" ~
+		"A fatal exception occured, which DD-DOS couldn't recover.\n" ~
 		"Below you'll find debugging information regarding the crash.\n" ~
-		"\nMessage: %s\n\n--\nMODULE: %s@L%d\nEXEC:",
-		msg, mod, line
+		"For more information about the error code, consult the manual (Critical Error Codes)\n" ~
+		"\nCode: %-4Xh\nModule: %s@L%d\nEXEC:",
+		code, mod, line
 	);
 	int i = RANGE;
 	ubyte* p = cast(ubyte*)MEMORY + EIP - PAD;

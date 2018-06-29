@@ -1,21 +1,23 @@
 module Logger;
 
-import core.stdc.stdio;
+import core.stdc.stdio : printf;
+
+import Codes;
 
 enum {
-	L_SILENCE = 0, /// Complete silence
-	L_CRIT = 1, /// Non-recoverable errors, program stopped
-	L_ERROR = 2, /// Recovarable error, flow halted
-	L_WARN = 3, /// Flow may be halted in the near future
-	L_INFO = 4, /// Informal message, can be a little verbose!
-	L_DEBUG = 5 /// Usually unused
+	LOG_SILENCE = 0, /// Complete silence
+	LOG_CRIT = 1, /// Non-recoverable errors, program stopped
+	LOG_ERROR = 2, /// Recovarable error, flow halted
+	LOG_WARN = 3, /// Flow may be halted in the near future
+	LOG_INFO = 4, /// Informal message, can be a little verbose!
+	LOG_DEBUG = 5 /// Usually only used in debug builds
 }
 
 /// Verbosity level
 debug
-public __gshared ubyte Verbose = L_INFO;
+public __gshared ubyte Verbose = LOG_INFO;
 else
-public __gshared ubyte Verbose = L_CRIT;
+public __gshared ubyte Verbose = LOG_CRIT;
 
 //TODO: Figure out template to avoid re-typing debug everytime
 debug void _debug(immutable(char)* msg) {
@@ -29,27 +31,27 @@ debug void logexec(ushort seg, ushort ip, ubyte op) {
 /// Log an informational message
 /// Params: msg = Message
 void info(immutable(char)* msg) {
-	if (Verbose < L_INFO) return;
+	if (Verbose < LOG_INFO) return;
 	printf("[INFO] %s\n", msg);
 }
 
 /// Log a warning message
 /// Params: msg = Message
 void warn(immutable(char)* msg) {
-	if (Verbose < L_WARN) return;
+	if (Verbose < LOG_WARN) return;
 	printf("[WARN] %s\n", msg);
 }
 
 /// Log an error
 /// Params: msg = Message
 void error(immutable(char)* msg) {
-	if (Verbose < L_ERROR) return;
+	if (Verbose < LOG_ERROR) return;
 	printf("[ERR!] %s\n", msg);
 }
 
-void crit(immutable(char)* msg, ubyte code = 0xff) {
+void crit(immutable(char)* msg, ubyte code = PANIC_UNKNOWN) {
 	import core.stdc.stdlib : exit;
 	import vdos : panic;
-	if (Verbose >= L_CRIT) panic(msg);
+	if (Verbose >= LOG_CRIT) panic(code);
 	exit(code);
 }
