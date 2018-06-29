@@ -9,6 +9,8 @@
 
 module ddcon;
 
+import ddc;
+
 private import core.stdc.stdio;
 private alias sys = core.stdc.stdlib.system;
 
@@ -19,6 +21,7 @@ version (Windows) {
 	private enum DEFAULT_COLOR =
 		FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 	/// Necessary handles.
+	//TODO: Get external handles from C runtime instead if possible
 	private __gshared HANDLE hIn, hOut;
 	private __gshared USHORT defaultColor = DEFAULT_COLOR;
 }
@@ -29,10 +32,6 @@ version (Posix) {
 	private enum TERM_ATTR = ~ICANON & ~ECHO;
 	private __gshared termios old_tio, new_tio;
 }
-
-// Temporary -betterC fix, confirmed on DMD 2.079.0+ (Windows)
-// putchar is extern (D) for some stupid reason
-version (Windows) extern (C) void putchar(int);
 
 /*******************************************************************
  * Initiation

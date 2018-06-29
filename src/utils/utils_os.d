@@ -5,18 +5,11 @@
  * directory, setting/getting file attributes, directory walkers, etc.
  */
 
-module utils_os;
-
 //TODO: File/directory walker
 
-version (Windows) {
-	private import core.sys.windows.windows;
-} else {
-// Temporary -betterC fix, confirmed on DMD 2.079.0+ (linux)
-// stat is extern (D) for some stupid reason
-import core.sys.posix.sys.stat : stat, stat_t;
-extern (C) int stat(char*, stat_t*);
-}
+module utils_os;
+
+import ddc;
 
 struct OSTime {
 	ubyte hour, minute, second, millisecond;
@@ -101,6 +94,7 @@ int os_date(OSDate* osd) {
 extern (C)
 int scwd(char* p) {
 	version (Windows) {
+		import core.sys.windows.winbase : SetCurrentDirectoryA;
 		return SetCurrentDirectoryA(p) != 0;
 	}
 	version (Posix) {
@@ -117,6 +111,7 @@ int scwd(char* p) {
 extern (C)
 int gcwd(char* p) {
 	version (Windows) {
+		import core.sys.windows.winbase : GetCurrentDirectoryA;
 		return GetCurrentDirectoryA(255, p);
 	}
 	version (Posix) {
@@ -134,6 +129,7 @@ int gcwd(char* p) {
 extern (C)
 int pexist(char* p) {
 	version (Windows) {
+		import core.sys.windows.windows : GetFileAttributesA;
 		return GetFileAttributesA(p) != 0xFFFF_FFFF;
 	}
 	version (Posix) {
@@ -153,12 +149,13 @@ int pexist(char* p) {
 extern (C)
 int pisdir(char* p) {
 	version (Windows) {
+		import core.sys.windows.windows : GetFileAttributesA;
 		return GetFileAttributesA(p) == 0x10; // FILE_ATTRIBUTE_DIRECTORY
 	}
 	version (Posix) {
 		import core.sys.posix.sys.stat;
 		debug import core.stdc.stdio;
-		__gshared stat_t s;
+		stat_t s;
 		stat(p, &s);
 		return S_ISDIR(s.st_mode);
 	}

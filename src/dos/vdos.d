@@ -8,7 +8,7 @@ import core.stdc.stdio;
 import core.stdc.string;
 import core.stdc.stdlib : malloc, free;
 import Loader : ExecLoad;
-import vcpu, ddcon, Logger, Codes, Utilities, utils_os;
+import vcpu, ddcon, Logger, Codes, Utilities, utils_os, ddc;
 
 debug {
 pragma(msg, `
@@ -65,11 +65,11 @@ enum OEM_ID { // Used for INT 21h AH=30 so far.
 	IBM, Compaq, MSPackagedProduct, ATnT, ZDS
 }
 
-enum DOS_MAJOR_VERSION = 5, /// Default reported major DOS version
-	 DOS_MINOR_VERSION = 0; /// Default reported minor DOS version
+enum DOS_MAJOR_VERSION = 5, /// Default major DOS version
+	 DOS_MINOR_VERSION = 0; /// Default minor DOS version
 
-__gshared ubyte MajorVersion = DOS_MAJOR_VERSION; /// Alterable reported major version
-__gshared ubyte MinorVersion = DOS_MINOR_VERSION; /// Alterable reported minor version
+__gshared ubyte MajorVersion = DOS_MAJOR_VERSION; /// Alterable major version
+__gshared ubyte MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
 
 /// File/Folder attribute. See INT 21h AH=3Ch
 // Trivia: Did you know Windows still use these values today?
@@ -81,10 +81,6 @@ enum
 	DIRECTORY = 16,
 	ARCHIVE = 32,
 	SHAREABLE = 128;
-
-// Temporary -betterC fix, confirmed on DMD 2.079.0+ (Windows+linux)
-// putchar is extern (D) for some stupid reason
-extern (C) void putchar(int);
 
 // While maximum in MS-DOS 5.0 seems to be 127, 255 feels like a little more
 // breathable
