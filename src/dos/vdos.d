@@ -367,7 +367,7 @@ By default, MEM will show memory usage`
 		goto END;
 	}
 
-	// 
+	//TODO: Exterior commands (shell)
 	puts("Bad command or file name");
 
 END:
