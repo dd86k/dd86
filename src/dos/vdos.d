@@ -802,30 +802,15 @@ void Raise(ubyte code) {
 		 *   DL (Day)
 		 *   AL (Day of the week, Sunday = 0)
 		 */
-		case 0x2A:
-			version (Windows) {
-				import core.sys.windows.winbase : SYSTEMTIME, GetLocalTime;
-				SYSTEMTIME s;
-				GetLocalTime(&s);
-
-				CX = s.wYear;
-				DH = cast(ubyte)s.wMonth;
-				DL = cast(ubyte)s.wDay;
-				AL = cast(ubyte)s.wDayOfWeek;
-			} else version (Posix) {
-				import core.sys.posix.time : time_t, time, localtime, tm;
-				time_t r;
-				time(&r);
-				const tm* s = localtime(&r);
-
-				CX = 1900 + s.tm_year;
-				DH = cast(ubyte)(s.tm_mon + 1);
-				DL = cast(ubyte)s.tm_mday;
-				AL = cast(ubyte)s.tm_wday;
-			} else {
-				static assert(0, "Implement INT 21h AH=2Ah");
-			}
+		case 0x2A: {
+			OSDate d;
+			os_date(&d);
+			CX = d.year;
+			DH = d.month;
+			DL = d.day;
+			AL = d.weekday;
 			break;
+		}
 		/*
 		 * 2Bh - Set system date.
 		 * Input:
@@ -846,35 +831,15 @@ void Raise(ubyte code) {
 		 *   DH (Second)
 		 *   DL (1/100 seconds)
 		 */
-		case 0x2C:
-			version (Windows) {
-				import core.sys.windows.windows : SYSTEMTIME, GetLocalTime;
-				SYSTEMTIME s;
-				GetLocalTime(&s);
-
-				CH = cast(ubyte)s.wHour;
-				CL = cast(ubyte)s.wMinute;
-				DH = cast(ubyte)s.wSecond;
-				DL = cast(ubyte)s.wMilliseconds;
-			} else version (Posix) {
-				import core.sys.posix.time : tm, localtime;
-				import core.sys.posix.sys.time : timeval, gettimeofday;
-				//TODO: Consider moving gettimeofday(2) to clock_gettime(2)
-				//      https://linux.die.net/man/2/gettimeofday
-				//      gettimeofday is deprecated since POSIX.2008
-				__gshared tm* s;
-				__gshared timeval tv;
-				gettimeofday(&tv, null);
-				s = localtime(&tv.tv_sec);
-
-				CH = cast(ubyte)s.tm_hour;
-				CL = cast(ubyte)s.tm_min;
-				DH = cast(ubyte)s.tm_sec;
-				AL = cast(ubyte)tv.tv_usec;
-			} else {
-				static assert(0, "Implement INT 21h AH=2Ch");
-			}
+		case 0x2C: {
+			OSTime t;
+			os_time(&t); // utils_os
+			CH = t.hour;
+			CL = t.minute;
+			DH = t.second;
+			DL = t.millisecond;
 			break;
+		}
 		/*
 		 * 2Dh - Set system time.
 		 * Input:
@@ -1247,10 +1212,10 @@ void Raise(ubyte code) {
 				if (pexist(cast(char*)p)) {
 					ExecLoad(cast(char*)p);
 					CF = 0;
-					return;
+				} else {
+					AX = E_FILE_NOT_FOUND;
+					CF = 1;
 				}
-				AX = E_FILE_NOT_FOUND;
-				CF = 1;
 				break;
 			case 1: // Load, create the program header but do not begin execution.
 
