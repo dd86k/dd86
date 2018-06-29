@@ -1,4 +1,4 @@
-import Utilities, vcpuutils;
+import Utilities, utils_vcpu;
 import unitutils;
 
 unittest

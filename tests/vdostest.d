@@ -1,4 +1,4 @@
-import vcpu, vcpuutils, std.stdio, vdos, std.file : exists;
+import vcpu, utils_vcpu, std.stdio, vdos, std.file : exists;
 import unitutils;
 
 unittest

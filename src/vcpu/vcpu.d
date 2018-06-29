@@ -9,7 +9,7 @@ module vcpu;
 
 import core.stdc.stdlib : exit; // Temporary
 import core.stdc.stdio : printf, puts;
-import vdos, vcpuutils;
+import vdos, utils_vcpu;
 import Logger; // crit and logexec
 
 /// Initial and maximum amount of memory if not specified in settings.

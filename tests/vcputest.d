@@ -1,4 +1,4 @@
-import vcpu, vcpuutils, std.stdio, vdos;
+import vcpu, utils_vcpu, std.stdio, vdos;
 import unitutils;
 
 unittest
@@ -10,7 +10,7 @@ unittest
 	CS = 0;
 	EIP = get_ip;
 
-	sub("Interpreter Utilities (vcpuutils.d)");
+	sub("Interpreter Utilities (utils_vcpu.d)");
 
 	test("__iu8");
 	__iu8(0xFF, EIP);
