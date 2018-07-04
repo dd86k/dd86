@@ -352,7 +352,7 @@ void __istr(immutable(char)* data, size_t addr = EIP) {
 extern (C)
 void __iwstr(immutable(wchar)[] data, size_t addr = EIP) {
 	if (C_OVERFLOW(addr)) crit("MEMORY ACCESS VIOLATION IN __iwstr");
-	wcscpy(cast(wchar_t*)(cast(ubyte*)MEMORY + addr), cast(wchar_t*)data);
+	wcscpy(cast(wchar_t*)(MEMORY_P + addr), cast(wchar_t*)data);
 }
 
 /*****************************************************************************
@@ -389,7 +389,7 @@ byte __fi8(uint addr) {
 extern (C)
 ushort __fu16(uint addr) {
 	if (C_OVERFLOW(addr)) crit("MEMORY OUT OF BOUND IN __fu16");
-	return *cast(ushort*)(cast(ubyte*)MEMORY + addr);
+	return *cast(ushort*)(MEMORY_P + addr);
 }
 
 /**
@@ -400,7 +400,7 @@ ushort __fu16(uint addr) {
 extern (C)
 short __fi16(uint addr) {
 	if (C_OVERFLOW(addr)) crit("MEMORY OUT OF BOUND IN __fi16");
-	return *cast(short*)(cast(ubyte*)MEMORY + addr);
+	return *cast(short*)(MEMORY_P + addr);
 }
 
 /**
@@ -411,7 +411,7 @@ short __fi16(uint addr) {
 extern (C)
 uint __fu32(uint addr) {
 	if (C_OVERFLOW(addr)) crit("MEMORY OUT OF BOUND IN __fu32");
-	return *cast(uint*)(cast(ubyte*)MEMORY + addr);
+	return *cast(uint*)(MEMORY_P + addr);
 }
 
 /*****************************************************************************
@@ -448,7 +448,7 @@ byte __fi8_i(int n = 0) {
 extern (C)
 ushort __fu16_i(uint n = 0) {
 	if (C_OVERFLOW(n)) crit("MEMORY OUT OF BOUND IN __fu16_i");
-	return *cast(ushort*)(cast(ubyte*)MEMORY + EIP + 1 + n);
+	return *cast(ushort*)(MEMORY_P + EIP + 1 + n);
 }
 
 /**
@@ -459,7 +459,7 @@ ushort __fu16_i(uint n = 0) {
 extern (C)
 short __fi16_i(uint n = 0) {
 	if (C_OVERFLOW(n)) crit("MEMORY OUT OF BOUND IN __fi16_i");
-	return *cast(short*)(cast(ubyte*)MEMORY + EIP + 1 + n);
+	return *cast(short*)(MEMORY_P + EIP + 1 + n);
 }
 
 /*****************************************************************************

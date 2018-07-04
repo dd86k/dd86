@@ -16,9 +16,9 @@ pragma(msg, `
 | DEBUG BUILD |
 +-------------+
 `);
-	enum BUILD_TYPE = "DEBUG"; /// For printing purposes
+	enum BUILD_TYPE = "DEBUG";	/// For printing purposes
 } else {
-	enum BUILD_TYPE = "RELEASE"; /// For printing purposes
+	enum BUILD_TYPE = "RELEASE";	/// For printing purposes
 }
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
@@ -279,7 +279,7 @@ By default, MEM will show memory usage`
 		goto END;
 	}
 	if (strcmp(*argv, "?run") == 0) {
-		run;
+		vcpu_run;
 		goto END;
 	}
 	if (strcmp(*argv, "?v") == 0) {
@@ -299,8 +299,8 @@ By default, MEM will show memory usage`
 		goto END;
 	}
 	if (strcmp(*argv, "?p") == 0) {
-		cpu_sleep = !cpu_sleep;
-		printf("CpuSleep mode: %s\n", cpu_sleep ? "ON" : cast(char*)"OFF");
+		opt_sleep = !opt_sleep;
+		printf("CpuSleep mode: %s\n", opt_sleep ? "ON" : cast(char*)"OFF");
 		goto END;
 	}
 	if (strcmp(*argv, "?r") == 0) {
@@ -379,7 +379,7 @@ void panic(ushort code,
 		code, mod, line
 	);
 	int i = RANGE;
-	ubyte* p = cast(ubyte*)MEMORY + EIP - PAD;
+	ubyte* p = MEMORY_P + EIP - PAD;
 	while (--i) {
 		if (i == (RANGE - PAD - 1))
 			printf(" >%02X<", *p);

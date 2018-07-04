@@ -21,7 +21,7 @@ enum INIT_MEM = 0x4_0000;
 
 /// Initiate interpreter
 extern (C)
-void init() {
+void vcpu_init() {
 	IPp = cast(ushort*)&EIP;
 
 	AXp = cast(ushort*)&EAX;
@@ -45,7 +45,7 @@ void init() {
 
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
-void run() {
+void vcpu_run() {
 	info("vcpu::run");
 	while (RLEVEL > 0) {
 		EIP = get_ip; // _Very important_ to pre-calculate CS:IP into EIP
@@ -64,8 +64,8 @@ void run() {
  * tl;dr: Emulates CALLs
  */
 __gshared short RLEVEL = 1;
-/// If set, the vcpu sleeps for this amount of time in hecto-seconds
-__gshared ubyte cpu_sleep = 1;
+/// If set, the vcpu sleeps between cycles
+__gshared ubyte opt_sleep = 1;
 
 enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer to avoid typing cast() everytime
 __gshared ubyte[INIT_MEM] MEMORY; /// Main memory bank

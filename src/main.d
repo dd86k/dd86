@@ -5,12 +5,12 @@
 import core.stdc.stdio;
 import core.stdc.string : strcmp;
 import vdos : APP_VERSION, BANNER, EnterShell;
-import vcpu : init, cpu_sleep, run;
+import vdos_codes;
+import vcpu : vcpu_init, vcpu_run, opt_sleep;
 import Loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;
 import utils_os : pexist;
-import vdos_codes;
 
 extern (C)
 private void _version() {
@@ -73,7 +73,7 @@ private int main(int argc, char** argv) {
 				char* a = *argv;
 				while (*++a) {
 					switch (*a) {
-					case 'P': --cpu_sleep; break;
+					case 'P': --opt_sleep; break;
 					case 'N': --arg_banner; break;
 					case 'v': ++Verbose; break;
 					case '-': --args; break;
@@ -104,7 +104,7 @@ private int main(int argc, char** argv) {
 		return E_INVALID_FUNCTION;
 	}
 
-	if (!cpu_sleep)
+	if (!opt_sleep)
 		info("-- SLEEP MODE OFF");
 
 	if (arg_banner)
@@ -113,7 +113,7 @@ private int main(int argc, char** argv) {
 	// Initiation
 
 	InitConsole; // ddcon
-	init; // vcpu
+	vcpu_init; // vcpu
 	//vdos_init; // vdos
 
 	// DD-DOS
@@ -127,7 +127,7 @@ private int main(int argc, char** argv) {
 				puts("E: Could not load executable");
 				return PANIC_FILE_NOT_LOADED;
 			}
-			run;
+			vcpu_run;
 		} else {
 			puts("E: File not found or loaded");
 			return E_FILE_NOT_FOUND;
