@@ -47,7 +47,7 @@ void init() {
 extern (C)
 void run() {
 	info("vcpu::run");
-	while (ERRORLEVEL > 0) {
+	while (RLEVEL > 0) {
 		EIP = get_ip; // _Very important_ to pre-calculate CS:IP into EIP
 		debug logexec(CS, IP, MEMORY[EIP]);
 		exec(MEMORY[EIP]);
@@ -63,7 +63,7 @@ void run() {
  * shell. Starts at 1.
  * tl;dr: Emulates CALLs
  */
-__gshared short ERRORLEVEL = 1;
+__gshared short RLEVEL = 1;
 /// If set, the vcpu sleeps for this amount of time in hecto-seconds
 __gshared ubyte cpu_sleep = 1;
 

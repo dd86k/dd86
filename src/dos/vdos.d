@@ -1210,7 +1210,7 @@ void Raise(ubyte code) {
 		 *     and all memory belonging to the process is freed.
 		 */
 		case 0x4C:
-			--ERRORLEVEL;
+			--RLEVEL;
 			break;
 		/*
 		 * 4Dh - Get return code. (ERRORLEVEL)
