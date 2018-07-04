@@ -290,7 +290,7 @@ void __hflag16_4(int r) {
 extern (C)
 pragma(inline, true)
 void __iu8(int op, int addr) {
-	if (C_OVERFLOW(addr)) crit("MEMORY ACCESS VIOLATION IN __iu8");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iu8");
 	MEMORY[addr] = cast(ubyte)op;
 }
 
@@ -302,7 +302,7 @@ void __iu8(int op, int addr) {
  */
 extern (C)
 void __iu16(int data, int addr) {
-	if (C_OVERFLOW(addr)) crit("MEMORY ACCESS VIOLATION IN __iu16");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iu16");
 	*cast(ushort*)(cast(void*)MEMORY + addr) = cast(ushort)data;
 }
 
@@ -314,7 +314,7 @@ void __iu16(int data, int addr) {
  */
 extern (C)
 void __iu32(uint op, int addr) {
-	if (C_OVERFLOW(addr)) crit("MEMORY ACCESS VIOLATION IN __iu32");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iu32");
 	*cast(uint*)(cast(void*)MEMORY + addr) = op;
 }
 
@@ -327,7 +327,7 @@ void __iu32(uint op, int addr) {
  */
 extern (C)
 void __iarr(void* ops, size_t size, size_t addr) {
-	if (C_OVERFLOW(addr)) crit("MEMORY ACCESS VIOLATION IN __iarr");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iarr");
 	memcpy(cast(void*)MEMORY + addr, ops, size);
 }
 
@@ -339,7 +339,7 @@ void __iarr(void* ops, size_t size, size_t addr) {
  */
 extern (C)
 void __istr(immutable(char)* data, size_t addr = EIP) {
-	if (C_OVERFLOW(addr)) crit("MEMORY ACCESS VIOLATION IN __istr");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __istr");
 	strcpy(cast(char*)MEMORY + addr, data);
 }
 
@@ -351,7 +351,7 @@ void __istr(immutable(char)* data, size_t addr = EIP) {
  */
 extern (C)
 void __iwstr(immutable(wchar)[] data, size_t addr = EIP) {
-	if (C_OVERFLOW(addr)) crit("MEMORY ACCESS VIOLATION IN __iwstr");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iwstr");
 	wcscpy(cast(wchar_t*)(MEMORY_P + addr), cast(wchar_t*)data);
 }
 
@@ -366,7 +366,7 @@ void __iwstr(immutable(wchar)[] data, size_t addr = EIP) {
  */
 extern (C)
 ubyte __fu8(uint addr) {
-	if (C_OVERFLOW(addr)) crit("MEMORY ACCESS VIOLATION IN __fu8");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fu8");
 	return MEMORY[addr];
 }
 
@@ -377,7 +377,7 @@ ubyte __fu8(uint addr) {
  */
 extern (C)
 byte __fi8(uint addr) {
-	if (C_OVERFLOW(addr)) crit("MEMORY OUT OF BOUND IN __fi8");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fi8");
 	return cast(byte)MEMORY[addr];
 }
 
@@ -388,7 +388,7 @@ byte __fi8(uint addr) {
  */
 extern (C)
 ushort __fu16(uint addr) {
-	if (C_OVERFLOW(addr)) crit("MEMORY OUT OF BOUND IN __fu16");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fu16");
 	return *cast(ushort*)(MEMORY_P + addr);
 }
 
@@ -399,7 +399,7 @@ ushort __fu16(uint addr) {
  */
 extern (C)
 short __fi16(uint addr) {
-	if (C_OVERFLOW(addr)) crit("MEMORY OUT OF BOUND IN __fi16");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fi16");
 	return *cast(short*)(MEMORY_P + addr);
 }
 
@@ -410,7 +410,7 @@ short __fi16(uint addr) {
  */
 extern (C)
 uint __fu32(uint addr) {
-	if (C_OVERFLOW(addr)) crit("MEMORY OUT OF BOUND IN __fu32");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fu32");
 	return *cast(uint*)(MEMORY_P + addr);
 }
 
@@ -425,7 +425,7 @@ uint __fu32(uint addr) {
  */
 extern (C)
 ubyte __fu8_i(int n = 0) {
-	if (C_OVERFLOW(n)) crit("MEMORY OUT OF BOUND IN __fu8_i");
+	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN__fu8_i");
 	return MEMORY[EIP + 1 + n];
 }
 
@@ -436,7 +436,7 @@ ubyte __fu8_i(int n = 0) {
 extern (C)
 pragma(inline, true)
 byte __fi8_i(int n = 0) {
-	if (C_OVERFLOW(n)) crit("MEMORY OUT OF BOUND IN __fi8_i");
+	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fi8_i");
 	return cast(byte)MEMORY[EIP + 1 + n];
 }
 
@@ -447,7 +447,7 @@ byte __fi8_i(int n = 0) {
  */
 extern (C)
 ushort __fu16_i(uint n = 0) {
-	if (C_OVERFLOW(n)) crit("MEMORY OUT OF BOUND IN __fu16_i");
+	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fu16_i");
 	return *cast(ushort*)(MEMORY_P + EIP + 1 + n);
 }
 
@@ -458,7 +458,7 @@ ushort __fu16_i(uint n = 0) {
  */
 extern (C)
 short __fi16_i(uint n = 0) {
-	if (C_OVERFLOW(n)) crit("MEMORY OUT OF BOUND IN __fi16_i");
+	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fi16_i");
 	return *cast(short*)(MEMORY_P + EIP + 1 + n);
 }
 
@@ -468,6 +468,6 @@ short __fi16_i(uint n = 0) {
 
 pragma(inline, true)
 extern (C)
-bool C_OVERFLOW(int addr) {
+bool C_OVERFLOW(size_t addr) {
 	return addr < 0 || addr > MEMORYSIZE;
 }

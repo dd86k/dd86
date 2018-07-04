@@ -6,7 +6,7 @@ module vdos;
 
 import core.stdc.stdio : printf, puts, fputs, fgets, stdin, stdout;
 import core.stdc.string : strcmp, strncpy, strlen;
-import core.stdc.stdlib : malloc, free;
+import core.stdc.stdlib : malloc, free, system;
 import vdos_loader : ExecLoad;
 import vcpu, ddcon, Logger, vdos_codes, utils, utils_os, ddc;
 
@@ -84,7 +84,7 @@ enum
 	ARCHIVE = 32,
 	SHAREABLE = 128;
 
-// While maximum in MS-DOS 5.0 seems to be 127, 255 feels like a little more
+// While maximum in MS-DOS 5.0 seems to be 120, 255 feels like a little more
 // breathable
 enum _BUFS = 255;
 
@@ -138,11 +138,11 @@ By default, CD will display the current working directory`
 				puts(cast(char*)inb);
 			else puts("E: Error getting CWD");
 		}
-		goto END;
+		goto START;
 	}
 	if (strcmp(*argv, "cls") == 0) {
 		Clear;
-		goto END;
+		goto START;
 	}
 
 	// D
@@ -162,7 +162,7 @@ By default, CD will display the current working directory`
 		default:
 		}
 		printf(" %d-%02d-%02d\n", CX, DH, DL);
-		goto END;
+		goto START;
 	}
 
 	// E
@@ -187,7 +187,7 @@ TIME      Get current time
 MEM       Show memory information
 VER       Show DD-DOS and MS-DOS version`
 		);
-		goto END;
+		goto START;
 	}
 
 	// M
@@ -234,7 +234,7 @@ By default, MEM will show memory usage`
 		} else {
 			puts("Not implemented");
 		}
-		goto END;
+		goto START;
 	}
 
 	// T
@@ -243,15 +243,17 @@ By default, MEM will show memory usage`
 		AH = 0x2C;
 		Raise(0x21);
 		printf("It is currently %02d:%02d:%02d.%02d\n", CH, CL, DH, DL);
-		goto END;
+		goto START;
 	}
 
 	// V
 
 	if (strcmp(*argv, "ver") == 0) {
-		printf("\nDD-DOS Version "~APP_VERSION~"\nMS-DOS Version %d.%d\n",
-			MajorVersion, MinorVersion);
-		goto END;
+		printf(
+			"\nDD-DOS Version " ~ APP_VERSION ~ "\nMS-DOS Version %d.%d\n",
+			MajorVersion, MinorVersion
+		);
+		goto START;
 	}
 
 	// ? -- debugging
@@ -267,7 +269,7 @@ By default, MEM will show memory usage`
 ?s          Print stack (Not implemented)
 ?v          Toggle verbose mode`
 		);
-		goto END;
+		goto START;
 	}
 	if (strcmp(*argv, "?load") == 0) {
 		if (argc > 1) {
@@ -276,11 +278,11 @@ By default, MEM will show memory usage`
 			else
 				puts("File not found");
 		} else puts("Executable required");
-		goto END;
+		goto START;
 	}
 	if (strcmp(*argv, "?run") == 0) {
 		vcpu_run;
-		goto END;
+		goto START;
 	}
 	if (strcmp(*argv, "?v") == 0) {
 		printf("Verbose set to ");
@@ -296,24 +298,24 @@ By default, MEM will show memory usage`
 				puts("INFO");
 			}
 		}
-		goto END;
+		goto START;
 	}
 	if (strcmp(*argv, "?p") == 0) {
 		opt_sleep = !opt_sleep;
 		printf("CpuSleep mode: %s\n", opt_sleep ? "ON" : cast(char*)"OFF");
-		goto END;
+		goto START;
 	}
 	if (strcmp(*argv, "?r") == 0) {
 		print_regs;
-		goto END;
+		goto START;
 	}
 	if (strcmp(*argv, "?s") == 0) {
 		print_stack;
-		goto END;
+		goto START;
 	}
 	if (strcmp(*argv, "?panic") == 0) {
 		panic(PANIC_MANUAL);
-		goto END;
+		goto START;
 	}
 	if (strcmp(*argv, "?diag") == 0) {
 		printf(
@@ -327,14 +329,13 @@ By default, MEM will show memory usage`
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION,
 			__VERSION__
 		);
-		goto END;
+		goto START;
 	}
 
-	//TODO: Exterior commands (shell)
-	puts("Bad command or file name");
+	system(inb);
+	//puts("Bad command or file name");
 
-END:
-	goto START;
+END:	goto START;
 }
 
 extern (C)
@@ -368,15 +369,14 @@ void print_stack() {
 
 extern (C)
 void panic(ushort code,
-		immutable(char)* mod = cast(immutable(char)*)__MODULE__, int line = __LINE__) {
+	immutable(char)* modname = cast(immutable(char)*)__MODULE__,
+	int line = __LINE__) {
 	enum RANGE = 22, PAD = 7;
 	printf(
 		"\n\n\n\n" ~
-		"A fatal exception occured, which DD-DOS couldn't recover.\n" ~
-		"Below you'll find debugging information regarding the crash.\n" ~
-		"For more information about the error code, consult the manual (Critical Error Codes)\n" ~
-		"\nCode: %-4Xh\nModule: %s@L%d\nEXEC:",
-		code, mod, line
+		"A fatal exception occured, which DD-DOS couldn't recover.\n\n" ~
+		"STOP: %4Xh (%s@L%d)\nEXEC:",
+		code, modname, line
 	);
 	int i = RANGE;
 	ubyte* p = MEMORY_P + EIP - PAD;
@@ -394,7 +394,7 @@ void panic(ushort code,
 }
 
 /*
- * Interrupt handler (Hardware, BIOS, DOS, MS-DOS)
+ * Interrupt handler (Hardware, BIOS, DOS, vDOS)
  */
 
 /// Raise interrupt.
@@ -411,10 +411,10 @@ void Raise(ubyte code) {
 	IF stack not large enough for a 6-byte return information
 		#SS
 	*/
-	push(FLAG);
+	/*push(FLAG);
 	IF = TF = 0;
 	push(CS);
-	push(IP);
+	push(IP);*/
 	//CS ← IDT[inum].selector;
 	//IP ← IDT[inum].offset;
 
@@ -425,24 +425,13 @@ void Raise(ubyte code) {
 	case 0x10: // VIDEO
 		switch (AH) {
 		/*
-		 * VIDEO - Set cursor position.
-		 * Input:
-		 *   BH (Page number)
-		 *   DH (Row, 0 is top)
-		 *   DL (Column, 0 is top)
+		 * VIDEO - Set cursor position
 		 */
 		case 0x02:
 			SetPos(DH, DL);
 			break;
 		/*
-		 * VIDEO - Get cursor position and size.
-		 * Input:
-		 *   BH (Page number)
-		 * Return:
-		 *   CH (Start scan line)
-		 *   CL (End scan line)
-		 *   DH (Row)
-		 *   DL (Column)
+		 * VIDEO - Get cursor position and size
 		 */
 		case 0x03:
 			AX = 0;
@@ -451,13 +440,6 @@ void Raise(ubyte code) {
 			break;
 		/*
 		 * VIDEO - Read light pen position
-		 * Return:
-		 *   AH (Trigger flag)
-		 *   DH (Row)
-		 *   DL (Column)
-		 *   CH (Pixel row, modes 04h-06h)
-		 *   CX (Pixel row, modes >200 rows)
-		 *   BX (Pixel column)
 		 */
 		case 0x04:
 
@@ -515,19 +497,12 @@ void Raise(ubyte code) {
 		switch (AH) {
 		/*
 		 * Get system time by number of clock ticks since midnight
-		 * Input: None
-		 * Returns:
-		 *   CX:DX 	Number of clock ticks since midnight
-		 *   AL		Midnight flag
 		 */
 		case 0:
 
 			break;
 		/*
 		 * Set system time by number of clock ticks since midnight
-		 * Input:
-		 *   CX:DX 	Number of clock ticks since midnight
-		 * Returns: None
 		 */
 		case 1:
 		
@@ -542,237 +517,114 @@ void Raise(ubyte code) {
 	case 0x21: // MS-DOS Services
 		switch (AH) {
 		/*
-		 * 00h - Terminate program.
-		 * Input:
-		 *   CS (PSP Segment)
-		 *
-		 * Notes: Microsoft recommends using INT 21/AH=4Ch for DOS 2+. This
-		 * function sets the program's return code (ERRORLEVEL) to 00h. Execution
-		 * continues at the address stored in INT 22 after DOS performs whatever
-		 * cleanup it needs to do (restoring the INT 22,INT 23,INT 24 vectors
-		 * from the PSP assumed to be located at offset 0000h in the segment
-		 * indicated by the stack copy of CS, etc.). If the PSP is its own parent,
-		 * the process's memory is not freed; if INT 22 additionally points into the
-		 * terminating program, the process is effectively NOT terminated. Not
-		 * supported by MS Windows 3.0 DOSX.EXE DOS extender.
+		 * 00h - Terminate program
 		 */
 		case 0:
 
 			break;
 		/*
-		 * 01h - Read character from stdin with echo.
-		 * Input: None
-		 * Return: AL (Character)
-		 * 
-		 * Notes:
-		 * - ^C and ^Break are checked.
-		 * - ^P toggles the DOS-internal echo-to-printer flag.
-		 * - ^Z is not interpreted.
+		 * 01h - Read character from stdin with echo
 		 */
 		case 1:
 			//AL = cast(ubyte)ReadKey.keyCode;
 			break;
 		/*
-		 * 02h - Write character to stdout.
-		 * Input: DL (Character)
-		 * Return: AL (Last character)
-		 * 
-		 * Notes:
-		 * - ^C and ^Break are checked. (If true, INT 23)
-		 * - If DL=09h on entry, in which case AL=20h is expended as blanks.
-		 * - If stdout is redirected to a file, no error-checks are performed.
+		 * 02h - Write character to stdout
 		 */
 		case 2:
 			AL = DL;
 			putchar(AL);
 			break;
 		/*
-		 * 05h - Write character to printer.
-		 * Input: DL (Character)
-		 * Return: None
-		 *
-		 * Notes:
-		 * - ^C and ^Break are checked. (Keyboard)
-		 * - Usually STDPRN, may be redirected under DOS 2.0+.
-		 * - If the printer is busy, this function will wait.
+		 * 05h - Write character to printer
 		 */
 		case 5:
 
 			break;
 		/*
-		 * 06h - Direct console input/output.
-		 * Input:
-		 *   Output: DL (Character, DL != FFh)
-		 *   Input: DL (Character, DL == FFh)
-		 * Return:
-		 *   Ouput: AL (Character)
-		 *   Input:
-		 *     ZF set if no characters are available and AL == 00h
-		 *     ZF clear if a character is available and AL != 00h
-		 *
-		 * Notes:
-		 * - ^C and ^Break are checked. (Keyboard)
-		 *
-		 * Input notes:
-		 * - If the returned character is 00h, the user pressed a key with an
-		 *     extended keycode, which will be returned by the next call of
-		 *     this function
+		 * 06h - Direct console input/output
 		 */
 		case 6:
 
 			break;
 		/*
-		 * 07h - Read character directly from stdin without echo.
-		 * Input: None
-		 * Return: AL (Character)
-		 *
-		 * Notes:
-		 * - ^C/^Break are not checked.
+		 * 07h - Read character directly from stdin without echo
 		 */
 		case 7:
 			//AL = cast(ubyte)ReadKey.keyCode;
 			break;
 		/*
-		 * 08h - Read character from stdin without echo.
-		 * Input: None
-		 * Return: AL (Character)
-		 *
-		 * Notes:
-		 * - ^C/^Break are checked.
+		 * 08h - Read character from stdin without echo
 		 */
 		case 8:
 
 			break;
 		/*
-		 * 09h - Write string to stdout.
-		 * Input: DS:DX ('$' terminated)
-		 * Return: AL = 24h
-		 *
-		 * Notes:
-		 * - ^C and ^Break are not checked.
+		 * 09h - Write string to stdout
 		 */
-		case 9:
+		case 9: {
+			uint limit = 255;
 			char* p = cast(char*)MEMORY + get_ad(DS, DX);
-			while (*p != '$')
+			while (*p != '$' && --limit > 0)
 				putchar(*p++);
 
 			AL = 0x24;
 			break;
+		}
 		/*
-		 * 0Ah - Buffered input.
-		 * Input: DS:DX (Pointer to BUFFER)
-		 * Return: Buffer filled with used input.
-		 *
-		 * Notes:
-		 * - ^C and ^Break are checked.
-		 * - Reads from stdin.
-		 *
-		 * BUFFER:
-		 * | Offset | Size | Description
-		 * +--------+------+-----------------
-		 * | 0      | 1    | Maximum characters buffer can hold
-		 * | 1      | 1    | Chars actually read (except CR) (or from last input)
-		 * | 2      | N    | Characters, including the final CR.
+		 * 0Ah - Buffered input
 		 */
 		case 0xA:
 
 			break;
 		/*
-		 * 0Bh - Get stdin status.
-		 * Input: None.
-		 * Return:
-		 *   AL = 00h if no characters are available.
-		 *   AL = FFh if a character are available.
-		 *
-		 * Notes:
-		 * - ^C and ^Break are checked.
+		 * 0Bh - Get stdin status
 		 */
 		case 0xB:
 
 			break;
 		/*
-		 * 0Ch - Flush stdin buffer and read character.
-		 * Input:
-		 *   AL (STDIN input function to execute after flushing)
-		 *   Other registers as appropriate for the input function.
-		 * Return: As appropriate for the input function.
-		 *
-		 * Notes:
-		 * - If AL is not 1h, 6h, 7h, 8h, or Ah, the buffer is flushed and
-		 *     no input are attempted.
+		 * 0Ch - Flush stdin buffer and read character
 		 */
 		case 0xC:
 
 			break;
 		/*
-		 * 0Dh - Disk reset.
-		 * Input: None.
-		 * Return: None.
-		 *
-		 * Notes:
-		 * - Write all buffers to disk without updating directory information.
+		 * 0Dh - Disk reset
 		 */
 		case 0xD:
 
 			break;
 		/*
-		 * 0Eh - Select default drive.
-		 * Input: DL (incrementing from 0 for A:)
-		 * Return: AL (number of potentially valid drive letters)
-		 *
-		 * Notes:
-		 * - The return value is the highest drive present.
+		 * 0Eh - Select default drive
 		 */
 		case 0xE:
 
 			break;
 		/*
-		 * 19h - Get default drive.
-		 * Input: None.
-		 * Return: AL (incrementing from 0 for A:)
+		 * 19h - Get default drive
 		 */
 		case 0x19:
 			AL = 2; // Temporary.
 			break;
 		/*
-		 * 25h - Set interrupt vector.
-		 * Input:
-		 *   AL (Interrupt number)
-		 *   DS:DX (New interrupt handler)
-		 * Return: None.
-		 *
-		 * Notes:
-		 * - Preferred over manually changing the interrupt vector table.
+		 * 25h - Set interrupt vector
 		 */
 		case 0x25:
 
 			break;
 		/*
 		 * 26h - Create PSP
-		 * Input: DX (Segment to create PSP)
-		 * Return: AL destroyed
-		 *
-		 * Notes:
-		 * - New PSP is updated with memory size information; INTs 22h, 23h,
-		 *     24h taken from interrupt vector table; the parent PSP field
-		 *     is set to 0. (DOS 2+) DOS assumes that the caller's CS is the`
-		 *     segment of the PSP to copy.
 		 */
 		case 0x26:
 
 			break;
 		/*
-		 * 2Ah - Get system date.
-		 * Input: None.
-		 * Return:
-		 *   CX (Year, 1980-2099)
-		 *   DH (Month)
-		 *   DL (Day)
-		 *   AL (Day of the week, Sunday = 0)
+		 * 2Ah - Get system date
 		 */
 		case 0x2A: {
 			OSDate d;
-			os_date(&d);
+			os_date(&d); // utils_os
 			CX = d.year;
 			DH = d.month;
 			DL = d.day;
@@ -780,24 +632,13 @@ void Raise(ubyte code) {
 			break;
 		}
 		/*
-		 * 2Bh - Set system date.
-		 * Input:
-		 *   CX (Year, 1980-2099)
-		 *   DH (Month)
-		 *   DL (Day)
-		 * Return: AL (00h if successful, FFh (invalid) if failed)
+		 * 2Bh - Set system date
 		 */
 		case 0x2B:
 			AL = 0xFF;
 			break;
 		/*
-		 * 2Ch - Get system time.
-		 * Input: None.
-		 * Return:
-		 *   CH (Hour)
-		 *   CL (Minute)
-		 *   DH (Second)
-		 *   DL (1/100 seconds)
+		 * 2Ch - Get system time
 		 */
 		case 0x2C: {
 			OSTime t;
@@ -809,41 +650,19 @@ void Raise(ubyte code) {
 			break;
 		}
 		/*
-		 * 2Dh - Set system time.
-		 * Input:
-		 *   CH (Hour)
-		 *   CL (Minute)
-		 *   DH (Second)
-		 *   DL (1/100 seconds)
-		 * Return: AL (00h if successful, FFh if failed (invalid))
+		 * 2Dh - Set system time
 		 */
 		case 0x2D:
 			AL = 0xFF;
 			break;
 		/*
-		 * 2Eh - Set verify flag.
-		 * Input: AL (00 = off, 01 = on)
-		 * Return: None.
-		 *
-		 * Notes:
-		 * - Default state at boot is off.
-		 * - When on, all disk writes are verified provided the device driver
-		 *   supports read-after-write verification.
+		 * 2Eh - Set verify flag
 		 */
 		case 0x2E:
 
 			break;
 		/*
-		 * 30h - Get DOS version.
-		 * Input: AL (00h = OEM Number in AL, 01h = Version flag in AL)
-		 * Return:
-		 *   AL (Major version, DOS 1.x = 00h)
-		 *   AH (Minor version)
-		 *   BL:CX (24-bit user serial* if DOS<5 or AL=0)
-		 *   BH (MS-DOS OEM number if DOS 5+ and AL=1)
-		 *   BH (Version flag bit 3: DOS is in ROM, other: reserved (0))
-		 *
-		 * *Most versions do not use this.
+		 * 30h - Get DOS version
 		 */
 		case 0x30:
 			BH = AL == 0 ? OEM_ID.IBM : 0;
@@ -852,326 +671,102 @@ void Raise(ubyte code) {
 			break;
 		/*
 		 * 35h - Get interrupt vector.
-		 * Input: AL (Interrupt number)
-		 * Return: ES:BX (Current interrupt number)
 		 */
 		case 0x35:
 
 			break;
 		/*
 		 * 36h - Get free disk space.
-		 * Input: DL (Drive number, e.g. A = 0, B = 1, etc.)
-		 * Return:
-		 *   AX (FFFFh = invalid drive)
-		 * or
-		 *   AX (Sectors per cluster)
-		 *   BX (Number of free clusters)
-		 *   CX (bytes per sector)
-		 *   DX (Total clusters on drive)
-		 *
-		 * Notes:
-		 * - Free space on drive in bytes is AX * BX * CX.
-		 * - Total space on drive in bytes is AX * CX * DX.
-		 * - "lost clusters" are considered to be in use.
-		 * - No proper results on CD-ROMs; use AX=4402h instead.
 		 */
 		case 0x36:
 
 			break;
 		/*
 		 * Get country specific information
-		 * Input:
-		 *   AL (0)
-		 *   DS:DX (Buffer location, see BUFFER)
-		 * Return:
-		 *   CF set on error, otherwise cleared
-		 *   AX (Error code, 02h)
-		 *   AL (0 for current country, 1h-feh specific, ffh for >ffh)
-		 *   BX (16-bit country code)
-		 *     http://www.ctyme.com/intr/rb-2773.htm#Table1400
-		 *   Buffer at DS:DX filled
-		 *
-		 * BUFFER:
-		 * Offset  Size    Description
-		 * 00h     WORD    date format (see #01398)
-		 * 02h  5  BYTEs   ASCIZ currency symbol string
-		 * 07h  2  BYTEs   ASCIZ thousands separator
-		 * 09h  2  BYTEs   ASCIZ decimal separator
-		 * 0Bh  2  BYTEs   ASCIZ date separator
-		 * 0Dh  2  BYTEs   ASCIZ time separator
-		 * 0Fh     BYTE    currency format
-		 *   bit 2 = set if currency symbol replaces decimal point
-		 *   bit 1 = number of spaces between value and currency symbol
-		 *   bit 0 = 0 if currency symbol precedes value
-		 *           1 if currency symbol follows value
-		 * 10h     BYTE    number of digits after decimal in currency
-		 * 11h     BYTE    time format
-		 *   bit 0 = 0 if 12-hour clock
-		 *       1 if 24-hour clock
-		 * 12h     DWORD   address of case map routine
-		 *   (FAR CALL, AL = character to map to upper case [>= 80h])
-		 * 16h  2  BYTEs   ASCIZ data-list separator
-		 * 18h 10  BYTEs   reserved
 		 */
 		case 0x38:
 
 			break;
 		/*
-		 * 39h - Create subdirectory.
-		 * Input: DS:DX (ASCIZ path)
-		 * Return:
-		 *  CF clear if sucessful (AX set to 0)
-		 *  CF set on error (AX = error code (3 or 5))
-		 *
-		 * Notes:
-		 * - All directories in the given path except the last must exist.
-		 * - Fails if the parent directory is the root and is full.
-		 * - DOS 2.x-3.3 allow the creation of a directory sufficiently deep
-		 *     that it is not possible to make that directory the current
-		 *     directory because the path would exceed 64 characters.
+		 * 39h - Create subdirectory
 		 */
 		case 0x39:
 
 			break;
 		/*
-		 * 3Ah - Remove subdirectory.
-		 * Input: DS:DX (ASCIZ path)
-		 * Return: 
-		 *   CF clear if successful (AX set to 0)
-		 *   CF set on error (AX = error code (03h,05h,06h,10h))
-		 *
-		 * Notes:
-		 * - Subdirectory must be empty.
+		 * 3Ah - Remove subdirectory
 		 */
 		case 0x3A:
 
 			break;
 		/*
-		 * 3Bh - Set current directory.
-		 * Input: DS:DX (ASCIZ path (maximum 64 Bytes))
-		 * Return:
-		 *  CF clear if sucessful (AX set to 0)
-		 *  CF set on error (AX = error code (3))
-		 *
-		 * Notes:
-		 * - If new directory name includes a drive letter, the default drive
-		 *     is not changed, only the current directory on that drive.
+		 * 3Bh - Set current directory
 		 */
 		case 0x3B:
 
 			break;
 		/*
-		 * 3Ch - Create or truncate file.
-		 * Input:
-		 *   CX (File attributes, see ATTRIB)
-		 *   DS:DX (ASCIZ path)
-		 * Return:
-		 *  CF clear if sucessful (AX = File handle)
-		 *  CF set if error (AX = error code (3, 4, 5)
-		 *
-		 * Notes:
-		 * - If the file already exists, it is truncated to zero-length.
-		 *
-		 * ATTRIB:
-		 * | Bit         | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
-		 * | Description | S | - | A | D | V | S | H | R |
-		 * 7 - S = Shareable
-		 *     A = Archive
-		 *     D = Directory
-		 *     V = Volume label
-		 *     S = System
-		 *     H = Hidden
-		 * 0 - R = Read-only
+		 * 3Ch - Create or truncate file
 		 */
 		case 0x3C:
 
 			break;
 		/*
-		 * 3Dh - Open file.
-		 * Input:
-		 *   AL (Access and sharing modes)
-		 *   DS:DX (ASCIZ path)
-		 * Return:
-		 *   CF clear if successful (AX = File handle)
-		 *   CF set on error (AX = error code (01h,02h,03h,04h,05h,0Ch,56h))
-		 *
-		 * Notes:
-		 * - File pointer is set to start of file.
-		 * - File handles which are inherited from a parent also inherit
-		 *     sharing and access restrictions.
-		 * - Files may be opened even if given the hidden or system attributes.
+		 * 3Dh - Open file
 		 */
 		case 0x3D:
 
 			break;
 		/*
-		 * 3Eh - Close file.
-		 * Input: BX (File handle)
-		 * Return:
-		 *   CF clear if successful (AX = File handle)
-		 *   CF set on error (AX = error code (06h))
-		 *
-		 * Notes:
-		 * - If the file was written to, any pending disk writes are performed,
-		 *     the time and date stamps are set to the current time, and the
-		 *     directory entry is updated.
+		 * 3Eh - Close file
 		 */
 		case 0x3E:
 
 			break;
 		/*
-		 * 3Fh - Read from file or device.
-		 * Input:
-		 *   BX (File handle)
-		 *   CX (Number of bytes to read)
-		 *   DS:DX (Points to buffer)
-		 * Return:
-		 *   CF clear if successful (AX = bytes read)
-		 *   CF set on error (AX = error code (05h,06h))
-		 *
-		 * Notes:
-		 * - Data is read beginning at current file position, and the file
-		 *     position is updated after a successful read.
-		 * - The returned AX may be smaller than the request in CX if a
-		 *     partial read occurred.
-		 * - If reading from CON, read stops at first CR.
+		 * 3Fh - Read from file or device
 		 */
 		case 0x3F:
 
 			break;
 		/*
-		 * 40h - Write to file or device.
-		 * Input:
-		 *   BX (File handle)
-		 *   CX (Number of bytes to write)
-		 *   DS:DX (Points to buffer)
-		 * Return:
-		 *   CF clear if successful (AX = bytes read)
-		 *   CF set on error (AX = error code (05h,06h))
-		 *
-		 * Notes:
-		 * - If CX is zero, no data is written, and the file is truncated or
-		 *     extended to the current position.
-		 * - Data is written beginning at the current file position, and the
-		 *     file position is updated after a successful write.
-		 * - The usual cause for AX < CX on return is a full disk.
+		 * 40h - Write to file or device
 		 */
 		case 0x40:
 
 			break;
 		/*
-		 * 41h - Delete file.
-		 * Input:
-		 *   DS:DX (ASCIZ path)
-		 *   CL (Attribute mask)
-		 * Return:
-		 *   CF clear if successful (AX = 0, AL seems to be drive number)
-		 *   CF set on error (AX = error code (2, 3, 5))
-		 *
-		 * Notes:
-		 * - (DOS 3.1+) wildcards are allowed if invoked via AX=5D00h, in
-		 *     which case the filespec must be canonical (as returned by
-		 *     AH=60h), and only files matching the attribute mask in CL are
-		 *     deleted.
-		 * - DOS does not erase the file's data; it merely becomes inaccessible
-		 *     because the FAT chain for the file is cleared.
-		 * - Deleting a file which is currently open may lead to filesystem
-		 *     corruption.
+		 * 41h - Delete file
 		 */
 		case 0x41:
 
 			break;
 		/*
-		 * 42h - Set current file position.
-		 * Input:
-		 *   AL (0 = SEEK_SET, 1 = SEEK_CUR, 2 = SEEK_END)
-		 *   BX (File handle)
-		 *   CX:DX (File origin offset)
-		 * Return:
-		 *   CF clear if successful (DX:AX = New position (from start))
-		 *   CF set on error (AX = error code (1, 6))
-		 *
-		 * Notes:
-		 * - For origins 01h and 02h, the pointer may be positioned before the
-		 *     start of the file; no error is returned in that case, but
-		 *     subsequent attempts at I/O will produce errors.
-		 * - If the new position is beyond the current end of file, the file
-		 *     will be extended by the next write (see AH=40h).
+		 * 42h - Set current file position
 		 */
 		case 0x42:
 
 			break;
 		/*
-		 * 43h - Get or set file attributes.
-		 * Input:
-		 *   AL (00 for getting, 01 for setting)
-		 *   CX (New attributes if setting, see ATTRIB in 3Ch)
-		 *   DS:DX (ASCIZ path)
-		 * Return:
-		 *   CF cleared if successful (CX=File attributes on getting, AX=0 on setting)
-		 *   CF set on error (AX = error code (01h,02h,03h,05h))
-		 *
-		 * Bugs:
-		 * - Windows for Workgroups returns error code 05h (access denied)
-		 *     instead of error code 02h (file not found) when attempting to
-		 *     get the attributes of a nonexistent file.
-		 *
-		 * Notes:
-		 * - Setting will not change volume label or directory attribute bits,
-		 *     but will change the other attribute bits of a directory.
-		 * - MS-DOS 4.01 reportedly closes the file if it is currently open.
+		 * 43h - Get or set file attributes
 		 */
 		case 0x43:
 
 			break;
 		/*
-		 * 47h - Get current working directory.
-		 * Input:
-		 *   DL (Drive number, 0 = Default, 1 = A:, etc.)
-		 *   DS:DI (Pointer to 64-byte buffer for ASCIZ path)
-		 * Return:
-		 *   CF cleared if successful
-		 *   CF set on error code (AX = error code (Fh))
-		 *
-		 * Notes:
-		 * - The returned path does not include a drive or the initial
-		 *     backslash
-		 * - Many Microsoft products for Windows rely on AX being 0100h on
-		 *     success.
+		 * 47h - Get current working directory
 		 */
 		case 0x47:
 
 			break;
 		/*
 		 * 4Ah - Resize memory block
-		 * Input:
-		 *   BX (New size in paragraphs)
-		 *   ES (Segment of block to resize)
-		 * Return: 
-		 *   CF set on error, otherwise cleared
-		 *   AX error code (07h,08h,09h)
-		 *   BX (Maximum paragraphs available for specified memory block)
-		 *
-		 * Notes:
-		 * - Notes: Under DOS 2.1 to 6.0, if there is insufficient memory to
-		 *     expand the block as much as requested, the block will be made
-		 *     as large as possible. DOS 2.1-6.0 coalesces any free blocks
-		 *     immediately following the block to be resized.
 		 */
 		case 0x4A:
 
 			break;
 		/*
 		 * 4Bh - Load/execute program
-		 * Input:
-		 *   AL (see LOADTYPE)
-		 *   DS:DX (ASCIZ path)
-		 *   ES:BX (parameter block)
-		 *   CX (Mode, only for AL=04h)
-		 * Return:
-		 *   CF set on error, or cleared
-		 *   AX (error code (See codes.d))
-		 *   BX and DX destroyed
 		 */
 		case 0x4B: {
 			switch (AL) {
@@ -1201,85 +796,31 @@ void Raise(ubyte code) {
 		}
 			break;
 		/*
-		 * 4Ch - Terminate with return code.
-		 * Input: AL (Return code)
-		 * Return: None. (Never returns)
-		 *
-		 * Notes:
-		 * - Unless the process is its own parent, all open files are closed
-		 *     and all memory belonging to the process is freed.
+		 * 4Ch - Terminate with return code
 		 */
 		case 0x4C:
 			--RLEVEL;
 			break;
 		/*
 		 * 4Dh - Get return code. (ERRORLEVEL)
-		 * Input: None
-		 * Return:
-		 *   AH (Termination type*)
-		 *   AL (Code)
-		 *
-		 * *00 = Normal, 01 = Control-C Abort, 02h = Critical Error Abort,
-		 *   03h Terminate and stay resident.
-		 *
-		 * Notes:
-		 * - The word in which DOS stores the return code is cleared after
-		 *     being read by this function, so the return code can only be
-		 *     retrieved once.
-		 * - COMMAND.COM stores the return code of the last external command
-		 *     it executed as ERRORLEVEL.
 		 */
 		case 0x4D:
 			
 			break;
 		/*
-		 * 54h - Get verify flag.
-		 * Input: None.
-		 * Return:
-		 *   AL (0 = off, 1 = on)
+		 * 54h - Get verify flag
 		 */
 		case 0x54:
 
 			break;
 		/*
-		 * 56h - Rename file or directory.
-		 * Input:
-		 *   DS:DX (ASCIZ path)
-		 *   ES:DI (ASCIZ new name)
-		 *   CL (Attribute mask, server call only)
-		 * Return:
-		 *   CF cleared if successful
-		 *   CF set on error (AX = error code (02h,03h,05h,11h))
-		 *
-		 * Notes:
-		 * - Allows move between directories on same logical volume.
-		 * - This function does not set the archive attribute.
-		 * - Open files should not be renamed.
-		 * - (DOS 3.0+) allows renaming of directories.
+		 * 56h - Rename file or directory
 		 */
 		case 0x56:
 
 			break;
 		/*
-		 * 57h - Get or set file's last-written time and date.
-		 * Input:
-		 *   AL (0 = get, 1 = set)
-		 *   BX (File handle)
-		 *   CX (New time (set), see TIME)
-		 *   DX (New date (set), see DATE)
-		 * Return (get):
-		 *   CF clear if successful (CX = file's time, DX = file's date)
-		 *   CF set on error (AX = error code (01h,06h))
-		 * Return (set):
-		 *   CF cleared if successful
-		 *   CF set on error (AX = error code (01h,06h))
-		 *
-		 * TIME:
-		 * | Bits        | 15-11 | 10-5    | 4-0     |
-		 * | Description | hours | minutes | seconds |
-		 * DATE:
-		 * | Bits        | 15-9         | 8-5   | 4-0 |
-		 * | Description | year (1980-) | month | day |
+		 * 57h - Get or set file's last-written time and date
 		 */
 		case 0x57:
 
@@ -1296,8 +837,8 @@ void Raise(ubyte code) {
 	default: break;
 	}
 
-	IP = pop;
+	/*IP = pop;
 	CS = pop;
 	IF = TF = 1;
-	FLAG = pop;
+	FLAG = pop;*/
 }

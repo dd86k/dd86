@@ -32,9 +32,9 @@ private enum {
 int ExecLoad(char* path) {
 	FILE* f = fopen(path, "rb"); /// file handle
 	fseek(f, 0, SEEK_END);
-	int fsize = cast(int)ftell(f); // who the hell would have a >2G exec to run in DOS
+	int fsize = ftell(f); // who the hell would have a >2G exec to run in DOS
 
-	debug printf("[dbug] File size: %d\n", fsize);
+	debug printf("[....] File size: %d\n", fsize);
 
 	if (fsize == 0) {
 		fclose(f);
@@ -49,7 +49,7 @@ int ExecLoad(char* path) {
 
 	switch (sig) {
 	case MZ_MAGIC: // Party time!
-		info("LOADING MZ");
+		info("LOAD MZ");
 
 		// ** Header is read for initial register values
 		__gshared mz_hdr mzh = void; /// MZ header structure variable
@@ -57,7 +57,7 @@ int ExecLoad(char* path) {
 		CS = 0x1000; IP = 0x1000; // Temporary!
 		CS = cast(ushort)(CS + mzh.e_cs); // Relative
 		IP = mzh.e_ip;
-		EIP = get_ip;
+		//EIP = get_ip;
 
 		// ** Copy code section from exe into memory
 		/*if (mzh.e_minalloc && mzh.e_maxalloc) { // Low memory
@@ -146,7 +146,7 @@ int ExecLoad(char* path) {
 			AL = E_BAD_FORMAT; //TODO: Verify code
 			return E_BAD_FORMAT;
 		}
-		info("LOADING COM");
+		info("LOAD COM");
 
 		fseek(f, 0, SEEK_SET);
 		fread(MEMORY_P + get_ip, fsize, 1, f);

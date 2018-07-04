@@ -6,7 +6,7 @@ unittest
 	import core.stdc.string : memset;
 	section("Interpreter (vcpu.d) -- 8086");
 
-	init;
+	vcpu_init;
 	CS = 0;
 	EIP = get_ip;
 

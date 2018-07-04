@@ -4,9 +4,8 @@
 
 import core.stdc.stdio;
 import core.stdc.string : strcmp;
-import vdos : APP_VERSION, BANNER, EnterShell;
-import vdos_codes;
-import vcpu : vcpu_init, vcpu_run, opt_sleep;
+import vdos, vdos_codes;
+import vcpu;
 import vdos_loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;
@@ -68,7 +67,7 @@ private int main(int argc, char** argv) {
 				}
 
 				printf("Unknown parameter: --%s\n", a);
-				return 1;
+				return E_INVALID_FUNCTION;
 			} else if (**argv == '-') { // short arguments
 				char* a = *argv;
 				while (*++a) {
@@ -104,7 +103,7 @@ private int main(int argc, char** argv) {
 		return E_INVALID_FUNCTION;
 	}
 
-	if (!opt_sleep)
+	if (opt_sleep == 0)
 		info("-- SLEEP MODE OFF");
 
 	if (arg_banner)
@@ -123,6 +122,7 @@ private int main(int argc, char** argv) {
 
 	if (cast(int)prog) {
 		if (pexist(prog)) {
+			CS = 0x400;
 			if (ExecLoad(prog)) {
 				puts("E: Could not load executable");
 				return PANIC_FILE_NOT_LOADED;

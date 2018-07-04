@@ -7,17 +7,14 @@
 
 module vcpu;
 
-import core.stdc.stdlib : exit; // Temporary
 import core.stdc.stdio : printf, puts;
 import vdos, utils_vcpu;
 import Logger; // crit and logexec
 
-/// Initial and maximum amount of memory if not specified in settings.
-enum INIT_MEM = 0x4_0000;
-// 0x4_0000    256K -- MS-DOS minimum
-// 0xA_0000    640K
-// 0x10_0000  1024K
-// 0x20_0000  2048K
+/*enum CPU_MODE : ubyte {
+	i8086,
+	i486
+}*/
 
 /// Initiate interpreter
 extern (C)
@@ -38,17 +35,16 @@ void vcpu_init() {
 	BLp = cast(ubyte*)BXp;
 	CLp = cast(ubyte*)CXp;
 	DLp = cast(ubyte*)DXp;
-
-	IP = 0x100; // Temporary, should be FFFFh
-	CS = 0x100; // Temporary
+	
+	//CS = 0xFFFF;
 }
 
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
 void vcpu_run() {
-	info("vcpu::run");
+	info("CALL vcpu_run");
 	while (RLEVEL > 0) {
-		EIP = get_ip; // _Very important_ to pre-calculate CS:IP into EIP
+		EIP = get_ip; // CS:IP->EIP (important)
 		debug logexec(CS, IP, MEMORY[EIP]);
 		exec(MEMORY[EIP]);
 		//if (cpu_sleep) SLEEP;
@@ -59,22 +55,23 @@ void vcpu_run() {
  * Runnning level.
  * Used to determine the "level of execution", such as the
  * "deepness" of a program. When a program terminates, its ERRORLEVEL is decreased.
- * If ERRORLEVEL reaches 0, the emulator either stops, or returns to the virtual
- * shell. Starts at 1.
+ * If RLEVEL reaches 0, the emulator either stops, or returns to the virtual shell.
  * tl;dr: Emulates CALLs
  */
 __gshared short RLEVEL = 1;
 /// If set, the vcpu sleeps between cycles
 __gshared ubyte opt_sleep = 1;
 
+/// Initial and maximum amount of memory if not specified in settings.
+enum INIT_MEM = 0x4_0000;
+// 0x4_0000    256K -- MS-DOS minimum
+// 0xA_0000    640K
+// 0x10_0000  1024K
+// 0x20_0000  2048K
+
 enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer to avoid typing cast() everytime
 __gshared ubyte[INIT_MEM] MEMORY; /// Main memory bank
 __gshared size_t MEMORYSIZE = INIT_MEM; /// Current memory MEMORY size
-
-enum CPU_MODE : ubyte {
-	i8086,
-	i486
-}
 
 /**
  * Get memory address out of a segment and a register value.
@@ -101,7 +98,7 @@ uint get_ip() {
 
 /// RESET instruction function
 extern (C)
-void reset() {
+private void reset() {
 	OF = DF = IF = TF = SF =
 		ZF = AF = PF = CF = 0;
 	CS = 0xFFFF;
