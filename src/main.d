@@ -7,7 +7,7 @@ import core.stdc.string : strcmp;
 import vdos : APP_VERSION, BANNER, EnterShell;
 import vdos_codes;
 import vcpu : vcpu_init, vcpu_run, opt_sleep;
-import Loader : ExecLoad;
+import vdos_loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;
 import utils_os : pexist;

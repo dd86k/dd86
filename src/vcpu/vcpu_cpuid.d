@@ -1,7 +1,7 @@
 /*
- * cpuid.d: i486DX CPUID instruction handler
+ * vcpu_cpuid.d: i486DX CPUID instruction handler
  */
 
-module cpuid;
+module vcpu_cpuid;
 
 // switch expected here

@@ -7,7 +7,7 @@ module vdos;
 import core.stdc.stdio : printf, puts, fputs, fgets, stdin, stdout;
 import core.stdc.string : strcmp, strncpy, strlen;
 import core.stdc.stdlib : malloc, free;
-import Loader : ExecLoad;
+import vdos_loader : ExecLoad;
 import vcpu, ddcon, Logger, vdos_codes, utils, utils_os, ddc;
 
 debug {

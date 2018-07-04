@@ -1,8 +1,8 @@
 /*
- * Loader.d: Executable file loader. Should somewhat be like EXEC.
+ * vdos_loader.d: Executable file loader. Should somewhat be like EXEC.
  */
 
-module Loader;
+module vdos_loader;
 
 import core.stdc.stdio;
 import core.stdc.stdlib : malloc, free;
