@@ -6,36 +6,10 @@ module Loader;
 
 import core.stdc.stdio;
 import core.stdc.stdlib : malloc, free;
-import vdos, vcpu, utils_vcpu, Logger;
-import Codes;
-
-private enum ERESWDS = 16; /// RESERVED WORDS
-
-/// MS-DOS EXE header structure
-private struct mz_hdr { align(1):
-//	ushort e_magic;        /// Magic number, "MZ"
-	ushort e_cblp;         /// Bytes on last page of file (extra bytes), 9 bits
-	ushort e_cp;           /// Pages in file
-	ushort e_crlc;         /// Number of relocation entries
-	ushort e_cparh;        /// Size of header in paragraphs (usually 32 (512B))
-	ushort e_minalloc;     /// Minimum extra paragraphs needed
-	ushort e_maxalloc;     /// Maximum extra paragraphs needed
-	ushort e_ss;           /// Initial (relative) SS value
-	ushort e_sp;           /// Initial SP value
-	ushort e_csum;         /// Checksum, ignored
-	ushort e_ip;           /// Initial IP value
-	ushort e_cs;           /// Initial (relative) CS value
-	ushort e_lfarlc;       /// File address (byte offset) of relocation table
-	ushort e_ovno;         /// Overlay number
-	ushort[ERESWDS] e_res; /// Reserved words
-	uint   e_lfanew;       /// File address of new exe header
-}
-
-/// MS_DOS EXE Relocation structure
-private struct mz_rlc { align(1): // For AL=03h
-	ushort offset; /// Offset
-	ushort segment; /// Segment of relocation
-}
+import vdos_codes, Logger;
+import vcpu, utils_vcpu;
+import vdos, vdos_structs;
+import ddc : NULL_CHAR;
 
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;
@@ -43,7 +17,7 @@ private enum MZ_MAGIC = 0x5A4D;
 private enum {
 	PARAGRAPH = 16, /// Size of a paragraph (16B)
 	PAGE = 512, /// Size of a page (512B)
-	SEG_SIZE = 64 * 1024, /// i8086 maximum code size (64K)
+	SEG_SIZE = 64 * 1024, /// i8086 max linear address size (64K)
 }
 
 /**
@@ -69,7 +43,7 @@ int ExecLoad(char* path) {
 		return E_BAD_FORMAT;
 	}
 
-	__gshared ushort sig = void; /// signature
+	__gshared ushort sig = void; /// Header signature
 	fseek(f, 0, SEEK_SET);
 	fread(&sig, 2, 1, f);
 
@@ -112,7 +86,7 @@ int ExecLoad(char* path) {
 		}
 
 		fseek(f, codebase, SEEK_SET); // Seek to start of first code segment
-		fread(cast(ubyte*)MEMORY + get_ip, csize, 1, f); // read code segment into MEMORY at CS:IP
+		fread(MEMORY_P + get_ip, csize, 1, f); // read code segment into MEMORY at CS:IP
 
 		// ** Read relocation table and adjust far pointers in memory
 		if (mzh.e_crlc) {
@@ -175,7 +149,7 @@ int ExecLoad(char* path) {
 		info("LOADING COM");
 
 		fseek(f, 0, SEEK_SET);
-		fread(cast(ubyte*)MEMORY + get_ip, fsize, 1, f);
+		fread(MEMORY_P + get_ip, fsize, 1, f);
 
 		//MakePSP(_comp - 0x100, "TEST");
 		AL = 0;
@@ -183,5 +157,21 @@ int ExecLoad(char* path) {
 	}
 
 	fclose(f);
+	return 0;
+}
+
+/**
+ * Create a PSP in MEMORY at get_ip:-100h with an optional filename
+ *
+ * Params: path = Path placed in PSP for command-line
+ * Returns: 0 on success
+ */
+private
+extern (C)
+int MakePSP(immutable(char)* path = NULL_CHAR) { //TODO: Consider default "NULL"
+	PSP* psp = cast(PSP*)(MEMORY_P + get_ip - 0x100);
+
+	psp.version_ = MajorVersion << 8 | MinorVersion; // temporary until union
+
 	return 0;
 }

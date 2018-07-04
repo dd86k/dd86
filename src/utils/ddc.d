@@ -4,9 +4,13 @@
  * Why? Because some functions are externed as (D) in core.stdc, which does not
  * mangle well with the linker (D mangles for C externs, really?!). This source
  * is also the beginning of the departure of the standard D library (core.stdc).
+ *
+ * This also adds some enumerations and aliases to aid development.
  */
 
 module ddc;
+
+enum NULL_CHAR = cast(char*)0; /// Null character pointer
 
 extern (C) void putchar(int);
 

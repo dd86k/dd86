@@ -10,6 +10,7 @@ import Loader : ExecLoad;
 import Logger;
 import ddcon : InitConsole;
 import utils_os : pexist;
+import vdos_codes;
 
 extern (C)
 private void _version() {
@@ -26,7 +27,7 @@ dd86k -- Original author and developer
 }
 
 extern (C)
-void help() {
+private void help() {
 	puts(
 `A DOS virtual machine and emulation layer
 USAGE
@@ -44,13 +45,13 @@ OPTIONS
 
 extern (C)
 private int main(int argc, char** argv) {
-	__gshared byte args = 1;
-	__gshared byte arg_banner = 1;
-	__gshared char* prog; /// FILE, COM or EXE to start
-//	__gshared char* args; /// FILEARGS, MUST not be over 127 characters
-//	__gshared size_t arg_i; /// Argument length incrementor
+	byte args = 1;
+	byte arg_banner = 1;
+	char* prog; /// FILE, COM or EXE to start
+//	char* args; /// FILEARGS, MUST not be over 127 characters
+//	size_t arg_i; /// Argument length incrementor
 
-	// CLI
+	// Pre-boot / CLI
 
 	while (--argc >= 1) {
 		++argv;
@@ -80,7 +81,7 @@ private int main(int argc, char** argv) {
 					case 'V': _version; return 0;
 					default:
 						printf("Invalid parameter: -%c\n", *a);
-						return 1;
+						return E_INVALID_FUNCTION;
 					}
 				}
 				continue;
@@ -93,8 +94,6 @@ private int main(int argc, char** argv) {
 		//      Don't forget to null it after while loop, keep arg_i updated
 	}
 
-	// Pre-boot
-
 	switch (Verbose) {
 	case LOG_SILENCE, LOG_CRIT, LOG_ERROR: break;
 	case LOG_WARN: info("-- Log level: LOG_WARN"); break;
@@ -102,7 +101,7 @@ private int main(int argc, char** argv) {
 	case LOG_DEBUG: info("-- Log level: LOG_DEBUG"); break;
 	default:
 		printf("E: Unknown log level: %d\n", Verbose);
-		return 1;
+		return E_INVALID_FUNCTION;
 	}
 
 	if (!cpu_sleep)
@@ -111,10 +110,11 @@ private int main(int argc, char** argv) {
 	if (arg_banner)
 		puts("DD-DOS is starting...");
 
-	// Initiating
+	// Initiation
 
 	InitConsole; // ddcon
-	init; // dd-dos
+	init; // vcpu
+	//vdos_init; // vdos
 
 	// DD-DOS
 
@@ -125,12 +125,12 @@ private int main(int argc, char** argv) {
 		if (pexist(prog)) {
 			if (ExecLoad(prog)) {
 				puts("E: Could not load executable");
-				return 3;
+				return PANIC_FILE_NOT_LOADED;
 			}
 			run;
 		} else {
 			puts("E: File not found or loaded");
-			return 2;
+			return E_FILE_NOT_FOUND;
 		}
 	} else EnterShell;
 

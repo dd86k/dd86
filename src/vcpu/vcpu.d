@@ -47,7 +47,7 @@ void init() {
 extern (C)
 void run() {
 	info("vcpu::run");
-	while (RLEVEL > 0) {
+	while (ERRORLEVEL > 0) {
 		EIP = get_ip; // _Very important_ to pre-calculate CS:IP into EIP
 		debug logexec(CS, IP, MEMORY[EIP]);
 		exec(MEMORY[EIP]);
@@ -58,19 +58,18 @@ void run() {
 /**
  * Runnning level.
  * Used to determine the "level of execution", such as the
- * "deepness" of a program. When a program terminates, its RLEVEL is decreased.
- * If RLEVEL reaches 0, the emulator either stops, or returns to the virtual
+ * "deepness" of a program. When a program terminates, its ERRORLEVEL is decreased.
+ * If ERRORLEVEL reaches 0, the emulator either stops, or returns to the virtual
  * shell. Starts at 1.
  * tl;dr: Emulates CALLs
  */
-__gshared short RLEVEL = 1;
+__gshared short ERRORLEVEL = 1;
 /// If set, the vcpu sleeps for this amount of time in hecto-seconds
 __gshared ubyte cpu_sleep = 1;
 
-/// Main memory brank. MEMORYSIZE's default: INIT_MEM
-__gshared ubyte[INIT_MEM] MEMORY; // It's planned to move to a malloc
-/// Current memory MEMORY size. Default: INIT_MEM
-__gshared size_t MEMORYSIZE = INIT_MEM;
+enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer to avoid typing cast() everytime
+__gshared ubyte[INIT_MEM] MEMORY; /// Main memory bank
+__gshared size_t MEMORYSIZE = INIT_MEM; /// Current memory MEMORY size
 
 enum CPU_MODE : ubyte {
 	i8086,

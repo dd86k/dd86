@@ -6,6 +6,47 @@ module utils;
 
 import vcpu : MEMORY, MEMORYSIZE;
 import core.stdc.string : strlen;
+import core.stdc.stdlib : malloc;
+import core.stdc.string : strcmp, strncpy, strlen;
+
+/**
+ * CLI argument splitter, supports quoting.
+ * This function use multiple malloc calls, which must be freed by the caller.
+ * Params:
+ *   t = User input
+ *   argv = argument vector buffer
+ * Returns: argument vector string array
+ * Notes: Original function by Nuke928. Modified by dd86k.
+ */
+extern (C)
+int sargs(const char* t, char** argv) {
+	int j, a;
+
+	size_t sl = strlen(t);
+
+	for (int i = 0; i <= sl; ++i) {
+		if (t[i] == 0 || t[i] == ' ' || t[i] == '\n') {
+			argv[a] = cast(char*)malloc(i - j + 1);
+			strncpy(argv[a], t + j, i - j);
+			argv[a][i - j] = 0;
+			while (t[i + 1] == ' ') ++i;
+			j = i + 1;
+			++a;
+		} else if (t[i] == '\"') {
+			j = ++i;
+			while (t[i] != '\"' && t[i] != 0) ++i;
+			if (t[i] == 0) continue;
+			argv[a] = cast(char*)malloc(i - j + 1);
+			strncpy(argv[a], t + j, i - j);
+			argv[a][i - j] = 0;
+			while(t[i + 1] == ' ') ++i;
+			j = ++i;
+			++a;
+		}
+	}
+
+	return --a;
+}
 
 /**
  * Fetches a string from MEMORY.

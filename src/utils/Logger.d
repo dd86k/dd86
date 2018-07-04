@@ -2,7 +2,7 @@ module Logger;
 
 import core.stdc.stdio : printf;
 
-import Codes;
+import vdos_codes;
 
 enum {
 	LOG_SILENCE = 0, /// Complete silence

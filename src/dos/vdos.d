@@ -8,7 +8,7 @@ import core.stdc.stdio : printf, puts, fputs, fgets, stdin, stdout;
 import core.stdc.string : strcmp, strncpy, strlen;
 import core.stdc.stdlib : malloc, free;
 import Loader : ExecLoad;
-import vcpu, ddcon, Logger, Codes, utils, utils_os, ddc;
+import vcpu, ddcon, Logger, vdos_codes, utils, utils_os, ddc;
 
 debug {
 pragma(msg, `
@@ -16,9 +16,9 @@ pragma(msg, `
 | DEBUG BUILD |
 +-------------+
 `);
-enum BUILD_TYPE = "DEBUG"; /// For printing purposes
+	enum BUILD_TYPE = "DEBUG"; /// For printing purposes
 } else {
-enum BUILD_TYPE = "RELEASE"; /// For printing purposes
+	enum BUILD_TYPE = "RELEASE"; /// For printing purposes
 }
 
 pragma(msg, "Compiling DD-DOS ", APP_VERSION);
@@ -65,10 +65,12 @@ enum OEM_ID { // Used for INT 21h AH=30 so far.
 	IBM, Compaq, MSPackagedProduct, ATnT, ZDS
 }
 
-enum DOS_MAJOR_VERSION = 5, /// Default major DOS version
+enum
+	DOS_MAJOR_VERSION = 5, /// Default major DOS version
 	DOS_MINOR_VERSION = 0; /// Default minor DOS version
 
-__gshared ubyte MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
+__gshared ubyte
+	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
 	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
 
 /// File/Folder attribute. See INT 21h AH=3Ch
@@ -85,45 +87,6 @@ enum
 // While maximum in MS-DOS 5.0 seems to be 127, 255 feels like a little more
 // breathable
 enum _BUFS = 255;
-
-/**
- * CLI argument splitter, supports quoting.
- * This function use multiple malloc calls, which must be freed by the caller.
- * Params:
- *   t = User input
- *   argv = argument vector buffer
- * Returns: argument vector string array
- * Notes: Original function by Nuke928. Modified by dd86k.
- */
-extern (C)
-int sargs(const char* t, char** argv) {
-	int j, a;
-
-	size_t sl = strlen(t);
-
-	for (int i = 0; i <= sl; ++i) {
-		if (t[i] == 0 || t[i] == ' ' || t[i] == '\n') {
-			argv[a] = cast(char*)malloc(i - j + 1);
-			strncpy(argv[a], t + j, i - j);
-			argv[a][i - j] = 0;
-			while (t[i + 1] == ' ') ++i;
-			j = i + 1;
-			++a;
-		} else if (t[i] == '\"') {
-			j = ++i;
-			while (t[i] != '\"' && t[i] != 0) ++i;
-			if (t[i] == 0) continue;
-			argv[a] = cast(char*)malloc(i - j + 1);
-			strncpy(argv[a], t + j, i - j);
-			argv[a][i - j] = 0;
-			while(t[i + 1] == ' ') ++i;
-			j = ++i;
-			++a;
-		}
-	}
-
-	return --a;
-}
 
 /**
  * Enter virtual shell (vDOS)
@@ -1247,7 +1210,7 @@ void Raise(ubyte code) {
 		 *     and all memory belonging to the process is freed.
 		 */
 		case 0x4C:
-			--RLEVEL;
+			--ERRORLEVEL;
 			break;
 		/*
 		 * 4Dh - Get return code. (ERRORLEVEL)

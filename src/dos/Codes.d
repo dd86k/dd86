@@ -1,13 +1,14 @@
 /*
- * codes.d: Error codes used for vDOS and DD-DOS. Mostly extracted from DOSSYM.ASM
+ * codes.d: Error codes used for vDOS, DD-DOS, and the CLI.
  */
 
-module Codes;
+module vdos_codes;
 
 /*
- * DOS
+ * DOS error codes
+ * Prefix: E_
+ * Source: DOSSYM.ASM (MS-DOS 2.0 source)
  */
-
 enum : ubyte {
 	E_NONE                  = 0,
 	E_INVALID_FUNCTION      = 1,
@@ -32,10 +33,11 @@ enum : ubyte {
 
 /*
  * DD-DOS Critical Error Codes
+ * Prefix: PANIC_
+ * Source: DD-DOS Technical Reference Manual 2018.1
  */
-
 enum : ushort {
-	PANIC_UNKNOWN = 0xFF,
-
-	PANIC_MANUAL = 0xDEAD,
+	PANIC_FILE_NOT_LOADED	= 0x03,
+	PANIC_UNKNOWN	= 0xFF,
+	PANIC_MANUAL	= 0xDEAD,
 }
