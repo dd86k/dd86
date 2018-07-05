@@ -35,7 +35,7 @@ void vcpu_init() {
 	BLp = cast(ubyte*)BXp;
 	CLp = cast(ubyte*)CXp;
 	DLp = cast(ubyte*)DXp;
-	
+
 	//CS = 0xFFFF;
 }
 
@@ -66,7 +66,7 @@ __gshared ubyte opt_sleep = 1;
 enum INIT_MEM = 0x4_0000;
 // 0x4_0000    256K -- MS-DOS minimum
 // 0xA_0000    640K
-// 0x10_0000  1024K
+// 0x10_0000  1024K -- Recommended
 // 0x20_0000  2048K
 
 enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer to avoid typing cast() everytime

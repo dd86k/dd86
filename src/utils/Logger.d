@@ -17,7 +17,7 @@ enum {
 debug
 public __gshared ubyte Verbose = LOG_DEBUG;
 else
-public __gshared ubyte Verbose = LOG_ERROR;
+public __gshared ubyte Verbose = LOG_SILENCE;
 
 //TODO: Figure out template to avoid re-typing debug everytime
 debug void _debug(immutable(char)* msg) {

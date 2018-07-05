@@ -405,12 +405,10 @@ void Raise(ubyte code) {
 
 	// REAL-MODE
 	//const inum = code << 2;
-	/*
-	IF (inum + 3 > IDT limit)
+	/*IF (inum + 3 > IDT limit)
 		#GP
 	IF stack not large enough for a 6-byte return information
-		#SS
-	*/
+		#SS*/
 	/*push(FLAG);
 	IF = TF = 0;
 	push(CS);
@@ -418,9 +416,6 @@ void Raise(ubyte code) {
 	//CS ← IDT[inum].selector;
 	//IP ← IDT[inum].offset;
 
-	// http://www.ctyme.com/intr/int.htm
-	// http://www.shsu.edu/csc_tjm/spring2001/cs272/interrupt.html
-	// http://spike.scu.edu.au/~barry/interrupts.html
 	switch (code) {
 	case 0x10: // VIDEO
 		switch (AH) {

@@ -151,7 +151,7 @@ int ExecLoad(char* path) {
 		fseek(f, 0, SEEK_SET);
 		fread(MEMORY_P + get_ip, fsize, 1, f);
 
-		//MakePSP(_comp - 0x100, "TEST");
+		MakePSP;
 		AL = 0;
 		break; // default (COM)
 	}
