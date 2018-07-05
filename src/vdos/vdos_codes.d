@@ -39,5 +39,6 @@ enum : ubyte {
 enum : ushort {
 	PANIC_FILE_NOT_LOADED	= 0x03,
 	PANIC_UNKNOWN	= 0xFF,
+	PANIC_MEMORY_ACCESS	= 0x100,
 	PANIC_MANUAL	= 0xDEAD,
 }

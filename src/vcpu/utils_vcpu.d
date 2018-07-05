@@ -9,6 +9,7 @@ import core.stdc.string : memcpy, strcpy;
 import core.stdc.wchar_ : wchar_t, wcscpy;
 import vcpu;
 import Logger;
+import vdos_codes : PANIC_MEMORY_ACCESS;
 
 /**
  * Get effective address from a R/M byte.
@@ -290,7 +291,7 @@ void __hflag16_4(int r) {
 extern (C)
 pragma(inline, true)
 void __iu8(int op, int addr) {
-	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iu8");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iu8", PANIC_MEMORY_ACCESS);
 	MEMORY[addr] = cast(ubyte)op;
 }
 
@@ -302,7 +303,7 @@ void __iu8(int op, int addr) {
  */
 extern (C)
 void __iu16(int data, int addr) {
-	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iu16");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iu16", PANIC_MEMORY_ACCESS);
 	*cast(ushort*)(cast(void*)MEMORY + addr) = cast(ushort)data;
 }
 
@@ -314,7 +315,7 @@ void __iu16(int data, int addr) {
  */
 extern (C)
 void __iu32(uint op, int addr) {
-	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iu32");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iu32", PANIC_MEMORY_ACCESS);
 	*cast(uint*)(cast(void*)MEMORY + addr) = op;
 }
 
@@ -327,7 +328,7 @@ void __iu32(uint op, int addr) {
  */
 extern (C)
 void __iarr(void* ops, size_t size, size_t addr) {
-	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iarr");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iarr", PANIC_MEMORY_ACCESS);
 	memcpy(cast(void*)MEMORY + addr, ops, size);
 }
 
@@ -339,7 +340,7 @@ void __iarr(void* ops, size_t size, size_t addr) {
  */
 extern (C)
 void __istr(immutable(char)* data, size_t addr = EIP) {
-	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __istr");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __istr", PANIC_MEMORY_ACCESS);
 	strcpy(cast(char*)MEMORY + addr, data);
 }
 
@@ -351,7 +352,7 @@ void __istr(immutable(char)* data, size_t addr = EIP) {
  */
 extern (C)
 void __iwstr(immutable(wchar)[] data, size_t addr = EIP) {
-	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iwstr");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iwstr", PANIC_MEMORY_ACCESS);
 	wcscpy(cast(wchar_t*)(MEMORY_P + addr), cast(wchar_t*)data);
 }
 
@@ -366,7 +367,7 @@ void __iwstr(immutable(wchar)[] data, size_t addr = EIP) {
  */
 extern (C)
 ubyte __fu8(uint addr) {
-	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fu8");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fu8", PANIC_MEMORY_ACCESS);
 	return MEMORY[addr];
 }
 
@@ -377,7 +378,7 @@ ubyte __fu8(uint addr) {
  */
 extern (C)
 byte __fi8(uint addr) {
-	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fi8");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fi8", PANIC_MEMORY_ACCESS);
 	return cast(byte)MEMORY[addr];
 }
 
@@ -388,7 +389,7 @@ byte __fi8(uint addr) {
  */
 extern (C)
 ushort __fu16(uint addr) {
-	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fu16");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fu16", PANIC_MEMORY_ACCESS);
 	return *cast(ushort*)(MEMORY_P + addr);
 }
 
@@ -399,7 +400,7 @@ ushort __fu16(uint addr) {
  */
 extern (C)
 short __fi16(uint addr) {
-	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fi16");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fi16", PANIC_MEMORY_ACCESS);
 	return *cast(short*)(MEMORY_P + addr);
 }
 
@@ -410,7 +411,7 @@ short __fi16(uint addr) {
  */
 extern (C)
 uint __fu32(uint addr) {
-	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fu32");
+	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fu32", PANIC_MEMORY_ACCESS);
 	return *cast(uint*)(MEMORY_P + addr);
 }
 
@@ -425,7 +426,7 @@ uint __fu32(uint addr) {
  */
 extern (C)
 ubyte __fu8_i(int n = 0) {
-	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN__fu8_i");
+	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN__fu8_i", PANIC_MEMORY_ACCESS);
 	return MEMORY[EIP + 1 + n];
 }
 
@@ -436,7 +437,7 @@ ubyte __fu8_i(int n = 0) {
 extern (C)
 pragma(inline, true)
 byte __fi8_i(int n = 0) {
-	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fi8_i");
+	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fi8_i", PANIC_MEMORY_ACCESS);
 	return cast(byte)MEMORY[EIP + 1 + n];
 }
 
@@ -447,7 +448,7 @@ byte __fi8_i(int n = 0) {
  */
 extern (C)
 ushort __fu16_i(uint n = 0) {
-	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fu16_i");
+	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fu16_i", PANIC_MEMORY_ACCESS);
 	return *cast(ushort*)(MEMORY_P + EIP + 1 + n);
 }
 
@@ -458,7 +459,7 @@ ushort __fu16_i(uint n = 0) {
  */
 extern (C)
 short __fi16_i(uint n = 0) {
-	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fi16_i");
+	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fi16_i", PANIC_MEMORY_ACCESS);
 	return *cast(short*)(MEMORY_P + EIP + 1 + n);
 }
 

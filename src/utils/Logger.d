@@ -46,12 +46,14 @@ void warn(immutable(char)* msg) {
 /// Params: msg = Message
 void error(immutable(char)* msg) {
 	if (Verbose < LOG_ERROR) return;
-	printf("[ERR!] %s\n", msg);
+	printf("[ERR ] %s\n", msg);
 }
 
-void crit(immutable(char)* msg, ubyte code = PANIC_UNKNOWN) {
+void crit(immutable(char)* msg, ushort code = PANIC_UNKNOWN) {
 	import core.stdc.stdlib : exit;
 	import vdos : panic;
-	if (Verbose >= LOG_CRIT) panic(code);
+	//if (Verbose >= LOG_CRIT)
+	printf("[!!!!] %s\n", msg);
+	panic(code);
 	exit(code);
 }

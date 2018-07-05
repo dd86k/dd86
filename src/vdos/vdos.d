@@ -8,7 +8,8 @@ import core.stdc.stdio : printf, puts, fputs, fgets, stdin, stdout;
 import core.stdc.string : strcmp, strncpy, strlen;
 import core.stdc.stdlib : malloc, free, system;
 import vdos_loader : ExecLoad;
-import vcpu, ddcon, Logger, vdos_codes, utils, utils_os, ddc;
+import vcpu;
+import ddcon, Logger, vdos_codes, utils, utils_os, ddc;
 
 debug {
 pragma(msg, `
@@ -25,7 +26,10 @@ pragma(msg, "Compiling DD-DOS ", APP_VERSION);
 pragma(msg, "Default MS-DOS version: ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
 version (BigEndian)
-	pragma(msg, "WARNING: DD-DOS has not been tested on big-endian platforms!");
+	pragma(msg,
+`WARNING: DD-DOS has not been tested on big-endian platforms!
+You might want to run 'dub test' beforehand.
+`);
 
 version (CRuntime_Bionic) {
 	pragma(msg, "Using Bionic C Runtime");
@@ -341,11 +345,11 @@ END:	goto START;
 extern (C)
 void print_regs() {
 	printf(
-`EIP=%08X  (%04X:%04X=%08X)
+`EIP=%08X  (IP=%04X  get_ip=%08X)
 EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X
 CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X
 `,
-		EIP, CS, IP, get_ip,
+		EIP, IP, get_ip,
 		EAX, EBX, ECX, EDX,
 		CS, DS, ES, SS, SP, BP, SI, DI,
 	);
@@ -371,20 +375,26 @@ extern (C)
 void panic(ushort code,
 	immutable(char)* modname = cast(immutable(char)*)__MODULE__,
 	int line = __LINE__) {
-	enum RANGE = 22, PAD = 7;
+	enum RANGE = 60, PAD = 30, LINE = RANGE / 3;
 	printf(
 		"\n\n\n\n" ~
 		"A fatal exception occured, which DD-DOS couldn't recover.\n\n" ~
-		"STOP: %4Xh (%s@L%d)\nEXEC:",
+		"STOP: %4Xh (%s@L%d)\nEXEC:\n",
 		code, modname, line
 	);
 	int i = RANGE;
+	int l = 0;
 	ubyte* p = MEMORY_P + EIP - PAD;
 	while (--i) {
 		if (i == (RANGE - PAD - 1))
-			printf(" >%02X<", *p);
+			printf(" > %02X<", *p);
 		else
 			printf(" %02X", *p);
+		if (l == LINE) {
+			printf("\n");
+			l = 0;
+		}
+		++l;
 		++p;
 	}
 	printf("\n--\n");
@@ -795,6 +805,7 @@ void Raise(ubyte code) {
 		 */
 		case 0x4C:
 			--RLEVEL;
+			//TODO: ERRORLEVEL = AL;
 			break;
 		/*
 		 * 4Dh - Get return code. (ERRORLEVEL)

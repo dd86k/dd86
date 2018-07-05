@@ -20,6 +20,7 @@ private void _version() {
 		"Compiler: " ~ __VENDOR__ ~ " v%d\n\n" ~
 		`Credits
 dd86k -- Original author and developer
+
 `,
 		__VERSION__
 	);
@@ -38,7 +39,8 @@ OPTIONS
 	-N	Remove starting messages and banner
 	-v	Increase verbosity level
 	-V, --version  Print version screen, then exit
-	-h, --help     Print help screen, then exit`
+	-h, --help     Print help screen, then exit
+`
 	);
 }
 
@@ -111,7 +113,7 @@ private int main(int argc, char** argv) {
 
 	// Initiation
 
-	InitConsole; // ddcon
+	version (Windows) InitConsole; // ddcon
 	vcpu_init; // vcpu
 	//vdos_init; // vdos
 
@@ -122,7 +124,7 @@ private int main(int argc, char** argv) {
 
 	if (cast(int)prog) {
 		if (pexist(prog)) {
-			CS = 0x400;
+			CS = 0; IP = 0x100; // Temporary
 			if (ExecLoad(prog)) {
 				puts("E: Could not load executable");
 				return PANIC_FILE_NOT_LOADED;

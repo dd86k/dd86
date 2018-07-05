@@ -32,7 +32,8 @@ private enum {
 int ExecLoad(char* path) {
 	FILE* f = fopen(path, "rb"); /// file handle
 	fseek(f, 0, SEEK_END);
-	int fsize = ftell(f); // who the hell would have a >2G exec to run in DOS
+	// leave the cast in case of 64-bit compiles
+	int fsize = cast(int)ftell(f); // who the hell would have a >2G exec to run in DOS
 
 	debug printf("[....] File size: %d\n", fsize);
 

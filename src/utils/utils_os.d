@@ -76,8 +76,8 @@ int os_date(OSDate* osd) {
 		time_t r; time(&r);
 		const tm* s = localtime(&r);
 
-		osd.year = 1900 + s.tm_year;
-		osd.month = cast(ubyte)(++s.tm_mon);
+		osd.year = cast(ushort)(1900 + s.tm_year);
+		osd.month = cast(ubyte)(s.tm_mon + 1);
 		osd.day = cast(ubyte)s.tm_mday;
 		osd.weekday = cast(ubyte)s.tm_wday;
 	} else {

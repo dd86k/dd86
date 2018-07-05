@@ -18,7 +18,10 @@ extern (C) void putchar(int);
  * sys/stat.h
  */
 version (Posix) {
-	struct stat { align(1):
+	extern (C) int getchar();
+
+	//TODO: !! alises/enums/structs for stat_t
+	/*struct stat_t { align(1):
 		mode_t st_mode;
 		ino_t st_ino;
 		dev_t st_dev;
@@ -33,7 +36,7 @@ version (Posix) {
 		blksize_t st_blksize;
 		blkcnt_t st_blocks;
 	}
-	extern extern (C) int stat(char*, stat_t*);
-	extern extern (C) int lstat(immutable(char*) filename, stat* buf);
-	extern extern (C) int fstat(int filedesc, stat* buf);
+	extern (C) int stat(char*, stat_t*);
+	extern (C) int lstat(immutable(char*) filename, stat* buf);
+	extern (C) int fstat(int filedesc, stat* buf);*/
 }

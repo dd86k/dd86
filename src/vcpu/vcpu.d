@@ -9,6 +9,7 @@ module vcpu;
 
 import core.stdc.stdio : printf, puts;
 import vdos, utils_vcpu;
+import sleep;
 import Logger; // crit and logexec
 
 /*enum CPU_MODE : ubyte {
@@ -47,7 +48,7 @@ void vcpu_run() {
 		EIP = get_ip; // CS:IP->EIP (important)
 		debug logexec(CS, IP, MEMORY[EIP]);
 		exec(MEMORY[EIP]);
-		//if (cpu_sleep) SLEEP;
+		if (opt_sleep) SLEEP;
 	}
 }
 
@@ -68,6 +69,7 @@ enum INIT_MEM = 0x4_0000;
 // 0xA_0000    640K
 // 0x10_0000  1024K -- Recommended
 // 0x20_0000  2048K
+// 0x40_0000  4096K
 
 enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer to avoid typing cast() everytime
 __gshared ubyte[INIT_MEM] MEMORY; /// Main memory bank
@@ -984,6 +986,7 @@ void exec(ubyte op) {
 		DI = pop;
 		++EIP;
 		return;
+	// Not used
 	case 0x70: // JO            SHORT-LABEL
 		EIP += OF ? __fi8_i : 2;
 		return;
