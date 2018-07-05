@@ -7,10 +7,12 @@
 
 module vcpu;
 
-import core.stdc.stdio : printf, puts;
-import vdos, utils_vcpu;
+import core.stdc.stdio : printf, puts; // should be removed in the future
+import vcpu_config;
+import utils_vcpu;
 import sleep;
 import Logger; // crit and logexec
+import vdos : Raise; // Interrupt handler
 
 /*enum CPU_MODE : ubyte {
 	i8086,
@@ -20,6 +22,8 @@ import Logger; // crit and logexec
 /// Initiate interpreter
 extern (C)
 void vcpu_init() {
+	SLEEP_SET;
+
 	IPp = cast(ushort*)&EIP;
 
 	AXp = cast(ushort*)&EAX;
@@ -44,13 +48,23 @@ void vcpu_init() {
 extern (C)
 void vcpu_run() {
 	info("CALL vcpu_run");
+	uint tsc;
 	while (RLEVEL > 0) {
 		EIP = get_ip; // CS:IP->EIP (important)
 		debug logexec(CS, IP, MEMORY[EIP]);
 		exec(MEMORY[EIP]);
-		if (opt_sleep) SLEEP;
+
+		if (opt_sleep) {
+			++tsc;
+			if (tsc == TSC_SLEEP) {
+				SLEEP;
+				tsc = 0;
+			}
+		}
 	}
 }
+
+__gshared ubyte opt_sleep = 1; /// If set, the vcpu sleeps between cycles
 
 /**
  * Runnning level.
@@ -60,16 +74,6 @@ void vcpu_run() {
  * tl;dr: Emulates CALLs
  */
 __gshared short RLEVEL = 1;
-/// If set, the vcpu sleeps between cycles
-__gshared ubyte opt_sleep = 1;
-
-/// Initial and maximum amount of memory if not specified in settings.
-enum INIT_MEM = 0x4_0000;
-// 0x4_0000    256K -- MS-DOS minimum
-// 0xA_0000    640K
-// 0x10_0000  1024K -- Recommended
-// 0x20_0000  2048K
-// 0x40_0000  4096K
 
 enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer to avoid typing cast() everytime
 __gshared ubyte[INIT_MEM] MEMORY; /// Main memory bank

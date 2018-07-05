@@ -9,11 +9,16 @@ version (Posix) {
 	private import core.stdc.errno;
 	private __gshared timespec _t;
 }
+version (Windows) {
+	private import core.sys.windows.winbase : Sleep;
+}
+
+enum SLEEP_TIME = 1; // ms
 
 extern (C)
-void SLEEP_SET(int nanoseconds) {
+void SLEEP_SET() {
 	version (Posix) {
-		_t.tv_nsec = nanoseconds;
+		_t.tv_nsec = SLEEP_TIME * 1_000_000UL;
 	}
 }
 
@@ -21,15 +26,9 @@ extern (C)
 void SLEEP() {
 	version (Posix) {
 		// EFAULT and EINVAL usually not applied to _our_ case
-		while (nanosleep(&_t, &_t)) {}
+		while (nanosleep(&_t, cast(timespec*)0)) {}
 	}
 	version (Windows) {
-		/*
-		 * TODO: Figure out a highly accurate sleep assembly usable in ring 3
-		 *
-		 * PAUSE is _only_ good for spin-locks, not thread-sleeping
-		 */
-		asm { // testing stuff
-		}
+		Sleep(SLEEP_TIME);
 	}
 }

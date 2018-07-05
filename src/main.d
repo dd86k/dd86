@@ -26,6 +26,9 @@ dd86k -- Original author and developer
 	);
 }
 
+// TODO:
+// - a "no video" mode switch
+
 extern (C)
 private void help() {
 	puts(
@@ -113,7 +116,7 @@ private int main(int argc, char** argv) {
 
 	// Initiation
 
-	version (Windows) InitConsole; // ddcon
+	InitConsole; // ddcon
 	vcpu_init; // vcpu
 	//vdos_init; // vdos
 
