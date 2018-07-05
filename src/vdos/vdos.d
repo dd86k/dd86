@@ -277,9 +277,10 @@ By default, MEM will show memory usage`
 	}
 	if (strcmp(*argv, "?load") == 0) {
 		if (argc > 1) {
-			if (pexist(argv[1]))
+			if (pexist(argv[1])) {
+				CS = 0; IP = 0x100; // Temporary
 				ExecLoad(argv[1]);
-			else
+			} else
 				puts("File not found");
 		} else puts("Executable required");
 		goto START;
