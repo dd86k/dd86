@@ -254,8 +254,9 @@ By default, MEM will show memory usage`
 
 	if (strcmp(*argv, "ver") == 0) {
 		printf(
-			"\nDD-DOS Version " ~ APP_VERSION ~ "\nMS-DOS Version %d.%d\n",
-			MajorVersion, MinorVersion
+			"\nDD-DOS Version " ~ APP_VERSION ~ "\nMS-DOS Version %d.%d (default: %d.%d)\n",
+			MajorVersion, MinorVersion,
+			DOS_MAJOR_VERSION, DOS_MINOR_VERSION
 		);
 		goto START;
 	}
