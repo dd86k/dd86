@@ -500,7 +500,61 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x02: { // ADD REG8, R/M8
-
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) { 
+		case RM_REG_000: {
+			r += AL;
+			__hflag8_1(r);
+			AL = r;
+			break;
+		}
+		case RM_REG_001: {
+			r += CL;
+			__hflag8_1(r);
+			CL = r;
+			break;
+		}
+		case RM_REG_010: {
+			r += DL;
+			__hflag8_1(r);
+			DL = r;
+			break;
+		}
+		case RM_REG_011: {
+			r += BL;
+			__hflag8_1(r);
+			BL = r;
+			break;
+		}
+		case RM_REG_100: {
+			r += AH;
+			__hflag8_1(r);
+			AH = r;
+			break;
+		}
+		case RM_REG_101: {
+			r += CH;
+			__hflag8_1(r);
+			CH = r;
+			break;
+		}
+		case RM_REG_110: {
+			r += DH;
+			__hflag8_1(r);
+			DH = r;
+			break;
+		}
+		case RM_REG_111: {
+			r += BH;
+			__hflag8_1(r);
+			BH = r;
+			break;
+		}
+		default:
+		}
+		EIP += 2;
 		return;
 	}
 	case 0x03: { // ADD REG16, R/M16

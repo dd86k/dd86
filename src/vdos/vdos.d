@@ -347,7 +347,7 @@ END:	goto START;
 extern (C)
 void print_regs() {
 	printf(
-`EIP=%08X  (IP=%04X  get_ip=%08X)
+`EIP=%08X  IP=%04X  (get_ip=%08X)
 EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X
 CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X
 `,
