@@ -377,7 +377,7 @@ extern (C)
 void panic(ushort code,
 	immutable(char)* modname = cast(immutable(char)*)__MODULE__,
 	int line = __LINE__) {
-	enum RANGE = 60, PAD = 30, LINE = RANGE / 3;
+	enum RANGE = 26, TARGET = RANGE / 2;
 	printf(
 		"\n\n\n\n" ~
 		"A fatal exception occured, which DD-DOS couldn't recover.\n\n" ~
@@ -385,18 +385,12 @@ void panic(ushort code,
 		code, modname, line
 	);
 	int i = RANGE;
-	int l = 0;
-	ubyte* p = MEMORY_P + EIP - PAD;
+	ubyte* p = MEMORY_P + EIP - TARGET;
 	while (--i) {
-		if (i == (RANGE - PAD - 1))
+		if (i == TARGET)
 			printf(" > %02X<", *p);
 		else
 			printf(" %02X", *p);
-		if (l == LINE) {
-			printf("\n");
-			l = 0;
-		}
-		++l;
 		++p;
 	}
 	printf("\n--\n");
