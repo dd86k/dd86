@@ -44,7 +44,7 @@ int ExecLoad(char* path) {
 		return E_BAD_FORMAT;
 	}
 
-	__gshared ushort sig = void; /// Header signature
+	ushort sig = void; /// Header signature
 	fseek(f, 0, SEEK_SET);
 	fread(&sig, 2, 1, f);
 
@@ -53,7 +53,7 @@ int ExecLoad(char* path) {
 		info("LOAD MZ");
 
 		// ** Header is read for initial register values
-		__gshared mz_hdr mzh = void; /// MZ header structure variable
+		mz_hdr mzh = void; /// MZ header structure variable
 		fread(&mzh, mzh.sizeof, 1, f);
 		CS = 0x1000; IP = 0x1000; // Temporary!
 		CS = cast(ushort)(CS + mzh.e_cs); // Relative

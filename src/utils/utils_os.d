@@ -135,7 +135,7 @@ int pexist(char* p) {
 	version (Posix) {
 		import core.sys.posix.sys.stat;
 		debug import core.stdc.stdio;
-		__gshared stat_t s;
+		private __gshared stat_t s;
 		return stat(p, &s) == 0;
 		//debug printf("mode: %X \n", s.st_mode);
 		//return s.st_mode != 0;
