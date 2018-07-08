@@ -98,11 +98,11 @@ enum _BUFS = 255;
  */
 extern (C)
 void EnterShell() {
-	__gshared char* inb; /// internal input buffer, also used for CWD buffering
-	__gshared char** argv; /// argument vector
-	__gshared int argc; /// argument count
+	char* inb; /// internal input buffer, also used for CWD buffering
+	char** argv = // sizeof(char *)
+		cast(char**)malloc(_BUFS * size_t.sizeof); /// argument vector
+	int argc; /// argument count
 	inb = cast(char*)malloc(_BUFS);
-	argv = cast(char**)malloc(_BUFS * size_t.sizeof); // sizeof(char *)
 START:
 	//TODO: Print $PROMPT
 	if (gcwd(cast(char*)inb))
