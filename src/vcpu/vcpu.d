@@ -458,6 +458,8 @@ void exec(ubyte op) {
 	 * The number suffix represents instruction width, such as 16 represents
 	 * 16-bit immediate values.
 	 */
+	//TODO: To reduce stack size, pre-define a stack variable, r, and move
+	//      all temporary results there.
 	switch (op) {
 	case 0x00: { // ADD R/M8, REG8
 		const ubyte rm = __fu8_i;
@@ -747,9 +749,26 @@ void exec(ubyte op) {
 		DS = pop;
 		++EIP;
 		return;
-	case 0x20: // AND R/M8, REG8
-
+	case 0x20: { // AND R/M8, REG8
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r &= AH; break;
+		case RM_REG_001: r &= CH; break;
+		case RM_REG_010: r &= DH; break;
+		case RM_REG_011: r &= BH; break;
+		case RM_REG_100: r &= AL; break;
+		case RM_REG_101: r &= CL; break;
+		case RM_REG_110: r &= DL; break;
+		case RM_REG_111: r &= BL; break;
+		default:
+		}
+		__hflag8_3(r);
+		__iu8(r, addr);
+		EIP += 2;
 		return;
+	}
 	case 0x21: { // AND R/M16, REG16
 		const ubyte rm = __fu8_i;
 		const uint addr = get_ea(rm, 1);
