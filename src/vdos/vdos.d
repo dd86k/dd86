@@ -32,25 +32,25 @@ You might want to run 'dub test' beforehand.
 `);
 
 version (CRuntime_Bionic) {
-	pragma(msg, "Using Bionic C Runtime");
+	pragma(msg, "RUNTIME: Bionic");
 	enum C_RUNTIME = "Bionic";
 } else version (CRuntime_DigitalMars) {
-	pragma(msg, "Using DigitalMars C Runtime");
+	pragma(msg, "RUNTIME: DigitalMars");
 	enum C_RUNTIME = "DigitalMars";
 } else version (CRuntime_Glibc) {
-	pragma(msg, "Using Glibc C Runtime");
+	pragma(msg, "RUNTIME: Glibc");
 	enum C_RUNTIME = "Glibc";
 } else version (CRuntime_Microsoft) {
-	pragma(msg, "Using Microsoft C Runtime");
+	pragma(msg, "RUNTIME: Microsoft");
 	enum C_RUNTIME = "Microsoft";
 } else version(CRuntime_Musl) {
-	pragma(msg, "Using musl C Runtime");
+	pragma(msg, "RUNTIME: musl");
 	enum C_RUNTIME = "musl";
 } else version (CRuntime_UClibc) {
-	pragma(msg, "Using uClibc C Runtime");
+	pragma(msg, "RUNTIME: uClibc");
 	enum C_RUNTIME = "uClibc";
 } else {
-	pragma(msg, "Runtime: Unknown (Be careful!)");
+	pragma(msg, "RUNTIME: UNKNOWN (Be careful!)");
 	enum C_RUNTIME = "UNKNOWN";
 }
 

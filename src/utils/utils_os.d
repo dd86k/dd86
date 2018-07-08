@@ -124,7 +124,7 @@ int gcwd(char* p) {
 /**
  * Verifies if the file or directory exists from path
  * Params: p = Path
- * Returns: 1 on found
+ * Returns: Non-zero on found
  */
 extern (C)
 int pexist(char* p) {
@@ -134,17 +134,14 @@ int pexist(char* p) {
 	}
 	version (Posix) {
 		import core.sys.posix.sys.stat;
-		debug import core.stdc.stdio;
-		private __gshared stat_t s;
+		stat_t s = void;
 		return stat(p, &s) == 0;
-		//debug printf("mode: %X \n", s.st_mode);
-		//return s.st_mode != 0;
 	}
 }
 
 /**
  * Verifies if given path is a directory
- * Returns: not-zero on success
+ * Returns: Non-zero on success
  */
 extern (C)
 int pisdir(char* p) {
@@ -155,7 +152,7 @@ int pisdir(char* p) {
 	version (Posix) {
 		import core.sys.posix.sys.stat;
 		debug import core.stdc.stdio;
-		stat_t s;
+		stat_t s = void;
 		stat(p, &s);
 		return S_ISDIR(s.st_mode);
 	}

@@ -348,8 +348,8 @@ extern (C)
 KeyInfo ReadKey(ubyte echo = false) {
 	KeyInfo k;
 	version (Windows) { // Sort of is like .NET's ReadKey
-		__gshared INPUT_RECORD ir;
-		__gshared DWORD num;
+		INPUT_RECORD ir = void;
+		DWORD num = void;
 		if (ReadConsoleInput(hIn, &ir, 1, &num)) {
 			if (ir.KeyEvent.bKeyDown && ir.EventType == KEY_EVENT) {
 				const DWORD state = ir.KeyEvent.dwControlKeyState;
