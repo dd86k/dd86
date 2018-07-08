@@ -9,7 +9,7 @@ module vcpu;
 
 import core.stdc.stdio : printf, puts; // should be removed in the future
 import vcpu_config;
-import utils_vcpu;
+import vcpu_utils;
 import sleep;
 import Logger; // crit and logexec
 import vdos : Raise; // Interrupt handler

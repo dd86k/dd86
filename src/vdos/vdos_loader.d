@@ -7,7 +7,7 @@ module vdos_loader;
 import core.stdc.stdio;
 import core.stdc.stdlib : malloc, free;
 import vdos_codes, Logger;
-import vcpu, utils_vcpu;
+import vcpu, vcpu_utils;
 import vdos, vdos_structs;
 import ddc : NULL_CHAR;
 

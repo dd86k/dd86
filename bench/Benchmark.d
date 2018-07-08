@@ -1,6 +1,6 @@
 module Benchmarks;
 
-import vcpu, utils_vcpu, std.stdio, vdos, utils;
+import vcpu, vcpu_utils, std.stdio, vdos, utils;
 import std.datetime.stopwatch : StopWatch;
 import core.time, std.conv;
 import core.stdc.string : memcpy;

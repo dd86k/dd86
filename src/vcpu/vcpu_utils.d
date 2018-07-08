@@ -1,8 +1,8 @@
 /*
- * utils_vcpu.d : vcpu utilities.
+ * vcpu_utils.d : vcpu utilities.
  */
 
-module utils_vcpu;
+module vcpu_utils;
 
 import core.stdc.stdio : printf, puts;
 import core.stdc.string : memcpy, strcpy;
