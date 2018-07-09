@@ -460,12 +460,13 @@ void exec(ubyte op) {
 	 */
 	//TODO: To reduce stack size, pre-define a stack variable, r, and move
 	//      all temporary results there.
+	//      Define: int r = void; uint addr = void; ubyte rm = void;
 	switch (op) {
 	case 0x00: { // ADD R/M8, REG8
 		const ubyte rm = __fu8_i;
 		const uint addr = get_ea(rm);
 		int r = __fu8(addr);
-		switch (rm & RM_REG) { 
+		switch (rm & RM_REG) {
 		case RM_REG_000: r += AL; break;
 		case RM_REG_001: r += CL; break;
 		case RM_REG_010: r += DL; break;
@@ -505,51 +506,51 @@ void exec(ubyte op) {
 		const ubyte rm = __fu8_i;
 		const uint addr = get_ea(rm);
 		int r = __fu8(addr);
-		switch (rm & RM_REG) { 
+		switch (rm & RM_REG) {
 		case RM_REG_000: {
-			r += AL;
+			r = AL + r;
 			__hflag8_1(r);
 			AL = r;
 			break;
 		}
 		case RM_REG_001: {
-			r += CL;
+			r = CL + r;
 			__hflag8_1(r);
 			CL = r;
 			break;
 		}
 		case RM_REG_010: {
-			r += DL;
+			r = DL + r;
 			__hflag8_1(r);
 			DL = r;
 			break;
 		}
 		case RM_REG_011: {
-			r += BL;
+			r = BL + r;
 			__hflag8_1(r);
 			BL = r;
 			break;
 		}
 		case RM_REG_100: {
-			r += AH;
+			r = AH + r;
 			__hflag8_1(r);
 			AH = r;
 			break;
 		}
 		case RM_REG_101: {
-			r += CH;
+			r = CH + r;
 			__hflag8_1(r);
 			CH = r;
 			break;
 		}
 		case RM_REG_110: {
-			r += DH;
+			r = DH + r;
 			__hflag8_1(r);
 			DH = r;
 			break;
 		}
 		case RM_REG_111: {
-			r += BH;
+			r = BH + r;
 			__hflag8_1(r);
 			BH = r;
 			break;
@@ -563,51 +564,51 @@ void exec(ubyte op) {
 		const ubyte rm = __fu8_i;
 		const uint addr = get_ea(rm, 1);
 		int r = __fu16(addr);
-		switch (rm & RM_REG) { 
+		switch (rm & RM_REG) {
 		case RM_REG_000: {
-			r += AX;
+			r = AX + r;
 			__hflag16_1(r);
 			AX = r;
 			break;
 		}
 		case RM_REG_001: {
-			r += CX;
+			r = CX + r;
 			__hflag16_1(r);
 			CX = r;
 			break;
 		}
 		case RM_REG_010: {
-			r += DX;
+			r = DX + r;
 			__hflag16_1(r);
 			DX = r;
 			break;
 		}
 		case RM_REG_011: {
-			r += BX;
+			r = BX + r;
 			__hflag16_1(r);
 			BX = r;
 			break;
 		}
 		case RM_REG_100: {
-			r += SP;
+			r = SP + r;
 			__hflag16_1(r);
 			SP = r;
 			break;
 		}
 		case RM_REG_101: {
-			r += BP;
+			r = BP + r;
 			__hflag16_1(r);
 			BP = r;
 			break;
 		}
 		case RM_REG_110: {
-			r += SI;
+			r = SI + r;
 			__hflag16_1(r);
 			SI = r;
 			break;
 		}
 		case RM_REG_111: {
-			r += DI;
+			r = DI + r;
 			__hflag16_1(r);
 			DI = r;
 			break;
@@ -640,19 +641,159 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0x08: { // OR R/M8, REG8
-
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r |= AL; break;
+		case RM_REG_001: r |= CL; break;
+		case RM_REG_010: r |= DL; break;
+		case RM_REG_011: r |= BL; break;
+		case RM_REG_100: r |= AH; break;
+		case RM_REG_101: r |= CH; break;
+		case RM_REG_110: r |= DH; break;
+		case RM_REG_111: r |= BH; break;
+		default:
+		}
+		__hflag8_3(r);
+		__iu8(r, addr);
+		EIP += 2;
 		return;
 	}
 	case 0x09: { // OR R/M16, REG16
-
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm, 1);
+		int r = __fu16(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r |= AX; break;
+		case RM_REG_001: r |= CX; break;
+		case RM_REG_010: r |= DX; break;
+		case RM_REG_011: r |= BX; break;
+		case RM_REG_100: r |= SP; break;
+		case RM_REG_101: r |= BP; break;
+		case RM_REG_110: r |= SI; break;
+		case RM_REG_111: r |= DI; break;
+		default:
+		}
+		__hflag16_3(r);
+		__iu16(r, addr);
+		EIP += 2;
 		return;
 	}
 	case 0x0A: { // OR REG8, R/M8
-	
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: {
+			r = AL | r;
+			__hflag8_3(r);
+			AL = r;
+			break;
+		}
+		case RM_REG_001: {
+			r = CL | r;
+			__hflag8_3(r);
+			CL = r;
+			break;
+		}
+		case RM_REG_010: {
+			r = DL | r;
+			__hflag8_3(r);
+			DL = r;
+			break;
+		}
+		case RM_REG_011: {
+			r = BL | r;
+			__hflag8_3(r);
+			BL = r;
+			break;
+		}
+		case RM_REG_100: {
+			r = AH | r;
+			__hflag8_3(r);
+			AH = r;
+			break;
+		}
+		case RM_REG_101: {
+			r = CH | r;
+			__hflag8_3(r);
+			CH = r;
+			break;
+		}
+		case RM_REG_110: {
+			r = DH | r;
+			__hflag8_3(r);
+			DH = r;
+			break;
+		}
+		case RM_REG_111: {
+			r = BH | r;
+			__hflag8_3(r);
+			BH = r;
+			break;
+		}
+		default:
+		}
+		EIP += 2;
 		return;
 	}
 	case 0x0B: { // OR REG16, R/M16
-
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm, 1);
+		int r = __fu16(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: {
+			r = AX | r;
+			__hflag16_3(r);
+			AX = r;
+			break;
+		}
+		case RM_REG_001: {
+			r = CX | r;
+			__hflag16_3(r);
+			CX = r;
+			break;
+		}
+		case RM_REG_010: {
+			r = DX | r;
+			__hflag16_3(r);
+			DX = r;
+			break;
+		}
+		case RM_REG_011: {
+			r = BX | r;
+			__hflag16_3(r);
+			BX = r;
+			break;
+		}
+		case RM_REG_100: {
+			r = SP | r;
+			__hflag16_3(r);
+			SP = r;
+			break;
+		}
+		case RM_REG_101: {
+			r |= BP;
+			__hflag16_3(r);
+			BP = r;
+			break;
+		}
+		case RM_REG_110: {
+			r = SI | r;
+			__hflag16_3(r);
+			SI = r;
+			break;
+		}
+		case RM_REG_111: {
+			r = DI | r;
+			__hflag16_3(r);
+			DI = r;
+			break;
+		}
+		default:
+		}
+		EIP += 2;
 		return;
 	}
 	case 0x0C: { // OR AL, IMM8
@@ -691,7 +832,7 @@ void exec(ubyte op) {
 	}
 	case 0x14: { // ADC AL, IMM8
 		int t = AL + __fu8_i;
-		__hflag8_3(t);
+		__hflag8_1(t);
 		if (CF) ++t;
 		AL = t;
 		EIP += 2;
@@ -699,7 +840,7 @@ void exec(ubyte op) {
 	}
 	case 0x15: { // ADC AX, IMM16
 		int t = AX + __fu16_i;
-		__hflag16_3(t);
+		__hflag16_1(t);
 		if (CF) ++t;
 		AX = t;
 		EIP += 3;
@@ -789,12 +930,122 @@ void exec(ubyte op) {
 		EIP += 2;
 		return;
 	}
-	case 0x22: // AND REG8, R/M8
-
+	case 0x22: { // AND REG8, R/M8
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: {
+			r = AL & r;
+			__hflag8_3(r);
+			AL = r;
+			break;
+		}
+		case RM_REG_001: {
+			r = CL & r;
+			__hflag8_3(r);
+			CL = r;
+			break;
+		}
+		case RM_REG_010: {
+			r = DL & r;
+			__hflag8_3(r);
+			DL = r;
+			break;
+		}
+		case RM_REG_011: {
+			r = BL & r;
+			__hflag8_3(r);
+			BL = r;
+			break;
+		}
+		case RM_REG_100: {
+			r = AH & r;
+			__hflag8_3(r);
+			AH = r;
+			break;
+		}
+		case RM_REG_101: {
+			r = CH & r;
+			__hflag8_3(r);
+			CH = r;
+			break;
+		}
+		case RM_REG_110: {
+			r = DH & r;
+			__hflag8_3(r);
+			DH = r;
+			break;
+		}
+		case RM_REG_111: {
+			r = BH & r;
+			__hflag8_3(r);
+			BH = r;
+			break;
+		}
+		default:
+		}
+		EIP += 2;
 		return;
-	case 0x23: // AND REG16, R/M16
-
+	}
+	case 0x23: { // AND REG16, R/M16
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm, 1);
+		int r = __fu16(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: {
+			r = AX & r;
+			__hflag16_3(r);
+			AX = r;
+			break;
+		}
+		case RM_REG_001: {
+			r = CX & r;
+			__hflag16_3(r);
+			CX = r;
+			break;
+		}
+		case RM_REG_010: {
+			r = DX & r;
+			__hflag16_3(r);
+			DX = r;
+			break;
+		}
+		case RM_REG_011: {
+			r = BX & r;
+			__hflag16_3(r);
+			BX = r;
+			break;
+		}
+		case RM_REG_100: {
+			r = SP & r;
+			__hflag16_3(r);
+			SP = r;
+			break;
+		}
+		case RM_REG_101: {
+			r = BP & r;
+			__hflag16_3(r);
+			BP = r;
+			break;
+		}
+		case RM_REG_110: {
+			r = SI & r;
+			__hflag16_3(r);
+			SI = r;
+			break;
+		}
+		case RM_REG_111: {
+			r = DI & r;
+			__hflag16_3(r);
+			DI = r;
+			break;
+		}
+		default:
+		}
+		EIP += 2;
 		return;
+	}
 	case 0x24: { // AND AL, IMM8
 		int r = AL & __fu8_i;
 		__hflag8_3(r);
@@ -832,18 +1083,162 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	}
-	case 0x28: // SUB R/M8, REG8
-
+	case 0x28: { // SUB R/M8, REG8
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r -= AL; break;
+		case RM_REG_001: r -= CL; break;
+		case RM_REG_010: r -= DL; break;
+		case RM_REG_011: r -= BL; break;
+		case RM_REG_100: r -= AH; break;
+		case RM_REG_101: r -= CH; break;
+		case RM_REG_110: r -= DH; break;
+		case RM_REG_111: r -= BH; break;
+		default:
+		}
+		__hflag8_1(r);
+		__iu8(r, addr);
+		EIP += 2;
 		return;
-	case 0x29: // SUB R/M16, REG16
-
+	}
+	case 0x29: { // SUB R/M16, REG16
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm, 1);
+		int r = __fu16(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r -= AX; break;
+		case RM_REG_001: r -= CX; break;
+		case RM_REG_010: r -= DX; break;
+		case RM_REG_011: r -= BX; break;
+		case RM_REG_100: r -= SP; break;
+		case RM_REG_101: r -= BP; break;
+		case RM_REG_110: r -= SI; break;
+		case RM_REG_111: r -= DI; break;
+		default:
+		}
+		__hflag16_1(r);
+		__iu16(r, addr);
+		EIP += 2;
 		return;
-	case 0x2A: // SUB REG8, R/M8
-	
+	}
+	case 0x2A: { // SUB REG8, R/M8
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: {
+			r = AL - r;
+			__hflag8_1(r);
+			AL = r;
+			break;
+		}
+		case RM_REG_001: {
+			r = CL - r;
+			__hflag8_1(r);
+			CL = r;
+			break;
+		}
+		case RM_REG_010: {
+			r = DL - r;
+			__hflag8_1(r);
+			DL = r;
+			break;
+		}
+		case RM_REG_011: {
+			r = BL - r;
+			__hflag8_1(r);
+			BL = r;
+			break;
+		}
+		case RM_REG_100: {
+			r = AH - r;
+			__hflag8_1(r);
+			AH = r;
+			break;
+		}
+		case RM_REG_101: {
+			r = CH - r;
+			__hflag8_1(r);
+			CH = r;
+			break;
+		}
+		case RM_REG_110: {
+			r = DH - r;
+			__hflag8_1(r);
+			DH = r;
+			break;
+		}
+		case RM_REG_111: {
+			r = BH - r;
+			__hflag8_1(r);
+			BH = r;
+			break;
+		}
+		default:
+		}
+		EIP += 2;
 		return;
-	case 0x2B: // SUB REG16, R/M16
-
+	}
+	case 0x2B: { // SUB REG16, R/M16
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm, 1);
+		int r = __fu16(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: {
+			r = AX - r;
+			__hflag16_1(r);
+			AX = r;
+			break;
+		}
+		case RM_REG_001: {
+			r = CX - r;
+			__hflag16_1(r);
+			CX = r;
+			break;
+		}
+		case RM_REG_010: {
+			r = DX - r;
+			__hflag16_1(r);
+			DX = r;
+			break;
+		}
+		case RM_REG_011: {
+			r = BX - r;
+			__hflag16_1(r);
+			BX = r;
+			break;
+		}
+		case RM_REG_100: {
+			r = SP - r;
+			__hflag16_1(r);
+			SP = r;
+			break;
+		}
+		case RM_REG_101: {
+			r = BP - r;
+			__hflag16_1(r);
+			BP = r;
+			break;
+		}
+		case RM_REG_110: {
+			r = SI - r;
+			__hflag16_1(r);
+			SI = r;
+			break;
+		}
+		case RM_REG_111: {
+			r = DI - r;
+			__hflag16_1(r);
+			DI = r;
+			break;
+		}
+		default:
+		}
+		EIP += 2;
 		return;
+	}
 	case 0x2C: { // SUB AL, IMM8
 		int r = AL - __fu8_i;
 		__hflag8_1(r);
@@ -881,18 +1276,162 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	}
-	case 0x30: // XOR R/M8, REG8
-
+	case 0x30: { // XOR R/M8, REG8
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r ^= AL; break;
+		case RM_REG_001: r ^= CL; break;
+		case RM_REG_010: r ^= DL; break;
+		case RM_REG_011: r ^= BL; break;
+		case RM_REG_100: r ^= AH; break;
+		case RM_REG_101: r ^= CH; break;
+		case RM_REG_110: r ^= DH; break;
+		case RM_REG_111: r ^= BH; break;
+		default:
+		}
+		__hflag8_3(r);
+		__iu8(r, addr);
+		EIP += 2;
 		return;
-	case 0x31: // XOR R/M16, REG16
-
+	}
+	case 0x31: { // XOR R/M16, REG16
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm, 1);
+		int r = __fu16(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r ^= AX; break;
+		case RM_REG_001: r ^= CX; break;
+		case RM_REG_010: r ^= DX; break;
+		case RM_REG_011: r ^= BX; break;
+		case RM_REG_100: r ^= SP; break;
+		case RM_REG_101: r ^= BP; break;
+		case RM_REG_110: r ^= SI; break;
+		case RM_REG_111: r ^= DI; break;
+		default:
+		}
+		__hflag16_3(r);
+		__iu16(r, addr);
+		EIP += 2;
 		return;
-	case 0x32: // XOR REG8, R/M8
-
+	}
+	case 0x32: { // XOR REG8, R/M8
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: {
+			r = AL ^ r;
+			__hflag8_3(r);
+			AL = r;
+			break;
+		}
+		case RM_REG_001: {
+			r = CL ^ r;
+			__hflag8_3(r);
+			CL = r;
+			break;
+		}
+		case RM_REG_010: {
+			r = DL ^ r;
+			__hflag8_3(r);
+			DL = r;
+			break;
+		}
+		case RM_REG_011: {
+			r = BL ^ r;
+			__hflag8_3(r);
+			BL = r;
+			break;
+		}
+		case RM_REG_100: {
+			r = AH ^ r;
+			__hflag8_3(r);
+			AH = r;
+			break;
+		}
+		case RM_REG_101: {
+			r = CH ^ r;
+			__hflag8_3(r);
+			CH = r;
+			break;
+		}
+		case RM_REG_110: {
+			r = DH ^ r;
+			__hflag8_3(r);
+			DH = r;
+			break;
+		}
+		case RM_REG_111: {
+			r = BH ^ r;
+			__hflag8_3(r);
+			BH = r;
+			break;
+		}
+		default:
+		}
+		EIP += 2;
 		return;
-	case 0x33: // XOR REG16, R/M16
-
+	}
+	case 0x33: { // XOR REG16, R/M16
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm, 1);
+		int r = __fu16(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: {
+			r = AX ^ r;
+			__hflag16_3(r);
+			AX = r;
+			break;
+		}
+		case RM_REG_001: {
+			r = CX ^ r;
+			__hflag16_3(r);
+			CX = r;
+			break;
+		}
+		case RM_REG_010: {
+			r = DX ^ r;
+			__hflag16_3(r);
+			DX = r;
+			break;
+		}
+		case RM_REG_011: {
+			r = BX ^ r;
+			__hflag16_3(r);
+			BX = r;
+			break;
+		}
+		case RM_REG_100: {
+			r = SP ^ r;
+			__hflag16_3(r);
+			SP = r;
+			break;
+		}
+		case RM_REG_101: {
+			r = BP ^ r;
+			__hflag16_3(r);
+			BP = r;
+			break;
+		}
+		case RM_REG_110: {
+			r = SI ^ r;
+			__hflag16_3(r);
+			SI = r;
+			break;
+		}
+		case RM_REG_111: {
+			r = DI ^ r;
+			__hflag16_3(r);
+			DI = r;
+			break;
+		}
+		default:
+		}
+		EIP += 2;
 		return;
+	}
 	case 0x34: { // XOR AL, IMM8
 		int r = AL ^ __fu8_i;
 		__hflag8_3(r);
@@ -919,18 +1458,82 @@ void exec(ubyte op) {
 		AL = AL & 0xF;
 		++EIP;
 		return;
-	case 0x38: // CMP R/M8, REG8
-
+	case 0x38: { // CMP R/M8, REG8
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r -= AL; break;
+		case RM_REG_001: r -= CL; break;
+		case RM_REG_010: r -= DL; break;
+		case RM_REG_011: r -= BL; break;
+		case RM_REG_100: r -= AH; break;
+		case RM_REG_101: r -= CH; break;
+		case RM_REG_110: r -= DH; break;
+		case RM_REG_111: r -= BH; break;
+		default:
+		}
+		__hflag8_1(r);
+		EIP += 2;
 		return;
-	case 0x39: // CMP R/M16, REG16
-
+	}
+	case 0x39: { // CMP R/M16, REG16
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm, 1);
+		int r = __fu16(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r -= AX; break;
+		case RM_REG_001: r -= CX; break;
+		case RM_REG_010: r -= DX; break;
+		case RM_REG_011: r -= BX; break;
+		case RM_REG_100: r -= SP; break;
+		case RM_REG_101: r -= BP; break;
+		case RM_REG_110: r -= SI; break;
+		case RM_REG_111: r -= DI; break;
+		default:
+		}
+		__hflag16_1(r);
+		EIP += 2;
 		return;
-	case 0x3A: // CMP REG8, R/M8
-
+	}
+	case 0x3A: { // CMP REG8, R/M8
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r = AL - r; break;
+		case RM_REG_001: r = CL - r; break;
+		case RM_REG_010: r = DL - r; break;
+		case RM_REG_011: r = BL - r; break;
+		case RM_REG_100: r = AH - r; break;
+		case RM_REG_101: r = CH - r; break;
+		case RM_REG_110: r = DH - r; break;
+		case RM_REG_111: r = BH - r; break;
+		default:
+		}
+		__hflag8_1(r);
+		EIP += 2;
 		return;
-	case 0x3B: // CMP REG16, R/M16
-
+	}
+	case 0x3B: { // CMP REG16, R/M16
+		const ubyte rm = __fu8_i;
+		const uint addr = get_ea(rm, 1);
+		int r = __fu16(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: r = AX - r; break;
+		case RM_REG_001: r = CX - r; break;
+		case RM_REG_010: r = DX - r; break;
+		case RM_REG_011: r = BX - r; break;
+		case RM_REG_100: r = SP - r; break;
+		case RM_REG_101: r = BP - r; break;
+		case RM_REG_110: r = SI - r; break;
+		case RM_REG_111: r = DI - r; break;
+		default:
+		}
+		__hflag16_1(r);
+		EIP += 2;
 		return;
+	}
 	case 0x3C: { // CMP AL, IMM8
 		__hflag8_1(AL - __fu8_i);
 		EIP += 2;
@@ -1451,7 +2054,7 @@ void exec(ubyte op) {
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 		const byte rm = __fu8_i;
 		const int ea = get_ea(rm, 1);
-		switch (rm & RM_REG) { // if bit 100_000 is clear, trip to default
+		switch (rm & RM_REG) { // if REG[3] is clear, trip to default
 		case RM_REG_100: // ES
 			__iu16(ES, ea);
 			break;
@@ -1804,18 +2407,18 @@ void exec(ubyte op) {
 		return;
 	case 0xCC: // INT 3
 		Raise(3);
-		++EIP; //TODO: Check: is this correct?
+		++EIP;
 		return;
 	case 0xCD: // INT IMM8
 		Raise(__fu8_i);
-		EIP += 2; //TODO: Check: is this correct?
+		EIP += 2;
 		return;
 	case 0xCE: // INTO
 		if (CF) Raise(4);
-		++EIP; //TODO: Check: is this correct?
+		++EIP;
 		return;
 	case 0xCF: // IRET
-		//Note: Usually unused since Raise handles both INT entry and exit
+		// NOTE: Usually unused since Raise handles both INT entry and exit
 		IP = pop;
 		CS = pop;
 		FLAG = pop;
@@ -2021,10 +2624,10 @@ void exec(ubyte op) {
 	case 0xEF: // OUT AX, DX
 
 		return;
-	/*case 0xF0: // LOCK (prefix)
-// http://qcd.phys.cmu.edu/QCDcluster/intel/vtune/reference/vc160.htm
-
-		return;*/
+	case 0xF0: // LOCK (prefix)
+	// http://qcd.phys.cmu.edu/QCDcluster/intel/vtune/reference/vc160.htm
+		++EIP;
+		return;
 	case 0xF2: // REPNE/REPNZ
 _F2_CX:	if (CX) {
 			//TODO: Finish REPNE/REPNZ properly?
@@ -2037,7 +2640,7 @@ _F2_CX:	if (CX) {
 
 		return;
 	case 0xF4: // HLT
-	//TODO: HLT
+		RLEVEL = 0;
 		++EIP;
 		return;
 	case 0xF5: // CMC

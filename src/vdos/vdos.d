@@ -98,10 +98,10 @@ enum _BUFS = 255;
  */
 extern (C)
 void EnterShell() {
-	char* inb; /// internal input buffer, also used for CWD buffering
+	char* inb = void; /// internal input buffer, also used for CWD buffering
+	int argc = void; /// argument count
 	char** argv = // sizeof(char *)
 		cast(char**)malloc(_BUFS * size_t.sizeof); /// argument vector
-	int argc; /// argument count
 	inb = cast(char*)malloc(_BUFS);
 START:
 	//TODO: Print $PROMPT

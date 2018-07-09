@@ -183,8 +183,7 @@ void __hflag8_1(int r) {
 
 /**
  * Handle result for GROUP1 (UNSIGNED WORD)
- * OF, SF, ZF, AF, and PF affected
- * CF undefined
+ * OF, SF, ZF, AF, CF, and PF affected
  * Params: r = Operation result
  */
 extern (C)
@@ -251,8 +250,7 @@ extern (C)
 void __hflag16_3(int r) {
 	ZF = r == 0;
 	SF = (r & 0x8000) != 0;
-	ubyte b = cast(ubyte)r;
-	PF = ~(b ^ b) != 0; // XNOR(TEMP[0:7]);
+	PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0; // XNOR(TEMP[0:7]);
 	OF = CF = 0;
 }
 
