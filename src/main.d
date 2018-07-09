@@ -84,7 +84,7 @@ private int main(int argc, char** argv) {
 					case 'h': help; return 0;
 					case 'V': _version; return 0;
 					default:
-						printf("Invalid parameter: -%c\n", *a);
+						printf("Unknown parameter: -%c\n", *a);
 						return E_INVALID_FUNCTION;
 					}
 				}
