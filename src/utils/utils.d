@@ -97,12 +97,8 @@ int mstring(char* c, int p) {
 extern (C)
 void lowercase(char* c) {
 	while (*c) {
-		switch (*c) {
-		case 'A': .. case 'Z':
+		if (*c >= 'A' && *c <= 'Z')
 			*c = cast(char)(*c + 32);
-			break;
-		default:
-		}
 		++c;
 	}
 }

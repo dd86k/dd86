@@ -2132,42 +2132,49 @@ void exec(ubyte op) {
 		const ushort t = AX;
 		AX = CX;
 		CX = t;
+		++EIP;
 		return;
 	}
 	case 0x92: { // XCHG AX, DX
 		const ushort t = AX;
 		AX = DX;
 		DX = t;
+		++EIP;
 		return;
 	}
 	case 0x93: { // XCHG AX, BX
 		const ushort t = AX;
 		AX = BX;
 		BX = t;
+		++EIP;
 		return;
 	}
 	case 0x94: { // XCHG AX, SP
 		const ushort t = AX;
 		AX = SP;
 		SP = t;
+		++EIP;
 		return;
 	}
 	case 0x95: { // XCHG AX, BP
 		const ushort t = AX;
 		AX = BP;
 		BP = t;
+		++EIP;
 		return;
 	}
 	case 0x96: { // XCHG AX, SI
 		const ushort t = AX;
 		AX = SI;
 		SI = t;
+		++EIP;
 		return;
 	}
 	case 0x97: { // XCHG AX, DI
 		const ushort t = AX;
 		AX = DI;
 		DI = t;
+		++EIP;
 		return;
 	}
 	case 0x98: // CBW
