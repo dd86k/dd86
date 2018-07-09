@@ -102,7 +102,6 @@ void EnterShell() {
 		cast(char*)malloc(_BUFS); /// internal input buffer
 	char** argv = // sizeof(char *)
 		cast(char**)malloc(_BUFS * size_t.sizeof); /// argument vector
-	int argc = void; /// argument count
 START:
 	//TODO: Print $PROMPT
 	if (gcwd(inb))
@@ -111,9 +110,9 @@ START:
 		fputs("\n% ", stdout);
 
 	fgets(inb, _BUFS, stdin);
-	if (*inb == '\n') goto START; // Empty?
+	if (*inb == '\n') goto START; // Nothing to process
 
-	argc = sargs(inb, argv);
+	int argc = sargs(inb, argv); /// argument count
 
 	//TODO: TREE, DIR
 	lowercase(*argv);
