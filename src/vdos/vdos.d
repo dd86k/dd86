@@ -98,22 +98,22 @@ enum _BUFS = 255;
  */
 extern (C)
 void EnterShell() {
-	char* inb = void; /// internal input buffer, also used for CWD buffering
-	int argc = void; /// argument count
+	char* inb = // also used for CWD buffering
+		cast(char*)malloc(_BUFS); /// internal input buffer
 	char** argv = // sizeof(char *)
 		cast(char**)malloc(_BUFS * size_t.sizeof); /// argument vector
-	inb = cast(char*)malloc(_BUFS);
+	int argc = void; /// argument count
 START:
 	//TODO: Print $PROMPT
-	if (gcwd(cast(char*)inb))
-		printf("\n%s%% ", cast(char*)inb);
+	if (gcwd(inb))
+		printf("\n%s%% ", inb);
 	else // just-in-case
 		fputs("\n% ", stdout);
 
-	fgets(cast(char*)inb, _BUFS, stdin);
+	fgets(inb, _BUFS, stdin);
 	if (*inb == '\n') goto START; // Empty?
 
-	argc = sargs(cast(char*)inb, argv);
+	argc = sargs(inb, argv);
 
 	//TODO: TREE, DIR
 	lowercase(*argv);
