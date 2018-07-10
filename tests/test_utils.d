@@ -1,5 +1,7 @@
 import std.stdio;
 
+module test_utils;
+
 enum SPACES = 20;
 
 void test(string s) {

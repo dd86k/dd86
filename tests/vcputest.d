@@ -1,5 +1,5 @@
 import vcpu, vcpu_utils, std.stdio, vdos;
-import unitutils;
+import test_utils;
 
 unittest
 {
