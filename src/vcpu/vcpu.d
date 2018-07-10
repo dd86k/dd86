@@ -48,7 +48,7 @@ void vcpu_init() {
 extern (C)
 void vcpu_run() {
 	info("CALL vcpu_run");
-	uint tsc;
+	uint tsc; /// tick count for thread sleeping purposes
 	while (RLEVEL > 0) {
 		EIP = get_ip; // CS:IP->EIP (important)
 		debug logexec(CS, IP, MEMORY[EIP]);
