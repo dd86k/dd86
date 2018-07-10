@@ -953,7 +953,7 @@ unittest
 	assert(__fu8(AL) == 0b0011_0000);
 	OK;
 	test("SUB/CMP");
-	AL = 0x40;
+	AL = 0x41;
 	__iu8(40, AL);
 	__iu8(0b11_101_000, EIP+1);
 	__iu8(20, EIP+2);

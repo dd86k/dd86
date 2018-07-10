@@ -77,7 +77,7 @@ __gshared short RLEVEL = 1;
 
 enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer to avoid typing cast() everytime
 __gshared ubyte[INIT_MEM] MEMORY; /// Main memory bank
-__gshared size_t MEMORYSIZE = INIT_MEM; /// Current memory MEMORY size
+__gshared uint MEMORYSIZE = INIT_MEM; /// Current memory MEMORY size
 
 /**
  * Get memory address out of a segment and a register value.
@@ -360,51 +360,41 @@ private enum : ushort {
 }
 
 enum : ubyte {
-	RM_MOD_00 = 0,   /// MOD 00, Memory Mode, no displacement
-	RM_MOD_01 = 64,  /// MOD 01, Memory Mode, 8-bit displacement
-	RM_MOD_10 = 128, /// MOD 10, Memory Mode, 16-bit displacement
-	RM_MOD_11 = 192, /// MOD 11, Register Mode
-	RM_MOD = 192, /// Used for masking the MOD bits (11 000 000)
+	RM_MOD_00 = 0,	/// MOD 00, Memory Mode, no displacement
+	RM_MOD_01 = 64,	/// MOD 01, Memory Mode, 8-bit displacement
+	RM_MOD_10 = 128,	/// MOD 10, Memory Mode, 16-bit displacement
+	RM_MOD_11 = 192,	/// MOD 11, Register Mode
+	RM_MOD = 192,	/// Used for masking the MOD bits (11 000 000)
 
-	RM_REG_000 = 0,  /// AL/AX
-	RM_REG_001 = 8,  /// CL/CX
-	RM_REG_010 = 16, /// DL/DX
-	RM_REG_011 = 24, /// BL/BX
-	RM_REG_100 = 32, /// AH/SP
-	RM_REG_101 = 40, /// CH/BP
-	RM_REG_110 = 48, /// DH/SI
-	RM_REG_111 = 56, /// BH/DI
-	RM_REG = 56, /// Used for masking the REG bits (00 111 000)
+	RM_REG_000 = 0,	/// AL/AX
+	RM_REG_001 = 8,	/// CL/CX
+	RM_REG_010 = 16,	/// DL/DX
+	RM_REG_011 = 24,	/// BL/BX
+	RM_REG_100 = 32,	/// AH/SP
+	RM_REG_101 = 40,	/// CH/BP
+	RM_REG_110 = 48,	/// DH/SI
+	RM_REG_111 = 56,	/// BH/DI
+	RM_REG = 56,	/// Used for masking the REG bits (00 111 000)
 
-	RM_RM_000 = 0, /// R/M 000 bits
-	RM_RM_001 = 1, /// R/M 001 bits
-	RM_RM_010 = 2, /// R/M 010 bits
-	RM_RM_011 = 3, /// R/M 011 bits
-	RM_RM_100 = 4, /// R/M 100 bits
-	RM_RM_101 = 5, /// R/M 101 bits
-	RM_RM_110 = 6, /// R/M 110 bits
-	RM_RM_111 = 7, /// R/M 111 bits
-	RM_RM = 7, /// Used for masking the R/M bits (00 000 111)
+	RM_RM_000 = 0,	/// R/M 000 bits
+	RM_RM_001 = 1,	/// R/M 001 bits
+	RM_RM_010 = 2,	/// R/M 010 bits
+	RM_RM_011 = 3,	/// R/M 011 bits
+	RM_RM_100 = 4,	/// R/M 100 bits
+	RM_RM_101 = 5,	/// R/M 101 bits
+	RM_RM_110 = 6,	/// R/M 110 bits
+	RM_RM_111 = 7,	/// R/M 111 bits
+	RM_RM = 7,	/// Used for masking the R/M bits (00 000 111)
 }
 
 /**
- * Push a WORD value into memory.
+ * Push a WORD value into stack.
  * Params: value = WORD value to PUSH
  */
 extern (C)
 void push(ushort value) {
 	SP = SP - 2;
 	__iu16(value, get_ad(SS, SP));
-}
-
-/**
- * Push a DWORD value into memory.
- * Params: value = DWORD value
- */
-extern (C)
-void epush(uint value) {
-	SP = SP - 2;
-	__iu32(value, get_ad(SS, SP));
 }
 
 /**
@@ -416,6 +406,16 @@ ushort pop() {
 	const uint addr = get_ad(SS, SP);
 	SP = SP + 2;
 	return __fu16(addr);
+}
+
+/**
+ * Push a DWORD value into stack.
+ * Params: value = DWORD value
+ */
+extern (C)
+void epush(uint value) {
+	SP = SP - 2;
+	__iu32(value, get_ad(SS, SP));
 }
 
 /**
@@ -432,12 +432,14 @@ uint epop() {
 /// Preferred Segment register
 __gshared ubyte Seg;
 enum : ubyte { // Segment override (for Seg)
-	SEG_NONE, /// Default, only exists to "reset" the preference.
-	SEG_CS, /// CS segment
-	SEG_DS, /// DS segment
-	SEG_ES, /// ES segment
-	SEG_SS  /// SS segment
-	// i486
+	SEG_NONE, /// None, default
+	SEG_CS,	/// CS segment
+	SEG_DS,	/// DS segment
+	SEG_ES,	/// ES segment
+	SEG_SS,	/// SS segment
+	// i386
+	SEG_FS,	/// FS segment
+	SEG_GS	/// GS segment
 }
 
 // Rest of the source here is solely this function.
@@ -454,13 +456,9 @@ void exec(ubyte op) {
 	 * REG - Register
 	 * MEM - Memory location
 	 * SEGREG - Segment register
-	 * 
-	 * The number suffix represents instruction width, such as 16 represents
-	 * 16-bit immediate values.
 	 */
-	//TODO: To reduce stack size, pre-define a stack variable, r, and move
-	//      all temporary results there.
-	//      Define: int r = void; uint addr = void; ubyte rm = void;
+	// Every instruction has their own local variables, since referencing one
+	// variable at the top of the stack increases binary size in general.
 	switch (op) {
 	case 0x00: { // ADD R/M8, REG8
 		const ubyte rm = __fu8_i;
@@ -1788,7 +1786,7 @@ void exec(ubyte op) {
 		const ubyte rm = __fu8_i; // Get ModR/M byte
 		const ubyte im = __fu8_i(1); // 8-bit Immediate after modr/m
 		const int addr = get_ea(rm);
-		int r;
+		int r = void;
 		switch (rm & RM_REG) { // REG
 		case RM_REG_000: // 000 - ADD
 			r = __fu8(addr) + im;
@@ -1835,7 +1833,7 @@ void exec(ubyte op) {
 		const ubyte rm = __fu8_i; // Get ModR/M byte
 		const ushort im = __fu16_i(1); // 8-bit Immediate after modr/m
 		const int addr = get_ea(rm, 1);
-		int r;
+		int r = void;
 		switch (rm & RM_REG) { // REG
 		case RM_REG_000: // 000 - ADD
 			r = __fu16(addr) + im;
@@ -1882,7 +1880,7 @@ void exec(ubyte op) {
 		const ubyte rm = __fu8_i; // Get ModR/M byte
 		const ushort im = __fu8_i(1);
 		const int addr = get_ea(rm);
-		int r;
+		int r = void;
 		switch (rm & RM_REG) { // ModRM REG
 		case RM_REG_000: // 000 - ADD
 			r = __fu8(addr) + im;
@@ -1914,7 +1912,7 @@ void exec(ubyte op) {
 		const ubyte rm = __fu8_i; // Get ModR/M byte
 		const ushort im = __fu8_i(1);
 		const int addr = get_ea(rm, 1);
-		int r;
+		int r = void;
 		switch (rm & RM_REG) { // ModRM REG
 		case 0b000_000: // 000 - ADD
 			r = __fu16(addr) + im;
@@ -1941,7 +1939,7 @@ void exec(ubyte op) {
 	case 0x84: { // TEST R/M8, REG8
 		ubyte rm = __fu8_i;
 		int n = __fu8(get_ea(rm));
-		int r;
+		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: r = AL & n; break;
 		case RM_REG_001: r = CL & n; break;
@@ -1960,7 +1958,7 @@ void exec(ubyte op) {
 	case 0x85: { // TEST R/M16, REG16
 		ubyte rm = __fu8_i;
 		int n = __fu16(get_ea(rm, 1));
-		int r;
+		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: r = AX & n; break;
 		case RM_REG_001: r = CX & n; break;
@@ -2658,7 +2656,7 @@ _F2_CX:	if (CX) {
 		ubyte rm = __fu8_i; // Get ModR/M byte
 		ubyte im = __fu8_i(1);
 		int addr = get_ea(rm);
-		int r;
+		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - TEST
 			__hflag8_1(im & __fu8(addr));
@@ -2706,7 +2704,7 @@ _F2_CX:	if (CX) {
 		ubyte rm = __fu8_i; // Get ModR/M byte
 		ushort im = __fu16_i(1);
 		int addr = get_ea(rm, 1);
-		int r;
+		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - TEST
 			__hflag16_1(im & __fu16(addr));

@@ -22,8 +22,8 @@ pragma(msg, `
 	enum BUILD_TYPE = "RELEASE";	/// For printing purposes
 }
 
-pragma(msg, "Compiling DD-DOS ", APP_VERSION);
-pragma(msg, "Default MS-DOS version: ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
+pragma(msg, "-- DD-DOS version: ", APP_VERSION);
+pragma(msg, "-- MS-DOS version: ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
 version (BigEndian)
 	pragma(msg,
@@ -32,25 +32,25 @@ You might want to run 'dub test' beforehand.
 `);
 
 version (CRuntime_Bionic) {
-	pragma(msg, "RUNTIME: Bionic");
+	pragma(msg, "-- RUNTIME: Bionic");
 	enum C_RUNTIME = "Bionic";
 } else version (CRuntime_DigitalMars) {
-	pragma(msg, "RUNTIME: DigitalMars");
+	pragma(msg, "-- RUNTIME: DigitalMars");
 	enum C_RUNTIME = "DigitalMars";
 } else version (CRuntime_Glibc) {
-	pragma(msg, "RUNTIME: Glibc");
+	pragma(msg, "-- RUNTIME: Glibc");
 	enum C_RUNTIME = "Glibc";
 } else version (CRuntime_Microsoft) {
-	pragma(msg, "RUNTIME: Microsoft");
+	pragma(msg, "-- RUNTIME: Microsoft");
 	enum C_RUNTIME = "Microsoft";
 } else version(CRuntime_Musl) {
-	pragma(msg, "RUNTIME: musl");
+	pragma(msg, "-- RUNTIME: musl");
 	enum C_RUNTIME = "musl";
 } else version (CRuntime_UClibc) {
-	pragma(msg, "RUNTIME: uClibc");
+	pragma(msg, "-- RUNTIME: uClibc");
 	enum C_RUNTIME = "uClibc";
 } else {
-	pragma(msg, "RUNTIME: UNKNOWN (Be careful!)");
+	pragma(msg, "-- RUNTIME: UNKNOWN (Be careful!)");
 	enum C_RUNTIME = "UNKNOWN";
 }
 
