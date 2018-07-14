@@ -2767,20 +2767,26 @@ _F2_CX:	if (CX) {
 		DF = 1;
 		++EIP;
 		return;
-	case 0xFE: // GRP4 R/M8
-		/*byte rm; // Get ModR/M byte
-		switch (rm & 0b00111000) {
-		case 0b00000000: // 000 - INC
-
+	case 0xFE: { // GRP4 R/M8
+		ubyte rm = __fu8_i;
+		uint addr = get_ea(rm);
+		int r = __fu8(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: // 000 - INC
+			++r;
 			break;
-		case 0b00001000: // 001 - DEC
-
+		case RM_REG_001: // 001 - DEC
+			--r;
 			break;
 		default:
-
-			break;
-		}*/
+			error("Invalid ModR/M on GRP4_8");
+			goto EXEC_ILLEGAL;
+		}
+		__iu16(r, addr);
+		__hflag16_2(r);
+		EIP += 2;
 		return;
+	}
 	case 0xFF: { // GRP5 R/M16
 		ubyte rm = __fu8_i;
 		uint addr = get_ea(rm, 1);
