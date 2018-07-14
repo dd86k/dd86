@@ -505,56 +505,41 @@ void exec(ubyte op) {
 		const uint addr = get_ea(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
-		case RM_REG_000: {
+		case RM_REG_000:
 			r = AL + r;
-			__hflag8_1(r);
 			AL = r;
 			break;
-		}
-		case RM_REG_001: {
+		case RM_REG_001:
 			r = CL + r;
-			__hflag8_1(r);
 			CL = r;
 			break;
-		}
-		case RM_REG_010: {
+		case RM_REG_010:
 			r = DL + r;
-			__hflag8_1(r);
 			DL = r;
 			break;
-		}
-		case RM_REG_011: {
+		case RM_REG_011:
 			r = BL + r;
-			__hflag8_1(r);
 			BL = r;
 			break;
-		}
-		case RM_REG_100: {
+		case RM_REG_100:
 			r = AH + r;
-			__hflag8_1(r);
 			AH = r;
 			break;
-		}
-		case RM_REG_101: {
+		case RM_REG_101:
 			r = CH + r;
-			__hflag8_1(r);
 			CH = r;
 			break;
-		}
-		case RM_REG_110: {
+		case RM_REG_110:
 			r = DH + r;
-			__hflag8_1(r);
 			DH = r;
 			break;
-		}
-		case RM_REG_111: {
+		case RM_REG_111:
 			r = BH + r;
-			__hflag8_1(r);
 			BH = r;
 			break;
-		}
 		default:
 		}
+		__hflag8_1(r);
 		EIP += 2;
 		return;
 	}
@@ -563,56 +548,41 @@ void exec(ubyte op) {
 		const uint addr = get_ea(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
-		case RM_REG_000: {
+		case RM_REG_000:
 			r = AX + r;
-			__hflag16_1(r);
 			AX = r;
 			break;
-		}
-		case RM_REG_001: {
+		case RM_REG_001:
 			r = CX + r;
-			__hflag16_1(r);
 			CX = r;
 			break;
-		}
-		case RM_REG_010: {
+		case RM_REG_010:
 			r = DX + r;
-			__hflag16_1(r);
 			DX = r;
 			break;
-		}
-		case RM_REG_011: {
+		case RM_REG_011:
 			r = BX + r;
-			__hflag16_1(r);
 			BX = r;
 			break;
-		}
-		case RM_REG_100: {
+		case RM_REG_100:
 			r = SP + r;
-			__hflag16_1(r);
 			SP = r;
 			break;
-		}
-		case RM_REG_101: {
+		case RM_REG_101:
 			r = BP + r;
-			__hflag16_1(r);
 			BP = r;
 			break;
-		}
-		case RM_REG_110: {
+		case RM_REG_110:
 			r = SI + r;
-			__hflag16_1(r);
 			SI = r;
 			break;
-		}
-		case RM_REG_111: {
+		case RM_REG_111:
 			r = DI + r;
-			__hflag16_1(r);
 			DI = r;
 			break;
-		}
 		default:
 		}
+		__hflag16_1(r);
 		EIP += 2;
 		return;
 	}
@@ -683,56 +653,41 @@ void exec(ubyte op) {
 		const uint addr = get_ea(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
-		case RM_REG_000: {
+		case RM_REG_000:
 			r = AL | r;
-			__hflag8_3(r);
 			AL = r;
 			break;
-		}
-		case RM_REG_001: {
+		case RM_REG_001:
 			r = CL | r;
-			__hflag8_3(r);
 			CL = r;
 			break;
-		}
-		case RM_REG_010: {
+		case RM_REG_010:
 			r = DL | r;
-			__hflag8_3(r);
 			DL = r;
 			break;
-		}
-		case RM_REG_011: {
+		case RM_REG_011:
 			r = BL | r;
-			__hflag8_3(r);
 			BL = r;
 			break;
-		}
-		case RM_REG_100: {
+		case RM_REG_100:
 			r = AH | r;
-			__hflag8_3(r);
 			AH = r;
 			break;
-		}
-		case RM_REG_101: {
+		case RM_REG_101:
 			r = CH | r;
-			__hflag8_3(r);
 			CH = r;
 			break;
-		}
-		case RM_REG_110: {
+		case RM_REG_110:
 			r = DH | r;
-			__hflag8_3(r);
 			DH = r;
 			break;
-		}
-		case RM_REG_111: {
+		case RM_REG_111:
 			r = BH | r;
-			__hflag8_3(r);
 			BH = r;
 			break;
-		}
 		default:
 		}
+		__hflag8_3(r);
 		EIP += 2;
 		return;
 	}
@@ -741,56 +696,41 @@ void exec(ubyte op) {
 		const uint addr = get_ea(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
-		case RM_REG_000: {
+		case RM_REG_000:
 			r = AX | r;
-			__hflag16_3(r);
 			AX = r;
 			break;
-		}
-		case RM_REG_001: {
+		case RM_REG_001:
 			r = CX | r;
-			__hflag16_3(r);
 			CX = r;
 			break;
-		}
-		case RM_REG_010: {
+		case RM_REG_010:
 			r = DX | r;
-			__hflag16_3(r);
 			DX = r;
 			break;
-		}
-		case RM_REG_011: {
+		case RM_REG_011:
 			r = BX | r;
-			__hflag16_3(r);
 			BX = r;
 			break;
-		}
-		case RM_REG_100: {
+		case RM_REG_100:
 			r = SP | r;
-			__hflag16_3(r);
 			SP = r;
 			break;
-		}
-		case RM_REG_101: {
+		case RM_REG_101:
 			r |= BP;
-			__hflag16_3(r);
 			BP = r;
 			break;
-		}
-		case RM_REG_110: {
+		case RM_REG_110:
 			r = SI | r;
-			__hflag16_3(r);
 			SI = r;
 			break;
-		}
-		case RM_REG_111: {
+		case RM_REG_111:
 			r = DI | r;
-			__hflag16_3(r);
 			DI = r;
 			break;
-		}
 		default:
 		}
+		__hflag16_3(r);
 		EIP += 2;
 		return;
 	}
@@ -829,18 +769,18 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x14: { // ADC AL, IMM8
-		int t = AL + __fu8_i;
-		__hflag8_1(t);
-		if (CF) ++t;
-		AL = t;
+		int r = AL + __fu8_i;
+		__hflag8_1(r);
+		if (CF) ++r;
+		AL = r;
 		EIP += 2;
 		return;
 	}
 	case 0x15: { // ADC AX, IMM16
-		int t = AX + __fu16_i;
-		__hflag16_1(t);
-		if (CF) ++t;
-		AX = t;
+		int r = AX + __fu16_i;
+		__hflag16_1(r);
+		if (CF) ++r;
+		AX = r;
 		EIP += 3;
 		return;
 	}
@@ -933,56 +873,41 @@ void exec(ubyte op) {
 		const uint addr = get_ea(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
-		case RM_REG_000: {
+		case RM_REG_000:
 			r = AL & r;
-			__hflag8_3(r);
 			AL = r;
 			break;
-		}
-		case RM_REG_001: {
+		case RM_REG_001:
 			r = CL & r;
-			__hflag8_3(r);
 			CL = r;
 			break;
-		}
-		case RM_REG_010: {
+		case RM_REG_010:
 			r = DL & r;
-			__hflag8_3(r);
 			DL = r;
 			break;
-		}
-		case RM_REG_011: {
+		case RM_REG_011:
 			r = BL & r;
-			__hflag8_3(r);
 			BL = r;
 			break;
-		}
-		case RM_REG_100: {
+		case RM_REG_100:
 			r = AH & r;
-			__hflag8_3(r);
 			AH = r;
 			break;
-		}
-		case RM_REG_101: {
+		case RM_REG_101:
 			r = CH & r;
-			__hflag8_3(r);
 			CH = r;
 			break;
-		}
-		case RM_REG_110: {
+		case RM_REG_110:
 			r = DH & r;
-			__hflag8_3(r);
 			DH = r;
 			break;
-		}
-		case RM_REG_111: {
+		case RM_REG_111:
 			r = BH & r;
-			__hflag8_3(r);
 			BH = r;
 			break;
-		}
 		default:
 		}
+		__hflag8_3(r);
 		EIP += 2;
 		return;
 	}
@@ -991,56 +916,41 @@ void exec(ubyte op) {
 		const uint addr = get_ea(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
-		case RM_REG_000: {
+		case RM_REG_000:
 			r = AX & r;
-			__hflag16_3(r);
 			AX = r;
 			break;
-		}
-		case RM_REG_001: {
+		case RM_REG_001:
 			r = CX & r;
-			__hflag16_3(r);
 			CX = r;
 			break;
-		}
-		case RM_REG_010: {
+		case RM_REG_010:
 			r = DX & r;
-			__hflag16_3(r);
 			DX = r;
 			break;
-		}
-		case RM_REG_011: {
+		case RM_REG_011:
 			r = BX & r;
-			__hflag16_3(r);
 			BX = r;
 			break;
-		}
-		case RM_REG_100: {
+		case RM_REG_100:
 			r = SP & r;
-			__hflag16_3(r);
 			SP = r;
 			break;
-		}
-		case RM_REG_101: {
+		case RM_REG_101:
 			r = BP & r;
-			__hflag16_3(r);
 			BP = r;
 			break;
-		}
-		case RM_REG_110: {
+		case RM_REG_110:
 			r = SI & r;
-			__hflag16_3(r);
 			SI = r;
 			break;
-		}
-		case RM_REG_111: {
+		case RM_REG_111:
 			r = DI & r;
-			__hflag16_3(r);
 			DI = r;
 			break;
-		}
 		default:
 		}
+		__hflag16_3(r);
 		EIP += 2;
 		return;
 	}
@@ -1126,56 +1036,41 @@ void exec(ubyte op) {
 		const uint addr = get_ea(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
-		case RM_REG_000: {
+		case RM_REG_000:
 			r = AL - r;
-			__hflag8_1(r);
 			AL = r;
 			break;
-		}
-		case RM_REG_001: {
+		case RM_REG_001:
 			r = CL - r;
-			__hflag8_1(r);
 			CL = r;
 			break;
-		}
-		case RM_REG_010: {
+		case RM_REG_010:
 			r = DL - r;
-			__hflag8_1(r);
 			DL = r;
 			break;
-		}
-		case RM_REG_011: {
+		case RM_REG_011:
 			r = BL - r;
-			__hflag8_1(r);
 			BL = r;
 			break;
-		}
-		case RM_REG_100: {
+		case RM_REG_100:
 			r = AH - r;
-			__hflag8_1(r);
 			AH = r;
 			break;
-		}
-		case RM_REG_101: {
+		case RM_REG_101:
 			r = CH - r;
-			__hflag8_1(r);
 			CH = r;
 			break;
-		}
-		case RM_REG_110: {
+		case RM_REG_110:
 			r = DH - r;
-			__hflag8_1(r);
 			DH = r;
 			break;
-		}
-		case RM_REG_111: {
+		case RM_REG_111:
 			r = BH - r;
-			__hflag8_1(r);
 			BH = r;
 			break;
-		}
 		default:
 		}
+		__hflag8_1(r);
 		EIP += 2;
 		return;
 	}
@@ -1184,56 +1079,41 @@ void exec(ubyte op) {
 		const uint addr = get_ea(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
-		case RM_REG_000: {
+		case RM_REG_000:
 			r = AX - r;
-			__hflag16_1(r);
 			AX = r;
 			break;
-		}
-		case RM_REG_001: {
+		case RM_REG_001:
 			r = CX - r;
-			__hflag16_1(r);
 			CX = r;
 			break;
-		}
-		case RM_REG_010: {
+		case RM_REG_010:
 			r = DX - r;
-			__hflag16_1(r);
 			DX = r;
 			break;
-		}
-		case RM_REG_011: {
+		case RM_REG_011:
 			r = BX - r;
-			__hflag16_1(r);
 			BX = r;
 			break;
-		}
-		case RM_REG_100: {
+		case RM_REG_100:
 			r = SP - r;
-			__hflag16_1(r);
 			SP = r;
 			break;
-		}
-		case RM_REG_101: {
+		case RM_REG_101:
 			r = BP - r;
-			__hflag16_1(r);
 			BP = r;
 			break;
-		}
-		case RM_REG_110: {
+		case RM_REG_110:
 			r = SI - r;
-			__hflag16_1(r);
 			SI = r;
 			break;
-		}
-		case RM_REG_111: {
+		case RM_REG_111:
 			r = DI - r;
-			__hflag16_1(r);
 			DI = r;
 			break;
-		}
 		default:
 		}
+		__hflag16_1(r);
 		EIP += 2;
 		return;
 	}
@@ -1319,56 +1199,41 @@ void exec(ubyte op) {
 		const uint addr = get_ea(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
-		case RM_REG_000: {
+		case RM_REG_000:
 			r = AL ^ r;
-			__hflag8_3(r);
 			AL = r;
 			break;
-		}
-		case RM_REG_001: {
+		case RM_REG_001:
 			r = CL ^ r;
-			__hflag8_3(r);
 			CL = r;
 			break;
-		}
-		case RM_REG_010: {
+		case RM_REG_010:
 			r = DL ^ r;
-			__hflag8_3(r);
 			DL = r;
 			break;
-		}
-		case RM_REG_011: {
+		case RM_REG_011:
 			r = BL ^ r;
-			__hflag8_3(r);
 			BL = r;
 			break;
-		}
-		case RM_REG_100: {
+		case RM_REG_100:
 			r = AH ^ r;
-			__hflag8_3(r);
 			AH = r;
 			break;
-		}
-		case RM_REG_101: {
+		case RM_REG_101:
 			r = CH ^ r;
-			__hflag8_3(r);
 			CH = r;
 			break;
-		}
-		case RM_REG_110: {
+		case RM_REG_110:
 			r = DH ^ r;
-			__hflag8_3(r);
 			DH = r;
 			break;
-		}
-		case RM_REG_111: {
+		case RM_REG_111:
 			r = BH ^ r;
-			__hflag8_3(r);
 			BH = r;
 			break;
-		}
 		default:
 		}
+		__hflag8_3(r);
 		EIP += 2;
 		return;
 	}
@@ -1377,56 +1242,41 @@ void exec(ubyte op) {
 		const uint addr = get_ea(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
-		case RM_REG_000: {
+		case RM_REG_000:
 			r = AX ^ r;
-			__hflag16_3(r);
 			AX = r;
 			break;
-		}
-		case RM_REG_001: {
+		case RM_REG_001:
 			r = CX ^ r;
-			__hflag16_3(r);
 			CX = r;
 			break;
-		}
-		case RM_REG_010: {
+		case RM_REG_010:
 			r = DX ^ r;
-			__hflag16_3(r);
 			DX = r;
 			break;
-		}
-		case RM_REG_011: {
+		case RM_REG_011:
 			r = BX ^ r;
-			__hflag16_3(r);
 			BX = r;
 			break;
-		}
-		case RM_REG_100: {
+		case RM_REG_100:
 			r = SP ^ r;
-			__hflag16_3(r);
 			SP = r;
 			break;
-		}
-		case RM_REG_101: {
+		case RM_REG_101:
 			r = BP ^ r;
-			__hflag16_3(r);
 			BP = r;
 			break;
-		}
-		case RM_REG_110: {
+		case RM_REG_110:
 			r = SI ^ r;
-			__hflag16_3(r);
 			SI = r;
 			break;
-		}
-		case RM_REG_111: {
+		case RM_REG_111:
 			r = DI ^ r;
-			__hflag16_3(r);
 			DI = r;
 			break;
-		}
 		default:
 		}
+		__hflag16_3(r);
 		EIP += 2;
 		return;
 	}
@@ -1733,7 +1583,6 @@ void exec(ubyte op) {
 		DI = pop;
 		++EIP;
 		return;
-	// Not used
 	case 0x70: // JO            SHORT-LABEL
 		EIP += OF ? __fi8_i : 2;
 		return;
@@ -1784,94 +1633,108 @@ void exec(ubyte op) {
 		return;
 	case 0x80: { // GRP1 R/M8, IMM8
 		const ubyte rm = __fu8_i; // Get ModR/M byte
-		const ubyte im = __fu8_i(1); // 8-bit Immediate after modr/m
+		const ushort im = __fu8_i(1);
 		const int addr = get_ea(rm);
-		int r = void;
+		int r = __fu8(addr);
 		switch (rm & RM_REG) { // REG
 		case RM_REG_000: // 000 - ADD
-			r = __fu8(addr) + im;
-			__hflag8_1(r);
-			__iu8(r, addr);
+			r += im;
+			__hflag16_1(r);
+			__iu16(r, addr);
 			break;
 		case RM_REG_001: // 001 - OR
-			r = __fu8(addr) | im;
-			__hflag8_3(r);
-			__iu8(r, addr);
+			r |= im;
+			__hflag16_3(r);
+			__iu16(r, addr);
 			break;
 		case RM_REG_010: // 010 - ADC
-		//TODO: 80h ADC
+			r += im;
+			if (CF) ++r;
+			__hflag16_1(r);
+			__iu16(r, addr);
 			break;
 		case RM_REG_011: // 011 - SBB
-		//TODO: 80h SBB
+			r -= im;
+			if (CF) --r;
+			__hflag16_1(r);
+			__iu16(r, addr);
 			break;
 		case RM_REG_100: // 100 - AND
-			r = __fu8(addr) & im;
-			__hflag8_1(r);
-			__iu8(r, addr);
+			r &= im;
+			__hflag16_1(r);
+			__iu16(r, addr);
 			break;
 		case RM_REG_101: // 101 - SUB
-			r = __fu8(addr) - im;
-			__hflag8_1(r);
-			__iu8(r, addr);
+			r -= im;
+			__hflag16_1(r);
+			__iu16(r, addr);
 			break;
 		case RM_REG_110: // 110 - XOR
-			r = __fu8(addr) ^ im;
-			__hflag8_3(r);
-			__iu8(r, addr);
+			r ^= im;
+			__hflag16_3(r);
+			__iu16(r, addr);
 			break;
 		case RM_REG_111: // 111 - CMP
-			r = __fu8(addr) ^ im;
-			__hflag8_3(r);
+			r -= im;
+			__hflag16_3(r);
 			break;
 		default:
-			crit("Invalid ModR/M from GRP1_8 (REG)");
+			crit("Invalid ModR/M from GRP1_8");
+			goto EXEC_ILLEGAL;
 		}
 		EIP += 3;
 		return;
 	}
 	case 0x81: { // GRP1 R/M16, IMM16
 		const ubyte rm = __fu8_i; // Get ModR/M byte
-		const ushort im = __fu16_i(1); // 8-bit Immediate after modr/m
+		const ushort im = __fu16_i(1);
 		const int addr = get_ea(rm, 1);
-		int r = void;
+		int r = __fu16(addr);
 		switch (rm & RM_REG) { // REG
 		case RM_REG_000: // 000 - ADD
-			r = __fu16(addr) + im;
+			r += im;
 			__hflag16_1(r);
 			__iu16(r, addr);
 			break;
 		case RM_REG_001: // 001 - OR
-			r = __fu16(addr) | im;
+			r |= im;
 			__hflag16_3(r);
 			__iu16(r, addr);
 			break;
 		case RM_REG_010: // 010 - ADC
-		//TODO: 80h ADC
+			r += im;
+			if (CF) ++r;
+			__hflag16_1(r);
+			__iu16(r, addr);
 			break;
 		case RM_REG_011: // 011 - SBB
-		//TODO: 80h SBB
+			r -= im;
+			if (CF) --r;
+			__hflag16_1(r);
+			__iu16(r, addr);
 			break;
 		case RM_REG_100: // 100 - AND
-			r = __fu16(addr) & im;
+			r &= im;
 			__hflag16_1(r);
 			__iu16(r, addr);
 			break;
 		case RM_REG_101: // 101 - SUB
-			r = __fu16(addr) - im;
+			r -= im;
 			__hflag16_1(r);
 			__iu16(r, addr);
 			break;
 		case RM_REG_110: // 110 - XOR
-			r = __fu16(addr) ^ im;
+			r ^= im;
 			__hflag16_3(r);
 			__iu16(r, addr);
 			break;
 		case RM_REG_111: // 111 - CMP
-			r = __fu16(addr) ^ im;
+			r -= im;
 			__hflag16_3(r);
 			break;
 		default:
-			crit("Invalid ModR/M from GRP1_16 (REG)");
+			crit("Invalid ModR/M from GRP1_16");
+			goto EXEC_ILLEGAL;
 		}
 		EIP += 4;
 		return;
@@ -1880,31 +1743,34 @@ void exec(ubyte op) {
 		const ubyte rm = __fu8_i; // Get ModR/M byte
 		const ushort im = __fu8_i(1);
 		const int addr = get_ea(rm);
-		int r = void;
+		int r = __fu8(addr);
 		switch (rm & RM_REG) { // ModRM REG
 		case RM_REG_000: // 000 - ADD
-			r = __fu8(addr) + im;
-			__hflag8_1(r);
+			r += im;
 			__iu8(r, addr);
 			break;
 		case RM_REG_010: // 010 - ADC
-		//TODO: 83h ADC
+			r += im;
+			if (CF) ++r;
+			__iu8(r, addr);
 			break;
 		case RM_REG_011: // 011 - SBB
-		//TODO: 83h SBB
+			r -= im;
+			if (CF) --r;
+			__iu8(r, addr);
 			break;
 		case RM_REG_101: // 101 - SUB
-			r = __fu8(addr) - im;
-			__hflag8_1(r);
+			r -= im;
 			__iu8(r, addr);
 			break;
 		case RM_REG_111: // 111 - CMP
-			r = __fu8(addr) - im;
-			__hflag8_1(r);
+			r -= im;
 			break;
 		default:
-			crit("Invalid ModR/M from GRP2_16 (REG)");
+			crit("Invalid ModR/M for GRP2_8");
+			goto EXEC_ILLEGAL;
 		}
+		__hflag8_1(r);
 		EIP += 3;
 		return;
 	}
@@ -1912,32 +1778,39 @@ void exec(ubyte op) {
 		const ubyte rm = __fu8_i; // Get ModR/M byte
 		const ushort im = __fu8_i(1);
 		const int addr = get_ea(rm, 1);
-		int r = void;
+		int r = __fu8(addr);
 		switch (rm & RM_REG) { // ModRM REG
-		case 0b000_000: // 000 - ADD
-			r = __fu16(addr) + im;
-			__hflag16_1(r);
+		case RM_REG_000: // 000 - ADD
+			r += im;
+			__iu16(r, addr);
 			break;
-		case 0b010_000: // 010 - ADC
-		//TODO: 83h ADC
+		case RM_REG_010: // 010 - ADC
+			r += im;
+			if (CF) ++r;
+			__iu16(r, addr);
 			break;
-		case 0b011_000: // 011 - SBB
-		//TODO: 83h SBB
+		case RM_REG_011: // 011 - SBB
+			r -= im;
+			if (CF) --r;
+			__iu16(r, addr);
 			break;
-		case 0b101_000: // 101 - SUB
-		case 0b111_000: // 111 - CMP
-			r = __fu16(addr) - im;
-			__hflag16_1(r);
+		case RM_REG_101: // 101 - SUB
+			r -= im;
+			__iu16(r, addr);
+			break;
+		case RM_REG_111: // 111 - CMP
+			r -= im;
 			break;
 		default:
-			crit("Invalid ModR/M from GRP2_16 (REG)");
+			crit("Invalid ModR/M for GRP2_16");
+			goto EXEC_ILLEGAL;
 		}
-		__iu16(r, addr);
-		EIP += 4;
+		__hflag16_1(r);
+		EIP += 3;
 		return;
 	}
 	case 0x84: { // TEST R/M8, REG8
-		ubyte rm = __fu8_i;
+		const ubyte rm = __fu8_i;
 		int n = __fu8(get_ea(rm));
 		int r = void;
 		switch (rm & RM_REG) {
@@ -1956,7 +1829,7 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x85: { // TEST R/M16, REG16
-		ubyte rm = __fu8_i;
+		const ubyte rm = __fu8_i;
 		int n = __fu16(get_ea(rm, 1));
 		int r = void;
 		switch (rm & RM_REG) {
@@ -1981,7 +1854,7 @@ void exec(ubyte op) {
 
 		return;
 	case 0x88: { // MOV R/M8, REG8
-		ubyte rm = __fu8_i;
+		const ubyte rm = __fu8_i;
 		int addr = get_ea(rm);
 		switch (rm & RM_REG) {
 		case RM_REG_000: __iu8(AL, addr); break;
@@ -1998,7 +1871,7 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x89: { // MOV R/M16, REG16
-		ubyte rm = __fu8_i;
+		const ubyte rm = __fu8_i;
 		int addr = get_ea(rm, 1);
 		switch (rm & RM_REG) {
 		case RM_REG_000: __iu16(AX, addr); break;
@@ -2015,7 +1888,7 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x8A: { // MOV REG8, R/M8
-		ubyte rm = __fu8_i;
+		const ubyte rm = __fu8_i;
 		int addr = get_ea(rm);
 		switch (rm & RM_REG) {
 		case RM_REG_000: AL = __fu8(addr); break;
@@ -2032,7 +1905,7 @@ void exec(ubyte op) {
 		return;
 	}
 	case 0x8B: { // MOV REG16, R/M16
-		ubyte rm = __fu8_i;
+		const ubyte rm = __fu8_i;
 		int addr = get_ea(rm, 1);
 		switch (rm & RM_REG) {
 		case RM_REG_000: AX = __fu16(addr); break;
@@ -2067,12 +1940,13 @@ void exec(ubyte op) {
 			break;
 		default: // when 100_000 is clear
 			crit("Invalid ModR/M for SEGREG->RM");
+			goto EXEC_ILLEGAL;
 		}
 		EIP += 2;
 		return;
 	}
 	case 0x8D: { // LEA REG16, MEM16
-		ubyte rm = __fu8_i;
+		const ubyte rm = __fu8_i;
 		int addr = get_ea(rm);
 		switch (rm & RM_REG) {
 		case RM_REG_000: AX = cast(ushort)addr; break;
@@ -2107,15 +1981,17 @@ void exec(ubyte op) {
 			break;
 		default: // when 100_000 is clear
 			crit("Invalid ModR/M for SEGREG<-RM");
+			goto EXEC_ILLEGAL;
 		}
 		EIP += 2;
 		return;
 	}
 	case 0x8F: { // POP R/M16
-		const byte rm = __fu8_i;
+		const ubyte rm = __fu8_i;
 		if (rm & RM_REG) { // REG MUST be 000
 			//TODO: Raise illegal instruction
 			crit("Invalid ModR/M for POP");
+			goto EXEC_ILLEGAL;
 		} else {
 			const ushort imm = __fu16_i(1);
 			//TODO: POP R/M16
@@ -2127,51 +2003,51 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0x91: { // XCHG AX, CX
-		const ushort t = AX;
+		const ushort r = AX;
 		AX = CX;
-		CX = t;
+		CX = r;
 		++EIP;
 		return;
 	}
 	case 0x92: { // XCHG AX, DX
-		const ushort t = AX;
+		const ushort r = AX;
 		AX = DX;
-		DX = t;
+		DX = r;
 		++EIP;
 		return;
 	}
 	case 0x93: { // XCHG AX, BX
-		const ushort t = AX;
+		const ushort r = AX;
 		AX = BX;
-		BX = t;
+		BX = r;
 		++EIP;
 		return;
 	}
 	case 0x94: { // XCHG AX, SP
-		const ushort t = AX;
+		const ushort r = AX;
 		AX = SP;
-		SP = t;
+		SP = r;
 		++EIP;
 		return;
 	}
 	case 0x95: { // XCHG AX, BP
-		const ushort t = AX;
+		const ushort r = AX;
 		AX = BP;
-		BP = t;
+		BP = r;
 		++EIP;
 		return;
 	}
 	case 0x96: { // XCHG AX, SI
-		const ushort t = AX;
+		const ushort r = AX;
 		AX = SI;
-		SI = t;
+		SI = r;
 		++EIP;
 		return;
 	}
 	case 0x97: { // XCHG AX, DI
-		const ushort t = AX;
+		const ushort r = AX;
 		AX = DI;
-		DI = t;
+		DI = r;
 		++EIP;
 		return;
 	}
@@ -2191,7 +2067,7 @@ void exec(ubyte op) {
 		return;
 	case 0x9B: // WAIT
 	/* Causes the processor to check for and handle pending, unmasked,
-	   floating-point exceptions before proceeding.*/
+	   floating-point exceptions before proceeding. */
 	//TODO: WAIT
 		++EIP;
 		return;
@@ -2233,7 +2109,7 @@ void exec(ubyte op) {
 	case 0xA5: // MOVS DEST-STR16, SRC-STR16
 
 		return;
-	case 0xA6: { // CMPS DEST-STR8, SRC-STR8
+	case 0xA6: // CMPS DEST-STR8, SRC-STR8
 		__hflag8_1(
 			__fu8(get_ad(DS, SI)) - __fu8(get_ad(ES, DI))
 		);
@@ -2245,8 +2121,7 @@ void exec(ubyte op) {
 			SI = SI + 1;
 		}
 		return;
-	}
-	case 0xA7: { // CMPSW DEST-STR16, SRC-STR16
+	case 0xA7: // CMPSW DEST-STR16, SRC-STR16
 		__hflag16_1(
 			__fu16(get_ad(DS, SI)) - __fu16(get_ad(ES, DI))
 		);
@@ -2258,17 +2133,14 @@ void exec(ubyte op) {
 			SI = SI + 2;
 		}
 		return;
-	}
-	case 0xA8: { // TEST AL, IMM8
+	case 0xA8: // TEST AL, IMM8
 		__hflag8_3(AL & __fu8_i);
 		EIP += 2;
 		return;
-	}
-	case 0xA9: { // TEST AX, IMM16
+	case 0xA9: // TEST AX, IMM16
 		__hflag16_3(AX & __fu16_i);
 		EIP += 3;
 		return;
-	}
 	case 0xAA: // STOS DEST-STR8
 		__iu8(AL, get_ad(ES, DI));
 		DI = DF ? DI - 1 : DI + 1;
@@ -2289,18 +2161,16 @@ void exec(ubyte op) {
 		SI = DF ? SI - 2 : SI + 2;
 		++EIP;
 		return;
-	case 0xAE: { // SCAS DEST-STR8
+	case 0xAE: // SCAS DEST-STR8
 		__hflag8_1(AL - __fu8(get_ad(ES, DI)));
 		DI = DF ? DI - 1 : DI + 1;
 		++EIP;
 		return;
-	}
-	case 0xAF: { // SCAS DEST-STR16
+	case 0xAF: // SCAS DEST-STR16
 		__hflag16_1(AX - __fu16(get_ad(ES, DI)));
 		DI = DF ? DI - 2 : DI + 2;
 		++EIP;
 		return;
-	}
 	case 0xB0: // MOV AL, IMM8
 		AL = __fu8_i;
 		EIP += 2;
@@ -2653,7 +2523,7 @@ _F2_CX:	if (CX) {
 		++EIP;
 		return;
 	case 0xF6: { // GRP3 R/M8, IMM8
-		ubyte rm = __fu8_i; // Get ModR/M byte
+		const ubyte rm = __fu8_i; // Get ModR/M byte
 		ubyte im = __fu8_i(1);
 		int addr = get_ea(rm);
 		int r = void;
@@ -2701,7 +2571,7 @@ _F2_CX:	if (CX) {
 		return;
 	}
 	case 0xF7: { // GRP3 R/M16, IMM16
-		ubyte rm = __fu8_i; // Get ModR/M byte
+		const ubyte rm = __fu8_i; // Get ModR/M byte
 		ushort im = __fu16_i(1);
 		int addr = get_ea(rm, 1);
 		int r = void;
@@ -2768,7 +2638,7 @@ _F2_CX:	if (CX) {
 		++EIP;
 		return;
 	case 0xFE: { // GRP4 R/M8
-		ubyte rm = __fu8_i;
+		const ubyte rm = __fu8_i;
 		uint addr = get_ea(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
@@ -2788,7 +2658,7 @@ _F2_CX:	if (CX) {
 		return;
 	}
 	case 0xFF: { // GRP5 R/M16
-		ubyte rm = __fu8_i;
+		const ubyte rm = __fu8_i;
 		uint addr = get_ea(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {

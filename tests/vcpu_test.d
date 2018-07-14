@@ -1039,21 +1039,21 @@ unittest
 
 	test("ADD");
 	AX = 0x400;
-	__iu16(400, AX);
+	__iu16(40, AX);
 	__iu8(0b11_000_000, EIP+1);
-	__iu16(200, EIP+2);
+	__iu16(20, EIP+2);
 	exec(0x83);
-	assert(__fu16(AX) == 600);
+	assert(__fu16(AX) == 60);
 	OK;
 	test("ADC"); TODO;
 	test("SBB"); TODO;
 	test("SUB/CMP");
 	AX = 0x400;
-	__iu16(400, AX);
+	__iu16(40, AX);
 	__iu8(0b11_101_000, EIP + 1);
-	__iu16(200, EIP + 2);
+	__iu16(25, EIP + 2);
 	exec(0x83);
-	assert(__fu16(AX) == 200);
+	assert(__fu16(AX) == 15);
 	OK;
 
 	sub("Group3 8");

@@ -11,6 +11,8 @@ import vcpu;
 import Logger;
 import vdos_codes : PANIC_MEMORY_ACCESS;
 
+//TODO: Consider get_ea16 for WIDE (16-bit) ModR/M operations
+
 /**
  * Get effective address from a R/M byte.
  * Takes account of the preferred segment register.
