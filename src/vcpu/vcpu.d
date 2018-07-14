@@ -48,7 +48,7 @@ void vcpu_init() {
 extern (C)
 void vcpu_run() {
 	info("CALL vcpu_run");
-	uint tsc;
+	uint tsc; /// tick count for thread sleeping purposes
 	while (RLEVEL > 0) {
 		EIP = get_ip; // CS:IP->EIP (important)
 		debug logexec(CS, IP, MEMORY[EIP]);
@@ -432,7 +432,7 @@ uint epop() {
 /// Preferred Segment register
 __gshared ubyte Seg;
 enum : ubyte { // Segment override (for Seg)
-	SEG_NONE, /// None, default
+	SEG_NONE,	/// None, default
 	SEG_CS,	/// CS segment
 	SEG_DS,	/// DS segment
 	SEG_ES,	/// ES segment
@@ -2738,7 +2738,7 @@ _F2_CX:	if (CX) {
 			__iu16(r, addr);
 			break;
 		default:
-			crit("Invalid ModR/M on GRP3_8");
+			error("Invalid ModR/M on GRP3_8");
 		}
 		EIP += 4;
 		return;
@@ -2781,38 +2781,52 @@ _F2_CX:	if (CX) {
 			break;
 		}*/
 		return;
-	case 0xFF: // GRP5 R/M16
-		/*byte rm; // Get ModR/M byte
-		switch (rm & 0b00111000) {
-		case 0b00000000: // 000 - INC
-
-		break;
-		case 0b00001000: // 001 - DEC
-
-		break;
-		case 0b00010000: // 010 - CALL R/M16 (intra)
-
-		break;
-		case 0b00011000: // 011 - CALL MEM16 (inter)
-
-		break;
-		case 0b00100000: // 100 - JMP R/M16 (intra)
-
-		break;
-		case 0b00101000: // 101 - JMP MEM16 (inter)
-
-		break;
-		case 0b00110000: // 110 - PUSH MEM16
-
-		break;
+	case 0xFF: { // GRP5 R/M16
+		ubyte rm = __fu8_i;
+		uint addr = get_ea(rm, 1);
+		int r = __fu16(addr);
+		switch (rm & RM_REG) {
+		case RM_REG_000: // 000 - INC
+			++r;
+			__iu16(r, addr);
+			__hflag16_2(r);
+			EIP += 2;
+			return;
+		case RM_REG_001: // 001 - DEC
+			--r;
+			__iu16(r, addr);
+			__hflag16_2(r);
+			EIP += 2;
+			break;
+		case RM_REG_010: // 010 - CALL R/M16 (near) -- Indirect within segment
+			push(IP);
+			EIP = r;
+			break;
+		case RM_REG_011: // 011 - CALL MEM16 (far) -- Indirect outside segment
+			push(CS);
+			push(IP);
+			EIP = get_ad(__fu16(addr + 2), r);
+			break;
+		case RM_REG_100: // 100 - JMP R/M16 (near) -- Indirect within segment
+			EIP = r;
+			break;
+		case RM_REG_101: // 101 - JMP MEM16 (far) -- Indirect outside segment
+			EIP = get_ad(__fu16(addr + 2), r);
+			break;
+		case RM_REG_110: // 110 - PUSH MEM16
+			push(__fu16(get_ad(__fu16(addr + 2), r)));
+			EIP += 2;
+			break;
 		default:
-
-		break;
-		}*/
-		break;
+			error("Invalid ModR/M on GRP5_16");
+			goto EXEC_ILLEGAL;
+		}
+		return;
+	}
 	default: // Illegal instruction
+EXEC_ILLEGAL:
+		error("INVALID OPERATION CODE");
 		//TODO: Raise vector on illegal op
-		crit("INVALID OPERATION CODE"); // Temporary
 		return;
 	}
 }
