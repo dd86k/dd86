@@ -11,7 +11,7 @@ void section(string s) {
 	writef("\n--------- %s\n", s);
 }
 void sub(string s) {
-	writef("\n    %s\n", s);
+	writef("\n\t%s\n", s);
 }
 void OK() {
 	writeln("OK");
