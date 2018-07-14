@@ -1,6 +1,6 @@
-import std.stdio;
-
 module test_utils;
+
+import std.stdio;
 
 enum SPACES = 20;
 
