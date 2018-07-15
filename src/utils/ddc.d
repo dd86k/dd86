@@ -12,7 +12,56 @@ module ddc;
 
 enum NULL_CHAR = cast(char*)0; /// Null character pointer
 
-extern (C) void putchar(int);
+extern (C) {
+	void putchar(int);
+	char* fgets(char*, int, shared(FILE*));
+	int fputs(immutable(char)*, shared(FILE*));
+}
+
+version (CRuntime_Microsoft) {
+	enum _NFILE = 20;
+
+	struct _iobuf { align(1):
+		char*	_ptr;
+		int	_cnt;
+		char*	_base;
+		int	_flag;
+		int	_file;
+		int	_charbuf;
+		int	_bufsiz;
+		int	__tmpnum;
+	}
+
+	alias _iobuf FILE;
+
+	enum {
+		_IOFBF   = 0,
+		_IOLBF   = 0x40,
+		_IONBF   = 4,
+		_IOREAD  = 1,     // non-standard
+		_IOWRT   = 2,     // non-standard
+		_IOMYBUF = 8,     // non-standard
+		_IOEOF   = 0x10,  // non-standard
+		_IOERR   = 0x20,  // non-standard
+		_IOSTRG  = 0x40,  // non-standard
+		_IORW    = 0x80,  // non-standard
+		_IOAPP   = 0x200, // non-standard
+		_IOAPPEND = 0x200, // non-standard
+	}
+
+	extern shared void function() _fcloseallp;
+
+	private extern extern(C) shared FILE[_NFILE] _iob;
+
+	shared stdin  = &_iob[0];
+	shared stdout = &_iob[1];
+	shared stderr = &_iob[2];
+	shared stdaux = &_iob[3];
+	shared stdprn = &_iob[4];
+} else {
+	public import core.stdc.stdio :
+		stdin, stdout, stderr, fgets, fputs, FILE;
+}
 
 /*
  * sys/stat.h

@@ -4,12 +4,15 @@
 
 module vdos;
 
-import core.stdc.stdio : printf, puts, fputs, fgets, stdin, stdout;
+import core.stdc.stdio : printf, puts;
 import core.stdc.string : strcmp, strncpy, strlen;
 import core.stdc.stdlib : malloc, free, system;
+import vcpu, vcpu_utils;
 import vdos_loader : ExecLoad;
-import vcpu;
-import ddcon, Logger, vdos_codes, utils, utils_os, ddc;
+import vdos_codes;
+import utils, utils_os;
+import ddcon, Logger;
+import ddc : putchar, stdin, stdout, fgets, fputs;
 
 debug {
 pragma(msg, `
@@ -106,8 +109,8 @@ START:
 	//TODO: Print $PROMPT
 	if (gcwd(inb))
 		printf("\n%s%% ", inb);
-	else // just-in-case
-		fputs("\n% ", stdout);
+	/*else // just-in-case
+		fputs("\n% ", stdout);*/
 
 	fgets(inb, _BUFS, stdin);
 	if (*inb == '\n') goto START; // Nothing to process
@@ -408,18 +411,7 @@ extern (C)
 void Raise(ubyte code) {
 	debug printf("[dbug] INTERRUPT: %02Xh\n", code);
 
-	// REAL-MODE
-	//const inum = code << 2;
-	/*IF (inum + 3 > IDT limit)
-		#GP
-	IF stack not large enough for a 6-byte return information
-		#SS*/
-	/*push(FLAG);
-	IF = TF = 0;
-	push(CS);
-	push(IP);*/
-	//CS ← IDT[inum].selector;
-	//IP ← IDT[inum].offset;
+	__int_enter;
 
 	switch (code) {
 	case 0x10: // VIDEO
@@ -838,8 +830,5 @@ void Raise(ubyte code) {
 	default: break;
 	}
 
-	/*IP = pop;
-	CS = pop;
-	IF = TF = 1;
-	FLAG = pop;*/
+	__int_exit;
 }

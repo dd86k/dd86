@@ -472,3 +472,30 @@ extern (C)
 bool C_OVERFLOW(size_t addr) {
 	return addr < 0 || addr > MEMORYSIZE;
 }
+
+/*****************************************************************************
+ * Interrupt helpers
+ *****************************************************************************/
+
+void __int_enter() {
+	// REAL-MODE
+	//const inum = code << 2;
+	/*IF (inum + 3 > IDT limit)
+		#GP
+	IF stack not large enough for a 6-byte return information
+		#SS*/
+	push(FLAG);
+	IF = TF = 0;
+	push(CS);
+	push(IP);
+	//CS ← IDT[inum].selector;
+	//IP ← IDT[inum].offset;
+}
+
+void __int_exit() {
+	// REAL-MODE
+	IP = pop;
+	CS = pop;
+	IF = TF = 1;
+	FLAG = pop;
+}

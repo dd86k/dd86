@@ -806,16 +806,16 @@ void exec(ubyte op) {
 		return;
 	case 0x1C: { // SBB AL, IMM8
 		int t = AL - __fu8_i;
-		__hflag8_3(t);
 		if (CF) --t;
+		__hflag8_3(t);
 		AL = t;
 		EIP += 2;
 		return;
 	}
 	case 0x1D: { // SBB AX, IMM16
 		int t = AX - __fu16_i;
-		__hflag16_3(t);
 		if (CF) --t;
+		__hflag16_3(t);
 		AX = t;
 		EIP += 3;
 		return;
@@ -2293,7 +2293,6 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0xCF: // IRET
-		// NOTE: Usually unused since Raise handles both INT entry and exit
 		IP = pop;
 		CS = pop;
 		FLAG = pop;
