@@ -6,7 +6,7 @@ copyright "Copyright © dd86k 2017-2018"
 license "MIT"
 homepage "https://github.com/dd86k/dd-dos"
 
-buildType "diag" {
+buildType "debug-verbose" {
   targetType "executable"
   buildOptions "debugMode" "debugInfoC"
   dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v"
@@ -18,10 +18,9 @@ buildType "debug" {
   dflags "-betterC" "-transition=intpromote"
 }
 
-buildType "debug-old" {
+buildType "debug-gdc" {
   targetType "executable"
   buildOptions "debugMode"
-  dflags "-betterC" "-g"
 }
 
 buildType "release" {
