@@ -109,8 +109,8 @@ START:
 	//TODO: Print $PROMPT
 	if (gcwd(inb))
 		printf("\n%s%% ", inb);
-	/*else // just-in-case
-		fputs("\n% ", stdout);*/
+	else // just-in-case
+		fputs("\n% ", stdout);
 
 	fgets(inb, _BUFS, stdin);
 	if (*inb == '\n') goto START; // Nothing to process
@@ -207,9 +207,12 @@ VER       Show DD-DOS and MS-DOS version`
 			int nzt; /// Non-zero (total/excluded from conventional in some cases)
 			int nzc; /// Convential (<640K) non-zero
 			for (int i; i < MEMORYSIZE; ++i) {
-				if (i < 0xA_0000) {
-					if (MEMORY[i]) ++nzc;
-				} else if (MEMORY[i]) ++nzt;
+				if (MEMORY[i]) {
+					if (i < 0xA_0000)
+						++nzc;
+					else
+						++nzt;
+				}
 			}
 			printf(
 				"Memory Type             Zero +    Data =   Total\n" ~
@@ -238,7 +241,7 @@ OPTIONS
 By default, MEM will show memory usage`
 			);
 		} else {
-			puts("Not implemented");
+			puts("Not implemented. Only /stats is implemented");
 		}
 		goto START;
 	}

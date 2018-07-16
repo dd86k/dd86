@@ -124,7 +124,7 @@ int gcwd(char* p) {
 /**
  * Verifies if the file or directory exists from path
  * Params: p = Path
- * Returns: Non-zero on found
+ * Returns: Non-zero if exists
  */
 extern (C)
 int pexist(char* p) {
@@ -141,19 +141,19 @@ int pexist(char* p) {
 
 /**
  * Verifies if given path is a directory
- * Returns: Non-zero on success
+ * Returns: Non-zero if directory
  */
 extern (C)
 int pisdir(char* p) {
 	version (Windows) {
-		import core.sys.windows.windows : GetFileAttributesA;
-		return GetFileAttributesA(p) == 0x10; // FILE_ATTRIBUTE_DIRECTORY
+		import core.sys.windows.windows :
+			GetFileAttributesA, FILE_ATTRIBUTE_DIRECTORY;
+		return GetFileAttributesA(p) == FILE_ATTRIBUTE_DIRECTORY;
 	}
 	version (Posix) {
-		import core.sys.posix.sys.stat;
-		debug import core.stdc.stdio;
+		import ddc : stat_t, stat, S_IFDIR;
 		stat_t s = void;
 		stat(p, &s);
-		return S_ISDIR(s.st_mode);
+		return s.st_mode & S_IFDIR;
 	}
 }

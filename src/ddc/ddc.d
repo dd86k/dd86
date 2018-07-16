@@ -1,5 +1,7 @@
 /*
- * ddc.d : C runtime bindings, subset of DD's C extern definitions (signatures)
+ * ddc.d : For people who want to C.
+ *
+ * C runtime bindings, subset of DD's C extern definitions (signatures)
  *
  * Why? Because some functions are externed as (D) in core.stdc, which does not
  * mangle well with the linker (D mangles for C externs, really?!). This source
@@ -10,12 +12,19 @@
 
 module ddc;
 
+enum float __DDC_VERSION = 2018.0;
+
 enum NULL_CHAR = cast(char*)0; /// Null character pointer
+
+/*
+ * Standard C runtime function fixes.
+ */
 
 extern (C) {
 	void putchar(int);
 	char* fgets(char*, int, shared(FILE*));
 	int fputs(immutable(char)*, shared(FILE*));
+	int getchar();
 }
 
 version (CRuntime_Microsoft) {
@@ -38,15 +47,15 @@ version (CRuntime_Microsoft) {
 		_IOFBF   = 0,
 		_IOLBF   = 0x40,
 		_IONBF   = 4,
-		_IOREAD  = 1,     // non-standard
-		_IOWRT   = 2,     // non-standard
-		_IOMYBUF = 8,     // non-standard
-		_IOEOF   = 0x10,  // non-standard
-		_IOERR   = 0x20,  // non-standard
-		_IOSTRG  = 0x40,  // non-standard
-		_IORW    = 0x80,  // non-standard
-		_IOAPP   = 0x200, // non-standard
-		_IOAPPEND = 0x200, // non-standard
+		_IOREAD  = 1,	// non-standard
+		_IOWRT   = 2,	// non-standard
+		_IOMYBUF = 8,	// non-standard
+		_IOEOF   = 0x10,	// non-standard
+		_IOERR   = 0x20,	// non-standard
+		_IOSTRG  = 0x40,	// non-standard
+		_IORW    = 0x80,	// non-standard
+		_IOAPP   = 0x200,	// non-standard
+		_IOAPPEND = 0x200,	// non-standard
 	}
 
 	extern shared void function() _fcloseallp;
@@ -59,17 +68,14 @@ version (CRuntime_Microsoft) {
 	shared stdaux = &_iob[3];
 	shared stdprn = &_iob[4];
 } else {
-	public import core.stdc.stdio :
-		stdin, stdout, stderr, fgets, fputs, FILE;
+	public import core.stdc.stdio;
 }
 
 /*
  * sys/stat.h
  */
 version (Posix) {
-	extern (C) int getchar();
-
-	//TODO: !! alises/enums/structs for stat_t
+	public import core.sys.posix.sys.stat;
 	/*struct stat_t { align(1):
 		mode_t st_mode;
 		ino_t st_ino;

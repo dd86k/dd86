@@ -8,8 +8,10 @@ dd-dos.exe
 dd-dos-test-library.exe
 dd-dos
 dd-dos-test-library
-docs
 dub.selections.json
+# dub_platform_probe*.s files
+dub*.s
+
 # Personal stuff
 t
 MEMDMP
