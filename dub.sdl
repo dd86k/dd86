@@ -6,6 +6,10 @@ copyright "Copyright © dd86k 2017-2018"
 license "MIT"
 homepage "https://github.com/dd86k/dd-dos"
 
+###################
+# Debug builds
+###################
+
 buildType "debug-verbose" {
   targetType "executable"
   buildOptions "debugMode" "debugInfoC"
@@ -23,10 +27,19 @@ buildType "debug-gdc" {
   buildOptions "debugMode"
 }
 
+###################
+# Release builds
+###################
+
 buildType "release" {
   targetType "executable"
   buildOptions "releaseMode" "optimize"
   dflags "-betterC" "-transition=intpromote"
+}
+
+buildType "release-gdc" {
+  targetType "executable"
+  buildOptions "releaseMode" "optimize"
 }
 
 buildType "release-nobounds" {
@@ -41,11 +54,25 @@ buildType "release-inline" {
   dflags "-betterC" "-transition=intpromote"
 }
 
+###################
+# Tests
+###################
+
 buildType "unittest" {
   targetName "tests"
   targetType "executable"
   buildOptions "unittests"
   dflags "-transition=intpromote"
+
+  excludedSourceFiles "src/main.d"
+  sourcePaths "tests/"
+  importPaths "tests/"
+}
+
+buildType "unittest-gdc" {
+  targetName "tests"
+  targetType "executable"
+  buildOptions "unittests"
 
   excludedSourceFiles "src/main.d"
   sourcePaths "tests/"
