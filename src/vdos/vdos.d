@@ -4,7 +4,7 @@
 
 module vdos;
 
-import core.stdc.stdio : printf, puts;
+import ddc;
 import core.stdc.string : strcmp, strncpy, strlen;
 import core.stdc.stdlib : malloc, free, system;
 import vcpu, vcpu_utils;
@@ -12,16 +12,12 @@ import vdos_loader : ExecLoad;
 import vdos_codes;
 import utils, utils_os;
 import ddcon, Logger;
-import ddc : putchar, stdin, stdout, fgets, fputs;
 
 debug {
-pragma(msg, `
-+-------------+
-| DEBUG BUILD |
-+-------------+
-`);
+	pragma(msg, "-- DEBUG: ON");
 	enum BUILD_TYPE = "DEBUG";	/// For printing purposes
 } else {
+	pragma(msg, "-- DEBUG: OFF");
 	enum BUILD_TYPE = "RELEASE";	/// For printing purposes
 }
 
@@ -31,7 +27,7 @@ pragma(msg, "-- MS-DOS version: ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 version (BigEndian)
 	pragma(msg,
 `WARNING: DD-DOS has not been tested on big-endian platforms!
-You might want to run 'dub test' beforehand.
+You might want to run 'dub test' beforehand to check if everything is OK.
 `);
 
 version (CRuntime_Bionic) {
@@ -76,10 +72,6 @@ enum
 	DOS_MAJOR_VERSION = 5, /// Default major DOS version
 	DOS_MINOR_VERSION = 0; /// Default minor DOS version
 
-__gshared ubyte
-	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
-	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
-
 /// File/Folder attribute. See INT 21h AH=3Ch
 // Trivia: Did you know Windows still use these values today?
 enum
@@ -94,6 +86,10 @@ enum
 // While maximum in MS-DOS 5.0 seems to be 120, 255 feels like a little more
 // breathable
 enum _BUFS = 255;
+
+__gshared ubyte
+	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
+	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
 
 /**
  * Enter virtual shell (vDOS)
@@ -618,7 +614,7 @@ void Raise(ubyte code) {
 		 * 2Ah - Get system date
 		 */
 		case 0x2A: {
-			OSDate d;
+			OSDate d = void;
 			os_date(&d); // utils_os
 			CX = d.year;
 			DH = d.month;
@@ -636,7 +632,7 @@ void Raise(ubyte code) {
 		 * 2Ch - Get system time
 		 */
 		case 0x2C: {
-			OSTime t;
+			OSTime t = void;
 			os_time(&t); // utils_os
 			CH = t.hour;
 			CL = t.minute;

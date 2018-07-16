@@ -23,7 +23,6 @@ public __gshared ubyte Verbose = LOG_SILENCE;
 debug void _debug(immutable(char)* msg) {
 	printf("[....] %s\n", msg);
 }
-//TODO: See above
 debug void logexec(ushort seg, ushort ip, ubyte op) {
 	printf("[ VM ] %04X:%04X  %02Xh\n", seg, ip, op);
 }
