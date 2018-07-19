@@ -1,15 +1,10 @@
 /*
- * ddcon.d : In-house console library inspired of the .NET Console class.
- *
- * This library maximize the use of Posix functions to be as portable and
- * compatible for many operating systems.
- *
- * This source is separated by long comments for easier navigation while scrolling.
+ * ddcon.d : In-house console library
  */
 
 module ddcon;
 
-import ddc;
+import ddc : putchar;
 
 private import core.stdc.stdio : printf;
 private alias sys = core.stdc.stdlib.system;
@@ -43,6 +38,9 @@ void InitConsole() {
 	version (Windows) {
 		hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 		hIn  = GetStdHandle(STD_INPUT_HANDLE);
+	}
+	version (Posix) {
+		tcgetattr(STDIN_FILENO, &old_tio);
 	}
 }
 
@@ -202,11 +200,11 @@ void ResetColor() {
 extern (C)
 void Clear() {
 	version (Windows) {
-		CONSOLE_SCREEN_BUFFER_INFO csbi;
+		CONSOLE_SCREEN_BUFFER_INFO csbi = void;
 		COORD c;
 		GetConsoleScreenBufferInfo(hOut, &csbi);
 		const int size = csbi.dwSize.X * csbi.dwSize.Y;
-		DWORD num = 0;
+		DWORD num;
 		if (FillConsoleOutputCharacterA(hOut, ' ', size, c, &num) == 0
 			/*|| // .NET uses this but no idea why yet.
 			FillConsoleOutputAttribute(hOut, csbi.wAttributes, size, c, &num) == 0*/) {
@@ -229,11 +227,11 @@ void Clear() {
 /// Window width
 @property ushort WindowWidth() {
 	version (Windows) {
-		CONSOLE_SCREEN_BUFFER_INFO c;
+		CONSOLE_SCREEN_BUFFER_INFO c = void;
 		GetConsoleScreenBufferInfo(hOut, &c);
 		return cast(ushort)(c.srWindow.Right - c.srWindow.Left + 1);
 	} else version (Posix) {
-		winsize ws;
+		winsize ws = void;
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
 		return ws.ws_col;
 	} else {
@@ -257,11 +255,11 @@ void Clear() {
 /// Window height
 @property ushort WindowHeight() {
 	version (Windows) {
-		CONSOLE_SCREEN_BUFFER_INFO c;
+		CONSOLE_SCREEN_BUFFER_INFO c = void;
 		GetConsoleScreenBufferInfo(hOut, &c);
 		return cast(ushort)(c.srWindow.Bottom - c.srWindow.Top + 1);
 	} else version (Posix) {
-		winsize ws;
+		winsize ws = void;
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
 		return ws.ws_row;
 	} else {
@@ -368,49 +366,53 @@ KeyInfo ReadKey(ubyte echo = false) {
 
 		// Commenting this section will echo the character
 		// And also it won't do anything to getchar
-		tcgetattr(STDIN_FILENO, &old_tio);
 		new_tio = old_tio;
 		new_tio.c_lflag &= TERM_ATTR;
 		tcsetattr(STDIN_FILENO,TCSANOW, &new_tio);
 
 		uint c = getchar;
 
+		if (c >= 'a' && c <= 'z') {
+			k.keyCode = cast(Key)(c - 32);
+			goto _READKEY_END;
+		}
+
 		with (k) switch (c) {
 		case '\n': // \n (ENTER)
 			keyCode = Key.Enter;
-			break;
+			goto _READKEY_END;
 		case 27: // ESC
 			switch (c = getchar) {
 			case '[':
 				switch (c = getchar) {
-				case 'A': keyCode = Key.UpArrow; break;
-				case 'B': keyCode = Key.DownArrow; break;
-				case 'C': keyCode = Key.RightArrow; break;
-				case 'D': keyCode = Key.LeftArrow; break;
-				case 'F': keyCode = Key.End; break;
-				case 'H': keyCode = Key.Home; break;
+				case 'A': keyCode = Key.UpArrow; goto _READKEY_END;
+				case 'B': keyCode = Key.DownArrow; goto _READKEY_END;
+				case 'C': keyCode = Key.RightArrow; goto _READKEY_END;
+				case 'D': keyCode = Key.LeftArrow; goto _READKEY_END;
+				case 'F': keyCode = Key.End; goto _READKEY_END;
+				case 'H': keyCode = Key.Home; goto _READKEY_END;
 				// There is an additional getchar due to the pending '~'
-				case '2': keyCode = Key.Insert; getchar; break;
-				case '3': keyCode = Key.Delete; getchar; break;
-				case '5': keyCode = Key.PageUp; getchar; break;
-				case '6': keyCode = Key.PageDown; getchar; break;
-				default: break;
+				case '2': keyCode = Key.Insert; getchar; goto _READKEY_END;
+				case '3': keyCode = Key.Delete; getchar; goto _READKEY_END;
+				case '5': keyCode = Key.PageUp; getchar; goto _READKEY_END;
+				case '6': keyCode = Key.PageDown; getchar; goto _READKEY_END;
+				default:
+					c = 0;
+					goto _READKEY_DEFAULT;
 				}
-				break;
+				break; // [
 			default: // EOF?
-
-				break;
+				c = 0;
+				goto _READKEY_DEFAULT;
 			}
-			break;
-		case 'a': .. case 'z': // A .. Z
-			k.keyCode = cast(Key)(c - 32);
-			break;
-		//TODO: The rest
-		default:
-			k.keyCode = cast(ushort)c;
-			break;
+			break; // ESC
+			default: goto _READKEY_DEFAULT;
 		}
 
+_READKEY_DEFAULT:
+		k.keyCode = cast(ushort)c;
+
+_READKEY_END:
 		tcsetattr(STDIN_FILENO,TCSANOW, &old_tio);
 	} // version posix
 	return k;
@@ -642,34 +644,25 @@ enum Key : ushort {
  * Structs
  *******************************************************************/
 /*
-struct RawEvent
-{
+struct RawEvent {
 	EventType Type;
 	KeyInfo Key;
 	MouseInfo Mouse;
 	WindowSize Size;
 }
 */
+
 /// Key information structure
-// ala C#
-struct KeyInfo
-{
-	/// UTF-8 Character.
-	char keyChar;
-	/// Key code.
-	ushort keyCode;
-	/// Scan code.
-	ushort scanCode;
-	/// If either CTRL was held down.
-	ubyte ctrl;
-	/// If either ALT was held down.
-	ubyte alt;
-	/// If SHIFT was held down.
-	ubyte shift;
+struct KeyInfo {
+	char keyChar;	/// UTF-8 Character.
+	ushort keyCode;	/// Key code.
+	ushort scanCode;	/// Scan code.
+	ubyte ctrl;	/// If either CTRL was held down.
+	ubyte alt;	/// If either ALT was held down.
+	ubyte shift;	/// If SHIFT was held down.
 }
 /*
-struct MouseInfo
-{
+struct MouseInfo {
 	struct ScreenLocation { ushort X, Y; }
 	ScreenLocation Location;
 	ushort Buttons;
@@ -677,7 +670,6 @@ struct MouseInfo
 	ushort Type;
 }
 */
-struct WindowSize
-{
+struct WindowSize {
 	ushort Width, Height;
 }
