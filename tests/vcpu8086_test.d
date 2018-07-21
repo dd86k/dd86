@@ -1,4 +1,4 @@
-import vcpu, vcpu_utils, std.stdio, vdos;
+import vcpu, vcpu_utils, vcpu_8086, std.stdio, vdos;
 import test_utils;
 
 unittest
@@ -953,12 +953,12 @@ unittest
 	assert(__fu8(AL) == 0b0011_0000);
 	OK;
 	test("SUB/CMP");
-	AL = 0x41;
-	__iu8(40, AL);
+	AL = 0x40;
+	__iu8(45, AL);
 	__iu8(0b11_101_000, EIP+1);
 	__iu8(20, EIP+2);
 	exec(0x80);
-	assert(__fu8(AL) == 20);
+	assert(__fu8(AL) == 25);
 	OK;
 	test("XOR");
 	AL = 0x40;

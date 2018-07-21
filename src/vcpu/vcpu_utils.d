@@ -175,12 +175,12 @@ uint get_ea(ubyte rm, ubyte wide = 0) {
  */
 extern (C)
 void __hflag8_1(int r) {
-	CF = (r & 0x100) != 0;
-	SF = (r & 0x80) != 0;
-	AF = (r & 0x10) != 0;
-	ZF = r == 0;
-	OF = r > 0xFF || r < 0;
-	PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0;
+	setZF(r);
+	setAF_8(r);
+	setSF_8(r);
+	setPF_8(r);
+	setOF_8(r);
+	setCF_8(r);
 }
 
 /**
@@ -190,12 +190,12 @@ void __hflag8_1(int r) {
  */
 extern (C)
 void __hflag16_1(int r) {
-	CF = (r & 0x1_0000) != 0;
-	SF = (r & 0x8000) != 0;
-	AF = (r & 0x100) != 0;
-	ZF = r == 0;
-	OF = r > 0xFFFF || r < 0;
-	PF = ~(cast(ushort)r ^ cast(ushort)r) != 0;
+	setZF(r);
+	setAF_16(r);
+	setSF_16(r);
+	setPF_16(r);
+	setOF_16(r);
+	setCF_16(r);
 }
 
 /**
@@ -206,11 +206,11 @@ void __hflag16_1(int r) {
  */
 extern (C)
 void __hflag8_2(int r) {
-	SF = (r & 0x80) != 0;
-	AF = (r & 0x10) != 0;
-	ZF = r == 0;
-	OF = r > 0xFF || r < 0;
-	PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0;
+	setZF(r);
+	setAF_8(r);
+	setSF_8(r);
+	setPF_8(r);
+	setOF_8(r);
 }
 
 /**
@@ -221,11 +221,11 @@ void __hflag8_2(int r) {
  */
 extern (C)
 void __hflag16_2(int r) {
-	SF = (r & 0x8000) != 0;
-	AF = (r & 0x100) != 0;
-	ZF = r == 0;
-	OF = r > 0xFFFF || r < 0;
-	PF = ~(cast(ushort)r ^ cast(ushort)r) != 0;
+	setZF(r);
+	setAF_16(r);
+	setSF_16(r);
+	setPF_16(r);
+	setOF_16(r);
 }
 
 /**
@@ -236,9 +236,9 @@ void __hflag16_2(int r) {
  */
 extern (C)
 void __hflag8_3(int r) {
-	ZF = r == 0;
-	SF = (r & 0x80) != 0;
-	PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0; // XNOR(TEMP[0:7]);
+	setZF(r);
+	setSF_8(r);
+	setPF_8(r);
 	OF = CF = 0;
 }
 
@@ -250,9 +250,9 @@ void __hflag8_3(int r) {
  */
 extern (C)
 void __hflag16_3(int r) {
-	ZF = r == 0;
-	SF = (r & 0x8000) != 0;
-	PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0; // XNOR(TEMP[0:7]);
+	setZF(r);
+	setSF_16(r);
+	setPF_16(r);
 	OF = CF = 0;
 }
 
@@ -263,8 +263,8 @@ void __hflag16_3(int r) {
  */
 extern (C)
 void __hflag8_4(int r) {
-	OF = r > 0xFF || r < 0;
-	CF = cast(ubyte)(r & 0x100);
+	setOF_8(r);
+	setCF_8(r);
 }
 
 /**
@@ -274,8 +274,71 @@ void __hflag8_4(int r) {
  */
 extern (C)
 void __hflag16_4(int r) {
-	OF = r > 0xFFFF || r < 0;
-	CF = cast(ubyte)(r & 0x1_0000);
+	setOF_16(r);
+	setCF_16(r);
+}
+
+/**
+ * Handle result for BYTE
+ * SF, ZF, and PF affected
+ * OF, CF, and AF undefined
+ */
+extern (C)
+void __hflag8_5(int r) {
+	setZF(r);
+	setSF_8(r);
+	setPF_8(r);
+}
+
+/**
+ * Handle result for WORD
+ * SF, ZF, and PF affected
+ * OF, CF, and AF undefined
+ */
+extern (C)
+void __hflag16_5(int r) {
+	setZF(r);
+	setSF_16(r);
+	setPF_16(r);
+}
+
+// Conditional flag handlers
+
+private extern (C)
+pragma(inline) {
+	void setCF_8(int r) {
+		CF = (r & 0x100) != 0;
+	}
+	void setCF_16(int r) {
+		CF = (r & 0x10000) != 0;
+	}
+	void setPF_8(int r) {
+		PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0; // XNOR(TEMP[0:7]);
+	}
+	void setPF_16(int r) {
+		PF = ~(cast(ushort)r ^ cast(ushort)r) != 0;
+	}
+	void setAF_8(int r) {
+		AF = (r & 0x10) != 0;
+	}
+	void setAF_16(int r) {
+		AF = (r & 0x100) != 0;
+	}
+	void setZF(int r) {
+		ZF = r == 0;
+	}
+	void setSF_8(int r) {
+		SF = (r & 0x80) != 0;
+	}
+	void setSF_16(int r) {
+		SF = (r & 0x8000) != 0;
+	}
+	void setOF_8(int r) {
+		OF = r > 0xFF || r < 0;
+	}
+	void setOF_16(int r) {
+		OF = r > 0xFFFF || r < 0;
+	}
 }
 
 /*****************************************************************************

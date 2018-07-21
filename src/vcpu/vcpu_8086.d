@@ -1240,7 +1240,7 @@ void exec(ubyte op) {
 			__hflag16_3(r);
 			break;
 		default:
-			crit("Invalid ModR/M from GRP1_8");
+			info("Invalid ModR/M from GRP1_8");
 			goto EXEC_ILLEGAL;
 		}
 		EIP += 3;
@@ -1294,7 +1294,7 @@ void exec(ubyte op) {
 			__hflag16_3(r);
 			break;
 		default:
-			crit("Invalid ModR/M from GRP1_16");
+			info("Invalid ModR/M from GRP1_16");
 			goto EXEC_ILLEGAL;
 		}
 		EIP += 4;
@@ -1328,7 +1328,7 @@ void exec(ubyte op) {
 			r -= im;
 			break;
 		default:
-			crit("Invalid ModR/M for GRP2_8");
+			info("Invalid ModR/M for GRP2_8");
 			goto EXEC_ILLEGAL;
 		}
 		__hflag8_1(r);
@@ -1363,7 +1363,7 @@ void exec(ubyte op) {
 			r -= im;
 			break;
 		default:
-			crit("Invalid ModR/M for GRP2_16");
+			info("Invalid ModR/M for GRP2_16");
 			goto EXEC_ILLEGAL;
 		}
 		__hflag16_1(r);
@@ -1408,12 +1408,102 @@ void exec(ubyte op) {
 		EIP += 2;
 		return;
 	}
-	case 0x86: // XCHG REG8, R/M8
-
+	case 0x86: { // XCHG REG8, R/M8
+		const ubyte rm = __fu8_i;
+		const int addr = get_ea(rm);
+		/*
+			temp <- REG
+			REG <- MEM
+			MEM <- temp
+		*/
+		ubyte r = void;
+		switch (rm & RM_REG) {
+		case RM_REG_000:
+			r = AL;
+			AL = __fu8(addr);
+			break;
+		case RM_REG_001:
+			r = CL;
+			CL = __fu8(addr);
+			break;
+		case RM_REG_010:
+			r = DL;
+			DL = __fu8(addr);
+			break;
+		case RM_REG_011:
+			r = BL;
+			BL = __fu8(addr);
+			break;
+		case RM_REG_100:
+			r = AH;
+			AH = __fu8(addr);
+			break;
+		case RM_REG_101:
+			r = CH;
+			CH = __fu8(addr);
+			break;
+		case RM_REG_110:
+			r = DH;
+			DH = __fu8(addr);
+			break;
+		case RM_REG_111:
+			r = BH;
+			BH = __fu8(addr);
+			break;
+		default:
+		}
+		__iu8(r, addr);
+		EIP += 2;
 		return;
-	case 0x87: // XCHG REG16, R/M16
-
+	}
+	case 0x87: { // XCHG REG16, R/M16
+		const ubyte rm = __fu8_i;
+		const int addr = get_ea(rm, 1);
+		/*
+			temp <- REG
+			REG <- MEM
+			MEM <- temp
+		*/
+		ushort r = void;
+		switch (rm & RM_REG) {
+		case RM_REG_000:
+			r = AX;
+			AX = __fu16(addr);
+			break;
+		case RM_REG_001:
+			r = CX;
+			CX = __fu16(addr);
+			break;
+		case RM_REG_010:
+			r = DX;
+			DX = __fu16(addr);
+			break;
+		case RM_REG_011:
+			r = BX;
+			BX = __fu16(addr);
+			break;
+		case RM_REG_100:
+			r = SP;
+			SP = __fu16(addr);
+			break;
+		case RM_REG_101:
+			r = BP;
+			BP = __fu16(addr);
+			break;
+		case RM_REG_110:
+			r = SI;
+			SI = __fu16(addr);
+			break;
+		case RM_REG_111:
+			r = DI;
+			DI = __fu16(addr);
+			break;
+		default:
+		}
+		__iu16(r, addr);
+		EIP += 2;
 		return;
+	}
 	case 0x88: { // MOV R/M8, REG8
 		const ubyte rm = __fu8_i;
 		int addr = get_ea(rm);
@@ -1485,22 +1575,22 @@ void exec(ubyte op) {
 	case 0x8C: { // MOV R/M16, SEGREG
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 		const byte rm = __fu8_i;
-		const int ea = get_ea(rm, 1);
+		const int addr = get_ea(rm, 1);
 		switch (rm & RM_REG) { // if REG[3] is clear, trip to default
 		case RM_REG_100: // ES
-			__iu16(ES, ea);
+			__iu16(ES, addr);
 			break;
 		case RM_REG_101: // CS
-			__iu16(CS, ea);
+			__iu16(CS, addr);
 			break;
 		case RM_REG_110: // SS
-			__iu16(SS, ea);
+			__iu16(SS, addr);
 			break;
 		case RM_REG_111: // DS
-			__iu16(DS, ea);
+			__iu16(DS, addr);
 			break;
-		default: // when 100_000 is clear
-			crit("Invalid ModR/M for SEGREG->RM");
+		default: // when bit 6 is clear
+			info("Invalid ModR/M for SEGREG->RM");
 			goto EXEC_ILLEGAL;
 		}
 		EIP += 2;
@@ -1508,16 +1598,16 @@ void exec(ubyte op) {
 	}
 	case 0x8D: { // LEA REG16, MEM16
 		const ubyte rm = __fu8_i;
-		int addr = get_ea(rm);
+		const int addr = get_ea(rm);
 		switch (rm & RM_REG) {
-		case RM_REG_000: AX = cast(ushort)addr; break;
-		case RM_REG_001: CX = cast(ushort)addr; break;
-		case RM_REG_010: DX = cast(ushort)addr; break;
-		case RM_REG_011: BX = cast(ushort)addr; break;
-		case RM_REG_100: BP = cast(ushort)addr; break;
-		case RM_REG_101: SP = cast(ushort)addr; break;
-		case RM_REG_110: SI = cast(ushort)addr; break;
-		case RM_REG_111: DI = cast(ushort)addr; break;
+		case RM_REG_000: AX = addr; break;
+		case RM_REG_001: CX = addr; break;
+		case RM_REG_010: DX = addr; break;
+		case RM_REG_011: BX = addr; break;
+		case RM_REG_100: BP = addr; break;
+		case RM_REG_101: SP = addr; break;
+		case RM_REG_110: SI = addr; break;
+		case RM_REG_111: DI = addr; break;
 		default: // Never happens
 		}
 		EIP += 2;
@@ -1526,22 +1616,22 @@ void exec(ubyte op) {
 	case 0x8E: { // MOV SEGREG, R/M16
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 		const byte rm = __fu8_i;
-		const int ea = get_ea(rm, 1);
+		const int addr = get_ea(rm, 1);
 		switch (rm & RM_REG) { // if bit 10_0000 is clear, trip to default
 		case RM_REG_100: // ES
-			ES = __fu16(ea);
+			ES = __fu16(addr);
 			break;
 		case RM_REG_101: // CS
-			CS = __fu16(ea);
+			CS = __fu16(addr);
 			break;
 		case RM_REG_110: // SS
-			SS = __fu16(ea);
+			SS = __fu16(addr);
 			break;
 		case RM_REG_111: // DS
-			DS = __fu16(ea);
+			DS = __fu16(addr);
 			break;
 		default: // when 100_000 is clear
-			crit("Invalid ModR/M for SEGREG<-RM");
+			info("Invalid ModR/M for SEGREG<-RM");
 			goto EXEC_ILLEGAL;
 		}
 		EIP += 2;
@@ -1550,13 +1640,10 @@ void exec(ubyte op) {
 	case 0x8F: { // POP R/M16
 		const ubyte rm = __fu8_i;
 		if (rm & RM_REG) { // REG MUST be 000
-			//TODO: Raise illegal instruction
-			crit("Invalid ModR/M for POP");
+			info("Invalid ModR/M for POP R/M16");
 			goto EXEC_ILLEGAL;
-		} else {
-			const ushort imm = __fu16_i(1);
-			//TODO: POP R/M16
 		}
+		push(__fu16(get_ea(rm, 1)));
 		EIP += 2;
 		return;
 	}
@@ -1798,38 +1885,63 @@ void exec(ubyte op) {
 		return;
 	case 0xC2: // RET IMM16 (NEAR)
 		IP = pop;
-		SP = cast(ushort)(SP + __fu16_i);
-		//EIP += 3; ?
+		SP = SP + __fu16_i;
 		return;
 	case 0xC3: // RET (NEAR)
 		IP = pop;
 		return;
-	case 0xC4: // LES REG16, MEM16
+	case 0xC4: { // LES REG16, MEM16
 		// Load into REG and ES
-		
+		const ubyte rm = __fu8_i;
+		const ushort r = __fu16(get_ea(rm, 1));
+		switch (rm & RM_REG) {
+		case RM_REG_000: ES = r; AX = r; break;
+		case RM_REG_001: ES = r; CX = r; break;
+		case RM_REG_010: ES = r; DX = r; break;
+		case RM_REG_011: ES = r; BX = r; break;
+		case RM_REG_100: ES = r; SP = r; break;
+		case RM_REG_101: ES = r; BP = r; break;
+		case RM_REG_110: ES = r; SI = r; break;
+		case RM_REG_111: ES = r; DI = r; break;
+		default:
+		}
+		EIP += 2;
 		return;
-	case 0xC5: // LDS REG16, MEM16
+	}
+	case 0xC5: { // LDS REG16, MEM16
 		// Load into REG and DS
-
+		const ubyte rm = __fu8_i;
+		const ushort r = __fu16(get_ea(rm, 1));
+		switch (rm & RM_REG) {
+		case RM_REG_000: DS = r; AX = r; break;
+		case RM_REG_001: DS = r; CX = r; break;
+		case RM_REG_010: DS = r; DX = r; break;
+		case RM_REG_011: DS = r; BX = r; break;
+		case RM_REG_100: DS = r; SP = r; break;
+		case RM_REG_101: DS = r; BP = r; break;
+		case RM_REG_110: DS = r; SI = r; break;
+		case RM_REG_111: DS = r; DI = r; break;
+		default:
+		}
+		EIP += 2;
 		return;
+	}
 	case 0xC6: { // MOV MEM8, IMM8
 		const ubyte rm = __fu8_i;
 		if (rm & RM_REG) { // No register operation allowed
-			//TODO: Raise #GP
-			crit("Invalid ModR/M for MOV MEM8");
-		} else {
-			__iu8(__fu8_i(1), get_ea(rm));
+			info("Invalid ModR/M for MOV MEM8");
+			goto EXEC_ILLEGAL;
 		}
+		__iu8(__fu8_i(1), get_ea(rm));
 		return;
 	}
 	case 0xC7: { // MOV MEM16, IMM16
 		const ubyte rm = __fu8_i;
 		if (rm & RM_REG) { // No register operation allowed
-			//TODO: Raise #GP
-			crit("Invalid ModR/M for MOV MEM16");
-		} else {
-			__iu16(__fu16_i(1), get_ea(rm));
+			info("Invalid ModR/M for MOV MEM16");
+			goto EXEC_ILLEGAL;
 		}
+		__iu16(__fu16_i(1), get_ea(rm, 1));
 		return;
 	}
 	case 0xCA: // RET IMM16 (FAR)
@@ -1860,146 +1972,156 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0xD0: { // GRP2 R/M8, 1
-		/*byte rm; // Get ModR/M byte
-		switch (rm & 0b00111000) {
-		case 0b00000000: // 000 - ROL
+		/*const ubyte rm = __fu8_i;
+		const int addr = get_ea(rm);
+		switch (rm & RM_REG) {
+		case RM_REG_000: // 000 - ROL
 
-		break;
-		case 0b00001000: // 001 - ROR
-
-		break;
-		case 0b00010000: // 010 - RCL
-
-		break;
-		case 0b00011000: // 011 - RCR
-
-		break;
-		case 0b00100000: // 100 - SAL/SHL
-
-		break;
-		case 0b00101000: // 101 - SHR
-
-		break;
-		case 0b00111000: // 111 - SAR
-
-		break;
-		default:
-			
 			break;
+		case RM_REG_001: // 001 - ROR
+
+			break;
+		case RM_REG_010: // 010 - RCL
+
+			break;
+		case RM_REG_011: // 011 - RCR
+
+			break;
+		case RM_REG_100: // 100 - SAL/SHL
+
+			break;
+		case RM_REG_101: // 101 - SHR
+
+			break;
+		case RM_REG_111: // 111 - SAR
+
+			break;
+		default:
+			info("Invalid ModR/M for GRP2 R/M8, 1");
+			goto EXEC_ILLEGAL;
 		}*/
+		EIP += 2;
 		return;
 	}
 	case 0xD1: // GRP2 R/M16, 1
-		/*byte rm; // Get ModR/M byte
-		switch (rm & 0b00111000) {
-		case 0b00000000: // 000 - ROL
+		/*const ubyte rm = __fu8_i;
+		const int addr = get_ea(rm);
+		switch (rm & RM_REG) {
+		case RM_REG_000: // 000 - ROL
 
-		break;
-		case 0b00001000: // 001 - ROR
+			break;
+		case RM_REG_001: // 001 - ROR
 
-		break;
-		case 0b00010000: // 010 - RCL
+			break;
+		case RM_REG_010: // 010 - RCL
 
-		break;
-		case 0b00011000: // 011 - RCR
+			break;
+		case RM_REG_011: // 011 - RCR
 
-		break;
-		case 0b00100000: // 100 - SAL/SHL
+			break;
+		case RM_REG_100: // 100 - SAL/SHL
 
-		break;
-		case 0b00101000: // 101 - SHR
+			break;
+		case RM_REG_101: // 101 - SHR
 
-		break;
-		case 0b00111000: // 111 - SAR
+			break;
+		case RM_REG_111: // 111 - SAR
 
-		break;
+			break;
 		default:
-
-		break;
+			info("Invalid ModR/M for GRP2 R/M16, 1");
+			goto EXEC_ILLEGAL;
 		}*/
+		EIP += 2;
 		return;
 	case 0xD2: // GRP2 R/M8, CL
-		/*byte rm; // Get ModR/M byte
-		switch (rm & 0b00111000) {
-		case 0b00000000: // 000 - ROL
+		/*const ubyte rm = __fu8_i;
+		const int addr = get_ea(rm);
+		switch (rm & RM_REG) {
+		case RM_REG_000: // 000 - ROL
 
-		break;
-		case 0b00001000: // 001 - ROR
+			break;
+		case RM_REG_001: // 001 - ROR
 
-		break;
-		case 0b00010000: // 010 - RCL
+			break;
+		case RM_REG_010: // 010 - RCL
 
-		break;
-		case 0b00011000: // 011 - RCR
+			break;
+		case RM_REG_011: // 011 - RCR
 
-		break;
-		case 0b00100000: // 100 - SAL/SHL
+			break;
+		case RM_REG_100: // 100 - SAL/SHL
 
-		break;
-		case 0b00101000: // 101 - SHR
+			break;
+		case RM_REG_101: // 101 - SHR
 
-		break;
-		case 0b00111000: // 111 - SAR
+			break;
+		case RM_REG_111: // 111 - SAR
 
-		break;
+			break;
 		default:
-
-		break;
+			info("Invalid ModR/M for GRP2 R/M8, CL");
+			goto EXEC_ILLEGAL;
 		}*/
+		EIP += 2;
 		return;
 	case 0xD3: // GRP2 R/M16, CL
-		/*byte rm; // Get ModR/M byte
-		switch (rm & 0b00111000) {
-		case 0b00000000: // 000 - ROL
+		/*const ubyte rm = __fu8_i;
+		const int addr = get_ea(rm, 1);
+		switch (rm & RM_REG) {
+		case RM_REG_000: // 000 - ROL
 
-		break;
-		case 0b00001000: // 001 - ROR
+			break;
+		case RM_REG_001: // 001 - ROR
 
-		break;
-		case 0b00010000: // 010 - RCL
+			break;
+		case RM_REG_010: // 010 - RCL
 
-		break;
-		case 0b00011000: // 011 - RCR
+			break;
+		case RM_REG_011: // 011 - RCR
 
-		break;
-		case 0b00100000: // 100 - SAL/SHL
+			break;
+		case RM_REG_100: // 100 - SAL/SHL
 
-		break;
-		case 0b00101000: // 101 - SHR
+			break;
+		case RM_REG_101: // 101 - SHR
 
-		break;
-		case 0b00111000: // 111 - SAR
+			break;
+		case RM_REG_111: // 111 - SAR
 
-		break;
+			break;
 		default:
-
-		break;
+			info("Invalid ModR/M for GRP2 R/M16, CL");
+			goto EXEC_ILLEGAL;
 		}*/
+		EIP += 2;
 		return;
 	case 0xD4: // AAM
-		AH = cast(ubyte)(AL / 0xA);
-		AL = cast(ubyte)(AL % 0xA);
+		int r = AL % 0xA;
+		__hflag8_5(r);
+		AL = r;
+		AH = r / 0xA;
 		++EIP;
 		return;
 	case 0xD5: // AAD
-		AL = cast(ubyte)(AL + (AH * 0xA));
+		int r = cast(ubyte)(AL + (AH * 0xA));
+		__hflag8_5(r);
+		AL = r;
 		AH = 0;
 		++EIP;
 		return;
 	// D6h is illegal under 8086
 	case 0xD7: // XLAT SOURCE-TABLE
-		AL = __fu8(get_ad(DS, BX) + AL);
+		AL = __fu8(get_ad(DS, BX) + cast(byte)AL);
 		return;
 	/*case 0xD8: // ESC OPCODE, SOURCE
 	case 0xD9: // 1101 1XXX - MOD YYY R/M
 	case 0xDA: // Used to escape to another co-processor.
-	case 0xDB: 
-	case 0xDC: 
+	case 0xDB:
+	case 0xDC:
 	case 0xDD:
 	case 0xDE:
-	case 0xDF:
-
-		break;*/
+	case 0xDF: break;*/
 	case 0xE0: // LOOPNE/LOOPNZ SHORT-LABEL
 		CX = CX - 1;
 		if (CX && ZF == 0) EIP += __fi8_i;
@@ -2064,11 +2186,11 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0xF2: // REPNE/REPNZ
-_F2_CX:	if (CX) {
+_F2_S:	if (CX) {
 			//TODO: Finish REPNE/REPNZ properly?
 			exec(0xA6);
 			CX = CX - 1;
-			if (ZF == 0) goto _F2_CX;
+			if (ZF == 0) goto _F2_S;
 		} else ++EIP;
 		return;
 	case 0xF3: // REP/REPE/REPNZ
@@ -2125,7 +2247,8 @@ _F2_CX:	if (CX) {
 			AL = cast(ubyte)r;
 			break;
 		default:
-			crit("Invalid ModR/M on GRP3_8");
+			info("Invalid ModR/M on GRP3_8");
+			goto EXEC_ILLEGAL;
 		}
 		EIP += 3;
 		return;
@@ -2168,7 +2291,8 @@ _F2_CX:	if (CX) {
 			__iu16(r, addr);
 			break;
 		default:
-			error("Invalid ModR/M on GRP3_8");
+			info("Invalid ModR/M on GRP3_8");
+			goto EXEC_ILLEGAL;
 		}
 		EIP += 4;
 		return;
@@ -2199,7 +2323,7 @@ _F2_CX:	if (CX) {
 		return;
 	case 0xFE: { // GRP4 R/M8
 		const ubyte rm = __fu8_i;
-		uint addr = get_ea(rm);
+		const uint addr = get_ea(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - INC
@@ -2209,7 +2333,7 @@ _F2_CX:	if (CX) {
 			--r;
 			break;
 		default:
-			error("Invalid ModR/M on GRP4_8");
+			info("Invalid ModR/M on GRP4_8");
 			goto EXEC_ILLEGAL;
 		}
 		__iu16(r, addr);
@@ -2254,14 +2378,14 @@ _F2_CX:	if (CX) {
 			EIP += 2;
 			break;
 		default:
-			error("Invalid ModR/M on GRP5_16");
+			info("Invalid ModR/M on GRP5_16");
 			goto EXEC_ILLEGAL;
 		}
 		return;
 	}
 	default: // Illegal instruction
 EXEC_ILLEGAL:
-		error("INVALID OPERATION CODE");
+		info("INVALID OPERATION CODE");
 		//TODO: Raise vector on illegal op
 		return;
 	}
