@@ -388,7 +388,7 @@ void panic(ushort code,
 	int i = RANGE;
 	ubyte* p = MEMORY_P + EIP - TARGET;
 	while (--i) {
-		if (i == TARGET)
+		if (i == (TARGET - 1))
 			printf(" > %02X<", *p);
 		else
 			printf(" %02X", *p);
