@@ -1,8 +1,5 @@
 /*
- * vcpu.d: Legacy machine code interpreter.
- * 
- * Right now it's closest to an 8086 (REAL-MODE)
- * I hope to make it closer to an i486 whenever possible.
+ * vcpu.d: x86 machine code interpreter.
  */
 
 module vcpu;
@@ -14,9 +11,16 @@ import vcpu_8086 : exec;
 import vcpu_utils;
 import vcpu_config;
 
-/*enum : ubyte {
+/*enum : ubyte { // Emulated CPU
 	CPU_8086,
 	CPU_80486
+}*/
+
+/*enum : ubyte { // CPU Mode
+	CPU_MODE_REAL,
+	CPU_MODE_PROTECTED,
+	CPU_MODE_EXTENDED,
+	// No LONG modes
 }*/
 
 /// Preferred Segment register
@@ -70,7 +74,7 @@ enum : ubyte {
 __gshared short RLEVEL = 1;
 __gshared ubyte opt_sleep = 1; /// If set, the vcpu sleeps between cycles
 
-enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer to avoid typing cast() everytime
+enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer enum to avoid explicit casting
 __gshared ubyte[INIT_MEM] MEMORY; /// Main memory bank
 __gshared uint MEMORYSIZE = INIT_MEM; /// Current memory MEMORY size
 
@@ -123,7 +127,7 @@ void vcpu_run() {
  * Get memory address out of a segment and a register value.
  * Params:
  *   s = Segment register value
- *   o  = Generic register value
+ *   o = Generic register value
  * Returns: SEG:ADDR Location
  */
 extern (C)

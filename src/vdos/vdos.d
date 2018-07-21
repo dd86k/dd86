@@ -784,8 +784,8 @@ void Raise(ubyte code) {
 				CF = 1;
 				break;
 			}
-		}
 			break;
+		}
 		/*
 		 * 4Ch - Terminate with return code
 		 */
