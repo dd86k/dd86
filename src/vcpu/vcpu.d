@@ -5,7 +5,8 @@
 module vcpu;
 
 import sleep;
-import Logger : info, logexec; // logexec
+import Logger : info;
+debug import Logger : logexec;
 import vdos : Raise; // Interrupt handler
 import vcpu_8086 : exec;
 import vcpu_utils;

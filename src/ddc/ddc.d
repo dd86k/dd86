@@ -20,7 +20,7 @@ enum NULL_CHAR = cast(char*)0; /// Null character pointer
  * Standard C runtime function fixes.
  */
 
-extern (C) {
+public extern (C) {
 	void putchar(int);
 	char* fgets(char*, int, shared(FILE*));
 	int fputs(immutable(char)*, shared(FILE*));
@@ -67,6 +67,8 @@ version (CRuntime_Microsoft) {
 	shared stderr = &_iob[2];
 	shared stdaux = &_iob[3];
 	shared stdprn = &_iob[4];
+
+	public import core.stdc.stdio : printf, puts;
 } else {
 	public import core.stdc.stdio;
 }
