@@ -4,7 +4,7 @@
 
 module ddcon;
 
-import ddc : putchar;
+import ddc : putchar, getchar;
 
 private import core.stdc.stdio : printf;
 private alias sys = core.stdc.stdlib.system;
@@ -41,6 +41,8 @@ void InitConsole() {
 	}
 	version (Posix) {
 		tcgetattr(STDIN_FILENO, &old_tio);
+		new_tio = old_tio;
+		new_tio.c_lflag &= TERM_ATTR;
 	}
 }
 
@@ -364,10 +366,6 @@ KeyInfo ReadKey(ubyte echo = false) {
 	} else version (Posix) {
 		//TODO: Get modifier keys states
 
-		// Commenting this section will echo the character
-		// And also it won't do anything to getchar
-		new_tio = old_tio;
-		new_tio.c_lflag &= TERM_ATTR;
 		tcsetattr(STDIN_FILENO,TCSANOW, &new_tio);
 
 		uint c = getchar;
@@ -396,17 +394,15 @@ KeyInfo ReadKey(ubyte echo = false) {
 				case '3': keyCode = Key.Delete; getchar; goto _READKEY_END;
 				case '5': keyCode = Key.PageUp; getchar; goto _READKEY_END;
 				case '6': keyCode = Key.PageDown; getchar; goto _READKEY_END;
-				default:
-					c = 0;
-					goto _READKEY_DEFAULT;
-				}
-				break; // [
-			default: // EOF?
-				c = 0;
-				goto _READKEY_DEFAULT;
-			}
-			break; // ESC
+				default: goto _READKEY_DEFAULT;
+				} // [
 			default: goto _READKEY_DEFAULT;
+			} // ESC
+		default:
+			if (c >= 'a' && c <= 'z') {
+				k.keyCode = cast(Key)(c - 32);
+				goto _READKEY_END;
+			}
 		}
 
 _READKEY_DEFAULT:

@@ -34,7 +34,7 @@ enum : ubyte {
 /*
  * DD-DOS Critical Error Codes
  * Prefix: PANIC_
- * Source: DD-DOS Technical Reference Manual 2018.1
+ * Source: DD-DOS Technical Reference Manual
  */
 enum : ushort {
 	PANIC_FILE_NOT_LOADED	= 0x03,
