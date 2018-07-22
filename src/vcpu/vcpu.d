@@ -8,7 +8,7 @@ import sleep;
 import Logger : info;
 debug import Logger : logexec;
 import vdos : Raise; // Interrupt handler
-import vcpu_8086 : exec;
+import vcpu_8086 : exec16;
 import vcpu_utils;
 import vcpu_config;
 
@@ -112,7 +112,7 @@ void vcpu_run() {
 	while (RLEVEL > 0) {
 		EIP = get_ip; // CS:IP->EIP (important)
 		debug logexec(CS, IP, MEMORY[EIP]);
-		exec(MEMORY[EIP]);
+		exec16(MEMORY[EIP]);
 
 		if (opt_sleep) {
 			++tsc;

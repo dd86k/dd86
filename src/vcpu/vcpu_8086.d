@@ -9,7 +9,7 @@ import vdos : Raise;
  * Params: op = 8086 opcode
  */
 extern (C)
-void exec(ubyte op) {
+void exec16(ubyte op) {
 	/*
 	 * Legend:
 	 * R/M - Mod Register/Memory byte
@@ -2104,7 +2104,7 @@ void exec(ubyte op) {
 		++EIP;
 		return;
 	case 0xD5: // AAD
-		int r = cast(ubyte)(AL + (AH * 0xA));
+		int r = AL + (AH * 0xA);
 		__hflag8_5(r);
 		AL = r;
 		AH = 0;
@@ -2114,13 +2114,13 @@ void exec(ubyte op) {
 	case 0xD7: // XLAT SOURCE-TABLE
 		AL = __fu8(get_ad(DS, BX) + cast(byte)AL);
 		return;
-	/*case 0xD8: // ESC OPCODE, SOURCE
-	case 0xD9: // 1101 1XXX - MOD YYY R/M
-	case 0xDA: // Used to escape to another co-processor.
-	case 0xDB:
-	case 0xDC:
-	case 0xDD:
-	case 0xDE:
+	/*
+	 * ESC OPCODE, SOURCE
+	 * Used to escape to another co-processor.
+	 * 1101 1XXX - MOD YYY R/M
+	 */
+	/*case 0xD8:
+	..
 	case 0xDF: break;*/
 	case 0xE0: // LOOPNE/LOOPNZ SHORT-LABEL
 		CX = CX - 1;
@@ -2188,10 +2188,11 @@ void exec(ubyte op) {
 	case 0xF2: // REPNE/REPNZ
 _F2_S:	if (CX) {
 			//TODO: Finish REPNE/REPNZ properly?
-			exec(0xA6);
+			exec16(0xA6);
 			CX = CX - 1;
 			if (ZF == 0) goto _F2_S;
-		} else ++EIP;
+		}
+		++EIP;
 		return;
 	case 0xF3: // REP/REPE/REPNZ
 
