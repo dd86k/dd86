@@ -12,7 +12,7 @@
 
 module ddc;
 
-enum float __DDC_VERSION = 2018.0;
+enum __DDC_VERSION = 2018_0;
 
 enum NULL_CHAR = cast(char*)0; /// Null character pointer
 

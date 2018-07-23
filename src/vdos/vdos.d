@@ -8,8 +8,10 @@ import ddc;
 import core.stdc.string : strcmp, strncpy, strlen;
 import core.stdc.stdlib : malloc, free, system;
 import vcpu, vcpu_utils;
+import vcpu_config : INIT_MEM; // for static assert
 import vdos_loader : ExecLoad;
 import vdos_codes;
+import vdos_structs : vdos_settings;
 import utils, utils_os;
 import ddcon, Logger;
 
@@ -72,24 +74,19 @@ enum
 	DOS_MAJOR_VERSION = 5, /// Default major DOS version
 	DOS_MINOR_VERSION = 0; /// Default minor DOS version
 
-/// File/Folder attribute. See INT 21h AH=3Ch
-// Trivia: Did you know Windows still use these values today?
-enum
-	READONLY = 1,
-	HIDDEN = 2,
-	SYSTEM = 4,
-	VOLLABEL = 8,
-	DIRECTORY = 16,
-	ARCHIVE = 32,
-	SHAREABLE = 128;
+// Internal input buffer length. While maximum in MS-DOS 5.0 seems to be 120,
+// 255 feels like a little more breathable.
+private enum _BUFS = 255;
 
-// While maximum in MS-DOS 5.0 seems to be 120, 255 feels like a little more
-// breathable
-enum _BUFS = 255;
+private enum __SETTINGS_LOC = 0x200; /// Settings location in MEMORY, low memory
+static assert(__SETTINGS_LOC + vdos_settings.sizeof < INIT_MEM);
 
 __gshared ubyte
 	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
 	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
+
+/// DD-DOS settings holder. Values are stored in MEMORY.
+__gshared vdos_settings* SETTINGS; // Not possible to assign pointer at compile-time
 
 /**
  * Enter virtual shell (vDOS)
