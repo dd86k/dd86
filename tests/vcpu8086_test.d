@@ -48,9 +48,9 @@ unittest
 	assert(__fu8_i == 0xAC);
 	OK;
 
-	/*test("__fi8");
+	test("__fi8");
 	assert(__fi8(EIP + 1) == cast(byte)0xAC);
-	OK;*/
+	OK;
 
 	test("__fi8_i");
 	assert(__fi8_i == cast(byte)0xAC);
@@ -531,7 +531,56 @@ unittest
 	assert(AX == 1204);
 	OK;
 
-	test("ADD REG8, R/M8"); TODO;
+	test("ADD REG8, R/M8");
+	CL = 0x20; // address
+	AL = 12;
+	__iu8(0b11_000_001, EIP + 1);
+	__iu8(13, CL);
+	exec16(0x02);
+	assert(AL == 25);
+	CL = 13;
+	AL = 0x20; // address
+	__iu8(0b11_001_000, EIP + 1);
+	__iu8(16, AL);
+	exec16(0x02);
+	assert(CL == 29);
+	CL = 0x20; // address
+	DL = 12;
+	__iu8(0b11_010_001, EIP + 1);
+	__iu8(23, CL);
+	exec16(0x02);
+	assert(DL == 35);
+	CL = 0x20; // address
+	BL = 12;
+	__iu8(0b11_011_001, EIP + 1);
+	__iu8(4, CL);
+	exec16(0x02);
+	assert(BL == 16);
+	CL = 0x20; // address
+	AH = 12;
+	__iu8(0b11_100_001, EIP + 1);
+	__iu8(4, CL);
+	exec16(0x02);
+	assert(AH == 16);
+	CX = 0x04_20; // address:20h
+	__iu8(0b11_101_001, EIP + 1);
+	__iu8(52, CL);
+	exec16(0x02);
+	assert(CH == 56);
+	CL = 0x20; // address
+	DH = 12;
+	__iu8(0b11_110_001, EIP + 1);
+	__iu8(22, CL);
+	exec16(0x02);
+	assert(DH == 34);
+	CL = 0x20; // address
+	BH = 56;
+	__iu8(0b11_111_001, EIP + 1);
+	__iu8(4, CL);
+	exec16(0x02);
+	assert(BH == 60);
+	OK;
+
 	test("ADD R/M8, REG8");
 	CL = 0x20; // address
 	AL = 12;

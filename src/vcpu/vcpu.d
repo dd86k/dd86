@@ -42,7 +42,7 @@ enum : ubyte {
 	RM_MOD_01 = 64,	/// MOD 01, Memory Mode, 8-bit displacement
 	RM_MOD_10 = 128,	/// MOD 10, Memory Mode, 16-bit displacement
 	RM_MOD_11 = 192,	/// MOD 11, Register Mode
-	RM_MOD = 192,	/// Used for masking the MOD bits (11 000 000)
+	RM_MOD = RM_MOD_11,	/// Used for masking the MOD bits (11 000 000)
 
 	RM_REG_000 = 0,	/// AL/AX
 	RM_REG_001 = 8,	/// CL/CX
@@ -52,7 +52,7 @@ enum : ubyte {
 	RM_REG_101 = 40,	/// CH/BP
 	RM_REG_110 = 48,	/// DH/SI
 	RM_REG_111 = 56,	/// BH/DI
-	RM_REG = 56,	/// Used for masking the REG bits (00 111 000)
+	RM_REG = RM_REG_111,	/// Used for masking the REG bits (00 111 000)
 
 	RM_RM_000 = 0,	/// R/M 000 bits
 	RM_RM_001 = 1,	/// R/M 001 bits
@@ -62,7 +62,7 @@ enum : ubyte {
 	RM_RM_101 = 5,	/// R/M 101 bits
 	RM_RM_110 = 6,	/// R/M 110 bits
 	RM_RM_111 = 7,	/// R/M 111 bits
-	RM_RM = 7,	/// Used for masking the R/M bits (00 000 111)
+	RM_RM = RM_RM_111,	/// Used for masking the R/M bits (00 000 111)
 }
 
 /**
@@ -73,7 +73,7 @@ enum : ubyte {
  * tl;dr: Emulates CALLs
  */
 __gshared short RLEVEL = 1;
-__gshared ubyte opt_sleep = 1; /// If set, the vcpu sleeps between cycles
+__gshared ubyte opt_sleep = 1; /// If set, the vcpu sleeps
 
 enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer enum to avoid explicit casting
 __gshared ubyte[INIT_MEM] MEMORY; /// Main memory bank
@@ -114,7 +114,7 @@ void vcpu_run() {
 		debug logexec(CS, IP, MEMORY[EIP]);
 		exec16(MEMORY[EIP]);
 
-		if (opt_sleep) {
+		if (opt_sleep) { // TODO: Redo sleeping procedure
 			++tsc;
 			if (tsc == TSC_SLEEP) {
 				SLEEP;

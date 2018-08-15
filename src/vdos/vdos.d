@@ -26,8 +26,7 @@ debug {
 pragma(msg, "-- DD-DOS version: ", APP_VERSION);
 pragma(msg, "-- MS-DOS version: ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
-version (BigEndian)
-	pragma(msg,
+version (BigEndian) pragma(msg,
 `WARNING: DD-DOS has not been tested on big-endian platforms!
 You might want to run 'dub test' beforehand to check if everything is OK.
 `);
@@ -74,19 +73,19 @@ enum
 	DOS_MAJOR_VERSION = 5, /// Default major DOS version
 	DOS_MINOR_VERSION = 0; /// Default minor DOS version
 
-// Internal input buffer length. While maximum in MS-DOS 5.0 seems to be 120,
-// 255 feels like a little more breathable.
-private enum _BUFS = 255;
-
-private enum __SETTINGS_LOC = 0x200; /// Settings location in MEMORY, low memory
-static assert(__SETTINGS_LOC + vdos_settings.sizeof < INIT_MEM);
-
 __gshared ubyte
 	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
 	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
 
+private enum __SETTINGS_LOC = 0x200; /// Settings location in MEMORY, low memory
+static assert(__SETTINGS_LOC + vdos_settings.sizeof < INIT_MEM);
+
 /// DD-DOS settings holder. Values are stored in MEMORY.
 __gshared vdos_settings* SETTINGS; // Not possible to assign pointer at compile-time
+
+// Internal input buffer length. While maximum in MS-DOS 5.0 seems to be 120,
+// 255 feels like a little more breathable.
+private enum _BUFS = 255;
 
 /**
  * Enter virtual shell (vDOS)
