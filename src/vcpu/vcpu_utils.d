@@ -239,7 +239,7 @@ void __hflag8_3(int r) {
 	setZF(r);
 	setSF_8(r);
 	setPF_8(r);
-	OF = CF = 0;
+	vCPU.OF = vCPU.CF = 0;
 }
 
 /**
@@ -253,7 +253,7 @@ void __hflag16_3(int r) {
 	setZF(r);
 	setSF_16(r);
 	setPF_16(r);
-	OF = CF = 0;
+	vCPU.OF = vCPU.CF = 0;
 }
 
 /**
@@ -307,37 +307,37 @@ void __hflag16_5(int r) {
 private extern (C)
 pragma(inline) {
 	void setCF_8(int r) {
-		CF = (r & 0x100) != 0;
+		vCPU.CF = (r & 0x100) != 0;
 	}
 	void setCF_16(int r) {
-		CF = (r & 0x10000) != 0;
+		vCPU.CF = (r & 0x10000) != 0;
 	}
 	void setPF_8(int r) {
-		PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0; // XNOR(TEMP[0:7]);
+		vCPU.PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0; // XNOR(TEMP[0:7]);
 	}
 	void setPF_16(int r) {
-		PF = ~(cast(ushort)r ^ cast(ushort)r) != 0;
+		vCPU.PF = ~(cast(ushort)r ^ cast(ushort)r) != 0;
 	}
 	void setAF_8(int r) {
-		AF = (r & 0x10) != 0;
+		vCPU.AF = (r & 0x10) != 0;
 	}
 	void setAF_16(int r) {
-		AF = (r & 0x100) != 0;
+		vCPU.AF = (r & 0x100) != 0;
 	}
 	void setZF(int r) {
-		ZF = r == 0;
+		vCPU.ZF = r == 0;
 	}
 	void setSF_8(int r) {
-		SF = (r & 0x80) != 0;
+		vCPU.SF = (r & 0x80) != 0;
 	}
 	void setSF_16(int r) {
-		SF = (r & 0x8000) != 0;
+		vCPU.SF = (r & 0x8000) != 0;
 	}
 	void setOF_8(int r) {
-		OF = r > 0xFF || r < 0;
+		vCPU.OF = r > 0xFF || r < 0;
 	}
 	void setOF_16(int r) {
-		OF = r > 0xFFFF || r < 0;
+		vCPU.OF = r > 0xFFFF || r < 0;
 	}
 }
 
@@ -548,7 +548,7 @@ void __int_enter() {
 	IF stack not large enough for a 6-byte return information
 		#SS*/
 	push(FLAG);
-	IF = TF = 0;
+	vCPU.IF = vCPU.TF = 0;
 	push(vCPU.CS);
 	push(vCPU.IP);
 	//CS ← IDT[inum].selector;
@@ -559,6 +559,6 @@ void __int_exit() {
 	// REAL-MODE
 	vCPU.IP = pop;
 	vCPU.CS = pop;
-	IF = TF = 1;
+	vCPU.IF = vCPU.TF = 1;
 	FLAG = pop;
 }

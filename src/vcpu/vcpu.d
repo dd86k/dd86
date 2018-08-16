@@ -135,6 +135,18 @@ extern (C) struct __CPU {
 		union { ushort SP; }
 	}
 	ushort CS, SS, DS, ES, FS, GS;
+	// Flags are bytes because single flags are affected a lot more often than
+	// flag-whole operations, like PUSHF.
+	__gshared ubyte
+	CF, /// Bit  0, Carry Flag
+	PF, /// Bit  2, Parity Flag
+	AF, /// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
+	ZF, /// Bit  6, Zero Flag
+	SF, /// Bit  7, Sign Flag
+	TF, /// Bit  8, Trap Flag
+	IF, /// Bit  9, Interrupt Flag
+	DF, /// Bit 10, Direction Flag
+	OF; /// Bit 11, Overflow Flag
 }
 
 public __gshared __CPU vCPU;
@@ -194,8 +206,8 @@ uint get_ip() {
 /// RESET instruction function
 extern (C)
 private void RESET() {
-	OF = DF = IF = TF = SF =
-		ZF = AF = PF = CF = 0;
+	vCPU.OF = vCPU.DF = vCPU.IF = vCPU.TF = vCPU.SF =
+		vCPU.ZF = vCPU.AF = vCPU.PF = vCPU.CF = 0;
 	vCPU.CS = 0xFFFF;
 	vCPU.EIP = vCPU.DS = vCPU.SS = vCPU.ES = 0;
 	// Empty Queue Bus
@@ -212,19 +224,6 @@ void fullreset() {
 /**********************************************************
  * FLAGS
  **********************************************************/
-
-// Flags are bytes because single flags are affected a lot more often than
-// flag-whole operations, like PUSHF.
-__gshared ubyte
-CF, /// Bit  0, Carry Flag
-PF, /// Bit  2, Parity Flag
-AF, /// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
-ZF, /// Bit  6, Zero Flag
-SF, /// Bit  7, Sign Flag
-TF, /// Bit  8, Trap Flag
-IF, /// Bit  9, Interrupt Flag
-DF, /// Bit 10, Direction Flag
-OF; /// Bit 11, Overflow Flag
 
 /// Flag mask
 private enum : ushort {
@@ -246,22 +245,22 @@ private enum : ushort {
  */
 @property ubyte FLAGB() {
 	ubyte b;
-	if (SF) b |= MASK_SF;
-	if (ZF) b |= MASK_ZF;
-	if (AF) b |= MASK_AF;
-	if (PF) b |= MASK_PF;
-	if (CF) b |= MASK_CF;
+	if (vCPU.SF) b |= MASK_SF;
+	if (vCPU.ZF) b |= MASK_ZF;
+	if (vCPU.AF) b |= MASK_AF;
+	if (vCPU.PF) b |= MASK_PF;
+	if (vCPU.CF) b |= MASK_CF;
 	return b;
 }
 
 /// Set FLAG as BYTE.
 /// Params: flag = FLAG byte
 @property void FLAGB(ubyte flag) {
-	SF = flag & MASK_SF;
-	ZF = flag & MASK_ZF;
-	AF = flag & MASK_AF;
-	PF = flag & MASK_PF;
-	CF = flag & MASK_CF;
+	vCPU.SF = flag & MASK_SF;
+	vCPU.ZF = flag & MASK_ZF;
+	vCPU.AF = flag & MASK_AF;
+	vCPU.PF = flag & MASK_PF;
+	vCPU.CF = flag & MASK_CF;
 }
 
 /**
@@ -270,20 +269,20 @@ private enum : ushort {
  */
 @property ushort FLAG() {
 	ushort b = FLAGB;
-	if (OF) b |= MASK_OF;
-	if (DF) b |= MASK_DF;
-	if (IF) b |= MASK_IF;
-	if (TF) b |= MASK_TF;
+	if (vCPU.OF) b |= MASK_OF;
+	if (vCPU.DF) b |= MASK_DF;
+	if (vCPU.IF) b |= MASK_IF;
+	if (vCPU.TF) b |= MASK_TF;
 	return b;
 }
 
 /// Set FLAG as WORD.
 /// Params: flag = FLAG word
 @property void FLAG(ushort flag) {
-	OF = (flag & MASK_OF) != 0;
-	DF = (flag & MASK_DF) != 0;
-	IF = (flag & MASK_IF) != 0;
-	TF = (flag & MASK_TF) != 0;
+	vCPU.OF = (flag & MASK_OF) != 0;
+	vCPU.DF = (flag & MASK_DF) != 0;
+	vCPU.IF = (flag & MASK_IF) != 0;
+	vCPU.TF = (flag & MASK_TF) != 0;
 	FLAGB = cast(ubyte)flag;
 }
 

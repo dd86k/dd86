@@ -153,13 +153,13 @@ unittest
 
 	test("FLAG");
 	FLAG = 0xFFFF;
-	assert(SF); assert(ZF); assert(AF); assert(PF); assert(CF);
-	assert(OF); assert(DF); assert(IF); assert(TF);
+	assert(vCPU.SF); assert(vCPU.ZF); assert(vCPU.AF); assert(vCPU.PF); assert(vCPU.CF);
+	assert(vCPU.OF); assert(vCPU.DF); assert(vCPU.IF); assert(vCPU.TF);
 	assert(FLAGB == 0xD5);
 	assert(FLAG == 0xFD5);
 	FLAG = 0;
-	assert(!SF); assert(!ZF); assert(!AF); assert(!PF); assert(!CF);
-	assert(!OF); assert(!DF); assert(!IF); assert(!TF);
+	assert(!vCPU.SF); assert(!vCPU.ZF); assert(!vCPU.AF); assert(!vCPU.PF); assert(!vCPU.CF);
+	assert(!vCPU.OF); assert(!vCPU.DF); assert(!vCPU.IF); assert(!vCPU.TF);
 	assert(FLAGB == 0);
 	assert(FLAG == 0);
 	OK;
@@ -225,13 +225,13 @@ unittest
 
 	sub("Flag instructions");
 
-	test("CLC"); exec16(0xF8); assert(CF == 0); OK;
-	test("STC"); exec16(0xF9); assert(CF); OK;
-	test("CMC"); exec16(0xF5); assert(CF == 0); OK;
-	test("CLI"); exec16(0xFA); assert(IF == 0); OK;
-	test("STI"); exec16(0xFB); assert(IF); OK;
-	test("CLD"); exec16(0xFC); assert(DF == 0); OK;
-	test("STD"); exec16(0xFD); assert(DF); OK;
+	test("CLC"); exec16(0xF8); assert(vCPU.CF == 0); OK;
+	test("STC"); exec16(0xF9); assert(vCPU.CF); OK;
+	test("CMC"); exec16(0xF5); assert(vCPU.CF == 0); OK;
+	test("CLI"); exec16(0xFA); assert(vCPU.IF == 0); OK;
+	test("STI"); exec16(0xFB); assert(vCPU.IF); OK;
+	test("CLD"); exec16(0xFC); assert(vCPU.DF == 0); OK;
+	test("STD"); exec16(0xFD); assert(vCPU.DF); OK;
 
 	sub("General instructions");
 
@@ -928,30 +928,30 @@ unittest
 	vCPU.AL = 0b1100;
 	__iu8(0b1100, vCPU.EIP + 1);
 	exec16(0xA8);
-	assert(PF);
-	assert(ZF == 0);
-	assert(SF == 0);
-	assert(CF == 0);
-	assert(OF == 0);
+	assert(vCPU.PF);
+	assert(vCPU.ZF == 0);
+	assert(vCPU.SF == 0);
+	assert(vCPU.CF == 0);
+	assert(vCPU.OF == 0);
 	vCPU.AL = 0xF0;
 	__iu8(0x0F, vCPU.EIP + 1);
 	exec16(0xA8);
-	assert(PF);
-	assert(ZF);
-	assert(SF == 0);
-	assert(CF == 0);
-	assert(OF == 0);
+	assert(vCPU.PF);
+	assert(vCPU.ZF);
+	assert(vCPU.SF == 0);
+	assert(vCPU.CF == 0);
+	assert(vCPU.OF == 0);
 	OK;
 
 	test("TEST vCPU.AX, IMM16");
 	vCPU.AX = 0xAA00;
 	__iu16(0xAA00, vCPU.EIP + 1);
 	exec16(0xA9);
-	assert(PF);
-	assert(ZF == 0);
-	assert(SF);
-	assert(CF == 0);
-	assert(OF == 0);
+	assert(vCPU.PF);
+	assert(vCPU.ZF == 0);
+	assert(vCPU.SF);
+	assert(vCPU.CF == 0);
+	assert(vCPU.OF == 0);
 	OK;
 
 	test("TEST R/M8, REG8");
@@ -960,7 +960,7 @@ unittest
 	__iu8(0b11_001_000, vCPU.EIP+1);
 	__iu8(20, vCPU.AL);
 	exec16(0x85);
-	assert(ZF);
+	assert(vCPU.ZF);
 	OK;
 	test("TEST R/M16, REG16");
 	vCPU.AX = 0x600; // address
@@ -968,7 +968,7 @@ unittest
 	__iu8(0b11_001_000, vCPU.EIP+1);
 	__iu16(200, vCPU.AL);
 	exec16(0x86);
-	assert(ZF);
+	assert(vCPU.ZF);
 	OK;
 
 	test("LEA REG16, MEM16"); TODO;
@@ -1112,7 +1112,7 @@ unittest
 	__iu8(0b11_000_000, vCPU.EIP + 1);
 	__iu8(0xF, vCPU.EIP + 2);
 	exec16(0xF6);
-	assert(ZF == 0 && OF == 0);
+	assert(vCPU.ZF == 0 && vCPU.OF == 0);
 	OK;
 	test("NOT");
 	__iu8(0b11_010_000, vCPU.EIP + 1);
@@ -1125,8 +1125,8 @@ unittest
 	__iu8(0xF, vCPU.AL);
 	exec16(0xF6);
 	assert(__fu8(vCPU.AL) == 0xF1);
-	assert(ZF == 0);
-	assert(OF == 0);
+	assert(vCPU.ZF == 0);
+	assert(vCPU.OF == 0);
 	OK;
 	test("MUL");
 	__iu8(0b11_100_000, vCPU.EIP + 1);
@@ -1134,7 +1134,7 @@ unittest
 	__iu8(4, vCPU.AL);
 	exec16(0xF6);
 	assert(__fu8(vCPU.AL) == 8);
-	assert(ZF == 0);
+	assert(vCPU.ZF == 0);
 	OK;
 	test("IMUL");
 	__iu8(0b11_101_000, vCPU.EIP + 1);
@@ -1142,7 +1142,7 @@ unittest
 	__iu8(4, vCPU.AL);
 	exec16(0xF6);
 	assert(__fu8(vCPU.AL) == 0xF8); // -8 as BYTE
-	assert(ZF == 0);
+	assert(vCPU.ZF == 0);
 	OK;
 	test("DIV");
 	vCPU.AX = 12;
@@ -1226,10 +1226,10 @@ unittest
 	__istr("Hello!");
 	vCPU.AL = 'H';
 	exec16(0xAE);
-	assert(ZF);
+	assert(vCPU.ZF);
 	vCPU.AL = '1';
 	exec16(0xAE);
-	assert(!ZF);
+	assert(!vCPU.ZF);
 	OK;
 
 	test("SCASW");
@@ -1237,12 +1237,12 @@ unittest
 	__iu16(0xFE22, get_ad(vCPU.ES, vCPU.DI));
 	vCPU.AX = 0xFE22;
 	exec16(0xAF);
-	assert(ZF);
+	assert(vCPU.ZF);
 	exec16(0xAF);
-	assert(!ZF);
+	assert(!vCPU.ZF);
 	OK;
 
-	DF = 0;
+	vCPU.DF = 0;
 
 	// CMPS
 
@@ -1252,13 +1252,13 @@ unittest
 	vCPU.CS = vCPU.DS = 0xF00; vCPU.SI = vCPU.EIP = 0x110;
 	__istr("HeLL", get_ip);
 	exec16(0xA6);
-	assert(ZF);
+	assert(vCPU.ZF);
 	exec16(0xA6);
-	assert(!ZF);
+	assert(!vCPU.ZF);
 	exec16(0xA6);
-	assert(ZF);
+	assert(vCPU.ZF);
 	exec16(0xA6);
-	assert(ZF);
+	assert(vCPU.ZF);
 	OK;
 
 	test("CMPSW");
@@ -1267,12 +1267,12 @@ unittest
 	vCPU.CS = vCPU.DS = 0xF00; vCPU.SI = vCPU.EIP = 0x110;
 	__iwstr("HeLL"w, get_ip);
 	exec16(0xA7);
-	assert(ZF);
+	assert(vCPU.ZF);
 	exec16(0xA7);
-	assert(!ZF);
+	assert(!vCPU.ZF);
 	exec16(0xA7);
-	assert(ZF);
+	assert(vCPU.ZF);
 	exec16(0xA7);
-	assert(ZF);
+	assert(vCPU.ZF);
 	OK;
 }

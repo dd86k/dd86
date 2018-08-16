@@ -332,7 +332,7 @@ void exec16(ubyte op) {
 	case 0x14: { // ADC AL, IMM8
 		int r = vCPU.AL + __fu8_i;
 		__hflag8_1(r);
-		if (CF) ++r;
+		if (vCPU.CF) ++r;
 		vCPU.AL = cast(ubyte)r;
 		vCPU.EIP += 2;
 		return;
@@ -340,7 +340,7 @@ void exec16(ubyte op) {
 	case 0x15: { // ADC AX, IMM16
 		int r = vCPU.AX + __fu16_i;
 		__hflag16_1(r);
-		if (CF) ++r;
+		if (vCPU.CF) ++r;
 		vCPU.AX = cast(ushort)r;
 		vCPU.EIP += 3;
 		return;
@@ -367,7 +367,7 @@ void exec16(ubyte op) {
 		return;
 	case 0x1C: { // SBB AL, IMM8
 		int r = vCPU.AL - __fu8_i;
-		if (CF) --r;
+		if (vCPU.CF) --r;
 		__hflag8_3(r);
 		vCPU.AL = cast(ubyte)r;
 		vCPU.EIP += 2;
@@ -375,7 +375,7 @@ void exec16(ubyte op) {
 	}
 	case 0x1D: { // SBB AX, IMM16
 		int r = vCPU.AX - __fu16_i;
-		if (CF) --r;
+		if (vCPU.CF) --r;
 		__hflag16_3(r);
 		vCPU.AX = cast(ushort)r;
 		vCPU.EIP += 3;
@@ -535,19 +535,19 @@ void exec16(ubyte op) {
 		return;
 	case 0x27: { // DAA
 		const ubyte oldAL = vCPU.AL;
-		const ubyte oldCF = CF;
-		CF = 0;
+		const ubyte oldCF = vCPU.CF;
+		vCPU.CF = 0;
 
-		if (((oldAL & 0xF) > 9) || AF) {
+		if (((oldAL & 0xF) > 9) || vCPU.AF) {
 			vCPU.AL = cast(ubyte)(vCPU.AL + 6);
-			CF = oldCF || (vCPU.AL & 0x80);
-			AF = 1;
-		} else AF = 0;
+			vCPU.CF = oldCF || (vCPU.AL & 0x80);
+			vCPU.AF = 1;
+		} else vCPU.AF = 0;
 
 		if ((oldAL > 0x99) || oldCF) {
 			vCPU.AL = cast(ubyte)(vCPU.AL + 0x60);
-			CF = 1;
-		} else CF = 0;
+			vCPU.CF = 1;
+		} else vCPU.CF = 0;
 
 		++vCPU.EIP;
 		return;
@@ -698,19 +698,19 @@ void exec16(ubyte op) {
 		return;
 	case 0x2F: { // DAS
 		const ubyte oldAL = vCPU.AL;
-		const ubyte oldCF = CF;
-		CF = 0;
+		const ubyte oldCF = vCPU.CF;
+		vCPU.CF = 0;
 
-		if (((oldAL & 0xF) > 9) || AF) {
+		if (((oldAL & 0xF) > 9) || vCPU.AF) {
 			vCPU.AL = cast(ubyte)(vCPU.AL - 6);
-			CF = oldCF || (vCPU.AL & 0x80);
-			AF = 1;
-		} else AF = 0;
+			vCPU.CF = oldCF || (vCPU.AL & 0x80);
+			vCPU.AF = 1;
+		} else vCPU.AF = 0;
 
 		if ((oldAL > 0x99) || oldCF) {
 			vCPU.AL = cast(ubyte)(vCPU.AL - 0x60);
-			CF = 1;
-		} else CF = 0;
+			vCPU.CF = 1;
+		} else vCPU.CF = 0;
 
 		++vCPU.EIP;
 		return;
@@ -860,10 +860,10 @@ void exec16(ubyte op) {
 		++vCPU.EIP;
 		return;
 	case 0x37: // AAA
-		if (((vCPU.AL & 0xF) > 9) || AF) {
+		if (((vCPU.AL & 0xF) > 9) || vCPU.AF) {
 			vCPU.AX = cast(ushort)(vCPU.AX + 0x106);
-			AF = CF = 1;
-		} else AF = CF = 0;
+			vCPU.AF = vCPU.CF = 1;
+		} else vCPU.AF = vCPU.CF = 0;
 		vCPU.AL = cast(ubyte)(vCPU.AL & 0xF);
 		++vCPU.EIP;
 		return;
@@ -958,12 +958,12 @@ void exec16(ubyte op) {
 		++vCPU.EIP;
 		return;
 	case 0x3F: // AAS
-		if (((vCPU.AL & 0xF) > 9) || AF) {
+		if (((vCPU.AL & 0xF) > 9) || vCPU.AF) {
 			vCPU.AX = cast(ushort)(vCPU.AX - 6);
 			vCPU.AH = cast(ubyte)(vCPU.AH - 1);
-			AF = CF = 1;
+			vCPU.AF = vCPU.CF = 1;
 		} else {
-			AF = CF = 0;
+			vCPU.AF = vCPU.CF = 0;
 		}
 		vCPU.AL = cast(ubyte)(vCPU.AL & 0xF);
 		++vCPU.EIP;
@@ -1145,52 +1145,52 @@ void exec16(ubyte op) {
 		++vCPU.EIP;
 		return;
 	case 0x70: // JO            SHORT-LABEL
-		vCPU.EIP += OF ? __fi8_i : 2;
+		vCPU.EIP += vCPU.OF ? __fi8_i : 2;
 		return;
 	case 0x71: // JNO           SHORT-LABEL
-		vCPU.EIP += OF ? 2 : __fi8_i;
+		vCPU.EIP += vCPU.OF ? 2 : __fi8_i;
 		return;
 	case 0x72: // JB/JNAE/JC    SHORT-LABEL
-		vCPU.EIP += CF ? __fi8_i : 2;
+		vCPU.EIP += vCPU.CF ? __fi8_i : 2;
 		return;
 	case 0x73: // JNB/JAE/JNC   SHORT-LABEL
-		vCPU.EIP += CF ? 2 : __fi8_i;
+		vCPU.EIP += vCPU.CF ? 2 : __fi8_i;
 		return;
 	case 0x74: // JE/JZ         SHORT-LABEL
-		vCPU.EIP += ZF ? __fi8_i : 2;
+		vCPU.EIP += vCPU.ZF ? __fi8_i : 2;
 		return;
 	case 0x75: // JNE/JNZ       SHORT-LABEL
-		vCPU.EIP += ZF ? 2 : __fi8_i;
+		vCPU.EIP += vCPU.ZF ? 2 : __fi8_i;
 		return;
 	case 0x76: // JBE/JNA       SHORT-LABEL
-		vCPU.EIP += (CF || ZF) ? __fi8_i : 2;
+		vCPU.EIP += (vCPU.CF || vCPU.ZF) ? __fi8_i : 2;
 		return;
 	case 0x77: // JNBE/JA       SHORT-LABEL
-		vCPU.EIP += CF == 0 && ZF == 0 ? __fi8_i : 2;
+		vCPU.EIP += vCPU.CF == 0 && vCPU.ZF == 0 ? __fi8_i : 2;
 		return;
 	case 0x78: // JS            SHORT-LABEL
-		vCPU.EIP += SF ? __fi8_i : 2;
+		vCPU.EIP += vCPU.SF ? __fi8_i : 2;
 		return;
 	case 0x79: // JNS           SHORT-LABEL
-		vCPU.EIP += SF ? 2 : __fi8_i;
+		vCPU.EIP += vCPU.SF ? 2 : __fi8_i;
 		return;
 	case 0x7A: // JP/JPE        SHORT-LABEL
-		vCPU.EIP += PF ? __fi8_i : 2;
+		vCPU.EIP += vCPU.PF ? __fi8_i : 2;
 		return;
 	case 0x7B: // JNP/JPO       SHORT-LABEL
-		vCPU.EIP += PF ? 2 : __fi8_i;
+		vCPU.EIP += vCPU.PF ? 2 : __fi8_i;
 		return;
 	case 0x7C: // JL/JNGE       SHORT-LABEL
-		vCPU.EIP += SF != OF ? __fi8_i : 2;
+		vCPU.EIP += vCPU.SF != vCPU.OF ? __fi8_i : 2;
 		return;
 	case 0x7D: // JNL/JGE       SHORT-LABEL
-		vCPU.EIP += SF == OF ? __fi8_i : 2;
+		vCPU.EIP += vCPU.SF == vCPU.OF ? __fi8_i : 2;
 		return;
 	case 0x7E: // JLE/JNG       SHORT-LABEL
-		vCPU.EIP += SF != OF || ZF ? __fi8_i : 2;
+		vCPU.EIP += vCPU.SF != vCPU.OF || vCPU.ZF ? __fi8_i : 2;
 		return;
 	case 0x7F: // JNLE/JG       SHORT-LABEL
-		vCPU.EIP += SF == OF && ZF == 0 ? __fi8_i : 2;
+		vCPU.EIP += vCPU.SF == vCPU.OF && vCPU.ZF == 0 ? __fi8_i : 2;
 		return;
 	case 0x80: { // GRP1 R/M8, IMM8
 		const ubyte rm = __fu8_i; // Get ModR/M byte
@@ -1210,13 +1210,13 @@ void exec16(ubyte op) {
 			break;
 		case RM_REG_010: // 010 - ADC
 			r += im;
-			if (CF) ++r;
+			if (vCPU.CF) ++r;
 			__hflag16_1(r);
 			__iu16(r, addr);
 			break;
 		case RM_REG_011: // 011 - SBB
 			r -= im;
-			if (CF) --r;
+			if (vCPU.CF) --r;
 			__hflag16_1(r);
 			__iu16(r, addr);
 			break;
@@ -1264,13 +1264,13 @@ void exec16(ubyte op) {
 			break;
 		case RM_REG_010: // 010 - ADC
 			r += im;
-			if (CF) ++r;
+			if (vCPU.CF) ++r;
 			__hflag16_1(r);
 			__iu16(r, addr);
 			break;
 		case RM_REG_011: // 011 - SBB
 			r -= im;
-			if (CF) --r;
+			if (vCPU.CF) --r;
 			__hflag16_1(r);
 			__iu16(r, addr);
 			break;
@@ -1312,12 +1312,12 @@ void exec16(ubyte op) {
 			break;
 		case RM_REG_010: // 010 - ADC
 			r += im;
-			if (CF) ++r;
+			if (vCPU.CF) ++r;
 			__iu8(r, addr);
 			break;
 		case RM_REG_011: // 011 - SBB
 			r -= im;
-			if (CF) --r;
+			if (vCPU.CF) --r;
 			__iu8(r, addr);
 			break;
 		case RM_REG_101: // 101 - SUB
@@ -1347,12 +1347,12 @@ void exec16(ubyte op) {
 			break;
 		case RM_REG_010: // 010 - ADC
 			r += im;
-			if (CF) ++r;
+			if (vCPU.CF) ++r;
 			__iu16(r, addr);
 			break;
 		case RM_REG_011: // 011 - SBB
 			r -= im;
-			if (CF) --r;
+			if (vCPU.CF) --r;
 			__iu16(r, addr);
 			break;
 		case RM_REG_101: // 101 - SUB
@@ -1725,7 +1725,7 @@ void exec16(ubyte op) {
 		__hflag8_1(
 			__fu8(get_ad(vCPU.DS, vCPU.SI)) - __fu8(get_ad(vCPU.ES, vCPU.DI))
 		);
-		if (DF) {
+		if (vCPU.DF) {
 			--vCPU.DI;
 			--vCPU.SI;
 		} else {
@@ -1737,7 +1737,7 @@ void exec16(ubyte op) {
 		__hflag16_1(
 			__fu16(get_ad(vCPU.DS, vCPU.SI)) - __fu16(get_ad(vCPU.ES, vCPU.DI))
 		);
-		if (DF) {
+		if (vCPU.DF) {
 			vCPU.DI -= 2;
 			vCPU.SI -= 2;
 		} else {
@@ -1756,37 +1756,37 @@ void exec16(ubyte op) {
 	case 0xAA: // STOS DEST-STR8
 		__iu8(vCPU.AL, get_ad(vCPU.ES, vCPU.DI));
 		//vCPU.DI = DF ? vCPU.DI - 1 : vCPU.DI + 1;
-		if (DF) --vCPU.DI; else ++vCPU.DI;
+		if (vCPU.DF) --vCPU.DI; else ++vCPU.DI;
 		++vCPU.EIP;
 		return;
 	case 0xAB: // STOS DEST-STR16
 		__iu16(vCPU.AX, get_ad(vCPU.ES, vCPU.DI));
 		//vCPU.DI = DF ? vCPU.DI - 2 : vCPU.DI + 2;
-		if (DF) vCPU.DI -= 2; else vCPU.DI += 2;
+		if (vCPU.DF) vCPU.DI -= 2; else vCPU.DI += 2;
 		++vCPU.EIP;
 		return;
 	case 0xAC: // LODS SRC-STR8
 		vCPU.AL = __fu8(get_ad(vCPU.DS, vCPU.SI));
 		//vCPU.SI = DF ? vCPU.SI - 1 : vCPU.SI + 1;
-		if (DF) --vCPU.SI; else ++vCPU.SI;
+		if (vCPU.DF) --vCPU.SI; else ++vCPU.SI;
 		++vCPU.EIP;
 		return;
 	case 0xAD: // LODS SRC-STR16
 		vCPU.AX = __fu16(get_ad(vCPU.DS, vCPU.SI));
 		//vCPU.SI = DF ? vCPU.SI - 2 : vCPU.SI + 2;
-		if (DF) vCPU.SI -= 2; else vCPU.SI += 2;
+		if (vCPU.DF) vCPU.SI -= 2; else vCPU.SI += 2;
 		++vCPU.EIP;
 		return;
 	case 0xAE: // SCAS DEST-STR8
 		__hflag8_1(vCPU.AL - __fu8(get_ad(vCPU.ES, vCPU.DI)));
 		//vCPU.DI = DF ? vCPU.DI - 1 : vCPU.DI + 1;
-		if (DF) --vCPU.DI; else ++vCPU.DI;
+		if (vCPU.DF) --vCPU.DI; else ++vCPU.DI;
 		++vCPU.EIP;
 		return;
 	case 0xAF: // SCAS DEST-STR16
 		__hflag16_1(vCPU.AX - __fu16(get_ad(vCPU.ES, vCPU.DI)));
 		//vCPU.DI = DF ? vCPU.DI - 2 : vCPU.DI + 2;
-		if (DF) vCPU.DI -= 2; else vCPU.DI += 2;
+		if (vCPU.DF) vCPU.DI -= 2; else vCPU.DI += 2;
 		++vCPU.EIP;
 		return;
 	case 0xB0: // MOV AL, IMM8
@@ -1918,7 +1918,7 @@ void exec16(ubyte op) {
 		vCPU.EIP += 2;
 		return;
 	case 0xCE: // INTO
-		if (CF) Raise(4);
+		if (vCPU.CF) Raise(4);
 		++vCPU.EIP;
 		return;
 	case 0xCF: // IRET
@@ -2079,12 +2079,12 @@ void exec16(ubyte op) {
 	case 0xDF: break;*/
 	case 0xE0: // LOOPNE/LOOPNZ SHORT-LABEL
 		--vCPU.CX;
-		if (vCPU.CX && ZF == 0) vCPU.EIP += __fi8_i;
+		if (vCPU.CX && vCPU.ZF == 0) vCPU.EIP += __fi8_i;
 		else vCPU.EIP += 2;
 		return;
 	case 0xE1: // LOOPE/LOOPZ   SHORT-LABEL
 		--vCPU.CX;
-		if (vCPU.CX && ZF) vCPU.EIP += __fi8_i;
+		if (vCPU.CX && vCPU.ZF) vCPU.EIP += __fi8_i;
 		else vCPU.EIP += 2;
 		return;
 	case 0xE2: // LOOP  SHORT-LABEL
@@ -2146,13 +2146,13 @@ void exec16(ubyte op) {
 			//TODO: Finish REPNE/REPNZ properly?
 			exec16(0xA6);
 			--vCPU.CX;
-			if (ZF == 0) goto EXEC16_REPNE;
+			if (vCPU.ZF == 0) goto EXEC16_REPNE;
 		}*/
 		while (vCPU.CX) {
 			//TODO: Finish REPNE/REPNZ properly?
 			exec16(0xA6);
 			--vCPU.CX;
-			if (ZF == 0) break;
+			if (vCPU.ZF == 0) break;
 		}
 		++vCPU.EIP;
 		return;
@@ -2164,7 +2164,7 @@ void exec16(ubyte op) {
 		++vCPU.EIP;
 		return;
 	case 0xF5: // CMC
-		CF = !CF;
+		vCPU.CF = !vCPU.CF;
 		++vCPU.EIP;
 		return;
 	case 0xF6: { // GRP3 R/M8, IMM8
@@ -2181,7 +2181,7 @@ void exec16(ubyte op) {
 			break;
 		case RM_REG_011: // 011 - NEG
 			r = cast(ubyte)-__fu8(addr);
-			CF = cast(ubyte)r;
+			vCPU.CF = cast(ubyte)r;
 			__hflag8_2(r);
 			__iu8(r, addr);
 			break;
@@ -2230,7 +2230,7 @@ void exec16(ubyte op) {
 			break;
 		case RM_REG_011: // 011 - NEG
 			r = -__fu16(addr);
-			CF = cast(ubyte)r;
+			vCPU.CF = cast(ubyte)r;
 			__iu16(r, addr);
 			break;
 		case RM_REG_100: // 100 - MUL
@@ -2261,27 +2261,27 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0xF8: // CLC
-		CF = 0;
+		vCPU.CF = 0;
 		++vCPU.EIP;
 		return;
 	case 0xF9: // STC
-		CF = 1;
+		vCPU.CF = 1;
 		++vCPU.EIP;
 		return;
 	case 0xFA: // CLI
-		IF = 0;
+		vCPU.IF = 0;
 		++vCPU.EIP;
 		return;
 	case 0xFB: // STI
-		IF = 1;
+		vCPU.IF = 1;
 		++vCPU.EIP;
 		return;
 	case 0xFC: // CLD
-		DF = 0;
+		vCPU.DF = 0;
 		++vCPU.EIP;
 		return;
 	case 0xFD: // STD
-		DF = 1;
+		vCPU.DF = 1;
 		++vCPU.EIP;
 		return;
 	case 0xFE: { // GRP4 R/M8

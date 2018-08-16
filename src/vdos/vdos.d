@@ -353,15 +353,16 @@ CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X
 		vCPU.CS, vCPU.DS, vCPU.ES, vCPU.SS, vCPU.SP, vCPU.BP, vCPU.SI, vCPU.DI,
 	);
 	printf("FLAG=");
-	if (OF) printf("OF ");
-	if (DF) printf("DF ");
-	if (IF) printf("IF ");
-	if (TF) printf("TF ");
-	if (SF) printf("SF ");
-	if (ZF) printf("ZF ");
-	if (AF) printf("AF ");
-	if (PF) printf("PF ");
-	if (CF) printf("CF ");
+	//TODO: Use put
+	if (vCPU.OF) printf("vCPU.OF ");
+	if (vCPU.DF) printf("vCPU.DF ");
+	if (vCPU.IF) printf("IF ");
+	if (vCPU.TF) printf("vCPU.TF ");
+	if (vCPU.SF) printf("vCPU.SF ");
+	if (vCPU.ZF) printf("vCPU.ZF ");
+	if (vCPU.AF) printf("vCPU.AF ");
+	if (vCPU.PF) printf("vCPU.PF ");
+	if (vCPU.CF) printf("vCPU.CF ");
 	printf("(%Xh)\n", FLAG);
 }
 
@@ -463,7 +464,7 @@ void Raise(ubyte code) {
 			/*const KeyInfo k = ReadKey;
 			vCPU.AH = cast(ubyte)k.scanCode;
 			vCPU.AL = cast(ubyte)k.keyCode;
-			if (vCPU.AH) ZF = 0; // Keystroke available*/
+			if (vCPU.AH) vCPU.ZF = 0; // Keystroke available*/
 		}
 			break;
 		case 2: // SHIFT
@@ -761,23 +762,23 @@ void Raise(ubyte code) {
 				char[] p = MemString(get_ad(vCPU.DS, vCPU.DX));
 				if (pexist(cast(char*)p)) {
 					ExecLoad(cast(char*)p);
-					CF = 0;
+					vCPU.CF = 0;
 				} else {
 					vCPU.AX = E_FILE_NOT_FOUND;
-					CF = 1;
+					vCPU.CF = 1;
 				}
 				break;
 			case 1: // Load, create the program header but do not begin execution.
 
-				CF = 1;
+				vCPU.CF = 1;
 				break;
 			case 3: // Load overlay. No header created.
 
-				CF = 1;
+				vCPU.CF = 1;
 				break;
 			default:
 				vCPU.AX = E_INVALID_FUNCTION;
-				CF = 1;
+				vCPU.CF = 1;
 				break;
 			}
 			break;
