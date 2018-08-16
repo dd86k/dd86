@@ -489,7 +489,7 @@ uint __fu32(uint addr) {
  */
 extern (C)
 ubyte __fu8_i(int n = 0) {
-	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN__fu8_i", PANIC_MEMORY_ACCESS);
+	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fu8_i", PANIC_MEMORY_ACCESS);
 	return MEMORY[vCPU.EIP + 1 + n];
 }
 
@@ -547,18 +547,18 @@ void __int_enter() {
 		#GP
 	IF stack not large enough for a 6-byte return information
 		#SS*/
-	push(FLAG);
+	push16(FLAG);
 	vCPU.IF = vCPU.TF = 0;
-	push(vCPU.CS);
-	push(vCPU.IP);
+	push16(vCPU.CS);
+	push16(vCPU.IP);
 	//CS ← IDT[inum].selector;
 	//IP ← IDT[inum].offset;
 }
 
 void __int_exit() {
 	// REAL-MODE
-	vCPU.IP = pop;
-	vCPU.CS = pop;
+	vCPU.IP = pop16;
+	vCPU.CS = pop16;
 	vCPU.IF = vCPU.TF = 1;
-	FLAG = pop;
+	FLAG = pop16;
 }

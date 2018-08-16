@@ -135,6 +135,7 @@ extern (C) struct __CPU {
 		union { ushort SP; }
 	}
 	ushort CS, SS, DS, ES, FS, GS;
+
 	// Flags are bytes because single flags are affected a lot more often than
 	// flag-whole operations, like PUSHF.
 	__gshared ubyte
@@ -194,7 +195,7 @@ uint get_ad(int s, int o) {
 }
 
 /**
- * Get next instruction location
+ * (8086) Get next instruction location
  * Returns: CS:IP effective address
  */
 extern (C)
@@ -203,11 +204,11 @@ uint get_ip() {
 	return get_ad(vCPU.CS, vCPU.IP);
 }
 
-/// RESET instruction function
+/// (8086, 80486) RESET instruction function
 extern (C)
 private void RESET() {
 	vCPU.OF = vCPU.DF = vCPU.IF = vCPU.TF = vCPU.SF =
-		vCPU.ZF = vCPU.AF = vCPU.PF = vCPU.CF = 0;
+	vCPU.ZF = vCPU.AF = vCPU.PF = vCPU.CF = 0;
 	vCPU.CS = 0xFFFF;
 	vCPU.EIP = vCPU.DS = vCPU.SS = vCPU.ES = 0;
 	// Empty Queue Bus
@@ -218,7 +219,7 @@ extern (C)
 void fullreset() {
 	RESET;
 	vCPU.EAX = vCPU.EBX = vCPU.ECX = vCPU.EDX =
-		vCPU.EBP = vCPU.ESP = vCPU.EDI = vCPU.ESI = 0;
+	vCPU.EBP = vCPU.ESP = vCPU.EDI = vCPU.ESI = 0;
 }
 
 /**********************************************************
@@ -291,43 +292,43 @@ private enum : ushort {
  **********************************************************/
 
 /**
- * Push a WORD value into stack.
+ * (8086) Push a WORD value into stack.
  * Params: value = WORD value to PUSH
  */
 extern (C)
-void push(ushort value) {
+void push16(ushort value) {
 	vCPU.SP = cast(ushort)(vCPU.SP - 2);
 	__iu16(value, get_ad(vCPU.SS, vCPU.SP));
 }
 
 /**
- * Pop a WORD value from stack.
+ * (8086) Pop a WORD value from stack.
  * Returns: WORD value
  */
 extern (C)
-ushort pop() {
+ushort pop16() {
 	const uint addr = get_ad(vCPU.SS, vCPU.SP);
 	vCPU.SP = cast(ushort)(vCPU.SP + 2);
 	return __fu16(addr);
 }
 
 /**
- * Push a DWORD value into stack.
+ * (80486) Push a DWORD value into stack.
  * Params: value = DWORD value
  */
 extern (C)
-void epush(uint value) {
-	vCPU.SP = cast(ushort)(vCPU.SP - 2);
+void push32(uint value) {
+	vCPU.SP = cast(ushort)(vCPU.SP - 4);
 	__iu32(value, get_ad(vCPU.SS, vCPU.SP));
 }
 
 /**
- * Pop a DWORD value from stack.
+ * (80486) Pop a DWORD value from stack.
  * Returns: WORD value
  */
 extern (C)
-uint epop() {
+uint pop32() {
 	const uint addr = get_ad(vCPU.SS, vCPU.SP);
-	vCPU.SP = cast(ushort)(vCPU.SP + 2);
+	vCPU.SP = cast(ushort)(vCPU.SP + 4);
 	return __fu32(addr);
 }

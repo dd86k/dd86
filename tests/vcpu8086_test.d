@@ -779,7 +779,7 @@ unittest
 	vCPU.AX = 0xDAD;
 	exec16(0x50);
 	assert(vCPU.AX == __fu16(get_ad(vCPU.SS, vCPU.SP)));
-	push(vCPU.AX);
+	push16(vCPU.AX);
 	assert(vCPU.AX == __fu16(get_ad(vCPU.SS, vCPU.SP)));
 
 	vCPU.CX = 0x4488;
@@ -818,7 +818,7 @@ unittest
 	vCPU.SS = 0x100;
 	vCPU.SP = 0x20;
 
-	push(0xFFAA);
+	push16(0xFFAA);
 	exec16(0x58);
 	assert(vCPU.AX == 0xFFAA);
 	vCPU.SP -= 2;

@@ -162,11 +162,11 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x06: // PUSH ES
-		push(vCPU.ES);
+		push16(vCPU.ES);
 		++vCPU.EIP;
 		return;
 	case 0x07: // POP ES
-		vCPU.ES = pop;
+		vCPU.ES = pop16;
 		++vCPU.EIP;
 		return;
 	case 0x08: { // OR R/M8, REG8
@@ -310,7 +310,7 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x0E: // PUSH CS
-		push(vCPU.CS);
+		push16(vCPU.CS);
 		++vCPU.EIP;
 		return;
 	case 0x10: { // ADC R/M8, REG8
@@ -346,11 +346,11 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x16: // PUSH SS
-		push(vCPU.SS);
+		push16(vCPU.SS);
 		++vCPU.EIP;
 		return;
 	case 0x17: // POP SS
-		vCPU.SS = pop;
+		vCPU.SS = pop16;
 		++vCPU.EIP;
 		return;
 	case 0x18: // SBB R/M8, REG8
@@ -382,11 +382,11 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x1E: // PUSH DS
-		push(vCPU.DS);
+		push16(vCPU.DS);
 		++vCPU.EIP;
 		return;
 	case 0x1F: // POP DS
-		vCPU.DS = pop;
+		vCPU.DS = pop16;
 		++vCPU.EIP;
 		return;
 	case 0x20: { // AND R/M8, REG8
@@ -1081,67 +1081,67 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x50: // PUSH AX
-		push(vCPU.AX);
+		push16(vCPU.AX);
 		++vCPU.EIP;
 		return;
 	case 0x51: // PUSH CX
-		push(vCPU.CX);
+		push16(vCPU.CX);
 		++vCPU.EIP;
 		return;
 	case 0x52: // PUSH DX
-		push(vCPU.DX);
+		push16(vCPU.DX);
 		++vCPU.EIP;
 		return;
 	case 0x53: // PUSH BX
-		push(vCPU.BX);
+		push16(vCPU.BX);
 		++vCPU.EIP;
 		return;
 	case 0x54: // PUSH SP
-		push(vCPU.SP);
+		push16(vCPU.SP);
 		++vCPU.EIP;
 		return;
 	case 0x55: // PUSH BP
-		push(vCPU.BP);
+		push16(vCPU.BP);
 		++vCPU.EIP;
 		return;
 	case 0x56: // PUSH SI
-		push(vCPU.SI);
+		push16(vCPU.SI);
 		++vCPU.EIP;
 		return;
 	case 0x57: // PUSH DI
-		push(vCPU.DI);
+		push16(vCPU.DI);
 		++vCPU.EIP;
 		return;
 	case 0x58: // POP AX
-		vCPU.AX = pop;
+		vCPU.AX = pop16;
 		++vCPU.EIP;
 		return;
 	case 0x59: // POP CX
-		vCPU.CX = pop;
+		vCPU.CX = pop16;
 		++vCPU.EIP;
 		return;
 	case 0x5A: // POP DX
-		vCPU.DX = pop;
+		vCPU.DX = pop16;
 		++vCPU.EIP;
 		return;
 	case 0x5B: // POP BX
-		vCPU.BX = pop;
+		vCPU.BX = pop16;
 		++vCPU.EIP;
 		return;
 	case 0x5C: // POP SP
-		vCPU.SP = pop;
+		vCPU.SP = pop16;
 		++vCPU.EIP;
 		return;
 	case 0x5D: // POP BP
-		vCPU.BP = pop;
+		vCPU.BP = pop16;
 		++vCPU.EIP;
 		return;
 	case 0x5E: // POP SI
-		vCPU.SI = pop;
+		vCPU.SI = pop16;
 		++vCPU.EIP;
 		return;
 	case 0x5F: // POP DI
-		vCPU.DI = pop;
+		vCPU.DI = pop16;
 		++vCPU.EIP;
 		return;
 	case 0x70: // JO            SHORT-LABEL
@@ -1607,7 +1607,7 @@ void exec16(ubyte op) {
 			info("Invalid ModR/M for POP R/M16");
 			goto EXEC16_ILLEGAL;
 		}
-		push(__fu16(get_ea(rm, 1)));
+		push16(__fu16(get_ea(rm, 1)));
 		vCPU.EIP += 2;
 		return;
 	}
@@ -1672,8 +1672,8 @@ void exec16(ubyte op) {
 		++vCPU.EIP;
 		return;
 	case 0x9A: // CALL FAR_PROC
-		push(vCPU.CS);
-		push(vCPU.IP);
+		push16(vCPU.CS);
+		push16(vCPU.IP);
 		vCPU.CS = __fu16_i;
 		vCPU.IP = __fu16_i(2);
 		return;
@@ -1684,11 +1684,11 @@ void exec16(ubyte op) {
 		++vCPU.EIP;
 		return;
 	case 0x9C: // PUSHF
-		push(FLAG);
+		push16(FLAG);
 		++vCPU.EIP;
 		return;
 	case 0x9D: // POPF
-		FLAG = pop;
+		FLAG = pop16;
 		++vCPU.EIP;
 		return;
 	case 0x9E: // SAHF (AH to Flags)
@@ -1854,11 +1854,11 @@ void exec16(ubyte op) {
 		vCPU.EIP += 3;
 		return;
 	case 0xC2: // RET IMM16 (NEAR)
-		vCPU.IP = pop;
+		vCPU.IP = pop16;
 		vCPU.SP += __fu16_i;
 		return;
 	case 0xC3: // RET (NEAR)
-		vCPU.IP = pop;
+		vCPU.IP = pop16;
 		return;
 	case 0xC4, 0xC5: { // LES/LDS REG16, MEM16
 		// Load into REG and ES/DS
@@ -1901,13 +1901,13 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0xCA: // RET IMM16 (FAR)
-		vCPU.IP = pop;
-		vCPU.CS = pop;
+		vCPU.IP = pop16;
+		vCPU.CS = pop16;
 		vCPU.SP += __fu16_i;
 		return;
 	case 0xCB: // RET (FAR)
-		vCPU.IP = pop;
-		vCPU.CS = pop;
+		vCPU.IP = pop16;
+		vCPU.CS = pop16;
 		return;
 	case 0xCC: // INT 3
 		Raise(3);
@@ -1922,9 +1922,9 @@ void exec16(ubyte op) {
 		++vCPU.EIP;
 		return;
 	case 0xCF: // IRET
-		vCPU.IP = pop;
-		vCPU.CS = pop;
-		FLAG = pop;
+		vCPU.IP = pop16;
+		vCPU.CS = pop16;
+		FLAG = pop16;
 		++vCPU.EIP;
 		return;
 	case 0xD0: { // GRP2 R/M8, 1
@@ -2109,7 +2109,7 @@ void exec16(ubyte op) {
 
 		return;
 	case 0xE8: // CALL NEAR-PROC
-		push(vCPU.IP);
+		push16(vCPU.IP);
 		vCPU.EIP += __fi16_i; // Direct within segment
 		return;
 	case 0xE9: // JMP NEAR-LABEL
@@ -2322,12 +2322,12 @@ void exec16(ubyte op) {
 			vCPU.EIP += 2;
 			break;
 		case RM_REG_010: // 010 - CALL R/M16 (near) -- Indirect within segment
-			push(vCPU.IP);
+			push16(vCPU.IP);
 			vCPU.EIP = r;
 			break;
 		case RM_REG_011: // 011 - CALL MEM16 (far) -- Indirect outside segment
-			push(vCPU.CS);
-			push(vCPU.IP);
+			push16(vCPU.CS);
+			push16(vCPU.IP);
 			vCPU.EIP = get_ad(__fu16(addr + 2), r);
 			break;
 		case RM_REG_100: // 100 - JMP R/M16 (near) -- Indirect within segment
@@ -2337,7 +2337,7 @@ void exec16(ubyte op) {
 			vCPU.EIP = get_ad(__fu16(addr + 2), r);
 			break;
 		case RM_REG_110: // 110 - PUSH MEM16
-			push(__fu16(get_ad(__fu16(addr + 2), r)));
+			push16(__fu16(get_ad(__fu16(addr + 2), r)));
 			vCPU.EIP += 2;
 			break;
 		default:
