@@ -40,7 +40,7 @@ int ExecLoad(char* path) {
 	if (fsize == 0) {
 		fclose(f);
 		warn("Executable file is zero length");
-		AL = E_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
+		vCPU.AL = E_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
 		return E_BAD_FORMAT;
 	}
 
@@ -55,10 +55,10 @@ int ExecLoad(char* path) {
 		// ** Header is read for initial register values
 		mz_hdr mzh = void; /// MZ header structure variable
 		fread(&mzh, mzh.sizeof, 1, f);
-		CS = 0x1000; IP = 0x1000; // Temporary!
-		CS = cast(ushort)(CS + mzh.e_cs); // Relative
-		IP = mzh.e_ip;
-		//EIP = get_ip;
+		vCPU.CS = 0x1000; vCPU.IP = 0x1000; // Temporary!
+		vCPU.CS = cast(ushort)(vCPU.CS + mzh.e_cs); // Relative
+		vCPU.IP = mzh.e_ip;
+		//vCPU.EIP = get_ip;
 
 		// ** Copy code section from exe into memory
 		/*if (mzh.e_minalloc && mzh.e_maxalloc) { // Low memory
@@ -80,10 +80,10 @@ int ExecLoad(char* path) {
 			printf("STURCT STRUCT SIZE: %d\n", mzh.sizeof);
 			printf("EXE HEADER SIZE: %d\n", hsize);
 			printf("CODE: %d -- %d B\n", codebase, csize);
-			printf("CS: %4Xh -- e_cs: %4Xh\n", CS, mzh.e_cs);
-			printf("IP: %4Xh -- e_ip: %4Xh\n", IP, mzh.e_ip);
-			printf("SS: %4Xh -- e_ss: %4Xh\n", SS, mzh.e_ss);
-			printf("SP: %4Xh -- e_sp: %4Xh\n", SP, mzh.e_sp);
+			printf("vCPU.CS: %4Xh -- e_cs: %4Xh\n", vCPU.CS, mzh.e_cs);
+			printf("vCPU.IP: %4Xh -- e_ip: %4Xh\n", vCPU.IP, mzh.e_ip);
+			printf("vCPU.SS: %4Xh -- e_ss: %4Xh\n", vCPU.SS, mzh.e_ss);
+			printf("vCPU.SP: %4Xh -- e_sp: %4Xh\n", vCPU.SP, mzh.e_sp);
 		}
 
 		fseek(f, codebase, SEEK_SET); // Seek to start of first code segment
@@ -110,8 +110,8 @@ int ExecLoad(char* path) {
 			do {
 				int addr = get_ad(r.segment, r.offset); // 2.
 				const ushort loadseg = __fu16(addr); /// 3. Load segment
-				debug printf("%2d   %04X:%04X -> cs:%04X+CS:%04X = %04X\n",
-					i, r.segment, r.offset, mzh.e_cs, CS, loadseg
+				debug printf("%2d   %04X:%04X -> cs:%04X+vCPU.CS:%04X = %04X\n",
+					i, r.segment, r.offset, mzh.e_cs, vCPU.CS, loadseg
 				);
 				__iu16(mzh.e_cs + loadseg, addr); // 4. & 5.
 				++r; ++i;
@@ -128,23 +128,23 @@ int ExecLoad(char* path) {
 		// DS:ES   Points to PSP
 		// SS:SP   Stack pointer (from EXE header)
 
-		AL = 2; // C: for now
-		AH = 0;
-		DS = CS; ES = IP;
-		SS = cast(ushort)(SS + mzh.e_ss); // Relative
-		SP = mzh.e_sp;
+		vCPU.AL = 2; // C: for now
+		vCPU.AH = 0;
+		vCPU.DS = vCPU.CS; vCPU.ES = vCPU.IP;
+		vCPU.SS = cast(ushort)(vCPU.SS + mzh.e_ss); // Relative
+		vCPU.SP = mzh.e_sp;
 
 		// ** Make PSP
-		//MakePSP(EIP - 0x100, ...);
+		//MakePSP(vCPU.EIP - 0x100, ...);
 
 		// ** Jump to CS:IP+0100h, relative to start of program
-		//EIP += 0x100; // Unecessary since we loaded code segment directly at CS:IP
+		//vCPU.EIP += 0x100; // Unecessary since we loaded code segment directly at CS:IP
 		break; // case MZ
 	default:
 		if (fsize > 0xFF00) { // Size - PSP
 			fclose(f);
 			error("COM file too large (>FF00h)");
-			AL = E_BAD_FORMAT; //TODO: Verify code
+			vCPU.AL = E_BAD_FORMAT; //TODO: Verify code
 			return E_BAD_FORMAT;
 		}
 		info("LOAD COM");
@@ -153,7 +153,7 @@ int ExecLoad(char* path) {
 		fread(MEMORY_P + get_ip, fsize, 1, f);
 
 		MakePSP;
-		AL = 0;
+		vCPU.AL = 0;
 		break; // default (COM)
 	}
 

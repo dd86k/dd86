@@ -42,21 +42,21 @@ uint get_ea(ubyte rm, ubyte wide = 0) {
 		default:
 			switch (rm & RM_RM) { // R/M
 			case RM_RM_000: debug _debug("EA:0:0");
-				return SI + BX;
+				return vCPU.SI + vCPU.BX;
 			case RM_RM_001: debug _debug("EA:0:1");
-				return DI + BX;
+				return vCPU.DI + vCPU.BX;
 			case RM_RM_010: debug _debug("EA:0:2");
-				return SI + BP;
+				return vCPU.SI + vCPU.BP;
 			case RM_RM_011: debug _debug("EA:0:3");
-				return DI + BP;
+				return vCPU.DI + vCPU.BP;
 			case RM_RM_100: debug _debug("EA:0:4");
-				return SI;
+				return vCPU.SI;
 			case RM_RM_101: debug _debug("EA:0:5");
-				return DI;
+				return vCPU.DI;
 			case RM_RM_110: debug _debug("EA:0:6");
 				return __fu16_i(1); // DIRECT ADDRESS, immediate follows
 			case RM_RM_111: debug _debug("EA:0:7");
-				return BX;
+				return vCPU.BX;
 			default:
 			}
 		}
@@ -65,24 +65,24 @@ uint get_ea(ubyte rm, ubyte wide = 0) {
 		debug _debug("EA:1:_");
 		switch (rm & RM_RM) {
 		case RM_RM_000: debug _debug("EA:1:0");
-			return SI + BX + __fi8_i(1);
+			return vCPU.SI + vCPU.BX + __fi8_i(1);
 		case RM_RM_001: debug _debug("EA:1:1");
-			return DI + BX + __fi8_i(1);
+			return vCPU.DI + vCPU.BX + __fi8_i(1);
 		case RM_RM_010: debug _debug("EA:1:2");
-			return SI + BP + __fi8_i(1);
+			return vCPU.SI + vCPU.BP + __fi8_i(1);
 		case RM_RM_011: debug _debug("EA:1:3");
-			return DI + BP + __fi8_i(1);
+			return vCPU.DI + vCPU.BP + __fi8_i(1);
 		case RM_RM_100: debug _debug("EA:1:4");
-			return SI + __fi8_i(1);
+			return vCPU.SI + __fi8_i(1);
 		case RM_RM_101: debug _debug("EA:1:5");
-			return DI + __fi8_i(1);
+			return vCPU.DI + __fi8_i(1);
 		case RM_RM_110: debug _debug("EA:1:6");
-			return BP + __fi8_i(1);
+			return vCPU.BP + __fi8_i(1);
 		case RM_RM_111: debug _debug("EA:1:7");
-			return BX + __fi8_i(1);
+			return vCPU.BX + __fi8_i(1);
 		default:
 		}
-		EIP += 1;
+		++vCPU.EIP;
 		break; // MOD 01
 	}
 	case RM_MOD_10: // MOD 10, Memory Mode, 16-bit displacement follows
@@ -103,56 +103,56 @@ uint get_ea(ubyte rm, ubyte wide = 0) {
 			switch (rm & RM_RM) { // R/M
 			case 0:
 				debug _debug("EA:2:0");
-				return SI + BX + __fi16_i(1);
+				return vCPU.SI + vCPU.BX + __fi16_i(1);
 			case RM_RM_001:
 				debug _debug("EA:2:1");
-				return DI + BX + __fi16_i(1);
+				return vCPU.DI + vCPU.BX + __fi16_i(1);
 			case RM_RM_010:
 				debug _debug("EA:2:2");
-				return SI + BP + __fi16_i(1);
+				return vCPU.SI + vCPU.BP + __fi16_i(1);
 			case RM_RM_011:
 				debug _debug("EA:2:3");
-				return DI + BP + __fi16_i(1);
+				return vCPU.DI + vCPU.BP + __fi16_i(1);
 			case RM_RM_100:
 				debug _debug("EA:2:4");
-				return SI + __fi16_i(1);
+				return vCPU.SI + __fi16_i(1);
 			case RM_RM_101:
 				debug _debug("EA:2:5");
-				return DI + __fi16_i(1);
+				return vCPU.DI + __fi16_i(1);
 			case RM_RM_110:
 				debug _debug("EA:2:6");
-				return BP + __fi16_i(1);
+				return vCPU.BP + __fi16_i(1);
 			case RM_RM_111:
 				debug _debug("EA:2:7");
-				return BX + __fi16_i(1);
+				return vCPU.BX + __fi16_i(1);
 			default:
 			}
 		}
-		EIP += 2;
+		vCPU.EIP += 2;
 		break; // MOD 10
 	case RM_MOD_11: // MOD 11, Register Mode
 		if (wide)
 			switch (rm & RM_RM) {
-			case RM_RM_000: return AX;
-			case RM_RM_001: return CX;
-			case RM_RM_010: return DX;
-			case RM_RM_011: return BX;
-			case RM_RM_100: return SP;
-			case RM_RM_101: return BP;
-			case RM_RM_110: return SI;
-			case RM_RM_111: return DI;
+			case RM_RM_000: return vCPU.AX;
+			case RM_RM_001: return vCPU.CX;
+			case RM_RM_010: return vCPU.DX;
+			case RM_RM_011: return vCPU.BX;
+			case RM_RM_100: return vCPU.SP;
+			case RM_RM_101: return vCPU.BP;
+			case RM_RM_110: return vCPU.SI;
+			case RM_RM_111: return vCPU.DI;
 			default:
 			}
 		else
 			switch (rm & RM_RM) {
-			case RM_RM_000: return AL;
-			case RM_RM_001: return CL;
-			case RM_RM_010: return DL;
-			case RM_RM_011: return BL;
-			case RM_RM_100: return AH;
-			case RM_RM_101: return CH;
-			case RM_RM_110: return DH;
-			case RM_RM_111: return BH;
+			case RM_RM_000: return vCPU.AL;
+			case RM_RM_001: return vCPU.CL;
+			case RM_RM_010: return vCPU.DL;
+			case RM_RM_011: return vCPU.BL;
+			case RM_RM_100: return vCPU.AH;
+			case RM_RM_101: return vCPU.CH;
+			case RM_RM_110: return vCPU.DH;
+			case RM_RM_111: return vCPU.BH;
 			default:
 			}
 		break; // MOD 11
@@ -402,7 +402,7 @@ void __iarr(void* ops, size_t size, size_t addr) {
  *   addr = Memory address, default: CS:IP
  */
 extern (C)
-void __istr(immutable(char)* data, size_t addr = EIP) {
+void __istr(immutable(char)* data, size_t addr = vCPU.EIP) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __istr", PANIC_MEMORY_ACCESS);
 	strcpy(cast(char*)MEMORY + addr, data);
 }
@@ -414,7 +414,7 @@ void __istr(immutable(char)* data, size_t addr = EIP) {
  *   addr = Memory Address (EIP by default)
  */
 extern (C)
-void __iwstr(immutable(wchar)[] data, size_t addr = EIP) {
+void __iwstr(immutable(wchar)[] data, size_t addr = vCPU.EIP) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iwstr", PANIC_MEMORY_ACCESS);
 	wcscpy(cast(wchar_t*)(MEMORY_P + addr), cast(wchar_t*)data);
 }
@@ -483,14 +483,14 @@ uint __fu32(uint addr) {
  *****************************************************************************/
 
 /**
- * Fetch an immediate BYTE at EIP+1+n
+ * Fetch an immediate BYTE at vCPU.EIP+1+n
  * Params: n = Optional offset (+1)
  * Returns: BYTE
  */
 extern (C)
 ubyte __fu8_i(int n = 0) {
 	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN__fu8_i", PANIC_MEMORY_ACCESS);
-	return MEMORY[EIP + 1 + n];
+	return MEMORY[vCPU.EIP + 1 + n];
 }
 
 /**
@@ -501,7 +501,7 @@ extern (C)
 pragma(inline, true)
 byte __fi8_i(int n = 0) {
 	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fi8_i", PANIC_MEMORY_ACCESS);
-	return cast(byte)MEMORY[EIP + 1 + n];
+	return cast(byte)MEMORY[vCPU.EIP + 1 + n];
 }
 
 /**
@@ -512,7 +512,7 @@ byte __fi8_i(int n = 0) {
 extern (C)
 ushort __fu16_i(uint n = 0) {
 	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fu16_i", PANIC_MEMORY_ACCESS);
-	return *cast(ushort*)(MEMORY_P + EIP + 1 + n);
+	return *cast(ushort*)(MEMORY_P + vCPU.EIP + 1 + n);
 }
 
 /**
@@ -523,7 +523,7 @@ ushort __fu16_i(uint n = 0) {
 extern (C)
 short __fi16_i(uint n = 0) {
 	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fi16_i", PANIC_MEMORY_ACCESS);
-	return *cast(short*)(MEMORY_P + EIP + 1 + n);
+	return *cast(short*)(MEMORY_P + vCPU.EIP + 1 + n);
 }
 
 /*****************************************************************************
@@ -549,16 +549,16 @@ void __int_enter() {
 		#SS*/
 	push(FLAG);
 	IF = TF = 0;
-	push(CS);
-	push(IP);
+	push(vCPU.CS);
+	push(vCPU.IP);
 	//CS ← IDT[inum].selector;
 	//IP ← IDT[inum].offset;
 }
 
 void __int_exit() {
 	// REAL-MODE
-	IP = pop;
-	CS = pop;
+	vCPU.IP = pop;
+	vCPU.CS = pop;
 	IF = TF = 1;
 	FLAG = pop;
 }

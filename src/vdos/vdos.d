@@ -146,10 +146,10 @@ By default, CD will display the current working directory`
 	// D
 
 	if (strcmp(*argv, "date") == 0) {
-		AH = 0x2A;
+		vCPU.AH = 0x2A;
 		Raise(0x21);
 		printf("It is currently ");
-		switch (AL) {
+		switch (vCPU.AL) {
 		case 0, 7: printf("Sun"); break;
 		case 1: printf("Mon"); break;
 		case 2: printf("Tue"); break;
@@ -159,7 +159,7 @@ By default, CD will display the current working directory`
 		case 6: printf("Sat"); break;
 		default:
 		}
-		printf(" %d-%02d-%02d\n", CX, DH, DL);
+		printf(" %d-%02d-%02d\n", vCPU.CX, vCPU.DH, vCPU.DL);
 		goto START;
 	}
 
@@ -241,9 +241,9 @@ By default, MEM will show memory usage`
 	// T
 
 	if (strcmp(*argv, "time") == 0) {
-		AH = 0x2C;
+		vCPU.AH = 0x2C;
 		Raise(0x21);
-		printf("It is currently %02d:%02d:%02d.%02d\n", CH, CL, DH, DL);
+		printf("It is currently %02d:%02d:%02d.%02d\n", vCPU.CH, vCPU.CL, vCPU.DH, vCPU.DL);
 		goto START;
 	}
 
@@ -276,7 +276,7 @@ By default, MEM will show memory usage`
 	if (strcmp(*argv, "?load") == 0) {
 		if (argc > 1) {
 			if (pexist(argv[1])) {
-				CS = 0; IP = 0x100; // Temporary
+				vCPU.CS = 0; vCPU.IP = 0x100; // Temporary
 				ExecLoad(argv[1]);
 			} else
 				puts("File not found");
@@ -345,12 +345,12 @@ extern (C)
 void print_regs() {
 	printf(
 `EIP=%08X  IP=%04X  (get_ip=%08X)
-EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X
+EIP=%08X  EBX=%08X  ECX=%08X  EDX=%08X
 CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X
 `,
-		EIP, IP, get_ip,
-		EAX, EBX, ECX, EDX,
-		CS, DS, ES, SS, SP, BP, SI, DI,
+		vCPU.EIP, vCPU.IP, get_ip,
+		vCPU.EIP, vCPU.EBX, vCPU.ECX, vCPU.EDX,
+		vCPU.CS, vCPU.DS, vCPU.ES, vCPU.SS, vCPU.SP, vCPU.BP, vCPU.SI, vCPU.DI,
 	);
 	printf("FLAG=");
 	if (OF) printf("OF ");
@@ -382,7 +382,7 @@ void panic(ushort code,
 		code, modname, line
 	);
 	int i = RANGE;
-	ubyte* p = MEMORY_P + EIP - TARGET;
+	ubyte* p = MEMORY_P + vCPU.EIP - TARGET;
 	while (--i) {
 		if (i == (TARGET - 1))
 			printf(" > %02X<", *p);
@@ -410,20 +410,20 @@ void Raise(ubyte code) {
 
 	switch (code) {
 	case 0x10: // VIDEO
-		switch (AH) {
+		switch (vCPU.AH) {
 		/*
 		 * VIDEO - Set cursor position
 		 */
 		case 0x02:
-			SetPos(DH, DL);
+			SetPos(vCPU.DH, vCPU.DL);
 			break;
 		/*
 		 * VIDEO - Get cursor position and size
 		 */
 		case 0x03:
-			AX = 0;
-			//DH = cast(ubyte)CursorTop;
-			//DL = cast(ubyte)CursorLeft;
+			vCPU.AX = 0;
+			//vCPU.DH = cast(ubyte)CursorTop;
+			//vCPU.DL = cast(ubyte)CursorLeft;
 			break;
 		/*
 		 * VIDEO - Read light pen position
@@ -438,18 +438,18 @@ void Raise(ubyte code) {
 		break;
 	case 0x11: { // BIOS - Get equipement list
 		// Number of 16K banks of RAM on motherboard (PC only).
-		int ax = 0b10000; // VGA //TODO: CHECK ON VIDEO MODE!
+		int r = 0b10000; // VGA //TODO: CHECK ON VIDEO MODE!
 		/*if (FloppyDiskInstalled) {
 			ax |= 1;
 			// Bit 6-7 = Number of floppy drives
 			ax |= 0b10
 		}*/
 		//if (PenInstalled) ax |= 0b100;
-		AX = ax;
+		vCPU.AX = cast(ushort)r;
 		break;
 	}
 	case 0x12: // BIOS - Get memory size
-		AX = cast(int)(MEMORYSIZE) / 1024;
+		vCPU.AX = cast(ushort)(MEMORYSIZE / 1024);
 		break;
 	case 0x13: // DISK operations
 
@@ -458,19 +458,19 @@ void Raise(ubyte code) {
 
 		break;
 	case 0x16: // Keyboard
-		switch (AH) {
+		switch (vCPU.AH) {
 		case 0, 1: { // Get/Check keystroke
 			/*const KeyInfo k = ReadKey;
-			AH = cast(ubyte)k.scanCode;
-			AL = cast(ubyte)k.keyCode;
-			if (AH) ZF = 0; // Keystroke available*/
+			vCPU.AH = cast(ubyte)k.scanCode;
+			vCPU.AL = cast(ubyte)k.keyCode;
+			if (vCPU.AH) ZF = 0; // Keystroke available*/
 		}
 			break;
 		case 2: // SHIFT
 			// Bit | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0
 			// Des | I | C | N | S | A | C | L | R
 			// Insert, Capslock, Numlock, Scrolllock, Alt, Ctrl, Left, Right
-			// AL = (flag)
+			// vCPU.AL = (flag)
 			break;
 		default:
 			
@@ -481,7 +481,7 @@ void Raise(ubyte code) {
 
 		break;
 	case 0x1A: // TIME
-		switch (AH) {
+		switch (vCPU.AH) {
 		/*
 		 * Get system time by number of clock ticks since midnight
 		 */
@@ -502,7 +502,7 @@ void Raise(ubyte code) {
 
 		break;
 	case 0x21: // MS-DOS Services
-		switch (AH) {
+		switch (vCPU.AH) {
 		/*
 		 * 00h - Terminate program
 		 */
@@ -513,14 +513,14 @@ void Raise(ubyte code) {
 		 * 01h - Read character from stdin with echo
 		 */
 		case 1:
-			//AL = cast(ubyte)ReadKey.keyCode;
+			//vCPU.AL = cast(ubyte)ReadKey.keyCode;
 			break;
 		/*
 		 * 02h - Write character to stdout
 		 */
 		case 2:
-			AL = DL;
-			putchar(AL);
+			vCPU.AL = vCPU.DL;
+			putchar(vCPU.AL);
 			break;
 		/*
 		 * 05h - Write character to printer
@@ -538,7 +538,7 @@ void Raise(ubyte code) {
 		 * 07h - Read character directly from stdin without echo
 		 */
 		case 7:
-			//AL = cast(ubyte)ReadKey.keyCode;
+			//vCPU.AL = cast(ubyte)ReadKey.keyCode;
 			break;
 		/*
 		 * 08h - Read character from stdin without echo
@@ -551,11 +551,11 @@ void Raise(ubyte code) {
 		 */
 		case 9: {
 			uint limit = 255;
-			char* p = cast(char*)MEMORY + get_ad(DS, DX);
+			char* p = cast(char*)MEMORY + get_ad(vCPU.DS, vCPU.DX);
 			while (*p != '$' && --limit > 0)
 				putchar(*p++);
 
-			AL = 0x24;
+			vCPU.AL = 0x24;
 			break;
 		}
 		/*
@@ -592,7 +592,7 @@ void Raise(ubyte code) {
 		 * 19h - Get default drive
 		 */
 		case 0x19:
-			AL = 2; // Temporary.
+			vCPU.AL = 2; // Temporary.
 			break;
 		/*
 		 * 25h - Set interrupt vector
@@ -612,17 +612,17 @@ void Raise(ubyte code) {
 		case 0x2A: {
 			OSDate d = void;
 			os_date(&d); // utils_os
-			CX = d.year;
-			DH = d.month;
-			DL = d.day;
-			AL = d.weekday;
+			vCPU.CX = d.year;
+			vCPU.DH = d.month;
+			vCPU.DL = d.day;
+			vCPU.AL = d.weekday;
 			break;
 		}
 		/*
 		 * 2Bh - Set system date
 		 */
 		case 0x2B:
-			AL = 0xFF;
+			vCPU.AL = 0xFF;
 			break;
 		/*
 		 * 2Ch - Get system time
@@ -630,17 +630,17 @@ void Raise(ubyte code) {
 		case 0x2C: {
 			OSTime t = void;
 			os_time(&t); // utils_os
-			CH = t.hour;
-			CL = t.minute;
-			DH = t.second;
-			DL = t.millisecond;
+			vCPU.CH = t.hour;
+			vCPU.CL = t.minute;
+			vCPU.DH = t.second;
+			vCPU.DL = t.millisecond;
 			break;
 		}
 		/*
 		 * 2Dh - Set system time
 		 */
 		case 0x2D:
-			AL = 0xFF;
+			vCPU.AL = 0xFF;
 			break;
 		/*
 		 * 2Eh - Set verify flag
@@ -652,9 +652,9 @@ void Raise(ubyte code) {
 		 * 30h - Get DOS version
 		 */
 		case 0x30:
-			BH = AL == 0 ? OEM_ID.IBM : 0;
-			AL = MajorVersion;
-			AH = MinorVersion;
+			vCPU.BH = vCPU.AL == 0 ? OEM_ID.IBM : 0;
+			vCPU.AL = MajorVersion;
+			vCPU.AH = MinorVersion;
 			break;
 		/*
 		 * 35h - Get interrupt vector.
@@ -756,14 +756,14 @@ void Raise(ubyte code) {
 		 * 4Bh - Load/execute program
 		 */
 		case 0x4B: {
-			switch (AL) {
+			switch (vCPU.AL) {
 			case 0: // Load and execute the program.
-				char[] p = MemString(get_ad(DS, DX));
+				char[] p = MemString(get_ad(vCPU.DS, vCPU.DX));
 				if (pexist(cast(char*)p)) {
 					ExecLoad(cast(char*)p);
 					CF = 0;
 				} else {
-					AX = E_FILE_NOT_FOUND;
+					vCPU.AX = E_FILE_NOT_FOUND;
 					CF = 1;
 				}
 				break;
@@ -776,7 +776,7 @@ void Raise(ubyte code) {
 				CF = 1;
 				break;
 			default:
-				AX = E_INVALID_FUNCTION;
+				vCPU.AX = E_INVALID_FUNCTION;
 				CF = 1;
 				break;
 			}
@@ -787,7 +787,7 @@ void Raise(ubyte code) {
 		 */
 		case 0x4C:
 			--RLEVEL;
-			//TODO: ERRORLEVEL = AL;
+			//TODO: ERRORLEVEL = vCPU.AL;
 			break;
 		/*
 		 * 4Dh - Get return code. (ERRORLEVEL)
@@ -820,7 +820,7 @@ void Raise(ubyte code) {
 
 		break;
 	case 0x29: // FAST CONSOLE OUTPUT
-		putchar(AL);
+		putchar(vCPU.AL);
 		break;
 	default: break;
 	}

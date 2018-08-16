@@ -6,7 +6,6 @@ module vcpu;
 
 import sleep;
 import Logger : info;
-debug import Logger : logexec;
 import vdos : Raise; // Interrupt handler
 import vcpu_8086 : exec16;
 import vcpu_utils;
@@ -44,14 +43,14 @@ enum : ubyte {
 	RM_MOD_11 = 192,	/// MOD 11, Register Mode
 	RM_MOD = RM_MOD_11,	/// Used for masking the MOD bits (11 000 000)
 
-	RM_REG_000 = 0,	/// AL/AX
-	RM_REG_001 = 8,	/// CL/CX
-	RM_REG_010 = 16,	/// DL/DX
-	RM_REG_011 = 24,	/// BL/BX
-	RM_REG_100 = 32,	/// AH/SP
-	RM_REG_101 = 40,	/// CH/BP
-	RM_REG_110 = 48,	/// DH/SI
-	RM_REG_111 = 56,	/// BH/DI
+	RM_REG_000 = 0,	/// vCPU.AL/vCPU.AX
+	RM_REG_001 = 8,	/// vCPU.CL/vCPU.CX
+	RM_REG_010 = 16,	/// vCPU.DL/vCPU.DX
+	RM_REG_011 = 24,	/// vCPU.BL/vCPU.BX
+	RM_REG_100 = 32,	/// vCPU.AH/vCPU.SP
+	RM_REG_101 = 40,	/// vCPU.CH/vCPU.BP
+	RM_REG_110 = 48,	/// vCPU.DH/vCPU.SI
+	RM_REG_111 = 56,	/// vCPU.BH/vCPU.DI
 	RM_REG = RM_REG_111,	/// Used for masking the REG bits (00 111 000)
 
 	RM_RM_000 = 0,	/// R/M 000 bits
@@ -67,8 +66,9 @@ enum : ubyte {
 
 /**
  * Runnning level.
- * Used to determine the "level of execution", such as the
- * "deepness" of a program. When a program terminates, its ERRORLEVEL is decreased.
+ * Used to determine the "level of execution", such as the "deepness" of a program.
+ * When a program terminates, RLEVEL is decreased.
+ * If HLT is sent, RLEVEL is set to 0, and the emulator stops.
  * If RLEVEL reaches 0, the emulator either stops, or returns to the virtual shell.
  * tl;dr: Emulates CALLs
  */
@@ -79,42 +79,86 @@ enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer enum to avoid explicit ca
 __gshared ubyte[INIT_MEM] MEMORY; /// Main memory bank
 __gshared uint MEMORYSIZE = INIT_MEM; /// Current memory MEMORY size
 
+/*
+ * Code might be ugly, but:
+ * - No more pointers to initialize and explicitly use
+ * - Avoids calling pretty function (@property), uses MOV directly (x86)
+ * - Alls major fields are initialized to 0 (.init) (.zero __CPU.sizeof)
+ */
+extern (C) struct __CPU {
+	union {
+		uint EIP;
+		union { ushort IP; }
+	}
+	union {
+		uint EAX;
+		union {
+			ushort AX;
+			union { struct { ubyte AL, AH; } }
+		}
+	}
+	union {
+		uint EBX;
+		union {
+			ushort BX;
+			union { struct { ubyte BL, BH; } }
+		}
+	}
+	union {
+		uint ECX;
+		union {
+			ushort CX;
+			union { struct { ubyte CL, CH; } }
+		}
+	}
+	union {
+		uint EDX;
+		union {
+			ushort DX;
+			union { struct { ubyte DL, DH; } }
+		}
+	}
+	union {
+		uint ESI;
+		union { ushort SI; }
+	}
+	union {
+		uint EDI;
+		union { ushort DI; }
+	}
+	union {
+		uint EBP;
+		union { ushort BP; }
+	}
+	union {
+		uint ESP;
+		union { ushort SP; }
+	}
+	ushort CS, SS, DS, ES, FS, GS;
+}
+
+public __gshared __CPU vCPU;
+
 /// Initiate interpreter
 extern (C)
 void vcpu_init() {
 	SLEEP_SET;
-
-	IPp = cast(ushort*)&EIP;
-
-	AXp = cast(ushort*)&EAX;
-	BXp = cast(ushort*)&EBX;
-	CXp = cast(ushort*)&ECX;
-	DXp = cast(ushort*)&EDX;
-
-	SIp = cast(ushort*)&ESI;
-	DIp = cast(ushort*)&EDI;
-	BPp = cast(ushort*)&EBP;
-	SPp = cast(ushort*)&ESP;
-
-	ALp = cast(ubyte*)AXp;
-	BLp = cast(ubyte*)BXp;
-	CLp = cast(ubyte*)CXp;
-	DLp = cast(ubyte*)DXp;
-
-	//CS = 0xFFFF;
+	//RESET;
 }
 
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
 void vcpu_run() {
+	debug import Logger : logexec;
+
 	info("CALL vcpu_run");
 	uint tsc; /// tick count for thread sleeping purposes
 	while (RLEVEL > 0) {
-		EIP = get_ip; // CS:IP->EIP (important)
-		debug logexec(CS, IP, MEMORY[EIP]);
-		exec16(MEMORY[EIP]);
+		vCPU.EIP = get_ip; // CS:IP->EIP (important)
+		debug logexec(vCPU.CS, vCPU.IP, MEMORY[vCPU.EIP]);
+		exec16(MEMORY[vCPU.EIP]);
 
-		if (opt_sleep) { // TODO: Redo sleeping procedure
+		if (opt_sleep) { // TODO: Redo sleeping procedure (#20)
 			++tsc;
 			if (tsc == TSC_SLEEP) {
 				SLEEP;
@@ -144,187 +188,26 @@ uint get_ad(int s, int o) {
 extern (C)
 pragma(inline, true)
 uint get_ip() {
-	return get_ad(CS, IP);
+	return get_ad(vCPU.CS, vCPU.IP);
 }
 
 /// RESET instruction function
 extern (C)
-private void reset() {
+private void RESET() {
 	OF = DF = IF = TF = SF =
 		ZF = AF = PF = CF = 0;
-	CS = 0xFFFF;
-	EIP = DS = SS = ES = 0;
+	vCPU.CS = 0xFFFF;
+	vCPU.EIP = vCPU.DS = vCPU.SS = vCPU.ES = 0;
 	// Empty Queue Bus
 }
 
 /// Resets the entire vcpu. Does not refer to the RESET instruction!
 extern (C)
 void fullreset() {
-	reset;
-	EAX = EBX = ECX = EDX =
-		EBP = ESP = EDI = ESI = 0;
+	RESET;
+	vCPU.EAX = vCPU.EBX = vCPU.ECX = vCPU.EDX =
+		vCPU.EBP = vCPU.ESP = vCPU.EDI = vCPU.ESI = 0;
 }
-
-/// Generic register
-__gshared uint EAX, EBX, ECX, EDX;
-private __gshared ushort* AXp, BXp, CXp, DXp;
-private __gshared ubyte* ALp, BLp, CLp, DLp;
-
-/*
- * Register properties.
- * Getters and setters, respectively.
- */
-
-/// Get AX
-/// Returns: WORD
-@property
-ushort AX() { return *AXp; }
-/// Get AH
-/// Returns: BYTE
-@property
-ubyte  AH() { return *(ALp + 1); }
-/// Get AL
-/// Returns: BYTE
-@property
-ubyte  AL() { return *ALp; }
-/// Set AX
-/// Params: v = WORD
-@property
-void   AX(int v) { *AXp = cast(ushort)v; }
-/// Set AH
-/// Params: v = BYTE
-@property
-void   AH(int v) { *(ALp + 1) = cast(ubyte)v; }
-/// Set AL
-/// Params: v = BYTE
-@property
-void   AL(int v) { *ALp = cast(ubyte)v; }
-
-/// Get BX
-/// Returns: WORD
-@property
-ushort BX() { return *BXp; }
-/// Get BH
-/// Returns: BYTE
-@property
-ubyte  BH() { return *(BLp + 1); }
-/// Get BL
-/// Returns: BYTE
-@property
-ubyte  BL() { return *BLp; }
-/// Set BX
-/// Params: v = WORD
-@property
-void   BX(int v) { *BXp = cast(ushort)v; }
-/// Set BH
-/// Params: v = BYTE
-@property
-void   BH(int v) { *(BLp + 1) = cast(ubyte)v; }
-/// Set BL
-/// Params: v = BYTE
-@property
-void   BL(int v) { *BLp = cast(ubyte)v; }
-
-/// Get CX
-/// Returns: WORD
-@property
-ushort CX() { return *CXp; }
-/// Get CH
-/// Returns: BYTE
-@property
-ubyte  CH() { return *(CLp + 1); }
-/// Get CL
-/// Returns: BYTE
-@property
-ubyte  CL() { return *CLp; }
-/// Set CX
-/// Params: v = WORD
-@property
-void   CX(int v) { *CXp = cast(ushort)v; }
-/// Set CH
-/// Params: v = BYTE
-@property
-void   CH(int v) { *(CLp + 1) = cast(ubyte)v; }
-/// Set CL
-/// Params: v = BYTE
-@property
-void   CL(int v) { *CLp = cast(ubyte)v; }
-
-/// Get DX
-/// Returns: WORD
-@property
-ushort DX() { return *DXp; }
-/// Get DH
-/// Returns: BYTE
-@property
-ubyte  DH() { return *(DLp + 1); }
-/// Get CL
-/// Returns: BYTE
-@property
-ubyte  DL() { return *DLp; }
-/// Set DX
-/// Params: v = WORD
-@property
-void   DX(int v) { *DXp = cast(ushort)v; }
-/// Set DH
-/// Params: v = BYTE
-@property
-void   DH(int v) { *(DLp + 1) = cast(ubyte)v; }
-/// Set DL
-/// Params: v = BYTE
-@property
-void   DL(int v) { *DLp = cast(ubyte)v; }
-
-/// Index register
-__gshared uint ESI, EDI, EBP, ESP;
-private __gshared ushort* SIp, DIp, BPp, SPp;
-
-/// Get SI register
-/// Returns: SI
-@property
-ushort SI() { return *SIp; }
-/// Get DI register
-/// Returns: DI
-@property
-ushort DI() { return *DIp; }
-/// Get BP register
-/// Returns: BP
-@property
-ushort BP() { return *BPp; }
-/// Get SP register
-/// Returns: SP
-@property
-ushort SP() { return *SPp; }
-/// Set SI register
-/// Params: v = Set SI value
-@property
-void SI(int v) { *SIp = cast(ushort)v; }
-/// Set DI register
-/// Params: v = Set DI value
-@property
-void DI(int v) { *DIp = cast(ushort)v; }
-/// Set BP register
-/// Params: v = Set BP value
-@property
-void BP(int v) { *BPp = cast(ushort)v; }
-/// Set SP register
-/// Params: v = Set SP value
-@property
-void SP(int v) { *SPp = cast(ushort)v; }
-
-/// Segment register
-__gshared ushort CS, SS, DS, ES,
-	FS, GS; // i386
-
-/// Program Counter
-__gshared uint EIP;
-private __gshared ushort* IPp;
-/// Get Instruction Pointer
-/// Returns: IP
-@property ushort IP() { return *IPp; }
-/// Set Instruction Pointer
-/// Params: v = Set IP value
-@property void IP(int v) { *IPp = cast(ushort)v; }
 
 /**********************************************************
  * FLAGS
@@ -404,14 +287,18 @@ private enum : ushort {
 	FLAGB = cast(ubyte)flag;
 }
 
+/**********************************************************
+ * STACK
+ **********************************************************/
+
 /**
  * Push a WORD value into stack.
  * Params: value = WORD value to PUSH
  */
 extern (C)
 void push(ushort value) {
-	SP = SP - 2;
-	__iu16(value, get_ad(SS, SP));
+	vCPU.SP = cast(ushort)(vCPU.SP - 2);
+	__iu16(value, get_ad(vCPU.SS, vCPU.SP));
 }
 
 /**
@@ -420,8 +307,8 @@ void push(ushort value) {
  */
 extern (C)
 ushort pop() {
-	const uint addr = get_ad(SS, SP);
-	SP = SP + 2;
+	const uint addr = get_ad(vCPU.SS, vCPU.SP);
+	vCPU.SP = cast(ushort)(vCPU.SP + 2);
 	return __fu16(addr);
 }
 
@@ -431,8 +318,8 @@ ushort pop() {
  */
 extern (C)
 void epush(uint value) {
-	SP = SP - 2;
-	__iu32(value, get_ad(SS, SP));
+	vCPU.SP = cast(ushort)(vCPU.SP - 2);
+	__iu32(value, get_ad(vCPU.SS, vCPU.SP));
 }
 
 /**
@@ -441,7 +328,7 @@ void epush(uint value) {
  */
 extern (C)
 uint epop() {
-	const uint addr = get_ad(SS, SP);
-	SP = SP + 2;
+	const uint addr = get_ad(vCPU.SS, vCPU.SP);
+	vCPU.SP = cast(ushort)(vCPU.SP + 2);
 	return __fu32(addr);
 }
