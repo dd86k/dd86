@@ -19,7 +19,7 @@ private void _version() {
 		"Project page: <https://github.com/dd86k/dd-dos>\n" ~
 		"License: <https://opensource.org/licenses/MIT>\n\n" ~
 		"dd-dos " ~ APP_VERSION ~ "  (" ~ __TIMESTAMP__ ~ ")\n" ~
-		"Compiled using " ~ __VENDOR__ ~ " compiler v%d\n\n" ~
+		"Compiled using the " ~ __VENDOR__ ~ " compiler v%d\n\n" ~
 		// Credit roles start at 40 characters
 		`Credits
 dd86k ................................. Original author
