@@ -23,8 +23,7 @@ import vcpu_config;
 	// No LONG modes
 }*/
 
-/// Preferred Segment register
-__gshared ubyte Seg;
+__gshared ubyte Seg; /// Preferred Segment register
 enum : ubyte { // Segment override (for Seg)
 	SEG_NONE,	/// None, default
 	SEG_CS,	/// CS segment

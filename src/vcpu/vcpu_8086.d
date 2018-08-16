@@ -10,16 +10,8 @@ import vdos : Raise;
  */
 extern (C)
 void exec16(ubyte op) {
-	/*
-	 * Legend:
-	 * R/M - Mod Register/Memory byte
-	 * IMM - Immediate value
-	 * REG - Register
-	 * MEM - Memory location
-	 * SEGREG - Segment register
-	 */
 	// Every instruction has their own local variables, since referencing one
-	// variable at the top of the stack increases binary size in general.
+	// variable at the top of the stack increases binary size (tested).
 	switch (op) {
 	case 0x00: { // ADD R/M8, REG8
 		const ubyte rm = __fu8_i;
@@ -2141,14 +2133,7 @@ void exec16(ubyte op) {
 		++vCPU.EIP;
 		return;
 	case 0xF2: // REPNE/REPNZ
-/*EXEC16_REPNE:
-		if (vCPU.CX) {
-			//TODO: Finish REPNE/REPNZ properly?
-			exec16(0xA6);
-			--vCPU.CX;
-			if (vCPU.ZF == 0) goto EXEC16_REPNE;
-		}*/
-		while (vCPU.CX) {
+		while (vCPU.CX > 0) {
 			//TODO: Finish REPNE/REPNZ properly?
 			exec16(0xA6);
 			--vCPU.CX;
@@ -2306,7 +2291,7 @@ void exec16(ubyte op) {
 	}
 	case 0xFF: { // GRP5 R/M16
 		const ubyte rm = __fu8_i;
-		uint addr = get_ea(rm, 1);
+		const uint addr = get_ea(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - INC
