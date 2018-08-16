@@ -14,12 +14,15 @@ import utils_os : pexist;
 extern (C)
 private void _version() {
 	printf(
+		BANNER ~ "\n" ~
 		"Copyright (c) 2017-2018 dd86k, MIT license\n" ~
-		"Project page: <https://github.com/dd86k/dd-dos>\n\n" ~
+		"Project page: <https://github.com/dd86k/dd-dos>\n" ~
+		"License: <https://opensource.org/licenses/MIT>\n\n" ~
 		"dd-dos " ~ APP_VERSION ~ "  (" ~ __TIMESTAMP__ ~ ")\n" ~
-		"Compiler: " ~ __VENDOR__ ~ " v%d\n\n" ~
+		"Compiled using " ~ __VENDOR__ ~ " compiler v%d\n\n" ~
+		// Credit roles start at 40 characters
 		`Credits
-dd86k -- Original author and developer
+dd86k ................................. Original author
 
 `,
 		__VERSION__
@@ -49,8 +52,8 @@ OPTIONS
 
 extern (C)
 private int main(int argc, char** argv) {
-	byte args = 1;
-	byte arg_banner = 1;
+	ubyte args = 1;
+	ubyte arg_banner = 1;
 	char* prog; /// FILE, COM or EXE to start
 //	char* args; /// FILEARGS, MUST not be over 127 characters
 //	size_t arg_i; /// Argument length incrementor
