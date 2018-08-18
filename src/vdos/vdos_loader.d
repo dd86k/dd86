@@ -22,13 +22,14 @@ private enum {
 
 /**
  * Load an executable file in memory.
- * AL values are set according to error (destroyed)
+ * AL is destroyed with error value
  * Params:
  *   path = Path to executable
  *   args = Executable arguments
  * Returns: 0 if successfully loaded
  * Notes: Refer to EXEC2BIN.ASM from MS-DOS 2.0 for details, at EXELOAD.
  */
+extern (C)
 int ExecLoad(char* path) {
 	FILE* f = fopen(path, "rb"); /// file handle
 	fseek(f, 0, SEEK_END);
@@ -55,7 +56,7 @@ int ExecLoad(char* path) {
 		// ** Header is read for initial register values
 		mz_hdr mzh = void; /// MZ header structure variable
 		fread(&mzh, mzh.sizeof, 1, f);
-		vCPU.CS = 0x1000; vCPU.IP = 0x1000; // Temporary!
+		vCPU.CS = 0; vCPU.IP = 0x100; // Temporary!
 		vCPU.CS = cast(ushort)(vCPU.CS + mzh.e_cs); // Relative
 		vCPU.IP = mzh.e_ip;
 		//vCPU.EIP = get_ip;
