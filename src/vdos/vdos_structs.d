@@ -77,17 +77,18 @@ struct mz_hdr { align(1):
 
 /// MS_DOS EXE Relocation structure
 struct mz_rlc { align(1): // For AL=03h
-	ushort offset; /// Offset
-	ushort segment; /// Segment of relocation
+	ushort offset;	/// Offset
+	ushort segment;	/// Segment of relocation
 }
 
 /*
  * Internal Structures
  */
 
-struct vdos_settings { align(1):
-	// DOS related
-	char[15] HOSTNAME;
-	// vDOS
-	// x86 interpreter settings
+struct vdos_settings { //align(1):
+	// ----- vDOS internals
+	char[15] HOSTNAME; /// Network NetBIOS HOSTNAME
+	ushort cursor_x, /// Left 0-based horizontal cursor position
+		cursor_y; /// Upper 0-based vertical cursor position
+	// ----- DD-DOS settings
 }

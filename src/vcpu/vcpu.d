@@ -1,5 +1,5 @@
 /*
- * vcpu.d: x86 machine code interpreter.
+ * vcpu.d: core of x86 machine code interpreter.
  */
 
 module vcpu;
@@ -9,7 +9,7 @@ import Logger : info;
 import vdos : Raise; // Interrupt handler
 import vcpu_8086 : exec16;
 import vcpu_utils;
-import vcpu_config;
+import compile_config : INIT_MEM, TSC_SLEEP;
 
 /*enum : ubyte { // Emulated CPU
 	CPU_8086,
@@ -24,6 +24,7 @@ import vcpu_config;
 }*/
 
 __gshared ubyte Seg; /// Preferred Segment register
+
 enum : ubyte { // Segment override (for Seg)
 	SEG_NONE,	/// None, default
 	SEG_CS,	/// CS segment
@@ -42,14 +43,14 @@ enum : ubyte {
 	RM_MOD_11 = 192,	/// MOD 11, Register Mode
 	RM_MOD = RM_MOD_11,	/// Used for masking the MOD bits (11 000 000)
 
-	RM_REG_000 = 0,	/// vCPU.AL/vCPU.AX
-	RM_REG_001 = 8,	/// vCPU.CL/vCPU.CX
-	RM_REG_010 = 16,	/// vCPU.DL/vCPU.DX
-	RM_REG_011 = 24,	/// vCPU.BL/vCPU.BX
-	RM_REG_100 = 32,	/// vCPU.AH/vCPU.SP
-	RM_REG_101 = 40,	/// vCPU.CH/vCPU.BP
-	RM_REG_110 = 48,	/// vCPU.DH/vCPU.SI
-	RM_REG_111 = 56,	/// vCPU.BH/vCPU.DI
+	RM_REG_000 = 0,	/// AL/AX
+	RM_REG_001 = 8,	/// CL/CX
+	RM_REG_010 = 16,	/// DL/DX
+	RM_REG_011 = 24,	/// BL/BX
+	RM_REG_100 = 32,	/// AH/SP
+	RM_REG_101 = 40,	/// CH/BP
+	RM_REG_110 = 48,	/// DH/SI
+	RM_REG_111 = 56,	/// BH/DI
 	RM_REG = RM_REG_111,	/// Used for masking the REG bits (00 111 000)
 
 	RM_RM_000 = 0,	/// R/M 000 bits
@@ -67,7 +68,7 @@ enum : ubyte {
  * Runnning level.
  * Used to determine the "level of execution", such as the "deepness" of a program.
  * When a program terminates, RLEVEL is decreased.
- * If HLT is sent, RLEVEL is set to 0, and the emulator stops.
+ * If HLT is sent, RLEVEL is set to 0.
  * If RLEVEL reaches 0, the emulator either stops, or returns to the virtual shell.
  * tl;dr: Emulates CALLs
  */
@@ -291,7 +292,7 @@ private enum : ushort {
  **********************************************************/
 
 /**
- * (8086) Push a WORD value into stack.
+ * Push a WORD value into stack.
  * Params: value = WORD value to PUSH
  */
 extern (C)
@@ -301,7 +302,7 @@ void push16(ushort value) {
 }
 
 /**
- * (8086) Pop a WORD value from stack.
+ * Pop a WORD value from stack.
  * Returns: WORD value
  */
 extern (C)
@@ -312,7 +313,7 @@ ushort pop16() {
 }
 
 /**
- * (80486) Push a DWORD value into stack.
+ * Push a DWORD value into stack.
  * Params: value = DWORD value
  */
 extern (C)
@@ -322,7 +323,7 @@ void push32(uint value) {
 }
 
 /**
- * (80486) Pop a DWORD value from stack.
+ * Pop a DWORD value from stack.
  * Returns: WORD value
  */
 extern (C)

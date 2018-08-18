@@ -8,12 +8,12 @@ import ddc;
 import core.stdc.string : strcmp, strncpy, strlen;
 import core.stdc.stdlib : malloc, free, system;
 import vcpu, vcpu_utils;
-import vcpu_config : INIT_MEM; // for static assert
 import vdos_loader : ExecLoad;
 import vdos_codes;
 import vdos_structs : vdos_settings;
 import utils, utils_os;
 import ddcon, Logger;
+import compile_config : INIT_MEM; // for static assert
 
 debug {
 	pragma(msg, "-- DEBUG: ON");
@@ -77,15 +77,19 @@ __gshared ubyte
 	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
 	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
 
-private enum __SETTINGS_LOC = 0x200; /// Settings location in MEMORY, low memory
-static assert(__SETTINGS_LOC + vdos_settings.sizeof < INIT_MEM);
-
-/// DD-DOS settings holder. Values are stored in MEMORY.
-__gshared vdos_settings* SETTINGS; // Not possible to assign pointer at compile-time
+// For high memory, use INIT_MEM - n.
+private enum __SETTINGS_LOC = 0x200; /// Settings location in MEMORY
+static assert(
+	__SETTINGS_LOC + vdos_settings.sizeof < INIT_MEM,
+	"Settings location and size go beyond INIT_MEM"
+);
 
 // Internal input buffer length. While maximum in MS-DOS 5.0 seems to be 120,
 // 255 feels like a little more breathable.
 private enum _BUFS = 255;
+
+/// DD-DOS settings holder. Values are stored in MEMORY.
+__gshared vdos_settings* SETTINGS; // Not possible to assign pointer at compile-time
 
 /**
  * Enter virtual shell (vDOS)
@@ -336,6 +340,8 @@ By default, MEM will show memory usage`
 		goto START;
 	}
 
+	//TODO: See if command is not an executable (COM/EXE (MZ)/BAT)
+	//      to evaluate before passing to system, like check_exe or something
 	system(inb);
 	//puts("Bad command or file name");
 
