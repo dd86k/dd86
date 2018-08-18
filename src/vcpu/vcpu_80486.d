@@ -1,7 +1,15 @@
+/*
+ * Intel 80486 processor emulator
+ */
+
 module vcpu_80486;
 
+import vcpu, vcpu_utils;
+import vdos : Raise;
+import Logger;
+
 /**
- * Execute an instruction under the EXTENDED mode.
+ * Execute an instruction under EXTENDED mode.
  * Params: op = operation code
  */
 extern (C)

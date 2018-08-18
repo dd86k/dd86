@@ -1,8 +1,12 @@
+/*
+ * Intel 8086 processor emulator
+ */
+
 module vcpu_8086;
 
 import vcpu, vcpu_utils;
-import Logger;
 import vdos : Raise;
+import Logger;
 
 /**
  * Execute an 8086 opcode
@@ -1920,69 +1924,87 @@ void exec16(ubyte op) {
 		++vCPU.EIP;
 		return;
 	case 0xD0: { // GRP2 R/M8, 1
-		/*const ubyte rm = __fu8_i;
+		const ubyte rm = __fu8_i;
 		const int addr = get_ea(rm);
+		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - ROL
-
+			r <<= 1;
+			if (r & 0x100) r |= 1;
 			break;
 		case RM_REG_001: // 001 - ROR
-
+			if (r & 1) r |= 0x100;
+			r >>= 1;
 			break;
 		case RM_REG_010: // 010 - RCL
-
+			r <<= 1;
+			if (r & 0x200) r |= 1;
 			break;
 		case RM_REG_011: // 011 - RCR
-
+			if (r & 1) r |= 0x200;
+			r >>= 1;
 			break;
 		case RM_REG_100: // 100 - SAL/SHL
-
+			r <<= 1;
 			break;
 		case RM_REG_101: // 101 - SHR
-
+			r >>= 1;
 			break;
 		case RM_REG_111: // 111 - SAR
-
+			if (r & 0x80) r |= 0x100;
+			r >>= 1;
 			break;
-		default:
+		default: // 110
 			info("Invalid ModR/M for GRP2 R/M8, 1");
 			goto EXEC16_ILLEGAL;
-		}*/
+		}
+		//TODO: handle flags accordingly
+		__iu8(r, addr);
 		vCPU.EIP += 2;
 		return;
 	}
-	case 0xD1: // GRP2 R/M16, 1
-		/*const ubyte rm = __fu8_i;
-		const int addr = get_ea(rm);
+	case 0xD1: { // GRP2 R/M16, 1
+		const ubyte rm = __fu8_i;
+		const int addr = get_ea(rm, 1);
+		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - ROL
-
+			r <<= 1;
+			if (r & 0x1_0000) r |= 1;
 			break;
 		case RM_REG_001: // 001 - ROR
-
+			if (r & 1) r |= 0x1_0000;
+			r >>= 1;
 			break;
 		case RM_REG_010: // 010 - RCL
-
+			r <<= 1;
+			if (r & 0x2_0000) r |= 1;
 			break;
 		case RM_REG_011: // 011 - RCR
-
+			if (r & 1) r |= 0x2_0000;
+			r >>= 1;
 			break;
 		case RM_REG_100: // 100 - SAL/SHL
-
+			r <<= 1;
 			break;
 		case RM_REG_101: // 101 - SHR
-
+			r >>= 1;
 			break;
 		case RM_REG_111: // 111 - SAR
-
+			if (r & 0x8000) r |= 0x1_0000;
+			r >>= 1;
 			break;
-		default:
+		default: // 110
 			info("Invalid ModR/M for GRP2 R/M16, 1");
 			goto EXEC16_ILLEGAL;
-		}*/
+		}
+		//TODO: handle flags accordingly
+		__iu16(r, addr);
 		vCPU.EIP += 2;
 		return;
+	}
 	case 0xD2: // GRP2 R/M8, CL
+	// The 8086 does not mask the rotation count.
 		/*const ubyte rm = __fu8_i;
 		const int addr = get_ea(rm);
 		switch (rm & RM_REG) {
@@ -2014,6 +2036,7 @@ void exec16(ubyte op) {
 		vCPU.EIP += 2;
 		return;
 	case 0xD3: // GRP2 R/M16, CL
+	// The 8086 does not mask the rotation count.
 		/*const ubyte rm = __fu8_i;
 		const int addr = get_ea(rm, 1);
 		switch (rm & RM_REG) {

@@ -50,7 +50,7 @@ version (CRuntime_Bionic) {
 	pragma(msg, "-- RUNTIME: uClibc");
 	enum C_RUNTIME = "uClibc";
 } else {
-	pragma(msg, "-- RUNTIME: UNKNOWN (Be careful!)");
+	pragma(msg, "-- RUNTIME: UNKNOWN");
 	enum C_RUNTIME = "UNKNOWN";
 }
 
@@ -175,15 +175,15 @@ By default, CD will display the current working directory`
 
 	if (strcmp(*argv, "help") == 0) {
 		puts(
-`CD        Change working directory
-CLS       Clear screen
-DATE      Get current date
-DIR       Show directory content
-EXIT      Exit DD-DOS or script
-TREE      Show directory structure
-TIME      Get current time
-MEM       Show memory information
-VER       Show DD-DOS and MS-DOS version`
+`CD .......... Change working directory
+CLS ......... Clear screen
+DATE ........ Get current date
+DIR ......... Show directory content
+EXIT ........ Exit DD-DOS or script
+TREE ........ Show directory structure
+TIME ........ Get current time
+MEM ......... Show memory information
+VER ......... Show DD-DOS and MS-DOS version`
 		);
 		goto START;
 	}
@@ -251,7 +251,9 @@ By default, MEM will show memory usage`
 
 	if (strcmp(*argv, "ver") == 0) {
 		printf(
-			"\nDD-DOS Version " ~ APP_VERSION ~ "\nMS-DOS Version %d.%d (default: %d.%d)\n",
+			"\nDD-DOS Version " ~
+			APP_VERSION ~
+			"\nMS-DOS Version %d.%d (compiled: %d.%d)\n",
 			MajorVersion, MinorVersion,
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION
 		);
@@ -322,8 +324,7 @@ By default, MEM will show memory usage`
 	}
 	if (strcmp(*argv, "?diag") == 0) {
 		printf(
-			"Current MS-DOS version: %d.%d\n" ~
-			"Compiled MS-DOS version: %d.%d\n" ~
+			"MS-DOS version: %d.%d (%d.%d)\n" ~
 			"DD-DOS version: " ~ APP_VERSION ~ "\n" ~
 			"Compiler: " ~ __VENDOR__ ~ " v%d\n" ~
 			"C Runtime: " ~ C_RUNTIME ~ " Runtime\n" ~
