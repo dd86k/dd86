@@ -36,7 +36,7 @@ unittest
 
     // FAST CONSOLE OUTPUT (MS-DOS)
 
-    test("INT 21h->02_00h");
+    test("INT 21h  AX=0200h");
     vCPU.AH = 2;
     vCPU.DL = 'O';
     Raise(0x21);
@@ -47,7 +47,7 @@ unittest
 
     // PRINT STRING
 
-    test("INT 21h->09_00h");
+    test("INT 21h  AX=0900h");
     vCPU.DS = vCPU.CS = 0x400;
     vCPU.DX = 0x20; vCPU.IP = 0x20;
     vCPU.EIP = get_ip;
@@ -58,7 +58,7 @@ unittest
 
     // GET DATE
 
-    test("INT 21h->2A_00h");
+    test("INT 21h  AX=2A00h");
     vCPU.AH = 0x2A;
     Raise(0x21);
     switch (vCPU.AL) {
@@ -75,14 +75,14 @@ unittest
 
     // GET TIME
 
-    test("INT 21h->2C_00h");
+    test("INT 21h  AX=2C00h");
     vCPU.AH = 0x2C;
     Raise(0x21);
     writefln("%02d:%02d:%02d.%d", vCPU.CH, vCPU.CL, vCPU.DH, vCPU.DL);
 
     // GET VERSION
 
-    test("INT 21h->30_00h");
+    test("INT 21h  AX=3000h");
     vCPU.AL = 0;
     vCPU.AH = 0x30;
     Raise(0x21);

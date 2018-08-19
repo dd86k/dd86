@@ -2,7 +2,7 @@ module test_utils;
 
 import std.stdio;
 
-enum SPACES = 20;
+enum SPACES = 30;
 
 void test(string s) {
 	writef("%-*s: ", SPACES, s);
