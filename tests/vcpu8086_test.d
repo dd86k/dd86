@@ -1,9 +1,7 @@
 import vcpu, vcpu_utils, vcpu_8086, std.stdio, vdos;
 import test_utils;
 
-unittest
-{
-	import core.stdc.string : memset;
+unittest {
 	section("Interpreter -- REAL MODE");
 
 	vcpu_init;
@@ -379,6 +377,8 @@ unittest
 	assert(vCPU.BH == 60);
 	OK;
 
+	test("03h  ADD REG16, R/M16"); TODO;
+
 	test("04h  ADD AL, IMM8");
 	__iu8(4, vCPU.EIP + 1);
 	vCPU.AL = 12;
@@ -392,6 +392,30 @@ unittest
 	exec16(0x05);
 	assert(vCPU.AX == 1204);
 	OK;
+
+	// PUSH ES
+
+	test("06h  PUSH ES"); TODO;
+
+	// POP ES
+
+	test("07h  POP ES"); TODO;
+
+	// OR R/M8, REG8
+
+	test("08h  OR R/M8, REG8"); TODO;
+
+	// OR R/M16, REG16
+
+	test("09h  OR R/M16, REG16"); TODO;
+
+	// OR REG8, R/M8
+
+	test("0Ah  OR REG8, R/M8"); TODO;
+
+	// OR REG16, R/M16
+
+	test("0Bh  OR REG16, R/M16"); TODO;
 
 	// OR AL, IMM8
 
@@ -410,7 +434,147 @@ unittest
 	assert(vCPU.AX == 0xFFFF);
 	OK;
 
+	// PUSH CS
+
+	test("0Eh  PUSH CS"); TODO;
+
+	// ADC R/M8, REG8
+
+	test("10h  ADC R/M8, REG8"); TODO;
+
+	// ADC R/M16, REG16
+
+	test("11h  ADC R/M16, REG16"); TODO;
+
+	// ADC REG8, R/M8
+
+	test("12h  ADC REG8, R/M8"); TODO;
+
+	// ADC REG16, R/M16
+
+	test("13h  ADC REG16, R/M16"); TODO;
+
+	// ADC AL, IMM8
+
+	test("14h  ADC AL, IMM8"); TODO;
+
+	// ADC AX, IMM16
+
+	test("15h  ADC AX, IMM16"); TODO;
+
+	// PUSH SS
+
+	test("16h  PUSH SS"); TODO;
+
+	// POP SS
+
+	test("17h  POP SS"); TODO;
+
+	// SBB R/M8, REG8
+
+	test("18h  SBB R/M8, REG8"); TODO;
+
+	// SBB R/M16, REG16
+
+	test("19h  SBB R/M16, REG16"); TODO;
+
+	// SBB REG8, R/M16
+
+	test("1Ah  SBB REG8, R/M16"); TODO;
+
+	// SBB REG16, R/M16
+
+	test("1Bh  SBB REG16, R/M16"); TODO;
+
+	// SBB AL, IMM8
+
+	test("1Ch  SBB AL, IMM8"); TODO;
+
+	// SBB AX, IMM16
+
+	test("1Dh  SBB AX, IMM16"); TODO;
+
+	// PUSH DS
+
+	test("1Eh  PUSH DS"); TODO;
+
+	// POP DS
+
+	test("1Fh  POP DS"); TODO;
+
+	// AND R/M8, REG8
+
+	test("20h  AND R/M8, REG8"); TODO;
+
+	// AND R/M16, REG16
+
+	test("21h  AND R/M16, REG16"); TODO;
+
+	// AND REG8, R/M8
+
+	test("22h  AND REG8, R/M8"); TODO;
+
+	// AND REG16, R/M16
+
+	test("23h  AND REG16, R/M16"); TODO;
+
+	// AND AL, IMM8
+
+	test("24h  AND AL, IMM8"); TODO;
+
+	// AND AX, IMM16
+
+	test("25h  AND AX, IMM16"); TODO;
+
+	// ES:
+
+	test("26h  ES:"); TODO;
+
+	// DAA
+
+	test("27h  DAA"); TODO;
+
+	// SUB R/M8, REG8
+
+	test("28h  SUB R/M8, REG8"); TODO;
+
+	// SUB R/M16, REG16
+
+	test("29h  SUB R/M16, REG16"); TODO;
+
+	// SUB REG8, R/M8
+
+	test("2Ah  SUB REG8, R/M8"); TODO;
+
+	// SUB REG16, R/M16
+
+	test("2Bh  SUB REG16, R/M16"); TODO;
+
+	// SUB AL, IMM8
+
+	test("2Ch  SUB AL, IMM8"); TODO;
+
+	// SUB AX, IMM16
+
+	test("2Dh  SUB AX, IMM16"); TODO;
+
+	// CS:
+
+	test("2Eh  CS:"); TODO;
+
+	// DAS
+
+	test("2Fh  DAS"); TODO;
+
 	// XOR
+
+	test("30h  XOR R/M8, REG8"); TODO;
+
+	test("31h  XOR R/M16, REG16"); TODO;
+
+	test("32h  XOR REG8, R/M8"); TODO;
+
+	test("33h  XOR REG16, R/M16"); TODO;
 
 	test("34h  XOR AL, IMM8");
 	__iu8(5, vCPU.EIP + 1);
@@ -592,6 +756,25 @@ unittest
 	assert(vCPU.DI == 0xFFAA);
 	OK;
 
+	// Jumps
+
+	test("70h  JO"); TODO;
+	test("71h  JNO"); TODO;
+	test("72h  JB/JNAE/JC"); TODO;
+	test("73h  JNB/JAE/JNC"); TODO;
+	test("74h  JE/JZ"); TODO;
+	test("75h  JNE/JNZ"); TODO;
+	test("76h  JBE/JNA"); TODO;
+	test("77h  JNBE/JA"); TODO;
+	test("78h  JS"); TODO;
+	test("79h  JNS"); TODO;
+	test("7Ah  JP/JPE"); TODO;
+	test("7Bh  JNP/JPO"); TODO;
+	test("7Ch  JL/JNGE"); TODO;
+	test("7Dh  JNL/JGE"); TODO;
+	test("7Eh  JLE/JNG"); TODO;
+	test("7Fh  JNLE/JG"); TODO;
+
 	// Group 1
 
 	test("80h  GRP1 ADD");
@@ -722,22 +905,15 @@ unittest
 
 	// TEST
 
-	test("85h  TEST R/M8, REG8");
-	vCPU.AL = 0x60; // address
-	vCPU.CL = 40;
-	__iu8(0b11_001_000, vCPU.EIP+1);
-	__iu8(20, vCPU.AL);
-	exec16(0x85);
-	assert(vCPU.ZF);
-	OK;
-	test("86h  TEST R/M16, REG16");
-	vCPU.AX = 0x600; // address
-	vCPU.CX = 400;
-	__iu8(0b11_001_000, vCPU.EIP+1);
-	__iu16(200, vCPU.AL);
-	exec16(0x86);
-	assert(vCPU.ZF);
-	OK;
+	test("84h  TEST R/M8, REG8"); TODO;
+
+	test("85h  TEST R/M16, REG16"); TODO;
+
+	// XCHG
+
+	test("86h  XCHG REG8, R/M8"); TODO;
+
+	test("87h  XCHG REG16, R/M16"); TODO;
 
 	// MOV REG8, R/M8
 
@@ -1039,6 +1215,26 @@ unittest
 	assert(vCPU.DX == 0xFFFF);
 	OK;
 
+	// WAIT
+
+	test("9Bh  WAIT"); TODO;
+
+	// PUSHF
+
+	test("9Ch  PUSHF"); TODO;
+
+	// POPF
+
+	test("9Dh  POPF"); TODO;
+
+	// SAHF
+
+	test("9Eh  SAHF"); TODO;
+
+	// LAHF
+
+	test("9Fh  LAHF"); TODO;
+
 	// MOV AL, MEM8
 
 	test("A0h  MOV AL, MEM8");
@@ -1307,6 +1503,92 @@ unittest
 	assert(vCPU.DI == 0x1119);
 	OK;
 
+	// RET
+
+	test("C2h  RET IMM16 (NEAR)"); TODO;
+
+	test("C3h  RET (NEAR)"); TODO;
+
+	// LES
+
+	test("C4h  LES REG16, MEM16"); TODO;
+
+	// LDS
+
+	test("C5h  LDS REG16, MEM16"); TODO;
+
+	// MOV
+
+	test("C6h  MOV MEM8, IMM8"); TODO;
+
+	test("C7h  MOV MEM16, IMM16"); TODO;
+
+	// RET
+
+	test("CAh  RET IMM16 (FAR)"); TODO;
+
+	test("CBh  RET (FAR)"); TODO;
+
+	// INT
+
+	test("CCh  INT 3"); TODO;
+
+	test("CDh  INT IMM8"); TODO;
+
+	test("CEh  INTO"); TODO;
+
+	// IRET
+
+	test("CFh  IRET"); TODO;
+
+	// Group 2, R/M8, 1
+
+	test("D0h  GRP2 ROL R/M8, 1"); TODO;
+	test("D0h  GRP2 ROR R/M8, 1"); TODO;
+	test("D0h  GRP2 RCL R/M8, 1"); TODO;
+	test("D0h  GRP2 RCR R/M8, 1"); TODO;
+	test("D0h  GRP2 SAL/SHL R/M8, 1"); TODO;
+	test("D0h  GRP2 SHR R/M8, 1"); TODO;
+	test("D0h  GRP2 SAR R/M8, 1"); TODO;
+
+	// Group 2, R/M16, 1
+
+	test("D1h  GRP2 ROL R/M16, 1"); TODO;
+	test("D1h  GRP2 ROR R/M16, 1"); TODO;
+	test("D1h  GRP2 RCL R/M16, 1"); TODO;
+	test("D1h  GRP2 RCR R/M16, 1"); TODO;
+	test("D1h  GRP2 SAL/SHL R/M16, 1"); TODO;
+	test("D1h  GRP2 SHR R/M16, 1"); TODO;
+	test("D1h  GRP2 SAR R/M16, 1"); TODO;
+
+	// Group 2, R/M8, CL
+
+	test("D2h  GRP2 ROL R/M8, CL"); TODO;
+	test("D2h  GRP2 ROR R/M8, CL"); TODO;
+	test("D2h  GRP2 RCL R/M8, CL"); TODO;
+	test("D2h  GRP2 RCR R/M8, CL"); TODO;
+	test("D2h  GRP2 SAL/SHL R/M8, CL"); TODO;
+	test("D2h  GRP2 SHR R/M8, CL"); TODO;
+	test("D2h  GRP2 SAR R/M8, CL"); TODO;
+
+	// Group 2, R/M16, CL
+
+	test("D3h  GRP2 ROL R/M16, CL"); TODO;
+	test("D3h  GRP2 ROR R/M16, CL"); TODO;
+	test("D3h  GRP2 RCL R/M16, CL"); TODO;
+	test("D3h  GRP2 RCR R/M16, CL"); TODO;
+	test("D3h  GRP2 SAL/SHL R/M16, CL"); TODO;
+	test("D3h  GRP2 SHR R/M16, CL"); TODO;
+	test("D3h  GRP2 SAR R/M16, CL"); TODO;
+
+	// AAM
+
+	test("D4h  AAM"); TODO;
+
+	// AAD
+
+	test("D5h  AAD"); TODO;
+
 	// XLAT SOURCE-TABLE
 
 	test("D7h  XLAT SOURCE-TABLE");
@@ -1318,16 +1600,50 @@ unittest
 	assert(vCPU.AL == 36);
 	OK;
 
-	// Flags
+	// LOOP
+
+	test("E0h  LOOPNE/LOOPNZ"); TODO;
+
+	test("E1h  LOOPE/LOOPZ"); TODO;
+
+	test("E2h  LOOP"); TODO;
+
+	// JCXZ
+
+	test("E3h  JCXZ"); TODO;
+
+	// CALL
+
+	test("E8h  CALL IMM16 (NEAR)"); TODO;
+
+	// JMP
+
+	test("E9h  JMP (NEAR)"); TODO;
+
+	test("EAh  JMP (FAR)"); TODO;
+
+	test("EBh  JMP (SHORT)"); TODO;
+
+	// LOCK
+
+	test("F0h  LOCK"); TODO;
+
+	// REPNE/REPNZ
+
+	test("F2h  REPNE/REPNZ"); TODO;
+
+	// REP/REPE/REPNZ
+
+	test("F3h  REP/REPE/REPNZ"); TODO;
+
+	// HLT
+
+	test("F4h  HLT"); TODO;
+
+	// CMC
 
 	vCPU.CF = 0;
 	test("F5h  CMC"); exec16(0xF5); assert(vCPU.CF); OK;
-	test("F8h  CLC"); exec16(0xF8); assert(vCPU.CF == 0); OK;
-	test("F9h  STC"); exec16(0xF9); assert(vCPU.CF); OK;
-	test("FAh  CLI"); exec16(0xFA); assert(vCPU.IF == 0); OK;
-	test("FBh  STI"); exec16(0xFB); assert(vCPU.IF); OK;
-	test("FCh  CLD"); exec16(0xFC); assert(vCPU.DF == 0); OK;
-	test("FDh  STD"); exec16(0xFD); assert(vCPU.DF); OK;
 
 	// Group 3, 8-bit
 
@@ -1385,4 +1701,38 @@ unittest
 	assert(vCPU.AL == 0xFF);
 	assert(vCPU.AH == 0xFC);
 	OK;
+
+	// Group 3, 16-bit
+
+	test("F7h  GRP3 TEST"); TODO;
+	test("F7h  GRP3 NOT"); TODO;
+	test("F7h  GRP3 NEG"); TODO;
+	test("F7h  GRP3 MUL"); TODO;
+	test("F7h  GRP3 IMUL"); TODO;
+	test("F7h  GRP3 DIV"); TODO;
+	test("F7h  GRP3 IDIV"); TODO;
+
+	// Flags
+
+	test("F8h  CLC"); exec16(0xF8); assert(vCPU.CF == 0); OK;
+	test("F9h  STC"); exec16(0xF9); assert(vCPU.CF); OK;
+	test("FAh  CLI"); exec16(0xFA); assert(vCPU.IF == 0); OK;
+	test("FBh  STI"); exec16(0xFB); assert(vCPU.IF); OK;
+	test("FCh  CLD"); exec16(0xFC); assert(vCPU.DF == 0); OK;
+	test("FDh  STD"); exec16(0xFD); assert(vCPU.DF); OK;
+
+	// Group 4, 8-bit
+
+	test("FEh  GRP4 INC"); TODO;
+	test("FEh  GRP4 DEC"); TODO;
+
+	// Group 5, 16-bit
+
+	test("FFh  GRP4 INC"); TODO;
+	test("FFh  GRP4 DEC"); TODO;
+	test("FFh  GRP4 CALL R/M16 (NEAR)"); TODO;
+	test("FFh  GRP4 CALL MEM16 (FAR)"); TODO;
+	test("FFh  GRP4 JMP R/M16 (NEAR)"); TODO;
+	test("FFh  GRP4 JMP MEM16 (FAR)"); TODO;
+	test("FFh  GRP4 PUSH MEM16"); TODO;
 }
