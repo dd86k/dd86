@@ -5,7 +5,7 @@ import std.datetime.stopwatch : StopWatch;
 import core.time, std.conv;
 import core.stdc.string : memcpy;
 
-import unitutils;
+import test_utils;
 
 unittest
 {

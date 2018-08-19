@@ -83,9 +83,10 @@ buildType "bench" {
   targetName "bench"
   targetType "executable"
   buildOptions "unittests"
+  dflags "-transition=intpromote"
 
   sourcePaths "bench/"
   importPaths "bench/"
-  sourceFiles "tests/unitutils.d"
+  sourceFiles "tests/test_utils.d"
   excludedSourceFiles "src/main.d"
 }
