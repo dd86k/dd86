@@ -247,7 +247,8 @@ By default, MEM will show memory usage`
 	if (strcmp(*argv, "time") == 0) {
 		vCPU.AH = 0x2C;
 		Raise(0x21);
-		printf("It is currently %02d:%02d:%02d.%02d\n", vCPU.CH, vCPU.CL, vCPU.DH, vCPU.DL);
+		printf("It is currently %02d:%02d:%02d.%02d\n",
+			vCPU.CH, vCPU.CL, vCPU.DH, vCPU.DL);
 		goto START;
 	}
 
@@ -361,15 +362,15 @@ CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X
 	);
 	printf("FLAG=");
 	//TODO: Use put
-	if (vCPU.OF) printf("vCPU.OF ");
-	if (vCPU.DF) printf("vCPU.DF ");
+	if (vCPU.OF) printf("OF ");
+	if (vCPU.DF) printf("DF ");
 	if (vCPU.IF) printf("IF ");
-	if (vCPU.TF) printf("vCPU.TF ");
-	if (vCPU.SF) printf("vCPU.SF ");
-	if (vCPU.ZF) printf("vCPU.ZF ");
-	if (vCPU.AF) printf("vCPU.AF ");
-	if (vCPU.PF) printf("vCPU.PF ");
-	if (vCPU.CF) printf("vCPU.CF ");
+	if (vCPU.TF) printf("TF ");
+	if (vCPU.SF) printf("SF ");
+	if (vCPU.ZF) printf("ZF ");
+	if (vCPU.AF) printf("AF ");
+	if (vCPU.PF) printf("PF ");
+	if (vCPU.CF) printf("CF ");
 	printf("(%Xh)\n", FLAG);
 }
 
