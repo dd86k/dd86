@@ -1,8 +1,7 @@
 import utils, vcpu_utils;
 import test_utils;
 
-unittest
-{
+unittest {
     section("Utilities");
 
     test("MemString");
@@ -10,21 +9,19 @@ unittest
     assert(MemString(10) == "Hello");
     OK;
 
-    //test("mstring");
-    //assert(mstring(cast(char*)__GBUF, 10) > 0);
-    //assert(__GBUF[0..2] == "He");
-    //OK;
-
     test("bswap16");
     assert(bswap16(0xAAFF) == 0xFFAA);
     OK;
+
     test("bswap32");
     assert(bswap32(0xAABB_FFEE) == 0xEEFF_BBAA);
     OK;
-    test("bswap64");
-    assert(
-        bswap64(0xAABBCCDD_11223344) ==
-        0x44332211_DDCCBBAA
-    );
-    OK;
+
+    version (none) {
+        test("bswap64");
+        assert(
+            bswap64(0xAABBCCDD_11223344) == 0x44332211_DDCCBBAA
+        );
+        OK;
+    }
 }

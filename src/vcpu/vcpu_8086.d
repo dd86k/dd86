@@ -2331,18 +2331,18 @@ void exec16(ubyte op) {
 			break;
 		case RM_REG_010: // 010 - CALL R/M16 (near) -- Indirect within segment
 			push16(vCPU.IP);
-			vCPU.EIP = r;
+			vCPU.IP = cast(ushort)r;
 			break;
 		case RM_REG_011: // 011 - CALL MEM16 (far) -- Indirect outside segment
 			push16(vCPU.CS);
 			push16(vCPU.IP);
-			vCPU.EIP = get_ad(__fu16(addr + 2), r);
+			vCPU.IP = cast(ushort)get_ad(__fu16(addr + 2), r);
 			break;
 		case RM_REG_100: // 100 - JMP R/M16 (near) -- Indirect within segment
-			vCPU.EIP = r;
+			vCPU.IP = cast(ushort)r;
 			break;
 		case RM_REG_101: // 101 - JMP MEM16 (far) -- Indirect outside segment
-			vCPU.EIP = get_ad(__fu16(addr + 2), r);
+			vCPU.IP = cast(ushort)get_ad(__fu16(addr + 2), r);
 			break;
 		case RM_REG_110: // 110 - PUSH MEM16
 			push16(__fu16(get_ad(__fu16(addr + 2), r)));

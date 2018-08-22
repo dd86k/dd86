@@ -7,7 +7,7 @@ module utils;
 import vcpu : MEMORY, MEMORYSIZE;
 import core.stdc.string : strlen;
 import core.stdc.stdlib : malloc;
-import core.stdc.string : strcmp, strncpy, strlen;
+import core.stdc.string : strncpy, strlen;
 
 /**
  * CLI argument splitter, supports quoting.
@@ -61,39 +61,6 @@ char[] MemString(uint pos) {
 		MEMORY[pos..pos + strlen(cast(char*)MEMORY + pos)];
 }
 
-/// Maximum string length
-//private enum STRING_MAX = 0x100; // Seems like a decent maximum length
-/// Global string buffer, mostly used with mstring.
-/// Avoids pre-allocating other strings.
-//__gshared char[STRING_MAX] __GBUF;
-
-/**
- * Fetch a string from MEMORY into an input buffer. If the function reaches
- * STRING_MAX, the function returns -2.
- * Params:
- *   c = Input buffer
- *   p = Memory position
- * Returns:
- *   On sucess, the function returns the number of characters read
- *   On failure, the function returns a negative value
- *     -1 = Memory Overflow
- *     -2 = STRING_MAX Overflow
- */
-/*extern (C)
-int mstring(char* c, int p) {
-	if (p < 0 || p > MEMORYSIZE) return -1;
-	int r; /// Result
-	char* m = cast(char*)MEMORY + p;
-	while (*m != 0) {
-		if (p >= MEMORYSIZE) return -1;
-		if (r > STRING_MAX) return -2;
-		*c = *m;
-		++c; ++m;
-		++p; ++c; ++r;
-	}
-	return r;
-}*/
-
 extern (C)
 void lowercase(char* c) {
 	while (*c) {
@@ -122,10 +89,13 @@ ushort bswap16(ushort n) {
 pragma(inline, true)
 extern (C)
 uint bswap32(uint n) {
-	return  (n >> 24) | (n & 0xFF_0000) >> 8 |
-			(n & 0xFF00) << 8 | (n << 24);
+	return
+		(n >> 24) | (n & 0xFF_0000) >> 8 |
+		(n & 0xFF00) << 8 | (n << 24);
 }
 
+// Disable bswap64 as long as we don't need it
+version (none)
 /**
  * Byte swap a 8-byte number.
  * Params: num = 8-byte number to swap.
@@ -148,7 +118,7 @@ ulong bswap64(ulong n) {
 		c = *(p + 3);
 		*(p + 3) = *(p + 4);
 		*(p + 4) = c;
-	} else { // LDC
+	} else { // LDC/GDC
 		uint i = *cast(uint*)&n;
 		ubyte* ip = cast(ubyte*)&i;
 		*(p + 0) = *(p + 7);

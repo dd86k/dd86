@@ -4,9 +4,7 @@
 
 module vdos_structs;
 
-// Tests
-
-static assert(PSP.sizeof == 0x100);
+static assert(PSP.sizeof == 256);
 
 // Enumerations
 
@@ -85,9 +83,10 @@ struct mz_rlc { align(1): // For AL=03h
  * Internal Structures
  */
 
-struct vdos_settings { //align(1):
+struct vdos_settings { align(1):
 	// ----- vDOS internals
 	char[15] HOSTNAME; /// Network NetBIOS HOSTNAME
+	private ubyte _pad0;
 	ushort cursor_x, /// Left 0-based horizontal cursor position
 		cursor_y; /// Upper 0-based vertical cursor position
 	// ----- DD-DOS settings

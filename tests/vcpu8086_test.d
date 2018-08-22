@@ -395,11 +395,19 @@ unittest {
 
 	// PUSH ES
 
-	test("06h  PUSH ES"); TODO;
+	test("06h  PUSH ES");
+	vCPU.ES = 189;
+	exec16(0x06);
+	assert(__fu16(get_ad(vCPU.SS, vCPU.SP)) == 189);
+	OK;
 
 	// POP ES
 
-	test("07h  POP ES"); TODO;
+	test("07h  POP ES");
+	vCPU.ES = 83;
+	exec16(0x07);
+	assert(vCPU.ES == 189); // sanity check
+	OK;
 
 	// OR R/M8, REG8
 
@@ -436,7 +444,11 @@ unittest {
 
 	// PUSH CS
 
-	test("0Eh  PUSH CS"); TODO;
+	test("0Eh  PUSH CS");
+	vCPU.CS = 318;
+	exec16(0x0E);
+	assert(__fu16(get_ad(vCPU.SS, vCPU.SP)) == 318);
+	OK;
 
 	// ADC R/M8, REG8
 
@@ -464,11 +476,18 @@ unittest {
 
 	// PUSH SS
 
-	test("16h  PUSH SS"); TODO;
+	test("16h  PUSH SS");
+	vCPU.SS = 202;
+	exec16(0x16);
+	assert(__fu16(get_ad(vCPU.SS, vCPU.SP)) == 202);
+	OK;
 
 	// POP SS
 
-	test("17h  POP SS"); TODO;
+	test("17h  POP SS");
+	exec16(0x17);
+	assert(vCPU.SS == 202);
+	OK;
 
 	// SBB R/M8, REG8
 
@@ -496,11 +515,19 @@ unittest {
 
 	// PUSH DS
 
-	test("1Eh  PUSH DS"); TODO;
+	test("1Eh  PUSH DS");
+	vCPU.DS = 444;
+	exec16(0x1E);
+	assert(__fu16(get_ad(vCPU.SS, vCPU.SP)) == 444);
+	OK;
 
 	// POP DS
 
-	test("1Fh  POP DS"); TODO;
+	test("1Fh  POP DS");
+	vCPU.DS = 128;
+	exec16(0x1F);
+	assert(vCPU.DS == 444);
+	OK;
 
 	// AND R/M8, REG8
 
@@ -528,7 +555,10 @@ unittest {
 
 	// ES:
 
-	test("26h  ES:"); TODO;
+	test("26h  ES:");
+	exec16(0x26);
+	assert(Seg == SEG_ES);
+	OK;
 
 	// DAA
 
@@ -560,7 +590,10 @@ unittest {
 
 	// CS:
 
-	test("2Eh  CS:"); TODO;
+	test("2Eh  CS:");
+	exec16(0x2E);
+	assert(Seg == SEG_CS);
+	OK;
 
 	// DAS
 
