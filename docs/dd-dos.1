@@ -1,0 +1,70 @@
+." Hi! This manual (man page) was written by dd86k.
+." Please read man-pages(7) and groff_man(7) about the manual page format.
+."
+.TH dd-dos 1 "August 2018" dd86k "User manual"
+.SH NAME
+dd-dos -- Lightweight 8086/DOS virtual machine and emulation layer
+
+.SH SYNOPSIS
+.SY dd-dos
+.OP \-vPN
+.RI [FILE
+.IR .\|.\|. ]
+.YS
+
+.SH DESCRIPTION
+.B dd-dos
+is a simple 8086 virtual machine, aiming to run legacy MS-DOS applications on any platforms.
+
+For more information regarding technical internal implementations, please see the DD-DOS Technical Reference Manual.
+
+.SH OPTIONS
+.IP -v
+Increments logging level by one. In release builds, this is initially set to silence. Not recommended for TUI applications.
+
+.IP -P
+Disables thread sleeping, making the host processor run dd-dos as fast as possible.
+
+.IP -N
+Supresses starting messages and banner.
+
+.IP FILE
+Pass an MZ or COM executable image to dd-dos with optional arguments for the image.
+
+.SH ERROR CODES
+This section addresses error codes, including panic error codes.
+
+Descriptions tagged with (cli) are codes used within the command-line interface.
+
+.EX
+Code		Hex		Description
+1		1H		(cli) Invalid or unknown parameter
+2		2H		(cli) File not found at given location
+3		3H		(cli) File could not be loaded
+255		FFH		Unknown error. Defaults to LOG_CRIT
+57005		DEADH		Manually initiated panic screen
+.EE
+
+.SH WARNINGS
+dd-dos is still currently going under active development, you may encounter lots of bugs.
+
+.SH NOTES
+None at this moment.
+
+.SH BUGS
+Likely lots.
+
+.SH AUTHOR
+Written by dd86k.
+
+.SH CONTACT
+.UR https://github.com/dd86k/dd-dos
+Homepage:
+.UE
+
+.MT devddstuff@gmail.com
+Email:
+.ME
+
+.SH HISTORY
+This project started in early January 2017.
