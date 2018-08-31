@@ -1093,6 +1093,7 @@ void exec16(ubyte op) {
 		++vCPU.EIP;
 		return;
 	case 0x54: // PUSH SP
+		vCPU.SP -= 2; // decrement after push is 286+
 		push16(vCPU.SP);
 		++vCPU.EIP;
 		return;

@@ -2,14 +2,16 @@
  * main.d: CLI entry point
  */
 
-import core.stdc.stdio;
+import core.stdc.stdio : printf, puts;
+import ddc : fputs, stderr;
 import core.stdc.string : strcmp;
 import vdos, vdos_codes;
 import vcpu;
-import vdos_loader : ExecLoad;
+import vdos_loader : vdos_load;
 import Logger;
-import ddcon : InitConsole;
+import ddcon : vcon_init;
 import utils_os : pexist;
+import sleep : sleep_init;
 
 extern (C)
 private void _version() {
@@ -119,9 +121,10 @@ private int main(int argc, char** argv) {
 
 	// Initiation
 
-	InitConsole; // ddcon
+	vcon_init; // ddcon
+	//sleep_init; // sleep
 	vcpu_init; // vcpu
-	//vdos_init; // vdos
+	vdos_init; // vdos
 
 	// DD-DOS
 
@@ -131,16 +134,16 @@ private int main(int argc, char** argv) {
 	if (cast(int)prog) {
 		if (pexist(prog)) {
 			vCPU.CS = 0; vCPU.IP = 0x100; // Temporary
-			if (ExecLoad(prog)) {
-				puts("E: Could not load executable");
+			if (vdos_load(prog)) {
+				fputs("E: Could not load executable image\n", stderr);
 				return PANIC_FILE_NOT_LOADED;
 			}
 			vcpu_run;
 		} else {
-			puts("E: File not found or loaded");
+			fputs("E: File not found\n", stderr);
 			return E_FILE_NOT_FOUND;
 		}
-	} else EnterShell;
+	} else vdos_shell;
 
 	return 0;
 }

@@ -28,7 +28,7 @@ enum
 struct PSP { align(1):
 	ushort cpm_exit;	/// CP/M Exit (INT 20h) pointer
 	ushort first_seg;	/// First segment location pointer
-	ubyte reserved1;
+	ubyte reserved1;	// likely to pad with cpm_comp
 	ubyte[5] cpm_comp;	/// Far call to CP/M combability mode within DOS (instructions)
 	uint prev_term;	/// Previous programs terminate address (INT 22h)
 	uint prev_break;	/// Previous programs break address (INT 23h)
@@ -41,12 +41,17 @@ struct PSP { align(1):
 	uint jft_pointer;	/// Pointer to the JFT (internal)
 	uint prev_psp;	/// Pointer to the previous PSP (SHARE in DOS 3.3 and later)
 	uint reserved2;
-	ushort version_;	/// DOS version
+	union {
+		ushort version_;	/// DOS version
+		union {
+			ubyte majorversion, minorversion;
+		}
+	}
 	//TODO: figure out union for version
 	ubyte[14] reserved3;
 	ubyte[3] dos_far;	/// DOS far call (instructions)
 	ushort reserved4;
-	ubyte[7] reserved5;	// Could be used to extend FCB1
+	ubyte[7] reserved5;	// Could be used to extend FCB1, usually struct padding
 	ubyte[16] fcb1;	/// Unopened Standard FCB 1 (see File Control Block)
 	ubyte[20] fcb2;	/// Unopened Standard FCB 2 (overwritten if FCB 1 is opened)
 	ubyte cmd_length;	/// Number of bytes on the command-line
@@ -79,15 +84,18 @@ struct mz_rlc { align(1): // For AL=03h
 	ushort segment;	/// Segment of relocation
 }
 
-/*
- * Internal Structures
- */
-
+// Includes:
+// - System Data and System Device Drivers
 struct vdos_settings { align(1):
 	// ----- vDOS internals
-	char[15] HOSTNAME; /// Network NetBIOS HOSTNAME
+	ushort dev_clock;	/// CLOCK$ device driver, far call
+	ushort dev_console;	/// CON device driver, far call
+	ushort dev_printer;	/// LPT device driver, far call
+	ushort dev_aux;	/// auxiliery device driver, far call
+	ushort dev_block;	/// Disk device driver, far call
+	char[15] HOSTNAME;	/// Network NetBIOS HOSTNAME
 	private ubyte _pad0;
-	ushort cursor_x, /// Left 0-based horizontal cursor position
-		cursor_y; /// Upper 0-based vertical cursor position
+	ushort cursor_x;	/// Left 0-based horizontal cursor position
+	ushort cursor_y;	/// Upper 0-based vertical cursor position
 	// ----- DD-DOS settings
 }

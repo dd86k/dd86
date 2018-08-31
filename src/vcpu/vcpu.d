@@ -12,8 +12,8 @@ import vcpu_utils;
 import compile_config : INIT_MEM, TSC_SLEEP;
 
 /*enum : ubyte { // Emulated CPU
-	CPU_8086,
-	CPU_80486
+	CPU_TYPE_8086,
+	CPU_TYPE_80486
 }*/
 
 /*enum : ubyte { // CPU Mode
@@ -73,7 +73,7 @@ enum : ubyte {
  * tl;dr: Emulates CALLs
  */
 __gshared short RLEVEL = 1;
-__gshared ubyte opt_sleep = 1; /// If set, the vcpu sleeps
+__gshared ubyte opt_sleep = 1; /// Is sleeping available to use? If so, use it
 
 enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer enum to avoid explicit casting
 __gshared ubyte[INIT_MEM] MEMORY; /// Main memory bank
@@ -155,7 +155,6 @@ public __gshared __CPU vCPU;
 /// Initiate interpreter
 extern (C)
 void vcpu_init() {
-	SLEEP_SET;
 	//RESET;
 }
 
@@ -171,13 +170,13 @@ void vcpu_run() {
 		debug logexec(vCPU.CS, vCPU.IP, MEMORY[vCPU.EIP]);
 		exec16(MEMORY[vCPU.EIP]);
 
-		if (opt_sleep) { // TODO: Redo sleeping procedure (#20)
+		/*if (opt_sleep) { // TODO: Redo sleeping procedure (#20)
 			++tsc;
 			if (tsc == TSC_SLEEP) {
 				SLEEP;
 				tsc = 0;
 			}
-		}
+		}*/
 	}
 }
 

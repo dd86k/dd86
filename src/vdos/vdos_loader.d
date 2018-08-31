@@ -17,7 +17,7 @@ private enum MZ_MAGIC = 0x5A4D;
 private enum {
 	PARAGRAPH = 16, /// Size of a paragraph (16B)
 	PAGE = 512, /// Size of a page (512B)
-	SEG_SIZE = 64 * 1024, /// i8086 max linear address size (64K)
+	SEG_SIZE = 64 * 1024, /// max linear address size (64K)
 }
 
 /**
@@ -30,7 +30,7 @@ private enum {
  * Notes: Refer to EXEC2BIN.ASM from MS-DOS 2.0 for details, at EXELOAD.
  */
 extern (C)
-int ExecLoad(char* path) {
+int vdos_load(char* path) {
 	FILE* f = fopen(path, "rb"); /// file handle
 	fseek(f, 0, SEEK_END);
 	// leave the cast in case of 64-bit compiles
@@ -144,7 +144,7 @@ int ExecLoad(char* path) {
 	default:
 		if (fsize > 0xFF00) { // Size - PSP
 			fclose(f);
-			error("COM file too large (>FF00h)");
+			error("COM file too large (exceeds FF00h)");
 			vCPU.AL = E_BAD_FORMAT; //TODO: Verify code
 			return E_BAD_FORMAT;
 		}
@@ -173,7 +173,8 @@ extern (C)
 int MakePSP(immutable(char)* path = NULL_CHAR) { //TODO: Consider default "NULL"
 	PSP* psp = cast(PSP*)(MEMORY_P + get_ip - 0x100);
 
-	psp.version_ = MajorVersion << 8 | MinorVersion; // temporary until union
+	psp.minorversion = MinorVersion;
+	psp.majorversion = MajorVersion;
 
 	return 0;
 }

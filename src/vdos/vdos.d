@@ -8,7 +8,7 @@ import ddc;
 import core.stdc.string : strcmp, strncpy, strlen;
 import core.stdc.stdlib : malloc, free, system;
 import vcpu, vcpu_utils;
-import vdos_loader : ExecLoad;
+import vdos_loader : vdos_load;
 import vdos_codes;
 import vdos_structs : vdos_settings;
 import utils, utils_os;
@@ -77,11 +77,11 @@ __gshared ubyte
 	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
 	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
 
-// For high memory, use INIT_MEM - n.
-private enum __SETTINGS_LOC = 0x200; /// Settings location in MEMORY
+// System Data and System Device Drivers
+private enum __SETTINGS_LOC = 0x700; /// Settings location in MEMORY
 static assert(
 	__SETTINGS_LOC + vdos_settings.sizeof < INIT_MEM,
-	"Settings location and size go beyond INIT_MEM"
+	"Settings location and size go beyond INIT_MEM size"
 );
 
 // Internal input buffer length. While maximum in MS-DOS 5.0 seems to be 120,
@@ -89,19 +89,26 @@ static assert(
 private enum _BUFS = 255;
 
 /// DD-DOS settings holder. Values are stored in MEMORY.
-__gshared vdos_settings* SETTINGS; // Not possible to assign pointer at compile-time
+__gshared vdos_settings* SETTINGS;
+
+extern (C)
+void vdos_init() {
+	// reinterpreting cast from ubyte* to vdos_settings* is not supported in CTFE
+	// so it's done in run-time
+	SETTINGS = cast(vdos_settings*)(MEMORY_P + __SETTINGS_LOC);
+}
 
 /**
  * Enter virtual shell (vDOS)
- * This function allocates memory on the heap and frees when exiting.
+ * This function allocates memory on the heap and frees it when exiting.
  */
 extern (C)
-void EnterShell() {
+void vdos_shell() {
 	char* inb = // also used for CWD buffering
 		cast(char*)malloc(_BUFS); /// internal input buffer
 	char** argv = // sizeof(char *)
 		cast(char**)malloc(_BUFS * size_t.sizeof); /// argument vector
-START:
+SHELL_SHART:
 	//TODO: Print $PROMPT
 	if (gcwd(inb))
 		printf("\n%s%% ", inb);
@@ -109,12 +116,14 @@ START:
 		fputs("\n% ", stdout);
 
 	fgets(inb, _BUFS, stdin);
-	if (*inb == '\n') goto START; // Nothing to process
+	if (*inb == '\n') goto SHELL_SHART; // Nothing to process
 
 	int argc = sargs(inb, argv); /// argument count
 
 	//TODO: TREE, DIR
 	lowercase(*argv);
+
+	//TODO: Consider string-switch usage in betterC code (#24)
 
 	// C
 
@@ -140,11 +149,11 @@ By default, CD will display the current working directory`
 				puts(cast(char*)inb);
 			else puts("E: Error getting CWD");
 		}
-		goto START;
+		goto SHELL_SHART;
 	}
 	if (strcmp(*argv, "cls") == 0) {
 		Clear;
-		goto START;
+		goto SHELL_SHART;
 	}
 
 	// D
@@ -164,7 +173,7 @@ By default, CD will display the current working directory`
 		default:
 		}
 		printf(" %d-%02d-%02d\n", vCPU.CX, vCPU.DH, vCPU.DL);
-		goto START;
+		goto SHELL_SHART;
 	}
 
 	// E
@@ -179,7 +188,9 @@ By default, CD will display the current working directory`
 
 	if (strcmp(*argv, "help") == 0) {
 		puts(
-`CD .......... Change working directory
+`Internal commands available
+
+CD .......... Change working directory
 CLS ......... Clear screen
 DATE ........ Get current date
 DIR ......... Show directory content
@@ -189,7 +200,7 @@ TIME ........ Get current time
 MEM ......... Show memory information
 VER ......... Show DD-DOS and MS-DOS version`
 		);
-		goto START;
+		goto SHELL_SHART;
 	}
 
 	// M
@@ -239,7 +250,7 @@ By default, MEM will show memory usage`
 		} else {
 			puts("Not implemented. Only /stats is implemented");
 		}
-		goto START;
+		goto SHELL_SHART;
 	}
 
 	// T
@@ -249,7 +260,7 @@ By default, MEM will show memory usage`
 		Raise(0x21);
 		printf("It is currently %02d:%02d:%02d.%02d\n",
 			vCPU.CH, vCPU.CL, vCPU.DH, vCPU.DL);
-		goto START;
+		goto SHELL_SHART;
 	}
 
 	// V
@@ -262,7 +273,7 @@ By default, MEM will show memory usage`
 			MajorVersion, MinorVersion,
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION
 		);
-		goto START;
+		goto SHELL_SHART;
 	}
 
 	// ? -- debugging
@@ -278,21 +289,21 @@ By default, MEM will show memory usage`
 ?s          Print stack (Not implemented)
 ?v          Toggle verbose mode`
 		);
-		goto START;
+		goto SHELL_SHART;
 	}
 	if (strcmp(*argv, "?load") == 0) {
 		if (argc > 1) {
 			if (pexist(argv[1])) {
 				vCPU.CS = 0; vCPU.IP = 0x100; // Temporary
-				ExecLoad(argv[1]);
+				vdos_load(argv[1]);
 			} else
 				puts("File not found");
 		} else puts("Executable required");
-		goto START;
+		goto SHELL_SHART;
 	}
 	if (strcmp(*argv, "?run") == 0) {
 		vcpu_run;
-		goto START;
+		goto SHELL_SHART;
 	}
 	if (strcmp(*argv, "?v") == 0) {
 		printf("Verbose set to ");
@@ -308,24 +319,24 @@ By default, MEM will show memory usage`
 				puts("INFO");
 			}
 		}
-		goto START;
+		goto SHELL_SHART;
 	}
 	if (strcmp(*argv, "?p") == 0) {
 		opt_sleep = !opt_sleep;
 		printf("CpuSleep mode: %s\n", opt_sleep ? "ON" : cast(char*)"OFF");
-		goto START;
+		goto SHELL_SHART;
 	}
 	if (strcmp(*argv, "?r") == 0) {
 		print_regs;
-		goto START;
+		goto SHELL_SHART;
 	}
 	if (strcmp(*argv, "?s") == 0) {
 		print_stack;
-		goto START;
+		goto SHELL_SHART;
 	}
 	if (strcmp(*argv, "?panic") == 0) {
 		panic(PANIC_MANUAL);
-		goto START;
+		goto SHELL_SHART;
 	}
 	if (strcmp(*argv, "?diag") == 0) {
 		printf(
@@ -338,7 +349,7 @@ By default, MEM will show memory usage`
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION,
 			__VERSION__
 		);
-		goto START;
+		goto SHELL_SHART;
 	}
 
 	//TODO: See if command is not an executable (COM/EXE (MZ)/BAT)
@@ -346,7 +357,8 @@ By default, MEM will show memory usage`
 	system(inb);
 	//puts("Bad command or file name");
 
-END:	goto START;
+SHELL_END:
+	goto SHELL_SHART;
 }
 
 extern (C)
@@ -361,7 +373,7 @@ CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X
 		vCPU.CS, vCPU.DS, vCPU.ES, vCPU.SS, vCPU.SP, vCPU.BP, vCPU.SI, vCPU.DI,
 	);
 	printf("FLAG=");
-	//TODO: Use put
+	//TODO: Use fputs
 	if (vCPU.OF) printf("OF ");
 	if (vCPU.DF) printf("DF ");
 	if (vCPU.IF) printf("IF ");
@@ -371,7 +383,7 @@ CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X
 	if (vCPU.AF) printf("AF ");
 	if (vCPU.PF) printf("PF ");
 	if (vCPU.CF) printf("CF ");
-	printf("(%Xh)\n", FLAG);
+	printf("(%4Xh)\n", FLAG);
 }
 
 extern (C)
@@ -655,7 +667,7 @@ void Raise(ubyte code) {
 		 * 2Eh - Set verify flag
 		 */
 		case 0x2E:
-
+			vCPU.AL = 1;
 			break;
 		/*
 		 * 30h - Get DOS version
@@ -769,7 +781,7 @@ void Raise(ubyte code) {
 			case 0: // Load and execute the program.
 				char[] p = MemString(get_ad(vCPU.DS, vCPU.DX));
 				if (pexist(cast(char*)p)) {
-					ExecLoad(cast(char*)p);
+					vdos_load(cast(char*)p);
 					vCPU.CF = 0;
 				} else {
 					vCPU.AX = E_FILE_NOT_FOUND;
