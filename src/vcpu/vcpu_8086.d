@@ -5,7 +5,7 @@
 module vcpu_8086;
 
 import vcpu, vcpu_utils;
-import vdos : Raise;
+import vdos_int;
 import Logger;
 
 /**
@@ -1907,15 +1907,15 @@ void exec16(ubyte op) {
 		vCPU.CS = pop16;
 		return;
 	case 0xCC: // INT 3
-		Raise(3);
+		INT(3);
 		++vCPU.EIP;
 		return;
 	case 0xCD: // INT IMM8
-		Raise(__fu8_i);
+		INT(__fu8_i);
 		vCPU.EIP += 2;
 		return;
 	case 0xCE: // INTO
-		if (vCPU.CF) Raise(4);
+		if (vCPU.CF) INT(4);
 		++vCPU.EIP;
 		return;
 	case 0xCF: // IRET

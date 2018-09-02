@@ -5,7 +5,7 @@
 module vcpu_80486;
 
 import vcpu, vcpu_utils;
-import vdos : Raise;
+import vdos_int;
 import Logger;
 
 /**

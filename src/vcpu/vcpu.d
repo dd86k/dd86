@@ -6,7 +6,6 @@ module vcpu;
 
 import sleep;
 import Logger : info;
-import vdos : Raise; // Interrupt handler
 import vcpu_8086 : exec16;
 import vcpu_utils;
 import compile_config : INIT_MEM, TSC_SLEEP;
@@ -76,7 +75,7 @@ __gshared short RLEVEL = 1;
 __gshared ubyte opt_sleep = 1; /// Is sleeping available to use? If so, use it
 
 enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer enum to avoid explicit casting
-__gshared ubyte[INIT_MEM] MEMORY; /// Main memory bank
+__gshared ubyte[INIT_MEM] MEMORY = void; /// Main memory bank
 __gshared uint MEMORYSIZE = INIT_MEM; /// Current memory MEMORY size
 
 /*

@@ -1,5 +1,5 @@
 /*
- * utils_os.d : Basic OS utilities
+ * os_utils.d : Basic OS utilities
  *
  * Includes OS utilities, such as changing/getting the current working
  * directory, setting/getting file attributes, directory walkers, etc.
@@ -7,7 +7,7 @@
 
 //TODO: File/directory walker
 
-module utils_os;
+module os_utils;
 
 import ddc;
 
@@ -92,7 +92,7 @@ int os_date(OSDate* osd) {
  * Returns: 0 on success
  */
 extern (C)
-int scwd(char* p) {
+int os_scwd(char* p) {
 	version (Windows) {
 		import core.sys.windows.winbase : SetCurrentDirectoryA;
 		return SetCurrentDirectoryA(p) != 0;
@@ -109,7 +109,7 @@ int scwd(char* p) {
  * Returns: non-zero on success
  */
 extern (C)
-int gcwd(char* p) {
+int os_gcwd(char* p) {
 	version (Windows) {
 		import core.sys.windows.winbase : GetCurrentDirectoryA;
 		return GetCurrentDirectoryA(255, p);
@@ -127,7 +127,7 @@ int gcwd(char* p) {
  * Returns: Non-zero if exists
  */
 extern (C)
-int pexist(char* p) {
+int os_pexist(char* p) {
 	version (Windows) {
 		import core.sys.windows.windows : GetFileAttributesA;
 		return GetFileAttributesA(p) != 0xFFFF_FFFF;
@@ -144,7 +144,7 @@ int pexist(char* p) {
  * Returns: Non-zero if directory
  */
 extern (C)
-int pisdir(char* p) {
+int os_pisdir(char* p) {
 	version (Windows) {
 		import core.sys.windows.windows :
 			GetFileAttributesA, FILE_ATTRIBUTE_DIRECTORY;

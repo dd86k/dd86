@@ -5,13 +5,15 @@
 import core.stdc.stdio : printf, puts;
 import ddc : fputs, stderr;
 import core.stdc.string : strcmp;
-import vdos, vdos_codes;
+import vdos : BANNER, vdos_shell, vdos_init;
+import vdos_codes;
 import vcpu;
 import vdos_loader : vdos_load;
 import Logger;
 import ddcon : vcon_init;
-import utils_os : pexist;
+import os_utils : os_pexist;
 import sleep : sleep_init;
+import compile_config : APP_VERSION;
 
 extern (C)
 private void _version() {
@@ -129,7 +131,7 @@ private int main(int argc, char** argv) {
 		puts(BANNER); // Defined in vdos.d
 
 	if (cast(int)prog) {
-		if (pexist(prog)) {
+		if (os_pexist(prog)) {
 			vCPU.CS = 0; vCPU.IP = 0x100; // Temporary
 			if (vdos_load(prog)) {
 				fputs("E: Could not load executable image\n", stderr);
