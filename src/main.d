@@ -31,13 +31,10 @@ dd86k ................................. Original author
 	);
 }
 
-// TODO:
-// - a "no video" mode switch
-
 extern (C)
 private void help() {
 	puts(
-`A DOS virtual machine and emulation layer
+`A 8088/DOS virtual machine and emulation layer
 USAGE
 	dd-dos [-vPN] [FILE [FILEARGS]]
 	dd-dos {-V|--version|-h|--help}
@@ -121,10 +118,10 @@ private int main(int argc, char** argv) {
 
 	// Initiation
 
-	vcon_init; // ddcon
-	//sleep_init; // sleep
-	vcpu_init; // vcpu
-	vdos_init; // vdos
+	vcon_init;	// ddcon
+	//sleep_init;	// sleep
+	vcpu_init;	// vcpu
+	vdos_init;	// vdos
 
 	// DD-DOS
 

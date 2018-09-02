@@ -22,7 +22,7 @@ struct OSDate {
 /**
  * Get OS current time
  * Params: ost = OSTime structure pointer
- * Returns: 0 on success
+ * Returns: 0 on success, non-zero on error when applicable
  */
 extern (C)
 int os_time(OSTime* ost) {
@@ -38,7 +38,7 @@ int os_time(OSTime* ost) {
 	} else version (Posix) {
 		import core.sys.posix.time : tm, localtime;
 		import core.sys.posix.sys.time : timeval, gettimeofday;
-		//TODO: Consider moving gettimeofday(2) to clock_gettime(2)
+		//TODO: Consider moving from gettimeofday(2) to clock_gettime(2)
 		//      https://linux.die.net/man/2/gettimeofday
 		//      gettimeofday is deprecated since POSIX.2008
 		tm* s; timeval tv;
@@ -104,8 +104,8 @@ int scwd(char* p) {
 }
 
 /**
- * Get the process' current working directory.
- * Params: po
+ * Get the process' current working directory. Limits to 255 characters.
+ * Params: p = string buffer
  * Returns: non-zero on success
  */
 extern (C)
