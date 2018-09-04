@@ -47,7 +47,6 @@ struct PSP { align(1):
 			ubyte majorversion, minorversion;
 		}
 	}
-	//TODO: figure out union for version
 	ubyte[14] reserved3;
 	ubyte[3] dos_far;	/// DOS far call (instructions)
 	ushort reserved4;
@@ -84,10 +83,7 @@ struct mz_rlc { align(1): // For AL=03h
 	ushort segment;	/// Segment of relocation
 }
 
-// Includes:
-// - System Data and System Device Drivers
-struct vdos_settings { align(1):
-	// ----- vDOS internals
+struct dos_struct { align(1):
 	ushort dev_clock;	/// CLOCK$ device driver, far call
 	ushort dev_console;	/// CON device driver, far call
 	ushort dev_printer;	/// LPT device driver, far call
@@ -95,7 +91,11 @@ struct vdos_settings { align(1):
 	ushort dev_block;	/// Disk device driver, far call
 	char[15] HOSTNAME;	/// Network NetBIOS HOSTNAME
 	private ubyte _pad0;
+	ubyte ERRORLEVEL;
+
+}
+
+struct vdos_settings { align(1):
 	ushort cursor_x;	/// Left 0-based horizontal cursor position
 	ushort cursor_y;	/// Upper 0-based vertical cursor position
-	// ----- DD-DOS settings
 }

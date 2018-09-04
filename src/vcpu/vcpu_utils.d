@@ -11,19 +11,18 @@ import vcpu;
 import Logger;
 import vdos_codes : PANIC_MEMORY_ACCESS;
 
-//TODO: Consider get_ea16 for WIDE (16-bit) ModR/M operations
-
 /**
  * Get effective address from a R/M byte.
  * Takes account of the preferred segment register.
- * MOD and RM fields are used, and Seg is reset (SEG_NONE) (TODO latter).
+ * MOD and RM fields are used, and Seg is reset (SEG_NONE).
  * Params:
  *   rm = R/M BYTE
  *   wide = wide bit set in opcode
  * Returns: Effective Address
  */
 extern (C)
-uint get_ea(ubyte rm, ubyte wide = 0) {
+uint get_rm16(ubyte rm, ubyte wide = 0) {
+	//TODO: Reset Seg to SEG_NONE
 	switch (rm & RM_MOD) { // MOD
 	case RM_MOD_00: // MOD 00, Memory Mode, no displacement
 		switch (Seg) {
@@ -162,7 +161,7 @@ uint get_ea(ubyte rm, ubyte wide = 0) {
 	return 0;
 }
 
-//TODO: get_ea32
+//TODO: Write get_rm32
 
 /*****************************************************************************
  * Flag utils

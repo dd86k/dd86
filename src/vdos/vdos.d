@@ -10,10 +10,11 @@ import core.stdc.stdlib : malloc, free, system;
 import vcpu, vcpu_utils;
 import vdos_codes, vdos_int;
 import vdos_loader : vdos_load;
-import vdos_structs : vdos_settings;
+import vdos_structs : vdos_settings, dos_struct;
 import utils, os_utils;
 import ddcon, Logger;
-import compile_config : __SETTINGS_LOC, C_RUNTIME, APP_VERSION, BUILD_TYPE;
+import compile_config :
+	__SETTINGS_LOC, __DOS_STRUCT_LOC, C_RUNTIME, APP_VERSION, BUILD_TYPE;
 
 enum BANNER = `
 _______ _______        _______  ______  _______
@@ -42,12 +43,14 @@ private enum _BUFS = 255;
 
 /// DD-DOS settings holder. Values are stored in MEMORY.
 __gshared vdos_settings* SETTINGS;
+__gshared dos_struct* DOS;
 
 extern (C)
 void vdos_init() {
 	// reinterpreting cast from ubyte* to vdos_settings* is not supported in CTFE
 	// so it's done in run-time
 	SETTINGS = cast(vdos_settings*)(MEMORY_P + __SETTINGS_LOC);
+	DOS = cast(dos_struct*)(MEMORY_P + __SETTINGS_LOC);
 }
 
 /**

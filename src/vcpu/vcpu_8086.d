@@ -19,7 +19,7 @@ void exec16(ubyte op) {
 	switch (op) {
 	case 0x00: { // ADD R/M8, REG8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r += vCPU.AL; break;
@@ -39,7 +39,7 @@ void exec16(ubyte op) {
 	}
 	case 0x01: { // ADD R/M16, REG16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r += vCPU.AX; break;
@@ -59,7 +59,7 @@ void exec16(ubyte op) {
 	}
 	case 0x02: { // ADD REG8, R/M8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
@@ -102,7 +102,7 @@ void exec16(ubyte op) {
 	}
 	case 0x03: { // ADD REG16, R/M16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
@@ -167,7 +167,7 @@ void exec16(ubyte op) {
 		return;
 	case 0x08: { // OR R/M8, REG8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r |= vCPU.AL; break;
@@ -187,7 +187,7 @@ void exec16(ubyte op) {
 	}
 	case 0x09: { // OR R/M16, REG16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r |= vCPU.AX; break;
@@ -207,7 +207,7 @@ void exec16(ubyte op) {
 	}
 	case 0x0A: { // OR REG8, R/M8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
@@ -250,7 +250,7 @@ void exec16(ubyte op) {
 	}
 	case 0x0B: { // OR REG16, R/M16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
@@ -387,7 +387,7 @@ void exec16(ubyte op) {
 		return;
 	case 0x20: { // AND R/M8, REG8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r &= vCPU.AH; break;
@@ -407,7 +407,7 @@ void exec16(ubyte op) {
 	}
 	case 0x21: { // AND R/M16, REG16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r &= vCPU.AX; break;
@@ -427,7 +427,7 @@ void exec16(ubyte op) {
 	}
 	case 0x22: { // AND REG8, R/M8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
@@ -470,7 +470,7 @@ void exec16(ubyte op) {
 	}
 	case 0x23: { // AND REG16, R/M16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
@@ -550,7 +550,7 @@ void exec16(ubyte op) {
 	}
 	case 0x28: { // SUB R/M8, REG8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r -= vCPU.AL; break;
@@ -570,7 +570,7 @@ void exec16(ubyte op) {
 	}
 	case 0x29: { // SUB R/M16, REG16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r -= vCPU.AX; break;
@@ -590,7 +590,7 @@ void exec16(ubyte op) {
 	}
 	case 0x2A: { // SUB REG8, R/M8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
@@ -633,7 +633,7 @@ void exec16(ubyte op) {
 	}
 	case 0x2B: { // SUB REG16, R/M16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
@@ -713,7 +713,7 @@ void exec16(ubyte op) {
 	}
 	case 0x30: { // XOR R/M8, REG8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r ^= vCPU.AL; break;
@@ -733,7 +733,7 @@ void exec16(ubyte op) {
 	}
 	case 0x31: { // XOR R/M16, REG16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r ^= vCPU.AX; break;
@@ -753,7 +753,7 @@ void exec16(ubyte op) {
 	}
 	case 0x32: { // XOR REG8, R/M8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
@@ -796,7 +796,7 @@ void exec16(ubyte op) {
 	}
 	case 0x33: { // XOR REG16, R/M16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
@@ -865,7 +865,7 @@ void exec16(ubyte op) {
 		return;
 	case 0x38: { // CMP R/M8, REG8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r -= vCPU.AL; break;
@@ -884,7 +884,7 @@ void exec16(ubyte op) {
 	}
 	case 0x39: { // CMP R/M16, REG16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r -= vCPU.AX; break;
@@ -903,7 +903,7 @@ void exec16(ubyte op) {
 	}
 	case 0x3A: { // CMP REG8, R/M8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r = vCPU.AL - r; break;
@@ -922,7 +922,7 @@ void exec16(ubyte op) {
 	}
 	case 0x3B: { // CMP REG16, R/M16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r = vCPU.AX - r; break;
@@ -1192,7 +1192,7 @@ void exec16(ubyte op) {
 	case 0x80: { // GRP1 R/M8, IMM8
 		const ubyte rm = __fu8_i; // Get ModR/M byte
 		const ushort im = __fu8_i(1);
-		const int addr = get_ea(rm);
+		const int addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) { // REG
 		case RM_REG_000: // 000 - ADD
@@ -1246,7 +1246,7 @@ void exec16(ubyte op) {
 	case 0x81: { // GRP1 R/M16, IMM16
 		const ubyte rm = __fu8_i; // Get ModR/M byte
 		const ushort im = __fu16_i(1);
-		const int addr = get_ea(rm, 1);
+		const int addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) { // REG
 		case RM_REG_000: // 000 - ADD
@@ -1300,7 +1300,7 @@ void exec16(ubyte op) {
 	case 0x82: { // GRP2 R/M8, IMM8
 		const ubyte rm = __fu8_i; // Get ModR/M byte
 		const ushort im = __fu8_i(1);
-		const int addr = get_ea(rm);
+		const int addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) { // ModRM REG
 		case RM_REG_000: // 000 - ADD
@@ -1335,7 +1335,7 @@ void exec16(ubyte op) {
 	case 0x83: { // GRP2 R/M16, IMM8
 		const ubyte rm = __fu8_i; // Get ModR/M byte
 		const ushort im = __fu8_i(1);
-		const int addr = get_ea(rm, 1);
+		const int addr = get_rm16(rm, 1);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) { // ModRM REG
 		case RM_REG_000: // 000 - ADD
@@ -1369,7 +1369,7 @@ void exec16(ubyte op) {
 	}
 	case 0x84: { // TEST R/M8, REG8
 		const ubyte rm = __fu8_i;
-		int n = __fu8(get_ea(rm));
+		int n = __fu8(get_rm16(rm));
 		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: r = vCPU.AL & n; break;
@@ -1388,7 +1388,7 @@ void exec16(ubyte op) {
 	}
 	case 0x85: { // TEST R/M16, REG16
 		const ubyte rm = __fu8_i;
-		int n = __fu16(get_ea(rm, 1));
+		int n = __fu16(get_rm16(rm, 1));
 		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: r = vCPU.AX & n; break;
@@ -1407,7 +1407,7 @@ void exec16(ubyte op) {
 	}
 	case 0x86: { // XCHG REG8, R/M8
 		const ubyte rm = __fu8_i;
-		const int addr = get_ea(rm);
+		const int addr = get_rm16(rm);
 		// temp <- REG
 		// REG  <- MEM
 		// MEM  <- temp
@@ -1445,7 +1445,7 @@ void exec16(ubyte op) {
 	}
 	case 0x87: { // XCHG REG16, R/M16
 		const ubyte rm = __fu8_i;
-		const int addr = get_ea(rm, 1);
+		const int addr = get_rm16(rm, 1);
 		// temp <- REG
 		// REG  <- MEM
 		// MEM  <- temp
@@ -1483,7 +1483,7 @@ void exec16(ubyte op) {
 	}
 	case 0x88: { // MOV R/M8, REG8
 		const ubyte rm = __fu8_i;
-		int addr = get_ea(rm);
+		int addr = get_rm16(rm);
 		switch (rm & RM_REG) {
 		case RM_REG_000: __iu8(vCPU.AL, addr); break;
 		case RM_REG_001: __iu8(vCPU.CL, addr); break;
@@ -1500,7 +1500,7 @@ void exec16(ubyte op) {
 	}
 	case 0x89: { // MOV R/M16, REG16
 		const ubyte rm = __fu8_i;
-		int addr = get_ea(rm, 1);
+		int addr = get_rm16(rm, 1);
 		switch (rm & RM_REG) {
 		case RM_REG_000: __iu16(vCPU.AX, addr); break;
 		case RM_REG_001: __iu16(vCPU.CX, addr); break;
@@ -1517,7 +1517,7 @@ void exec16(ubyte op) {
 	}
 	case 0x8A: { // MOV REG8, R/M8
 		const ubyte rm = __fu8_i;
-		int addr = get_ea(rm);
+		int addr = get_rm16(rm);
 		switch (rm & RM_REG) {
 		case RM_REG_000: vCPU.AL = __fu8(addr); break;
 		case RM_REG_001: vCPU.CL = __fu8(addr); break;
@@ -1534,7 +1534,7 @@ void exec16(ubyte op) {
 	}
 	case 0x8B: { // MOV REG16, R/M16
 		const ubyte rm = __fu8_i;
-		int addr = get_ea(rm, 1);
+		int addr = get_rm16(rm, 1);
 		switch (rm & RM_REG) {
 		case RM_REG_000: vCPU.AX = __fu16(addr); break;
 		case RM_REG_001: vCPU.CX = __fu16(addr); break;
@@ -1552,7 +1552,7 @@ void exec16(ubyte op) {
 	case 0x8C: { // MOV R/M16, SEGREG
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 		const byte rm = __fu8_i;
-		const int addr = get_ea(rm, 1);
+		const int addr = get_rm16(rm, 1);
 		switch (rm & RM_REG) { // if REG[3] is clear, trip to default
 		case RM_REG_100: __iu16(vCPU.ES, addr); break;
 		case RM_REG_101: __iu16(vCPU.CS, addr); break;
@@ -1567,7 +1567,7 @@ void exec16(ubyte op) {
 	}
 	case 0x8D: { // LEA REG16, MEM16
 		const ubyte rm = __fu8_i;
-		const ushort addr = cast(ushort)get_ea(rm);
+		const ushort addr = cast(ushort)get_rm16(rm);
 		switch (rm & RM_REG) {
 		case RM_REG_000: vCPU.AX = addr; break;
 		case RM_REG_001: vCPU.CX = addr; break;
@@ -1585,7 +1585,7 @@ void exec16(ubyte op) {
 	case 0x8E: { // MOV SEGREG, R/M16
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 		const byte rm = __fu8_i;
-		const int addr = get_ea(rm, 1);
+		const int addr = get_rm16(rm, 1);
 		switch (rm & RM_REG) { // if REG[3] is clear, trip to default
 		case RM_REG_100: vCPU.ES = __fu16(addr); break;
 		case RM_REG_101: vCPU.CS = __fu16(addr); break;
@@ -1604,7 +1604,7 @@ void exec16(ubyte op) {
 			info("Invalid ModR/M for POP R/M16");
 			goto EXEC16_ILLEGAL;
 		}
-		push16(__fu16(get_ea(rm, 1)));
+		push16(__fu16(get_rm16(rm, 1)));
 		vCPU.EIP += 2;
 		return;
 	}
@@ -1860,7 +1860,7 @@ void exec16(ubyte op) {
 	case 0xC4, 0xC5: { // LES/LDS REG16, MEM16
 		// Load into REG and ES/DS
 		const ubyte rm = __fu8_i;
-		const ushort r = __fu16(get_ea(rm, 1));
+		const ushort r = __fu16(get_rm16(rm, 1));
 		if (op == 0xC4)
 			vCPU.ES = r;
 		else
@@ -1885,7 +1885,7 @@ void exec16(ubyte op) {
 			info("Invalid ModR/M for MOV MEM8");
 			goto EXEC16_ILLEGAL;
 		}
-		__iu8(__fu8_i(1), get_ea(rm));
+		__iu8(__fu8_i(1), get_rm16(rm));
 		return;
 	}
 	case 0xC7: { // MOV MEM16, IMM16
@@ -1894,7 +1894,7 @@ void exec16(ubyte op) {
 			info("Invalid ModR/M for MOV MEM16");
 			goto EXEC16_ILLEGAL;
 		}
-		__iu16(__fu16_i(1), get_ea(rm, 1));
+		__iu16(__fu16_i(1), get_rm16(rm, 1));
 		return;
 	}
 	case 0xCA: // RET IMM16 (FAR)
@@ -1926,7 +1926,7 @@ void exec16(ubyte op) {
 		return;
 	case 0xD0: { // GRP2 R/M8, 1
 		const ubyte rm = __fu8_i;
-		const int addr = get_ea(rm);
+		const int addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - ROL
@@ -1966,7 +1966,7 @@ void exec16(ubyte op) {
 	}
 	case 0xD1: { // GRP2 R/M16, 1
 		const ubyte rm = __fu8_i;
-		const int addr = get_ea(rm, 1);
+		const int addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - ROL
@@ -2007,7 +2007,7 @@ void exec16(ubyte op) {
 	case 0xD2: // GRP2 R/M8, CL
 	// The 8086 does not mask the rotation count.
 		/*const ubyte rm = __fu8_i;
-		const int addr = get_ea(rm);
+		const int addr = get_rm16(rm);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - ROL
 
@@ -2039,7 +2039,7 @@ void exec16(ubyte op) {
 	case 0xD3: // GRP2 R/M16, CL
 	// The 8086 does not mask the rotation count.
 		/*const ubyte rm = __fu8_i;
-		const int addr = get_ea(rm, 1);
+		const int addr = get_rm16(rm, 1);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - ROL
 
@@ -2179,7 +2179,7 @@ void exec16(ubyte op) {
 	case 0xF6: { // GRP3 R/M8, IMM8
 		const ubyte rm = __fu8_i; // Get ModR/M byte
 		ubyte im = __fu8_i(1);
-		int addr = get_ea(rm);
+		int addr = get_rm16(rm);
 		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - TEST
@@ -2228,7 +2228,7 @@ void exec16(ubyte op) {
 	case 0xF7: { // GRP3 R/M16, IMM16
 		const ubyte rm = __fu8_i; // Get ModR/M byte
 		ushort im = __fu16_i(1);
-		int addr = get_ea(rm, 1);
+		int addr = get_rm16(rm, 1);
 		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - TEST
@@ -2295,7 +2295,7 @@ void exec16(ubyte op) {
 		return;
 	case 0xFE: { // GRP4 R/M8
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm);
+		const uint addr = get_rm16(rm);
 		int r = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - INC
@@ -2315,7 +2315,7 @@ void exec16(ubyte op) {
 	}
 	case 0xFF: { // GRP5 R/M16
 		const ubyte rm = __fu8_i;
-		const uint addr = get_ea(rm, 1);
+		const uint addr = get_rm16(rm, 1);
 		int r = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - INC

@@ -168,58 +168,58 @@ unittest {
 	vCPU.SI = 0x50; vCPU.DI = 0x50;
 	vCPU.BX = 0x30; vCPU.BP = 0x30;
 	test("ModR/M (MOD=00)");
-	assert(get_ea(0b000) == 0x80);
-	assert(get_ea(0b001) == 0x80);
-	assert(get_ea(0b010) == 0x80);
-	assert(get_ea(0b011) == 0x80);
-	assert(get_ea(0b100) == 0x50);
-	assert(get_ea(0b101) == 0x50);
-	assert(get_ea(0b110) == 0x1020);
-	assert(get_ea(0b111) == 0x30);
+	assert(get_rm16(0b000) == 0x80);
+	assert(get_rm16(0b001) == 0x80);
+	assert(get_rm16(0b010) == 0x80);
+	assert(get_rm16(0b011) == 0x80);
+	assert(get_rm16(0b100) == 0x50);
+	assert(get_rm16(0b101) == 0x50);
+	assert(get_rm16(0b110) == 0x1020);
+	assert(get_rm16(0b111) == 0x30);
 	OK;
 	test("ModR/M (MOD=01)");
-	assert(get_ea(0b01_000_000) == 0xA0);
-	assert(get_ea(0b01_000_001) == 0xA0);
-	assert(get_ea(0b01_000_010) == 0xA0);
-	assert(get_ea(0b01_000_011) == 0xA0);
-	assert(get_ea(0b01_000_100) == 0x70);
-	assert(get_ea(0b01_000_101) == 0x70);
-	assert(get_ea(0b01_000_110) == 0x50);
-	assert(get_ea(0b01_000_111) == 0x50);
+	assert(get_rm16(0b01_000_000) == 0xA0);
+	assert(get_rm16(0b01_000_001) == 0xA0);
+	assert(get_rm16(0b01_000_010) == 0xA0);
+	assert(get_rm16(0b01_000_011) == 0xA0);
+	assert(get_rm16(0b01_000_100) == 0x70);
+	assert(get_rm16(0b01_000_101) == 0x70);
+	assert(get_rm16(0b01_000_110) == 0x50);
+	assert(get_rm16(0b01_000_111) == 0x50);
 	OK;
 	test("ModR/M (MOD=10)");
-	assert(get_ea(0b10_000_000) == 0x10A0);
-	assert(get_ea(0b10_000_001) == 0x10A0);
-	assert(get_ea(0b10_000_010) == 0x10A0);
-	assert(get_ea(0b10_000_011) == 0x10A0);
-	assert(get_ea(0b10_000_100) == 0x1070);
-	assert(get_ea(0b10_000_101) == 0x1070);
-	assert(get_ea(0b10_000_110) == 0x1050);
-	assert(get_ea(0b10_000_111) == 0x1050);
+	assert(get_rm16(0b10_000_000) == 0x10A0);
+	assert(get_rm16(0b10_000_001) == 0x10A0);
+	assert(get_rm16(0b10_000_010) == 0x10A0);
+	assert(get_rm16(0b10_000_011) == 0x10A0);
+	assert(get_rm16(0b10_000_100) == 0x1070);
+	assert(get_rm16(0b10_000_101) == 0x1070);
+	assert(get_rm16(0b10_000_110) == 0x1050);
+	assert(get_rm16(0b10_000_111) == 0x1050);
 	OK;
 	test("ModR/M (MOD=11)");
 	vCPU.AX = 0x2040; vCPU.CX = 0x2141;
 	vCPU.DX = 0x2242; vCPU.BX = 0x2343;
 	vCPU.SP = 0x2030; vCPU.BP = 0x2131;
 	vCPU.SI = 0x2232; vCPU.DI = 0x2333;
-	assert(get_ea(0b11_000_000) == 0x40); // AL
-	assert(get_ea(0b11_000_001) == 0x41); // CL
-	assert(get_ea(0b11_000_010) == 0x42); // DL
-	assert(get_ea(0b11_000_011) == 0x43); // BL
-	assert(get_ea(0b11_000_100) == 0x20); // AH
-	assert(get_ea(0b11_000_101) == 0x21); // CH
-	assert(get_ea(0b11_000_110) == 0x22); // DH
-	assert(get_ea(0b11_000_111) == 0x23); // BH
+	assert(get_rm16(0b11_000_000) == 0x40); // AL
+	assert(get_rm16(0b11_000_001) == 0x41); // CL
+	assert(get_rm16(0b11_000_010) == 0x42); // DL
+	assert(get_rm16(0b11_000_011) == 0x43); // BL
+	assert(get_rm16(0b11_000_100) == 0x20); // AH
+	assert(get_rm16(0b11_000_101) == 0x21); // CH
+	assert(get_rm16(0b11_000_110) == 0x22); // DH
+	assert(get_rm16(0b11_000_111) == 0x23); // BH
 	OK;
 	test("ModR/M (MOD=11+W)");
-	assert(get_ea(0b11_000_000, 1) == 0x2040); // AX
-	assert(get_ea(0b11_000_001, 1) == 0x2141); // CX
-	assert(get_ea(0b11_000_010, 1) == 0x2242); // DX
-	assert(get_ea(0b11_000_011, 1) == 0x2343); // BX
-	assert(get_ea(0b11_000_100, 1) == 0x2030); // SP
-	assert(get_ea(0b11_000_101, 1) == 0x2131); // BP
-	assert(get_ea(0b11_000_110, 1) == 0x2232); // SI
-	assert(get_ea(0b11_000_111, 1) == 0x2333); // DI
+	assert(get_rm16(0b11_000_000, 1) == 0x2040); // AX
+	assert(get_rm16(0b11_000_001, 1) == 0x2141); // CX
+	assert(get_rm16(0b11_000_010, 1) == 0x2242); // DX
+	assert(get_rm16(0b11_000_011, 1) == 0x2343); // BX
+	assert(get_rm16(0b11_000_100, 1) == 0x2030); // SP
+	assert(get_rm16(0b11_000_101, 1) == 0x2131); // BP
+	assert(get_rm16(0b11_000_110, 1) == 0x2232); // SI
+	assert(get_rm16(0b11_000_111, 1) == 0x2333); // DI
 	OK;
 
 	sub("General instructions");

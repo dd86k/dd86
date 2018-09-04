@@ -7,7 +7,7 @@ module vdos_int;
 import ddc;
 import vcpu : vCPU, MEMORY, MEMORYSIZE, get_ad, RLEVEL;
 import vcpu_utils : __int_enter, __int_exit;
-import vdos : MinorVersion, MajorVersion, OEM_ID;
+import vdos : DOS, MinorVersion, MajorVersion, OEM_ID;
 import vdos_codes;
 import vdos_loader : vdos_load;
 import ddcon;
@@ -51,7 +51,6 @@ void INT(ubyte code) {
 		}
 		break;
 	case 0x11: { // BIOS - Get equipement list
-		// Number of 16K banks of RAM on motherboard (PC only).
 		int r = 0b10000; // VGA //TODO: CHECK ON VIDEO MODE!
 		/*if (FloppyDiskInstalled) {
 			ax |= 1;
@@ -401,7 +400,7 @@ void INT(ubyte code) {
 		 */
 		case 0x4C:
 			--RLEVEL;
-			//TODO: ERRORLEVEL = vCPU.AL;
+			DOS.ERRORLEVEL = vCPU.AL;
 			break;
 		/*
 		 * 4Dh - Get return code. (ERRORLEVEL)

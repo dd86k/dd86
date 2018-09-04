@@ -82,7 +82,8 @@ enum INIT_MEM = 0x4_0000;
  * vDOS
  */
 
-private enum __SETTINGS_LOC = 0x900; /// Settings location in MEMORY
+private enum __SETTINGS_LOC = 0x2000; /// Settings location in MEMORY
+private enum __DOS_STRUCT_LOC = 0x1160; /// MS-DOS system data location in MEMORY
 static assert(
 	__SETTINGS_LOC + vdos_settings.sizeof < INIT_MEM,
 	"Settings location and size go beyond INIT_MEM size"
