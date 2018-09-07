@@ -93,28 +93,28 @@ extern (C) struct __CPU {
 		uint EAX;
 		union {
 			ushort AX;
-			union { struct { ubyte AL, AH; } }
+			struct { ubyte AL, AH; }
 		}
 	}
 	union {
 		uint EBX;
 		union {
 			ushort BX;
-			union { struct { ubyte BL, BH; } }
+			struct { ubyte BL, BH; }
 		}
 	}
 	union {
 		uint ECX;
 		union {
 			ushort CX;
-			union { struct { ubyte CL, CH; } }
+			struct { ubyte CL, CH; }
 		}
 	}
 	union {
 		uint EDX;
 		union {
 			ushort DX;
-			union { struct { ubyte DL, DH; } }
+			struct { ubyte DL, DH; }
 		}
 	}
 	union {
