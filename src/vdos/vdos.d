@@ -262,7 +262,36 @@ By default, MEM will show memory usage`
 	}
 	if (strcmp(*argv, "?v") == 0) {
 		printf("Verbose set to ");
-		if (Verbose) {
+		if (argc >= 2) {
+			switch (argv[1][0]) {
+			case '0', 's':
+				Verbose = LOG_DEBUG;
+				puts("DEBUG");
+				break;
+			case '1', 'c':
+				Verbose = LOG_CRIT;
+				puts("CRTICAL");
+				break;
+			case '2', 'e':
+				Verbose = LOG_ERROR;
+				puts("ERRORS");
+				break;
+			case '3', 'w':
+				Verbose = LOG_WARN;
+				puts("WARNINGS");
+				break;
+			case '4', 'i':
+				Verbose = LOG_INFO;
+				puts("INFORMAL");
+				break;
+			case '5', 'd':
+				Verbose = LOG_DEBUG;
+				puts("DEBUG");
+				break;
+			default:
+				puts("Invalid log level");
+			} // switch
+		} else if (Verbose) {
 			Verbose = LOG_SILENCE;
 			puts("SILENCE");
 		} else {

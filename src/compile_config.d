@@ -53,12 +53,13 @@ enum APP_VERSION = "0.0.0-0"; /// DD-DOS version
  * vCPU
  */
 
+// It is planned to redo this section, part of Issue #20
+
 // in MHz
 private enum i8086_FREQ = 5; // to 10
 private enum i486_FREQ = 16; // to 100
 
 /// Number of instructions to execute before sleeping for SLEEP_TIME
-// part of issue #20
 enum uint TSC_SLEEP = cast(uint)(
 	(SLEEP_TIME * 1_000_000) / ((cast(float)1 / i8086_FREQ) * 1000)
 );
