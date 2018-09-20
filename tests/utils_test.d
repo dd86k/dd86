@@ -4,6 +4,9 @@ import test_utils;
 unittest {
     section("Utilities");
 
+    import vcpu; vcpu_init;
+    import vdos; vdos_init;
+
     test("MemString");
     __istr("Hello", 10);
     assert(MemString(10) == "Hello");

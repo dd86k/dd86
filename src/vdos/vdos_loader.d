@@ -25,7 +25,6 @@ private enum {
  * AL is destroyed with error value
  * Params:
  *   path = Path to executable
- *   args = Executable arguments
  * Returns: 0 if successfully loaded
  * Notes: Refer to EXEC2BIN.ASM from MS-DOS 2.0 for details, at EXELOAD.
  */
@@ -41,8 +40,8 @@ int vdos_load(char* path) {
 	if (fsize == 0) {
 		fclose(f);
 		warn("Executable file is zero length");
-		vCPU.AL = E_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
-		return E_BAD_FORMAT;
+		vCPU.AL = EDOS_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
+		return EDOS_BAD_FORMAT;
 	}
 
 	ushort sig = void; /// Header signature
@@ -88,7 +87,7 @@ int vdos_load(char* path) {
 		}
 
 		fseek(f, codebase, SEEK_SET); // Seek to start of first code segment
-		fread(MEMORY_P + get_ip, csize, 1, f); // read code segment into MEMORY at CS:IP
+		fread(MEMORY + get_ip, csize, 1, f); // read code segment into MEMORY at CS:IP
 
 		// ** Read relocation table and adjust far pointers in memory
 		if (mzh.e_crlc) {
@@ -102,14 +101,14 @@ int vdos_load(char* path) {
 			if (Verbose)
 				printf("[INFO] Relocation(s): %d\n", mzh.e_crlc);
 			fseek(f, mzh.e_lfarlc, SEEK_SET); // 1.
-			int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
+			const int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
 			mz_rlc* r = cast(mz_rlc*)malloc(rs); /// Relocation table pointer
 			fread(r, rs, 1, f); // Read whole relocation table
 
 			int i;
 			debug puts(" #    seg: off -> loadseg");
 			do {
-				int addr = get_ad(r.segment, r.offset); // 2.
+				const int addr = get_ad(r.segment, r.offset); // 2.
 				const ushort loadseg = __fu16(addr); /// 3. Load segment
 				debug printf("%2d   %04X:%04X -> cs:%04X+vCPU.CS:%04X = %04X\n",
 					i, r.segment, r.offset, mzh.e_cs, vCPU.CS, loadseg
@@ -145,13 +144,13 @@ int vdos_load(char* path) {
 		if (fsize > 0xFF00) { // Size - PSP
 			fclose(f);
 			error("COM file too large (exceeds FF00h)");
-			vCPU.AL = E_BAD_FORMAT; //TODO: Verify code
-			return E_BAD_FORMAT;
+			vCPU.AL = EDOS_BAD_FORMAT; //TODO: Verify code
+			return EDOS_BAD_FORMAT;
 		}
 		info("LOAD COM");
 
 		fseek(f, 0, SEEK_SET);
-		fread(MEMORY_P + get_ip, fsize, 1, f);
+		fread(MEMORY + get_ip, fsize, 1, f);
 
 		MakePSP;
 		vCPU.AL = 0;
@@ -163,7 +162,7 @@ int vdos_load(char* path) {
 }
 
 /**
- * Create a PSP in MEMORY at get_ip:-100h with an optional filename
+ * Create a PSP in MEMORY at CS:IP-100h with an optional filename
  *
  * Params: path = Path placed in PSP for command-line
  * Returns: 0 on success
@@ -171,7 +170,7 @@ int vdos_load(char* path) {
 private
 extern (C)
 int MakePSP(immutable(char)* path = NULL_CHAR) { //TODO: Consider default "NULL"
-	PSP* psp = cast(PSP*)(MEMORY_P + get_ip - 0x100);
+	PSP* psp = cast(PSP*)(MEMORY + get_ip - 0x100);
 
 	psp.minorversion = MinorVersion;
 	psp.majorversion = MajorVersion;

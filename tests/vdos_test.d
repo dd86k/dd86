@@ -14,8 +14,13 @@ unittest
 
     test("INT 12h");
     INT(0x12);
-    assert(MEMORYSIZE / 1024 == vCPU.AX);
+    assert(SYSTEM.memsize == vCPU.AX);
     writeln("OK  (", vCPU.AX, " KB)");
+
+    test("INT 1Ah AH=00h");
+    vCPU.AH = 0;
+    INT(0x1A);
+    writefln("assuming OK (CS=%04X DX=%04X -- %d)", vCPU.CS, vCPU.DX, (vCPU.CS << 16) | vCPU.DX);
 
     /*
      * Software (Other)

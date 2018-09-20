@@ -10,6 +10,7 @@ import core.stdc.wchar_ : wchar_t, wcscpy;
 import vcpu;
 import Logger;
 import vdos_codes : PANIC_MEMORY_ACCESS;
+import vdos : SYSTEM;
 
 /**
  * Get effective address from a R/M byte.
@@ -415,7 +416,7 @@ void __istr(immutable(char)* data, size_t addr = vCPU.EIP) {
 extern (C)
 void __iwstr(immutable(wchar)[] data, size_t addr = vCPU.EIP) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iwstr", PANIC_MEMORY_ACCESS);
-	wcscpy(cast(wchar_t*)(MEMORY_P + addr), cast(wchar_t*)data);
+	wcscpy(cast(wchar_t*)(MEMORY + addr), cast(wchar_t*)data);
 }
 
 /*****************************************************************************
@@ -452,7 +453,7 @@ byte __fi8(uint addr) {
 extern (C)
 ushort __fu16(uint addr) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fu16", PANIC_MEMORY_ACCESS);
-	return *cast(ushort*)(MEMORY_P + addr);
+	return *cast(ushort*)(MEMORY + addr);
 }
 
 /**
@@ -463,7 +464,7 @@ ushort __fu16(uint addr) {
 extern (C)
 short __fi16(uint addr) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fi16", PANIC_MEMORY_ACCESS);
-	return *cast(short*)(MEMORY_P + addr);
+	return *cast(short*)(MEMORY + addr);
 }
 
 /**
@@ -474,7 +475,7 @@ short __fi16(uint addr) {
 extern (C)
 uint __fu32(uint addr) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __fu32", PANIC_MEMORY_ACCESS);
-	return *cast(uint*)(MEMORY_P + addr);
+	return *cast(uint*)(MEMORY + addr);
 }
 
 /*****************************************************************************
@@ -511,7 +512,7 @@ byte __fi8_i(int n = 0) {
 extern (C)
 ushort __fu16_i(uint n = 0) {
 	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fu16_i", PANIC_MEMORY_ACCESS);
-	return *cast(ushort*)(MEMORY_P + vCPU.EIP + 1 + n);
+	return *cast(ushort*)(MEMORY + vCPU.EIP + 1 + n);
 }
 
 /**
@@ -522,7 +523,7 @@ ushort __fu16_i(uint n = 0) {
 extern (C)
 short __fi16_i(uint n = 0) {
 	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fi16_i", PANIC_MEMORY_ACCESS);
-	return *cast(short*)(MEMORY_P + vCPU.EIP + 1 + n);
+	return *cast(short*)(MEMORY + vCPU.EIP + 1 + n);
 }
 
 /*****************************************************************************
@@ -532,7 +533,7 @@ short __fi16_i(uint n = 0) {
 pragma(inline, true)
 extern (C)
 bool C_OVERFLOW(size_t addr) {
-	return addr < 0 || addr > MEMORYSIZE;
+	return addr < 0 || addr > (SYSTEM.memsize * 1024);
 }
 
 /*****************************************************************************

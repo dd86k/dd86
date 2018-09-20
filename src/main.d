@@ -76,7 +76,7 @@ private int main(int argc, char** argv) {
 				}
 
 				printf("Unknown parameter: --%s\n", a);
-				return E_INVALID_FUNCTION;
+				return EDOS_INVALID_FUNCTION;
 			} else if (**argv == '-') { // short arguments
 				char* a = *argv;
 				while (*++a) {
@@ -89,7 +89,7 @@ private int main(int argc, char** argv) {
 					case 'V': _version; return 0;
 					default:
 						printf("Unknown parameter: -%c\n", *a);
-						return E_INVALID_FUNCTION;
+						return EDOS_INVALID_FUNCTION;
 					}
 				}
 				continue;
@@ -109,8 +109,10 @@ private int main(int argc, char** argv) {
 	case LOG_DEBUG: info("-- Log level: LOG_DEBUG"); break;
 	default:
 		printf("E: Unknown log level: %d\n", Verbose);
-		return E_INVALID_FUNCTION;
+		return EDOS_INVALID_FUNCTION;
 	}
+
+	//TODO: Check function(s) before anything else
 
 	if (opt_sleep == 0)
 		info("-- SLEEP MODE OFF");
@@ -140,7 +142,7 @@ private int main(int argc, char** argv) {
 			vcpu_run;
 		} else {
 			fputs("E: File not found\n", stderr);
-			return E_FILE_NOT_FOUND;
+			return EDOS_FILE_NOT_FOUND;
 		}
 	} else vdos_shell;
 

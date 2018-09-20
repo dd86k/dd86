@@ -10,11 +10,11 @@ import core.stdc.stdlib : malloc, free, system;
 import vcpu, vcpu_utils;
 import vdos_codes, vdos_int;
 import vdos_loader : vdos_load;
-import vdos_structs : vdos_settings, dos_struct;
+import vdos_structs : system_struct, dos_struct;
 import utils, os_utils;
 import ddcon, Logger;
 import compile_config :
-	__SETTINGS_LOC, __DOS_STRUCT_LOC, C_RUNTIME, APP_VERSION, BUILD_TYPE;
+	__MM_SYS_DOS, C_RUNTIME, APP_VERSION, BUILD_TYPE, INIT_MEM;
 
 enum BANNER = `
 _______ _______        _______  ______  _______
@@ -33,24 +33,28 @@ enum
 	DOS_MAJOR_VERSION = 5, /// Default major DOS version
 	DOS_MINOR_VERSION = 0; /// Default minor DOS version
 
-__gshared ubyte
-	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
-	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
-
 // Internal input buffer length. While maximum in MS-DOS 5.0 seems to be 120,
 // 255 feels like a little more breathable.
 private enum _BUFS = 255;
 
-/// DD-DOS settings holder. Values are stored in MEMORY.
-__gshared vdos_settings* SETTINGS;
+enum float TICK = 1 / 18.2f;
+
+__gshared ubyte
+	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
+	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
+
+// Live structures in MEMORY
+
 __gshared dos_struct* DOS;
+__gshared system_struct* SYSTEM;
 
 extern (C)
 void vdos_init() {
-	// reinterpreting cast from ubyte* to vdos_settings* is not supported in CTFE
-	// so it's done in run-time
-	SETTINGS = cast(vdos_settings*)(MEMORY_P + __SETTINGS_LOC);
-	DOS = cast(dos_struct*)(MEMORY_P + __SETTINGS_LOC);
+	// ubyte* -> vdos_settings* is not supported in CTFE, done in run-time instead
+	SYSTEM = cast(system_struct*)MEMORY;
+	SYSTEM.memsize = INIT_MEM / 1024;
+
+	DOS = cast(dos_struct*)(MEMORY + __MM_SYS_DOS);
 }
 
 /**
@@ -162,13 +166,14 @@ VER ......... Show DD-DOS and MS-DOS version`
 
 	if (strcmp(*argv, "mem") == 0) {
 		if (strcmp(argv[1], "/stats") == 0) {
-			const ubyte ext = MEMORYSIZE > 0xA_0000; // extended?
-			const size_t ct = ext ? 0xA_0000 : MEMORYSIZE; /// convential memsize
-			const size_t tt = MEMORYSIZE - ct; /// total memsize excluding convential
+			uint t_size = SYSTEM.memsize * 1024;
+			const ubyte ext = t_size > 0xA_0000; // extended?
+			const size_t ct = ext ? 0xA_0000 : t_size; /// convential memsize
+			const size_t tt = t_size - ct; /// total memsize excluding convential
 
 			int nzt; /// Non-zero (total/excluded from conventional in some cases)
 			int nzc; /// Convential (<640K) non-zero
-			for (int i; i < MEMORYSIZE; ++i) {
+			for (size_t i; i < t_size; ++i) {
 				if (MEMORY[i]) {
 					if (i < 0xA_0000)
 						++nzc;
@@ -185,7 +190,7 @@ VER ......... Show DD-DOS and MS-DOS version`
 				"Total                %6dK   %6dK   %6dK\n",
 				(ct - nzc) / 1024, nzc / 1024, ct / 1024,
 				(tt - nzt) / 1024, nzt / 1024, tt / 1024,
-				(MEMORYSIZE - nzt) / 1024, (nzt + nzc) / 1024, MEMORYSIZE / 1024);
+				(t_size - nzt) / 1024, (nzt + nzc) / 1024, t_size / 1024);
 		} else if (strcmp(argv[1], "/debug") == 0) {
 			puts("Not implemented");
 		} else if (strcmp(argv[1], "/free") == 0) {
@@ -349,24 +354,23 @@ extern (C)
 void print_regs() {
 	printf(
 `EIP=%08X  IP=%04X  (get_ip=%08X)
-EIP=%08X  EBX=%08X  ECX=%08X  EDX=%08X
+EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X
 CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X
 `,
 		vCPU.EIP, vCPU.IP, get_ip,
-		vCPU.EIP, vCPU.EBX, vCPU.ECX, vCPU.EDX,
+		vCPU.EAX, vCPU.EBX, vCPU.ECX, vCPU.EDX,
 		vCPU.CS, vCPU.DS, vCPU.ES, vCPU.SS, vCPU.SP, vCPU.BP, vCPU.SI, vCPU.DI,
 	);
 	printf("FLAG=");
-	//TODO: Use fputs
-	if (vCPU.OF) printf("OF ");
-	if (vCPU.DF) printf("DF ");
-	if (vCPU.IF) printf("IF ");
-	if (vCPU.TF) printf("TF ");
-	if (vCPU.SF) printf("SF ");
-	if (vCPU.ZF) printf("ZF ");
-	if (vCPU.AF) printf("AF ");
-	if (vCPU.PF) printf("PF ");
-	if (vCPU.CF) printf("CF ");
+	if (vCPU.OF) fputs("OF ", stdout);
+	if (vCPU.DF) fputs("DF ", stdout);
+	if (vCPU.IF) fputs("IF ", stdout);
+	if (vCPU.TF) fputs("TF ", stdout);
+	if (vCPU.SF) fputs("SF ", stdout);
+	if (vCPU.ZF) fputs("ZF ", stdout);
+	if (vCPU.AF) fputs("AF ", stdout);
+	if (vCPU.PF) fputs("PF ", stdout);
+	if (vCPU.CF) fputs("CF ", stdout);
 	printf("(%4Xh)\n", FLAG);
 }
 
@@ -387,7 +391,7 @@ void panic(ushort code,
 		code, modname, line
 	);
 	int i = RANGE;
-	ubyte* p = MEMORY_P + vCPU.EIP - TARGET;
+	ubyte* p = MEMORY + vCPU.EIP - TARGET;
 	while (--i) {
 		if (i == (TARGET - 1))
 			printf(" > %02X<", *p);

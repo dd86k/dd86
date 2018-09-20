@@ -1,43 +1,44 @@
 /*
- * codes.d: Error codes used for vDOS, DD-DOS, and the CLI.
+ * codes.d: Error codes
  */
 
 module vdos_codes;
 
 /*
  * DOS error codes
- * Prefix: E_
- * Source: DOSSYM.ASM (MS-DOS 2.0 source)
- * Source: FreeDOS
+ * Prefix: EDOS_
+ * Source:
+ *   DOSSYM.ASM (MS-DOS 2.0 source)
+ *   FreeDOS
  */
 enum : ubyte {
-	E_NONE		= 0,
-	E_INVALID_FUNCTION		= 1,
-	E_FILE_NOT_FOUND		= 2,
-	E_PATH_NOT_FOUND		= 3,
-	E_TOO_MANY_OPENED_FILES		= 4,
-	E_ACCESS_DENIED		= 5,
-	E_INVALID_HANDLE		= 6,
-	E_ARENA_TRASHED		= 7,
-	E_NOT_ENOUGH_MEMORY		= 8,
-	E_INVALID_BLOCK		= 9,
-	E_BAD_ENVIRONMENT		= 10,
-	E_BAD_FORMAT		= 11,
-	E_INVALID_ACCESS		= 12,
-	E_INVALID_DATA		= 13,
+	EDOS_NONE		= 0,
+	EDOS_INVALID_FUNCTION		= 1,
+	EDOS_FILE_NOT_FOUND		= 2,
+	EDOS_PATH_NOT_FOUND		= 3,
+	EDOS_TOO_MANY_OPENED_FILES		= 4,
+	EDOS_ACCESS_DENIED		= 5,
+	EDOS_INVALID_HANDLE		= 6,
+	EDOS_ARENA_TRASHED		= 7,
+	EDOS_NOT_ENOUGH_MEMORY		= 8,
+	EDOS_INVALID_BLOCK		= 9,
+	EDOS_BAD_ENVIRONMENT		= 10,
+	EDOS_BAD_FORMAT		= 11,
+	EDOS_INVALID_ACCESS		= 12,
+	EDOS_INVALID_DATA		= 13,
 //    ;**** unused          = 14,
-	E_INVALID_DRIVE		= 15,
-	E_CURRENT_DIRECTORY		= 16,
-	E_NOT_SAME_DEVICE		= 17,
-	E_NO_MORE_FILES		= 18,	// also DE_WRTPRTCT
-	//E_INVALID_BLOCK		= 20,
-	E_INVALID_BUFFER		= 24,	/// Invalid buffer size
-	E_SEEK		= 25,	/// Seek error (file)
-	E_DISK_FULL		= 28, /// Handle disk full, likely used internally
-	E_DEADLOCK		= 36,
-	E_LOCK		= 39,
-	E_FILE_EXISTS	= 80,
-	E_INVALID_PARAMETER		= 87,	/// Invalid parameter
+	EDOS_INVALID_DRIVE		= 15,
+	EDOS_CURRENT_DIRECTORY		= 16,
+	EDOS_NOT_SAME_DEVICE		= 17,
+	EDOS_NO_MORE_FILES		= 18,	// also DE_WRTPRTCT
+	//EDOS_INVALID_BLOCK		= 20,
+	EDOS_INVALID_BUFFER		= 24,	/// Invalid buffer size
+	EDOS_SEEK		= 25,	/// Seek error (file)
+	EDOS_DISK_FULL		= 28, /// Handle disk full, likely used internally
+	EDOS_DEADLOCK		= 36,
+	EDOS_LOCK		= 39,
+	EDOS_FILE_EXISTS	= 80,
+	EDOS_INVALID_PARAMETER		= 87,	/// Invalid parameter
 }
 
 /+

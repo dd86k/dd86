@@ -39,13 +39,11 @@ struct PSP { align(1):
 	uint int21h;	/// Entry to call INT 21h (SS:SP) (internal)
 	ushort jft_size;	/// JFT size (internal)
 	uint jft_pointer;	/// Pointer to the JFT (internal)
-	uint prev_psp;	/// Pointer to the previous PSP (SHARE in DOS 3.3 and later)
+	uint prev_psp;	/// Pointer to the previous PSP (used in SHARE in DOS 3.3 and later)
 	uint reserved2;
 	union {
 		ushort version_;	/// DOS version
-		union {
-			ubyte majorversion, minorversion;
-		}
+		ubyte majorversion, minorversion;
 	}
 	ubyte[14] reserved3;
 	ubyte[3] dos_far;	/// DOS far call (instructions)
@@ -92,10 +90,139 @@ struct dos_struct { align(1):
 	char[15] HOSTNAME;	/// Network NetBIOS HOSTNAME
 	private ubyte _pad0;
 	ubyte ERRORLEVEL;
-
 }
 
-struct vdos_settings { align(1):
-	ushort cursor_x;	/// Left 0-based horizontal cursor position
-	ushort cursor_y;	/// Upper 0-based vertical cursor position
+/// Cursor position structure
+struct __cpos { align(1):
+	ubyte col;	/// Left 0-based horizontal cursor position
+	ubyte row;	/// Upper 0-based vertical cursor position
 }
+
+struct __ivt { align(1):
+	union {
+		uint ivt;
+		ushort offset;
+		ushort segment;
+	}
+}
+
+static assert(__ivt.sizeof == 4, "IVT structure must be size of 4");
+
+/// BIOS data area
+// Includes:
+// - 000h -- Interrupt Vector Table
+// - 400h -- ROM Communication Area
+// - 500h -- DOS Communication Area
+struct system_struct { align(1):
+	__ivt[256] IVT;
+	// 300h would usually contain bootstrap code on an actual IBM PC
+	// 400h
+	ushort COM1;
+	ushort COM2;
+	ushort COM3;
+	ushort COM4;
+	ushort LPT1;
+	ushort LPT2;
+	ushort LPT3;
+	ushort LPT4;
+	ushort equip_flag;	/// See INT 11h
+	ubyte pcjr_ir_kb_er_count;	/// (PCjr) Infrared keyboard link error count
+	ushort memsize;	/// Memory size (in KB)
+	private ubyte _res0;
+	ubyte ps2_bios_flag;	/// (PS/2) BIOS control flags
+	ushort kb_flags;	// 417h
+	ubyte keypad_storage;
+	ushort kb_buf_head_offset;	/// from 400h
+	ushort kb_buf_tail_offset;	/// from 400h
+	ubyte[32] kb_buffer;
+	ubyte drive_recal_status;	// 43Eh
+	ubyte diskette_motor_status;	// 43Fh
+	ubyte diskette_shutoff_counter;	// 440h
+	ubyte diskette_last_op_status;	// 441h, see INT 13h AH=01h
+	ubyte[7] nec765_status;
+	ubyte video_mode;	/// Current video mode
+	ushort screen_columns;
+	ushort video_rbuf_size;	/// Size of current video regenerate buffer in bytes
+	ushort video_rbuf_off;	/// Offset of current video page in video regenerate buffer
+	__cpos[8] cursor_pos;	/// Cursor positions per page
+	ubyte video_scan_line_bottom;
+	ubyte video_scan_line_top;
+	ubyte video_active_page;
+	ushort crt_base_port;	/// 6845 base port, 3B4h=mono, 3D4h=color
+	ubyte crt_mode;	/// 6845 CRT mode control register value (port 3x8h)
+	ubyte video_cga_palette;	/// CGA current color palette mask setting (port 3D9h)
+	ubyte[5] cassette_control;
+	uint clock_counter;
+	ubyte clock_rollover;
+	ubyte bios_break;
+	ushort reset;
+	ubyte disk_last_op;
+	ubyte disk_number;	// attached
+	ubyte disk_control;
+	ubyte disk_adapter_port_offset;
+	ubyte[4] lpt_timeouts;
+	ubyte[4] com_timeouts;
+	// 480h
+	ushort kb_buf_off_start;
+	ushort kb_buf_off_end;
+	ubyte video_screen_row;	// -1
+	ushort video_char_matrix_off;
+	ubyte video_options;
+	ubyte video_features;
+	ubyte video_data_area;
+	ubyte video_dcc_index;
+	ubyte diskette_data_rate;
+	ubyte disk_status;
+	ubyte disk_error;
+	ubyte disk_int_control;
+	ubyte disk_floppy_card;
+	ubyte[4] drive_status;	// 0 through 3
+	ubyte drive0_seek;
+	ubyte drive1_seek;
+	ubyte kb_mode;
+	ubyte kb_led;
+	uint user_wait_complete;	// flag
+	uint user_wait_timeout;	// microseconds
+	ubyte rtc_flag;
+	ubyte lana_dma;
+	ubyte lana0_status;
+	ubyte lana1_status;
+	uint disk_int;
+	uint video_table_addr;	/// BIOS Video Save/Override Pointer Table address
+	private ubyte[8] _res1;
+	ubyte kb_nmi_control;
+	uint kb_break;
+	ubyte port60_queue;
+	ubyte kb_last_scancode;
+	ubyte nmi_buf_head;	// pointer
+	ubyte nmi_buf_tail;	// pointer
+	ubyte[16] nmi_scancode_buf;
+	ushort clock_counter_conv;
+	ubyte[16] app_comm_area;	/// Intra-Applications Communications Area
+	// 500h
+	ubyte print_scr_status;
+	ubyte[3] basic;
+	ubyte diskette_dos_mode;
+	ubyte[10] post;
+	ubyte basic_shell;
+	ushort basic_ds;
+	uint basic_int1c;
+	uint basic_int23;
+	uint basic_int24;
+	ushort dos_storage;
+	ubyte[14] diskette_init_table;	/// DOS
+	ushort mode;
+}
+
+static assert(
+	system_struct.COM1.offsetof == 0x400,
+	"System structure is misaligned"
+);
+static assert(
+	system_struct.kb_buf_off_start.offsetof == 0x480,
+	"System structure is misaligned"
+);
+/*static assert(
+	system_struct.print_scr_status.offsetof == 0x500,
+	"System structure is misaligned"
+);*/

@@ -5,11 +5,12 @@
 module vdos_int;
 
 import ddc;
-import vcpu : vCPU, MEMORY, MEMORYSIZE, get_ad, RLEVEL;
+import vcpu : vCPU, MEMORY, get_ad, RLEVEL;
 import vcpu_utils : __int_enter, __int_exit;
-import vdos : DOS, MinorVersion, MajorVersion, OEM_ID;
+import vdos : SYSTEM, DOS, TICK, MinorVersion, MajorVersion, OEM_ID;
 import vdos_codes;
 import vdos_loader : vdos_load;
+import vdos_structs : __cpos;
 import ddcon;
 import os_utils;
 import utils : MemString;
@@ -25,44 +26,38 @@ void INT(ubyte code) {
 	switch (code) {
 	case 0x10: // VIDEO
 		switch (vCPU.AH) {
-		/*
-		 * VIDEO - Set cursor position
-		 */
-		case 0x02:
-			SetPos(vCPU.DH, vCPU.DL);
+		case 0: // Set video mode
+
 			break;
-		/*
-		 * VIDEO - Get cursor position and size
-		 */
-		case 0x03:
-			vCPU.AX = 0;
+		case 0x01: // Set text-mode cursor shape
+
+			break;
+		case 0x02: // Set cursor position
+			SYSTEM.video_active_page = vCPU.BL > 8 ? 0 : vCPU.BH;
+			__cpos* pos = &SYSTEM.cursor_pos[SYSTEM.video_active_page];
+			pos.row = vCPU.DH; //TODO: Check against system rows/columns current size
+			pos.col = vCPU.DL;
+			SetPos(pos.row, pos.col);
+			break;
+		case 0x03: // Get cursor position and size
+			vCPU.AX = SYSTEM.video_active_page; //TODO: Check if graphical mode
 			//vCPU.DH = cast(ubyte)CursorTop;
 			//vCPU.DL = cast(ubyte)CursorLeft;
 			break;
-		/*
-		 * VIDEO - Read light pen position
-		 */
-		case 0x04:
+		case 0x04: // Read light pen position
+
+			break;
+		case 0x06: // Select display page
 
 			break;
 		default:
-		
-			break;
 		}
 		break;
-	case 0x11: { // BIOS - Get equipement list
-		int r = 0b10000; // VGA //TODO: CHECK ON VIDEO MODE!
-		/*if (FloppyDiskInstalled) {
-			ax |= 1;
-			// Bit 6-7 = Number of floppy drives
-			ax |= 0b10
-		}*/
-		//if (PenInstalled) ax |= 0b100;
-		vCPU.AX = cast(ushort)r;
+	case 0x11: // BIOS - Get equipement list
+		vCPU.AX = SYSTEM.equip_flag;
 		break;
-	}
-	case 0x12: // BIOS - Get memory size
-		vCPU.AX = cast(ushort)(MEMORYSIZE / 1024);
+	case 0x12: // BIOS - Get memory size (KB)
+		vCPU.AX = SYSTEM.memsize;
 		break;
 	case 0x13: // DISK operations
 
@@ -72,12 +67,11 @@ void INT(ubyte code) {
 		break;
 	case 0x16: // Keyboard
 		switch (vCPU.AH) {
-		case 0, 1: { // Get/Check keystroke
-			/*const KeyInfo k = ReadKey;
-			vCPU.AH = cast(ubyte)k.scanCode;
-			vCPU.AL = cast(ubyte)k.keyCode;
-			if (vCPU.AH) vCPU.ZF = 0; // Keystroke available*/
-		}
+		case 0:
+
+			break;
+		case 1:
+
 			break;
 		case 2: // SHIFT
 			// Bit | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0
@@ -86,8 +80,6 @@ void INT(ubyte code) {
 			// vCPU.AL = (flag)
 			break;
 		default:
-			
-			break;
 		}
 		break;
 	case 0x17: // PRINTER
@@ -95,134 +87,91 @@ void INT(ubyte code) {
 		break;
 	case 0x1A: // TIME
 		switch (vCPU.AH) {
-		/*
-		 * Get system time by number of clock ticks since midnight
-		 */
-		case 0:
-
+		case 0: // Get system time by number of clock ticks since midnight
+			OSTime t = void;
+			os_time(&t);
+			uint c = cast(uint)( //TODO: fix?
+				((cast(float)t.hour * 60 * 60) +
+				(cast(float)t.minute * 60) +
+				cast(float)t.second) * TICK
+			);
+			vCPU.CS = c >> 16;
+			vCPU.DX = cast(ushort)c;
 			break;
-		/*
-		 * Set system time by number of clock ticks since midnight
-		 */
-		case 1:
-		
+		case 1: // Set system time by number of clock ticks since midnight
 			break;
-
-		default: break;
+		default:
 		}
 		break;
 	case 0x1B: // CTRL-BREAK handler
 
 		break;
+	case 0x20: // Terminate program
+		--RLEVEL;
+		break;
 	case 0x21: // MS-DOS Services
 		switch (vCPU.AH) {
-		/*
-		 * 00h - Terminate program
-		 */
-		case 0:
-
+		case 0: // Terminal program
+			--RLEVEL;
 			break;
-		/*
-		 * 01h - Read character from stdin with echo
-		 */
-		case 1:
+		case 1: // Read character from stdin with echo
 			//vCPU.AL = cast(ubyte)ReadKey.keyCode;
 			break;
-		/*
-		 * 02h - Write character to stdout
-		 */
-		case 2:
+		case 2: // Write character to stdout
 			vCPU.AL = vCPU.DL;
 			putchar(vCPU.AL);
 			break;
-		/*
-		 * 05h - Write character to printer
-		 */
-		case 5:
+		case 5: // Write character to printer
 
 			break;
-		/*
-		 * 06h - Direct console input/output
-		 */
-		case 6:
+		case 6: // Direct console input/output
+			if (vCPU.DL == 0xFF) { // input
 
+			} else { // output
+				vCPU.AL = vCPU.DL;
+				putchar(vCPU.AL);
+			}
 			break;
-		/*
-		 * 07h - Read character directly from stdin without echo
-		 */
-		case 7:
+		case 7: // Read character directly from stdin without echo
 			//vCPU.AL = cast(ubyte)ReadKey.keyCode;
 			break;
-		/*
-		 * 08h - Read character from stdin without echo
-		 */
-		case 8:
+		case 8: // Read character from stdin without echo
 
 			break;
-		/*
-		 * 09h - Write string to stdout
-		 */
-		case 9: {
-			uint limit = 255;
-			char* p = cast(char*)MEMORY + get_ad(vCPU.DS, vCPU.DX);
+		case 9: { // Write string to stdout
+			ubyte limit = 255;
+			char* p = cast(char*)(MEMORY + get_ad(vCPU.DS, vCPU.DX));
 			while (*p != '$' && --limit > 0)
 				putchar(*p++);
 
 			vCPU.AL = 0x24;
 			break;
 		}
-		/*
-		 * 0Ah - Buffered input
-		 */
-		case 0xA:
+		case 0xA: // Buffered input
 
 			break;
-		/*
-		 * 0Bh - Get stdin status
-		 */
-		case 0xB:
+		case 0xB: // Get stdin status
 
 			break;
-		/*
-		 * 0Ch - Flush stdin buffer and read character
-		 */
-		case 0xC:
+		case 0xC: // Flush stdin buffer and read character
 
 			break;
-		/*
-		 * 0Dh - Disk reset
-		 */
-		case 0xD:
+		case 0xD: // Disk reset
 
 			break;
-		/*
-		 * 0Eh - Select default drive
-		 */
-		case 0xE:
+		case 0xE: // Select default drive
 
 			break;
-		/*
-		 * 19h - Get default drive
-		 */
-		case 0x19:
+		case 0x19: // Get default drive
 			vCPU.AL = 2; // Temporary.
 			break;
-		/*
-		 * 25h - Set interrupt vector
-		 */
-		case 0x25:
+		case 0x25: // Set interrupt vector
 
 			break;
-		/*
-		 * 26h - Create PSP
-		 */
-		case 0x26:
+		case 0x26: // Create PSP
 
 			break;
-		/*
-		 * 2Ah - Get system date
-		 */
-		case 0x2A: {
+		case 0x2A: { // Get system date
 			OSDate d = void;
 			os_date(&d); // os_utils
 			vCPU.CX = d.year;
@@ -231,16 +180,10 @@ void INT(ubyte code) {
 			vCPU.AL = d.weekday;
 			break;
 		}
-		/*
-		 * 2Bh - Set system date
-		 */
-		case 0x2B:
+		case 0x2B: // Set system date
 			vCPU.AL = 0xFF;
 			break;
-		/*
-		 * 2Ch - Get system time
-		 */
-		case 0x2C: {
+		case 0x2C: { // Get system time
 			OSTime t = void;
 			os_time(&t); // os_utils
 			vCPU.CH = t.hour;
@@ -249,126 +192,66 @@ void INT(ubyte code) {
 			vCPU.DL = t.millisecond;
 			break;
 		}
-		/*
-		 * 2Dh - Set system time
-		 */
-		case 0x2D:
+		case 0x2D: // Set system time
 			vCPU.AL = 0xFF;
 			break;
-		/*
-		 * 2Eh - Set verify flag
-		 */
-		case 0x2E:
+		case 0x2E: // Set verify flag
 			vCPU.AL = 1;
 			break;
-		/*
-		 * 30h - Get DOS version
-		 */
-		case 0x30:
+		case 0x30: // Get DOS version
 			vCPU.BH = vCPU.AL == 0 ? OEM_ID.IBM : 0;
 			vCPU.AL = MajorVersion;
 			vCPU.AH = MinorVersion;
 			break;
-		/*
-		 * 35h - Get interrupt vector.
-		 */
-		case 0x35:
+		case 0x35: // Get interrupt vector
 
 			break;
-		/*
-		 * 36h - Get free disk space.
-		 */
-		case 0x36:
+		case 0x36: // Get free disk space
 
 			break;
-		/*
-		 * Get country specific information
-		 */
-		case 0x38:
+		case 0x38: // Get country specific information
 
 			break;
-		/*
-		 * 39h - Create subdirectory
-		 */
-		case 0x39:
+		case 0x39: // Create subdirectory
 
 			break;
-		/*
-		 * 3Ah - Remove subdirectory
-		 */
-		case 0x3A:
+		case 0x3A: // Remove subdirectory
 
 			break;
-		/*
-		 * 3Bh - Set current directory
-		 */
-		case 0x3B:
+		case 0x3B: // Set current directory
 
 			break;
-		/*
-		 * 3Ch - Create or truncate file
-		 */
-		case 0x3C:
+		case 0x3C: // Create or truncate file
 
 			break;
-		/*
-		 * 3Dh - Open file
-		 */
-		case 0x3D:
+		case 0x3D: // Open file
 
 			break;
-		/*
-		 * 3Eh - Close file
-		 */
-		case 0x3E:
+		case 0x3E: // Close file
 
 			break;
-		/*
-		 * 3Fh - Read from file or device
-		 */
-		case 0x3F:
+		case 0x3F: // Read from file or device
 
 			break;
-		/*
-		 * 40h - Write to file or device
-		 */
-		case 0x40:
+		case 0x40: // Write to file or device
 
 			break;
-		/*
-		 * 41h - Delete file
-		 */
-		case 0x41:
+		case 0x41: // Delete file
 
 			break;
-		/*
-		 * 42h - Set current file position
-		 */
-		case 0x42:
+		case 0x42: // Set current file position
 
 			break;
-		/*
-		 * 43h - Get or set file attributes
-		 */
-		case 0x43:
+		case 0x43: // Get or set file attributes
 
 			break;
-		/*
-		 * 47h - Get current working directory
-		 */
-		case 0x47:
+		case 0x47: // Get current working directory
 
 			break;
-		/*
-		 * 4Ah - Resize memory block
-		 */
-		case 0x4A:
+		case 0x4A: // Resize memory block
 
 			break;
-		/*
-		 * 4Bh - Load/execute program
-		 */
-		case 0x4B: {
+		case 0x4B: { // Load/execute program
 			switch (vCPU.AL) {
 			case 0: // Load and execute the program.
 				char[] p = MemString(get_ad(vCPU.DS, vCPU.DX));
@@ -376,7 +259,7 @@ void INT(ubyte code) {
 					vdos_load(cast(char*)p);
 					vCPU.CF = 0;
 				} else {
-					vCPU.AX = E_FILE_NOT_FOUND;
+					vCPU.AX = EDOS_FILE_NOT_FOUND;
 					vCPU.CF = 1;
 				}
 				break;
@@ -389,44 +272,29 @@ void INT(ubyte code) {
 				vCPU.CF = 1;
 				break;
 			default:
-				vCPU.AX = E_INVALID_FUNCTION;
+				vCPU.AX = EDOS_INVALID_FUNCTION;
 				vCPU.CF = 1;
 				break;
 			}
 			break;
 		}
-		/*
-		 * 4Ch - Terminate with return code
-		 */
-		case 0x4C:
+		case 0x4C: // Terminate with return code
 			--RLEVEL;
 			DOS.ERRORLEVEL = vCPU.AL;
 			break;
-		/*
-		 * 4Dh - Get return code. (ERRORLEVEL)
-		 */
-		case 0x4D:
+		case 0x4D: // Get return code (ERRORLEVEL)
 			
 			break;
-		/*
-		 * 54h - Get verify flag
-		 */
-		case 0x54:
+		case 0x54: // Get verify flag
 
 			break;
-		/*
-		 * 56h - Rename file or directory
-		 */
-		case 0x56:
+		case 0x56: // Rename file or directory
 
 			break;
-		/*
-		 * 57h - Get or set file's last-written time and date
-		 */
-		case 0x57:
+		case 0x57: // Get/set file's last-written time and date
 
 			break;
-		default: break;
+		default:
 		}
 		break; // End MS-DOS Services
 	case 0x27: // TERMINATE AND STAY RESIDANT
@@ -435,7 +303,7 @@ void INT(ubyte code) {
 	case 0x29: // FAST CONSOLE OUTPUT
 		putchar(vCPU.AL);
 		break;
-	default: break;
+	default:
 	}
 
 	__int_exit;

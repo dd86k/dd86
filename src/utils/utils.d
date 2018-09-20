@@ -4,7 +4,7 @@
 
 module utils;
 
-import vcpu : MEMORY, MEMORYSIZE;
+import vcpu : MEMORY;
 import core.stdc.string : strlen;
 import core.stdc.stdlib : malloc;
 import core.stdc.string : strncpy, strlen;

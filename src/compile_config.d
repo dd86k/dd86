@@ -6,7 +6,7 @@ module compile_config;
 
 import sleep : SLEEP_TIME;
 import vdos : DOS_MAJOR_VERSION, DOS_MINOR_VERSION;
-import vdos_structs : vdos_settings;
+import vdos_structs;
 
 debug {
 	pragma(msg, "-- DEBUG: ON");
@@ -49,9 +49,9 @@ version (CRuntime_Bionic) {
 
 enum APP_VERSION = "0.0.0-0"; /// DD-DOS version
 
-/*
+/********************************************************************
  * vCPU
- */
+ ********************************************************************/
 
 // It is planned to redo this section, part of Issue #20
 
@@ -67,9 +67,9 @@ pragma(msg, "-- CONFIG: Intel 8086 = ", i8086_FREQ, " MHz");
 //pragma(msg, "-- CONFIG: Intel i486 = ", i486_FREQ, " MHz");
 pragma(msg, "-- CONFIG: vcpu sleeps every ", TSC_SLEEP, " instructions");
 
-/*
+/********************************************************************
  * Memory
- */
+ ********************************************************************/
 
 /// Initial and maximum amount of memory if not specified in settings.
 enum INIT_MEM = 0x4_0000;
@@ -79,13 +79,8 @@ enum INIT_MEM = 0x4_0000;
 // 0x20_0000  2048K
 // 0x40_0000  4096K
 
-/*
- * vDOS
- */
-
-private enum __SETTINGS_LOC = 0x2000; /// Settings location in MEMORY
-private enum __DOS_STRUCT_LOC = 0x1160; /// MS-DOS system data location in MEMORY
-static assert(
-	__SETTINGS_LOC + vdos_settings.sizeof < INIT_MEM,
-	"Settings location and size go beyond INIT_MEM size"
-);
+enum __MM_COM_ROM = 0x400;	/// ROM Communication Area, 400h
+enum __MM_COM_DOS = 0x500;	/// DOS Communication Area, 500h
+// Includes I/O drivers from IO.SYS and IBMBIO.COM
+enum __MM_SYS_DEV = 0x700;	/// System Device Drivers location, 700h
+enum __MM_SYS_DOS = 0x1160;	/// MS-DOS data location, 1160h

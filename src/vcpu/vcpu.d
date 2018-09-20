@@ -74,9 +74,7 @@ enum : ubyte {
 __gshared short RLEVEL = 1;
 __gshared ubyte opt_sleep = 1; /// Is sleeping available to use? If so, use it
 
-enum MEMORY_P = cast(ubyte*)MEMORY; /// Memory pointer enum to avoid explicit casting
-__gshared ubyte[INIT_MEM] MEMORY; /// Main memory bank
-__gshared uint MEMORYSIZE = INIT_MEM; /// Current memory MEMORY size
+__gshared ubyte* MEMORY; /// Main memory bank
 
 /*
  * Code might be ugly, but:
@@ -87,51 +85,43 @@ __gshared uint MEMORYSIZE = INIT_MEM; /// Current memory MEMORY size
 extern (C) struct __CPU {
 	union {
 		uint EIP;
-		union { ushort IP; }
+		ushort IP;
 	}
 	union {
 		uint EAX;
-		union {
-			ushort AX;
-			struct { ubyte AL, AH; }
-		}
+		ushort AX;
+		struct { ubyte AL, AH; }
 	}
 	union {
 		uint EBX;
-		union {
-			ushort BX;
-			struct { ubyte BL, BH; }
-		}
+		ushort BX;
+		struct { ubyte BL, BH; }
 	}
 	union {
 		uint ECX;
-		union {
-			ushort CX;
-			struct { ubyte CL, CH; }
-		}
+		ushort CX;
+		struct { ubyte CL, CH; }
 	}
 	union {
 		uint EDX;
-		union {
-			ushort DX;
-			struct { ubyte DL, DH; }
-		}
+		ushort DX;
+		struct { ubyte DL, DH; }
 	}
 	union {
 		uint ESI;
-		union { ushort SI; }
+		ushort SI;
 	}
 	union {
 		uint EDI;
-		union { ushort DI; }
+		ushort DI;
 	}
 	union {
 		uint EBP;
-		union { ushort BP; }
+		ushort BP;
 	}
 	union {
 		uint ESP;
-		union { ushort SP; }
+		ushort SP;
 	}
 	ushort CS, SS, DS, ES, FS, GS;
 
@@ -154,7 +144,10 @@ public __gshared __CPU vCPU;
 /// Initiate interpreter
 extern (C)
 void vcpu_init() {
+	import core.stdc.stdlib : malloc;
 	//RESET;
+
+	MEMORY = cast(ubyte*)malloc(INIT_MEM);
 }
 
 /// Start the emulator at CS:IP (usually 0000h:0100h)
