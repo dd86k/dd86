@@ -15,9 +15,10 @@ version (Windows) {
 	private enum CTRL_PRESSED = RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED;
 	private enum DEFAULT_COLOR =
 		FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
+	private enum DISABLE_NEWLINE_AUTO_RETURN = 0x0008;
 	/// Necessary handles.
-	//TODO: Get external handles from C runtime instead if possible
-	private __gshared HANDLE hIn, hOut;
+	//TODO: Get external handles from C runtimes instead if possible (depending on version)
+	__gshared HANDLE hIn, hOut;
 	private __gshared USHORT defaultColor = DEFAULT_COLOR;
 }
 version (Posix) {
@@ -38,6 +39,10 @@ void vcon_init() {
 	version (Windows) {
 		hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 		hIn  = GetStdHandle(STD_INPUT_HANDLE);
+
+		// ~ENABLE_PROCESSED_OUTPUT
+		// ~ENABLE_WRAP_AT_EOL_OUTPUT
+		SetConsoleMode(hOut, 0);
 	}
 	version (Posix) {
 		tcgetattr(STDIN_FILENO, &old_tio);

@@ -146,7 +146,6 @@ extern (C)
 void vcpu_init() {
 	import core.stdc.stdlib : malloc;
 	//RESET;
-
 	MEMORY = cast(ubyte*)malloc(INIT_MEM);
 }
 

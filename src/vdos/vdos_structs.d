@@ -4,8 +4,6 @@
 
 module vdos_structs;
 
-static assert(PSP.sizeof == 256);
-
 // Enumerations
 
 private enum ERESWDS = 16; /// RESERVED WORDS (MZ EXE)
@@ -55,6 +53,8 @@ struct PSP { align(1):
 	ubyte[127] cmd;	/// Command-line, terminates with CR character (Dh)
 }
 
+static assert(PSP.sizeof == 256);
+
 /// MS-DOS EXE header structure
 struct mz_hdr { align(1):
 //	ushort e_magic;	/// Magic number, "MZ"
@@ -100,7 +100,7 @@ struct __cpos { align(1):
 
 struct __ivt { align(1):
 	union {
-		uint ivt;
+		uint address;
 		ushort offset;
 		ushort segment;
 	}
@@ -114,7 +114,12 @@ static assert(__ivt.sizeof == 4, "IVT structure must be size of 4");
 // - 400h -- ROM Communication Area
 // - 500h -- DOS Communication Area
 struct system_struct { align(1):
-	__ivt[256] IVT;
+	union {
+		__ivt[256] IVT;
+		private ubyte[0x104] _pad;
+		ushort hdd_offset;	/// HDD address Parameter
+		ushort hdd_segment;	/// HDD address Parameter
+	}
 	// 300h would usually contain bootstrap code on an actual IBM PC
 	// 400h
 	ushort COM1;
@@ -141,7 +146,7 @@ struct system_struct { align(1):
 	ubyte diskette_last_op_status;	// 441h, see INT 13h AH=01h
 	ubyte[7] nec765_status;
 	ubyte video_mode;	/// Current video mode
-	ushort screen_columns;
+	ushort screen_col;
 	ushort video_rbuf_size;	/// Size of current video regenerate buffer in bytes
 	ushort video_rbuf_off;	/// Offset of current video page in video regenerate buffer
 	__cpos[8] cursor_pos;	/// Cursor positions per page
@@ -165,7 +170,7 @@ struct system_struct { align(1):
 	// 480h
 	ushort kb_buf_off_start;
 	ushort kb_buf_off_end;
-	ubyte video_screen_row;	// -1
+	ubyte screen_row;	// -1
 	ushort video_char_matrix_off;
 	ubyte video_options;
 	ubyte video_features;

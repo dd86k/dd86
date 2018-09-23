@@ -3,12 +3,13 @@
  */
 
 import core.stdc.stdio : printf, puts;
+import core.stdc.string : strcmp, memcpy;
 import ddc : fputs, stderr;
-import core.stdc.string : strcmp;
+import vcpu;
 import vdos : BANNER, vdos_shell, vdos_init;
 import vdos_codes;
-import vcpu;
 import vdos_loader : vdos_load;
+import vdos_screen : screen_draw, screen_clear, __VGA_ADDRESS;
 import Logger;
 import ddcon : vcon_init;
 import os_utils : os_pexist;
@@ -17,8 +18,10 @@ import compile_config : APP_VERSION;
 
 extern (C)
 private void _version() {
+	puts(
+		BANNER
+	);
 	printf(
-		BANNER ~ "\n" ~
 		"Copyright (c) 2017-2018 dd86k, MIT license\n" ~
 		"Project page: <https://github.com/dd86k/dd-dos>\n" ~
 		"License: <https://opensource.org/licenses/MIT>\n\n" ~
@@ -112,25 +115,33 @@ private int main(int argc, char** argv) {
 		return EDOS_INVALID_FUNCTION;
 	}
 
-	//TODO: Check function(s) before anything else
-
-	if (opt_sleep == 0)
-		info("-- SLEEP MODE OFF");
-
 	if (arg_banner)
 		puts("DD-DOS is starting...");
+
+	if (opt_sleep == 0)
+		info("NOTICE: MAX_PERF");
 
 	// Initiation
 
 	vcon_init;	// ddcon
 	//sleep_init;	// sleep
 	vcpu_init;	// vcpu
-	vdos_init;	// vdos
+	vdos_init;	// vdos, screen
 
-	// DD-DOS
+	screen_clear;
 
-	if (arg_banner)
-		puts(BANNER); // Defined in vdos.d
+	if (arg_banner) {
+		MEMORY[__VGA_ADDRESS] = 'H';
+		MEMORY[__VGA_ADDRESS + 2] = 'e';
+		MEMORY[__VGA_ADDRESS + 4] = 'l';
+		MEMORY[__VGA_ADDRESS + 6] = 'l';
+		MEMORY[__VGA_ADDRESS + 8] = 'o';
+		//memcpy(MEMORY + __VGA_ADDRESS, BANNER, 48 * 6);
+		screen_draw;
+	}
+
+	/*if (arg_banner)
+		puts(BANNER); // Defined in vdos.d*/
 
 	if (cast(int)prog) {
 		if (os_pexist(prog)) {

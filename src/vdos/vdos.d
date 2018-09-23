@@ -11,12 +11,13 @@ import vcpu, vcpu_utils;
 import vdos_codes, vdos_int;
 import vdos_loader : vdos_load;
 import vdos_structs : system_struct, dos_struct;
+import vdos_screen : screen_init;
 import utils, os_utils;
 import ddcon, Logger;
 import compile_config :
 	__MM_SYS_DOS, C_RUNTIME, APP_VERSION, BUILD_TYPE, INIT_MEM;
 
-enum BANNER = `
+immutable(char)* BANNER = `
 _______ _______        _______  ______  _______
 |  __  \|  __  \  ___  |  __  \/  __  \/ _____/
 | |  \ || |  \ | |___| | |  \ || /  \ |\____ \
@@ -33,11 +34,10 @@ enum
 	DOS_MAJOR_VERSION = 5, /// Default major DOS version
 	DOS_MINOR_VERSION = 0; /// Default minor DOS version
 
-// Internal input buffer length. While maximum in MS-DOS 5.0 seems to be 120,
-// 255 feels like a little more breathable.
-private enum _BUFS = 255;
+// Internal input buffer length.
+private enum _BUFS = 127;
 
-enum float TICK = 1 / 18.2f;
+enum float BIOS_TICK = 1 / 18.2f;
 
 __gshared ubyte
 	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
@@ -53,8 +53,13 @@ void vdos_init() {
 	// ubyte* -> vdos_settings* is not supported in CTFE, done in run-time instead
 	SYSTEM = cast(system_struct*)MEMORY;
 	SYSTEM.memsize = INIT_MEM / 1024;
+	SYSTEM.video_mode = 3;
+	SYSTEM.screen_row = 24;
+	SYSTEM.screen_col = 79;
 
 	DOS = cast(dos_struct*)(MEMORY + __MM_SYS_DOS);
+
+	screen_init;
 }
 
 /**
@@ -77,7 +82,7 @@ SHELL_SHART:
 	fgets(inb, _BUFS, stdin);
 	if (*inb == '\n') goto SHELL_SHART; // Nothing to process
 
-	int argc = sargs(inb, argv); /// argument count
+	const int argc = sargs(inb, argv); /// argument count
 
 	//TODO: TREE, DIR
 	lowercase(*argv);
@@ -166,7 +171,7 @@ VER ......... Show DD-DOS and MS-DOS version`
 
 	if (strcmp(*argv, "mem") == 0) {
 		if (strcmp(argv[1], "/stats") == 0) {
-			uint t_size = SYSTEM.memsize * 1024;
+			const uint t_size = SYSTEM.memsize * 1024;
 			const ubyte ext = t_size > 0xA_0000; // extended?
 			const size_t ct = ext ? 0xA_0000 : t_size; /// convential memsize
 			const size_t tt = t_size - ct; /// total memsize excluding convential
@@ -346,7 +351,7 @@ By default, MEM will show memory usage`
 	system(inb);
 	//puts("Bad command or file name");
 
-SHELL_END:
+//SHELL_END:
 	goto SHELL_SHART;
 }
 

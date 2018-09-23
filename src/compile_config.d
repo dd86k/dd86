@@ -9,15 +9,15 @@ import vdos : DOS_MAJOR_VERSION, DOS_MINOR_VERSION;
 import vdos_structs;
 
 debug {
-	pragma(msg, "-- DEBUG: ON");
+	pragma(msg, "[DEBUG]\tON");
 	enum BUILD_TYPE = "DEBUG";	/// For printing purposes
 } else {
-	pragma(msg, "-- DEBUG: OFF");
+	pragma(msg, "[DEBUG]\tOFF");
 	enum BUILD_TYPE = "RELEASE";	/// For printing purposes
 }
 
-pragma(msg, "-- DD-DOS version: ", APP_VERSION);
-pragma(msg, "-- MS-DOS version: ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
+pragma(msg, "[DOS]\tDD-DOS version: ", APP_VERSION);
+pragma(msg, "[DOS]\tMS-DOS version: ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
 version (BigEndian) pragma(msg,
 `WARNING: DD-DOS has not been tested on big-endian platforms!
@@ -25,25 +25,25 @@ You might want to run 'dub test' beforehand to check if everything is OK.
 `);
 
 version (CRuntime_Bionic) {
-	pragma(msg, "-- RUNTIME: Bionic");
+	pragma(msg, "[RUNTIME]\tBionic");
 	enum C_RUNTIME = "Bionic";
 } else version (CRuntime_DigitalMars) {
-	pragma(msg, "-- RUNTIME: DigitalMars");
+	pragma(msg, "[RUNTIME]\tDigitalMars");
 	enum C_RUNTIME = "DigitalMars";
 } else version (CRuntime_Glibc) {
-	pragma(msg, "-- RUNTIME: Glibc");
+	pragma(msg, "[RUNTIME]\tGlibc");
 	enum C_RUNTIME = "Glibc";
 } else version (CRuntime_Microsoft) {
-	pragma(msg, "-- RUNTIME: Microsoft");
+	pragma(msg, "[RUNTIME]\tMicrosoft");
 	enum C_RUNTIME = "Microsoft";
 } else version(CRuntime_Musl) {
-	pragma(msg, "-- RUNTIME: musl");
+	pragma(msg, "[RUNTIME]\tmusl");
 	enum C_RUNTIME = "musl";
 } else version (CRuntime_UClibc) {
-	pragma(msg, "-- RUNTIME: uClibc");
+	pragma(msg, "[RUNTIME]\tuClibc");
 	enum C_RUNTIME = "uClibc";
 } else {
-	pragma(msg, "-- RUNTIME: UNKNOWN");
+	pragma(msg, "[RUNTIME]\tUNKNOWN");
 	enum C_RUNTIME = "UNKNOWN";
 }
 
@@ -63,19 +63,19 @@ private enum i486_FREQ = 16; // to 100
 enum uint TSC_SLEEP = cast(uint)(
 	(SLEEP_TIME * 1_000_000) / ((cast(float)1 / i8086_FREQ) * 1000)
 );
-pragma(msg, "-- CONFIG: Intel 8086 = ", i8086_FREQ, " MHz");
-//pragma(msg, "-- CONFIG: Intel i486 = ", i486_FREQ, " MHz");
-pragma(msg, "-- CONFIG: vcpu sleeps every ", TSC_SLEEP, " instructions");
+pragma(msg, "[CONFIG]\tIntel 8086 = ", i8086_FREQ, " MHz");
+//pragma(msg, "[CONFIG]\tIntel i486 = ", i486_FREQ, " MHz");
+pragma(msg, "[CONFIG]\tvcpu sleeps every ", TSC_SLEEP, " instructions");
 
 /********************************************************************
  * Memory
  ********************************************************************/
 
 /// Initial and maximum amount of memory if not specified in settings.
-enum INIT_MEM = 0x4_0000;
-// 0x4_0000    256K -- MS-DOS minimum
+enum INIT_MEM = 0x10_0000;
+// 0x4_0000    256K MS-DOS minimum
 // 0xA_0000    640K
-// 0x10_0000  1024K -- Recommended
+// 0x10_0000  1024K Recommended
 // 0x20_0000  2048K
 // 0x40_0000  4096K
 

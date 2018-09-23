@@ -7,7 +7,7 @@ module vdos_int;
 import ddc;
 import vcpu : vCPU, MEMORY, get_ad, RLEVEL;
 import vcpu_utils : __int_enter, __int_exit;
-import vdos : SYSTEM, DOS, TICK, MinorVersion, MajorVersion, OEM_ID;
+import vdos : SYSTEM, DOS, BIOS_TICK, MinorVersion, MajorVersion, OEM_ID;
 import vdos_codes;
 import vdos_loader : vdos_load;
 import vdos_structs : __cpos;
@@ -93,7 +93,7 @@ void INT(ubyte code) {
 			uint c = cast(uint)( //TODO: fix?
 				((cast(float)t.hour * 60 * 60) +
 				(cast(float)t.minute * 60) +
-				cast(float)t.second) * TICK
+				cast(float)t.second) * BIOS_TICK
 			);
 			vCPU.CS = c >> 16;
 			vCPU.DX = cast(ushort)c;
