@@ -370,6 +370,9 @@ KeyInfo ReadKey(ubyte echo = false) {
 		}
 	} else version (Posix) {
 		//TODO: Get modifier keys states
+		// or better yet
+		//TODO: See console_ioctl for KDGETKEYCODE
+		// https://linux.die.net/man/4/console_ioctl
 
 		tcsetattr(STDIN_FILENO,TCSANOW, &new_tio);
 

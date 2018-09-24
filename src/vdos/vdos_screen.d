@@ -1,3 +1,9 @@
+/*
+ * vdos_screen: Virtual video adapter.
+ *
+ * Used to translate CP437 characters and character attributes to stdout.
+ */
+
 module vdos_screen;
 
 import core.stdc.stdlib : malloc;
@@ -39,12 +45,15 @@ struct videochar {
 			// | | | | +-+-+-+- foreground (4 bits)
 			// | +-+-+--------- background (3 bits)
 			// +--------------- blink (1 bit)
-			ubyte attribute;	/// attributes
+			ubyte attribute;	/// character attributes
 		}
 	}
 }
 static assert(videochar.sizeof == 2);
 
+/**
+ * Initiates screen, including intermediate buffer.
+ */
 void screen_init() {
 	import core.stdc.string : memset;
 	screensize = 80 * 25; // mode 3
@@ -65,17 +74,27 @@ void screen_init() {
 	}
 }
 
+/**
+ * Draw a frame from the video adapter memory region.
+ * (Windows) Uses WriteConsoleOutputA
+ * (Linux) WIP
+ */
 void screen_draw() {
 	version (Windows) {
-		import core.stdc.stdio;
 		for (size_t i; i < screensize; ++i) {
 			ibuf[i].AsciiChar = cast(char)vbuffer[i].ascii;
 			ibuf[i].Attributes = vbuffer[i].attribute;
 		}
 		WriteConsoleOutputA(hOut, ibuf, ibufsize, bufcoord, &ibufout);
 	}
-	version (linux)
+	version (linux) {
+		// Possible link for solution
+		// https://linux.die.net/man/4/console_ioctl see TIOCLINUX, subcode=3
+		// https://linux.die.net/man/4/tty_ioctl
+		// https://linux.die.net/man/3/termios (unlikely)
+		// See https://linux.die.net/man/2/ioctl_list for possible ioctl actions
 		static assert(0, "Virtual Video Adapter missing for linux");
+	}
 	version (FreeBSD)
 		static assert(0, "Virtual Video Adapter missing for FreeBSD");
 	version (OpenBSD)
