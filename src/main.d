@@ -11,17 +11,15 @@ import vdos_codes;
 import vdos_loader : vdos_load;
 import vdos_screen : screen_draw, screen_clear, __VGA_ADDRESS;
 import Logger;
-import ddcon : vcon_init;
+import ddcon : vcon_init, Clear;
 import os_utils : os_pexist;
 import sleep : sleep_init;
 import compile_config : APP_VERSION;
 
 extern (C)
 private void _version() {
-	puts(
-		BANNER
-	);
 	printf(
+		"%s\n" ~
 		"Copyright (c) 2017-2018 dd86k, MIT license\n" ~
 		"Project page: <https://github.com/dd86k/dd-dos>\n" ~
 		"License: <https://opensource.org/licenses/MIT>\n\n" ~
@@ -32,7 +30,7 @@ private void _version() {
 dd86k ................................. Original author
 
 `,
-		__VERSION__
+		BANNER, __VERSION__
 	);
 }
 
@@ -128,20 +126,10 @@ private int main(int argc, char** argv) {
 	vcpu_init;	// vcpu
 	vdos_init;	// vdos, screen
 
-	screen_clear;
+	Clear;
 
-	if (arg_banner) {
-		MEMORY[__VGA_ADDRESS] = 'H';
-		MEMORY[__VGA_ADDRESS + 2] = 'e';
-		MEMORY[__VGA_ADDRESS + 4] = 'l';
-		MEMORY[__VGA_ADDRESS + 6] = 'l';
-		MEMORY[__VGA_ADDRESS + 8] = 'o';
-		//memcpy(MEMORY + __VGA_ADDRESS, BANNER, 48 * 6);
-		screen_draw;
-	}
-
-	/*if (arg_banner)
-		puts(BANNER); // Defined in vdos.d*/
+	if (arg_banner)
+		puts(BANNER); // Defined in vdos.d
 
 	if (cast(int)prog) {
 		if (os_pexist(prog)) {
