@@ -1,0 +1,21 @@
+***************************************
+* OPERATING SYSTEM SUPPORT
+***************************************
+
+This page features a list of operating systems I wish to support. The higher
+the tier, the likely the operating systems will receive new features, bug
+fixes, and 
+
+Getting DD-DOS to work on Windows and Linux is my main current priority.
+
+First tier  | Windows (including ReactOS)
+            | Linux
+Second tier | FreeBSD
+            | NetBSD
+            | OpenBSD
+            | DragonflyBSD
+Third tier  | macOS (formally known as Mac OS X)
+            | Haiku (based on BeOS)
+            | HardenedBSD (based on FreeBSD)
+Fourth tier | UEFI
+            | OpenIndiana (based on Solaris)
