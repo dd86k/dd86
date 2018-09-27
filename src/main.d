@@ -126,7 +126,11 @@ private int main(int argc, char** argv) {
 	vcpu_init;	// vcpu
 	vdos_init;	// vdos, screen
 
-	Clear;
+	/*Clear;
+
+	// Place banner in memory here
+
+	screen_draw;*/
 
 	if (arg_banner)
 		puts(BANNER); // Defined in vdos.d

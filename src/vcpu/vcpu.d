@@ -155,7 +155,7 @@ void vcpu_run() {
 	debug import Logger : logexec;
 
 	info("CALL vcpu_run");
-	uint tsc; /// tick count for thread sleeping purposes
+	//uint tsc; /// tick count for thread sleeping purposes
 	while (RLEVEL > 0) {
 		vCPU.EIP = get_ip; // CS:IP->EIP (important)
 		debug logexec(vCPU.CS, vCPU.IP, MEMORY[vCPU.EIP]);

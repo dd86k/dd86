@@ -388,6 +388,7 @@ extern (C)
 void panic(ushort code,
 	immutable(char)* modname = cast(immutable(char)*)__MODULE__,
 	int line = __LINE__) {
+	import core.stdc.stdlib : exit;
 	enum RANGE = 26, TARGET = RANGE / 2;
 	printf(
 		"\n\n\n\n" ~
@@ -408,4 +409,6 @@ void panic(ushort code,
 	print_regs;
 	/*printf("--\n"); Temporary commented until print_stack is implemented
 	print_stack;*/
+
+	exit(code);
 }

@@ -58,13 +58,12 @@ buildType "release-inline" {
 # Tests
 ###################
 
-buildType "unittest" {
+buildType "unittest" { # default to dub test
   targetName "tests"
   targetType "executable"
   buildOptions "unittests"
   dflags "-transition=intpromote"
 
-  excludedSourceFiles "src/main.d"
   sourcePaths "tests/"
   importPaths "tests/"
 }
@@ -74,7 +73,6 @@ buildType "unittest-gdc" {
   targetType "executable"
   buildOptions "unittests"
 
-  excludedSourceFiles "src/main.d"
   sourcePaths "tests/"
   importPaths "tests/"
 }
@@ -88,5 +86,15 @@ buildType "bench" {
   sourcePaths "bench/"
   importPaths "bench/"
   sourceFiles "tests/test_utils.d"
-  excludedSourceFiles "src/main.d"
+}
+
+buildType "demo-screen" {
+  targetName "demo-screen"
+  targetType "executable"
+  buildOptions "unittests"
+  dflags "-transition=intpromote"
+
+  sourceFiles "demo/screen/cp437.d"
+  #sourcePaths "demo/screen/"
+  #importPaths "demo/screen/"
 }

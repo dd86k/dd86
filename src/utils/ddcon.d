@@ -4,7 +4,7 @@
 
 module ddcon;
 
-import ddc : putchar, getchar;
+import ddc : putchar, getchar, fputs, stdout;
 
 private import core.stdc.stdio : printf;
 private alias sys = core.stdc.stdlib.system;
@@ -54,134 +54,6 @@ void vcon_init() {
 /*******************************************************************
  * Colors
  *******************************************************************/
-
-version (Windows) {
-/*
-0 = Black       8 = Gray
-1 = Blue        9 = Light Blue
-2 = Green       A = Light Green
-3 = Aqua        B = Light Aqua
-4 = Red         C = Light Red
-5 = Purple      D = Light Purple
-6 = Yellow      E = Light Yellow
-7 = White       F = Bright White
-*/
-//https://msdn.microsoft.com/en-us/library/windows/desktop/ms682088(v=vs.85).aspx#_win32_character_attributes
-	enum FgColor {
-		Black = 0,
-		Red    = FOREGROUND_RED,
-		Green  = FOREGROUND_GREEN,
-		Blue   = FOREGROUND_BLUE,
-		Purple = FOREGROUND_RED | FOREGROUND_BLUE,
-		//Yellow = FOREGROUND_RED | FOREGROUND_GREEN,
-		Cyan   = FOREGROUND_BLUE | FOREGROUND_GREEN,
-		// check if gray/darkgray are ok
-		Gray   = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
-		DarkGray    = FOREGROUND_INTENSITY,
-		LightRed    = FOREGROUND_INTENSITY | FOREGROUND_RED,
-		LightGreen  = FOREGROUND_INTENSITY | FOREGROUND_GREEN,
-		LightBlue   = FOREGROUND_INTENSITY | FOREGROUND_BLUE,
-		LightPurple = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE,
-		LightCyan   = FOREGROUND_INTENSITY | FOREGROUND_BLUE | FOREGROUND_GREEN,
-		//LightYellow = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN,
-		White       = FOREGROUND_INTENSITY | Gray
-	}
-	enum BgColor {
-		Black = 0,
-		Red    = BACKGROUND_RED,
-		Green  = BACKGROUND_GREEN,
-		Blue   = BACKGROUND_BLUE,
-		Purple = BACKGROUND_RED | BACKGROUND_BLUE,
-		//Yellow = BACKGROUND_RED | BACKGROUND_GREEN,
-		Cyan   = BACKGROUND_BLUE | BACKGROUND_GREEN,
-		// check if gray/darkgray are ok
-		Gray   = BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE,
-		DarkGray    = BACKGROUND_INTENSITY,
-		LightRed    = BACKGROUND_INTENSITY | BACKGROUND_RED,
-		LightGreen  = BACKGROUND_INTENSITY | BACKGROUND_GREEN,
-		LightBlue   = BACKGROUND_INTENSITY | BACKGROUND_BLUE,
-		LightPurple = BACKGROUND_INTENSITY | BACKGROUND_RED | BACKGROUND_BLUE,
-		LightCyan   = BACKGROUND_INTENSITY | BACKGROUND_BLUE | BACKGROUND_GREEN,
-		//LightYellow = BACKGROUND_INTENSITY | BACKGROUND_RED | BACKGROUND_GREEN,
-		White       = BACKGROUND_INTENSITY | Gray
-	}
-}
-version (Posix) {
-/*
-Black       0;30     Dark Gray     1;30
-Blue        0;34     Light Blue    1;34
-Green       0;32     Light Green   1;32
-Cyan        0;36     Light Cyan    1;36
-Red         0;31     Light Red     1;31
-Purple      0;35     Light Purple  1;35
-Brown       0;33     Yellow        1;33
-Light Gray  0;37     White         1;37
-*/
-	enum INTENSIFY = 0x100;
-	enum FgColor {
-		/*Black = 30,
-		Red = 31,
-		Blue = 34,
-		Green = 32,
-		Purple = 35,
-		//Brown = 33,
-		Cyan = 36,
-		Gray = 37,
-		DarkGray = INTENSIFY | Black,
-		LightRed = INTENSIFY | Red,
-		LightBlue = INTENSIFY | Blue,
-		LightGreen = INTENSIFY | Green,
-		LightPurple = 45,
-		LightCyan = 46,
-		//Yellow = 43,
-		White = INTENSIFY*/
-		Black = 0,
-		Red,
-		Green,
-		//Brown,
-		Blue = 4,
-		Purple,
-		Cyan,
-		Gray,
-		DarkGray,
-		LightRed,
-		LightGreen,
-		//LightYellow,
-		LightBlue = 12,
-		LightPurple,
-		LightCyan,
-		White
-	}
-	enum BgColor {
-		Black = FgColor.Black << 8,
-		Blue = FgColor.Blue << 8,
-		Green = FgColor.Green << 8,
-		Cyan = FgColor.Cyan << 8,
-		Red = FgColor.Red << 8,
-		Purple = FgColor.Purple << 8,
-		//Brown = FgColor.Brown << 8,
-		Gray = FgColor.Gray << 8,
-		DarkGray = FgColor.DarkGray << 8,
-		LightBlue = FgColor.LightBlue << 8,
-		LightGreen = FgColor.LightGreen << 8,
-		LightCyan = FgColor.LightCyan << 8,
-		LightRed = FgColor.LightRed << 8,
-		LightPurple = FgColor.LightPurple << 8,
-		//Yellow = FgColor.Yellow << 8,
-		White = FgColor.White << 8
-	}
-}
-
-extern (C)
-void SetColor(int n) {
-	version (Windows) {
-		SetConsoleTextAttribute(hOut, cast(ushort)n);
-	} else version (Posix) { // Foreground and background
-		printf("\033[38;5;%dm\033[48;5;%dm", cast(ubyte)n, cast(ubyte)(n >> 8));
-	} else {
-
-	}
-}
 
 extern (C)
 void InvertColor() {
@@ -305,6 +177,16 @@ void SetPos(int x, int y) {
 		SetConsoleCursorPosition(hOut, c);
 	} else version (Posix) { // 1-based
 		printf("\033[%d;%dH", y + 1, x + 1);
+	}
+}
+
+extern (C)
+void ResetPos() {
+	version (Windows) { // 0-based
+		COORD c = { 0, 0 };
+		SetConsoleCursorPosition(hOut, c);
+	} else version (Posix) { // 1-based
+		fputs("\033[0;0H", stdout);
 	}
 }
 

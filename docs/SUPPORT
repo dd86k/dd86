@@ -26,4 +26,5 @@ Fourth tier | UEFI
 
 * UNIX
 
-On UNIX platforms, the terminal must support UTF-8.
+On UNIX platforms, the terminal must support the UTF-8 character encoding and
+the xterm-256color escape codes.
