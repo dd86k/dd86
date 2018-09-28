@@ -9,7 +9,6 @@ module vdos_screen;
 import core.stdc.stdlib : malloc;
 import vcpu : MEMORY;
 import vdos : SYSTEM;
-import ddcon;
 
 enum __EGA_ADDRESS = 0xA_0000;
 enum __MDA_ADDRESS = 0xB_0000;
@@ -17,12 +16,16 @@ enum __VGA_ADDRESS = 0xB_8000;
 
 extern (C):
 __gshared:
+nothrow:
+@nogc:
 
 private videochar* vbuffer = void;	/// video buffer
 private uint screensize = void;
 
 // When possible, use this VGA reference
 // http://www.brackeen.com/vga/basics.html
+
+// Unicode reference: https://unicode-table.com
 
 version (Windows) {
 	import core.sys.windows.wincon :
@@ -34,20 +37,20 @@ version (Windows) {
 	private SMALL_RECT ibufout = void;
 	private COORD bufcoord;	// inits to 0,0
 }
-version (linux) {
-	import core.sys.posix.fcntl;
+version (Posix) {
+	// Should cover Linux, FreeBSD, NetBSD, OpenBSD, DragonflyBSD, Haiku,
+	// OpenIndiana/Solaris, macOS
+	// Haiku has write(1) in fcntl.h
 	import core.sys.posix.unistd;
 	// This table suits most use cases.
 	// It could of been a three-byte table, which yes could of saved us 256
-	// bytes of memory, but due to misalignment (performance reasons), it's
+	// bytes of memory, but due to alignment (fetch performance) reasons, it's
 	// better to have this 4 bytes wide.
 	//TODO: See if the table should be filled with actual characters
 	//      since D characters are UTF-8. Which might avoid us to make a MSB
-	//      version of this table.
+	//      version of this table. However, this is safer.
 	//TODO: These kind of tables could very potentially be seperate binary files
 	immutable uint[256] vctable = [ /// cp437-utf8-le default character translation table
-	//TODO: these as utf-8, refer to https://unicode-table.com
-	//      and https://en.wikipedia.org/wiki/Code_page_437
 		0x000020, 0xBA98E2, 0xBB98E2, 0xA599E2, 0xA699E2, 0xA399E2, 0xA099E2, 0x9897E2,
 		0x8B97E2, 0x9997E2, 0x8299E2, 0x8099E2, 0xAA99E2, 0xAB99E2, 0xBC98E2, 0xBA96E2,
 		// 16 (offset)
@@ -96,9 +99,9 @@ version (linux) {
 		0xA189E2, 0x00B1C2, 0xA589E2, 0xA489E2, 0xA08CE2, 0xA18CE2, 0x00B7C3, 0x8889E2,
 		0x00B0C2, 0x9988E2, 0x00B7C2, 0x9A88E2, 0xBF81E2, 0x00B2C2, 0xA096E2, 0x000020
 	];
-	immutable ushort[16] vatable = [ /// attribute translation table (xterm-256)
-		// ascii-encoded characters, term (usually) CAN accept a leading zero
-		// https://i.stack.imgur.com/KTSQa.png
+	immutable ushort[16] vatable = [ /// xterm-256 attribute translation table
+		// ascii-encoded characters, terminal can accept a leading zero
+		// see https://i.stack.imgur.com/KTSQa.png for reference
 		// black, blue, green, cyan, red, magenta, brown, lightgray
 		0x3030, 0x3430, 0x3230, 0x3630, 0x3130, 0x3530, 0x3330, 0x3730,
 		// dark gray, ^blue, ^green, ^cyan, ^red, ^magenta, yellow, white
@@ -131,8 +134,7 @@ void screen_init() {
 	screensize = 80 * 25; // temporary -- mode 3
 	vbuffer = cast(videochar*)(MEMORY + __VGA_ADDRESS);
 
-	int t = screensize / 2; uint* v = cast(uint*)vbuffer;
-	for (size_t i; i < t; ++i) v[i] = 0x0720_0720;
+	screen_clear;
 
 	version (Windows) {
 		ibuf = cast(CHAR_INFO*)malloc(CHAR_INFO.sizeof * screensize);
@@ -158,29 +160,27 @@ void screen_draw() {
 		}
 		WriteConsoleOutputA(hOut, ibuf, ibufsize, bufcoord, &ibufout);
 	}
-	version (linux) {
-		import ddc : printf, putchar;
+	version (Posix) {
 		uint x = SYSTEM.screen_col;
 		//uint y = SYSTEM.screen_row;
 
 		uint sc = x * SYSTEM.screen_row; /// screen size
 
 		char NL = '\n';
-		char* s = cast(char*)"\033[38;5;XXm\033[48;5;XXm"; /// attribute format string
+		ubyte[] s = [ // "\033[38;5;00m\033[48;5;00m" -- Guarantees byte-alignment
+			0x1b,0x5b,0x33,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // fg
+			0x1b,0x5b,0x34,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // bg
+		];
 		uint c = void; /// character to print
-		ushort* s_fg = cast(ushort*)(s);// + 10);
-		ushort* s_bg = cast(ushort*)(s + 18);
+		ushort* s_fg = cast(ushort*)(cast(ubyte*)s + 7);
+		ushort* s_bg = cast(ushort*)(cast(ubyte*)s + 17);
 
-		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6);
+		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // put cursor at 0,0
 		for (size_t i, _x; i < sc; ++i, ++_x) {
-			//ubyte al = vbuffer[i].attribute & 0xF;
-			//ubyte ah = vbuffer[i].attribute >> 4;
-			//*s_fg = vatable[vbuffer[i].attribute & 0xF];
-			*s_fg = 2;
-			//*s_bg = vatable[vbuffer[i].attribute >> 4];
+			*s_fg = vatable[vbuffer[i].attribute & 0xF];
+			*s_bg = vatable[(vbuffer[i].attribute >> 4) & 7];
 			c = vctable[vbuffer[i].ascii];
-			////printf("\033[38;5;%dm\033[48;5;%dm", al, ah);
-			//write(STDOUT_FILENO, s, 20);
+			write(STDOUT_FILENO, cast(void*)s, 20);
 			if (c < 128)
 				write(STDOUT_FILENO, cast(void*)&c, 1); // s + 1
 			else if (c > 0xFFFF)
@@ -188,51 +188,51 @@ void screen_draw() {
 			else
 				write(STDOUT_FILENO, cast(void*)&c, 2); // s + 2
 			if (_x == x) {
+				// TODO: Check if newline fucks when terminal's witdh is screen_col (80)
 				write(STDOUT_FILENO, &NL, 1);
 				_x = 0;
 			}
 		}
-
-		// 1.
-		//ushort fl = 5; /// length, defaults at <ATTRIBUTE ESCAPE CODE LEGNTH>
-		//char* f = "\033[38;5;%dm\033[48;5;%dm"; /// format attribute escape code
-
-		// 2.
-		//uint c = vctable[219]; /// translated character
-		//uint a = vatable[]; /// translate attriute
-
-		// 101: e
-		// 219: BLOCK
-		//char* attr_s = ""; /// standard attribute string
-		//ushort l = ; /// length, defaults at <ATTRIBUTE ESCAPE CODE LEGNTH>
-		// PLAN: attr_s + c (and data alignment magic) -> 1 write call + variable length
-		/*if (c < 128) //TODO: change length ONLY
-			write(STDOUT_FILENO, cast(void*)&c, 1);
-		else if (c > 0xFFFF)
-			write(STDOUT_FILENO, cast(void*)&c, 3);
-		else
-			write(STDOUT_FILENO, cast(void*)&c, 2);*/
-		// 1. loop over video memory buffer and translate on the fly
-		//while (--l)
 	}
-	version (FreeBSD)
-		static assert(0, "Virtual Video Adapter missing for FreeBSD");
-	version (OpenBSD)
-		static assert(0, "Virtual Video Adapter missing for OpenBSD");
-	version (NetBSD)
-		static assert(0, "Virtual Video Adapter missing for NetBSD");
-	version (DragonFlyBSD)
-		static assert(0, "Virtual Video Adapter missing for DragonflyBSD");
-	version (Solaris)
-		static assert(0, "Virtual Video Adapter missing for Solaris");
-	version (Haiku)
-		static assert(0, "Virtual Video Adapter missing for Haiku");
-	version (OSX)
-		static assert(0, "Virtual Video Adapter missing for OSX");
 }
 
+/// Clear virtual video RAM
 void screen_clear() {
-	for (size_t i; i < screensize; ++i) {
-		vbuffer[i].WORD = 0x0720;
-	}
+	int t = screensize / 2; uint* v = cast(uint*)vbuffer;
+	for (size_t i; i < t; ++i) v[i] = 0x0720_0720;
+}
+
+/// Print DD-DOS logo
+void screen_logo() {
+	/*
+	 * ┌─────────────────────────────────────────────────────┐
+	 * │ ┌──────┐ ┌──────┐        ┌──────┐ ┌──────┐ ┌──────┐ │
+	 * │ │ ┌──┐ └┐│ ┌──┐ └┐ ┌───┐ │ ┌──┐ └┐│ ┌──┐ │┌┘ ────┬┘ │
+	 * │ │ │  │  ││ │  │  │ └───┘ │ │  │  ││ │  │ │└────┐ │  │
+	 * │ │ └──┘ ┌┘│ └──┘ ┌┘       │ └──┘ ┌┘│ └──┘ │┌────┘ │  │
+	 * │ └──────┘ └──────┘        └──────┘ └──────┘└──────┘  │
+	 * └─────────────────────────────────────────────────────┘
+	 */
+	//TODO: print screen logo "normally" (using vdos stdio functions)
+}
+
+/// Output a string
+/// This function affects the system cursor position
+/// Equivelent to fputs(s, stdout)
+void __vd_put(immutable(char)* s) {
+	//TODO: __vd_put
+}
+
+/// Output a string with a newline
+/// This function affects the system cursor position
+/// Equivelent to puts(s)
+void __vd_putn(immutable(char)* s) {
+	//TODO: __vd_putn
+}
+
+/// Output a formatted string
+/// This function affects the system cursor position
+/// Equivelent to print(s, ...)
+void __vd_printf(immutable(char)* s, ...) {
+	//TODO: __vd_printf
 }

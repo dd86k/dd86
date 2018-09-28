@@ -54,8 +54,8 @@ void vdos_init() {
 	SYSTEM = cast(system_struct*)MEMORY;
 	SYSTEM.memsize = INIT_MEM / 1024;
 	SYSTEM.video_mode = 3;
-	SYSTEM.screen_row = 24;
-	SYSTEM.screen_col = 79;
+	SYSTEM.screen_row = 25;
+	SYSTEM.screen_col = 80;
 
 	DOS = cast(dos_struct*)(MEMORY + __MM_SYS_DOS);
 
@@ -347,7 +347,7 @@ By default, MEM will show memory usage`
 	}
 
 	//TODO: See if command is not an executable (COM/EXE (MZ)/BAT)
-	//      to evaluate before passing to system, like check_exe or something
+	//      to evaluate before passing to system, like check_exe
 	system(inb);
 	//puts("Bad command or file name");
 

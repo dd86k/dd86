@@ -11,14 +11,21 @@ Getting DD-DOS to work on Windows and Linux is my main current priority.
 First tier  | Windows (including ReactOS)
             | Linux
 Second tier | FreeBSD
+            | macOS (OS X)
+            | OpenIndiana (based on OpenSolaris/Illios)
+Third tier  | OpenBSD
             | NetBSD
-            | OpenBSD
-            | DragonflyBSD
-Third tier  | macOS (formally known as Mac OS X)
-            | Haiku (based on BeOS)
             | HardenedBSD (based on FreeBSD)
-Fourth tier | UEFI
-            | OpenIndiana (based on OpenSolaris)
+            | DragonflyBSD [1]
+            | Haiku [1] (based on BeOS)
+Fourth tier | UEFI [2]
+
+[1] The DMD install script mentions not supporting this operating system or script
+    cannot run on the operating system. May include others untagged by this
+    footnote.
+    (Haiku) DMD version in the depot is 2.067.1, dating 2014.
+    (DragonflyBSD) DMD in repo is 1.076_2, curl fails writing body.
+[2] Requires a toolkit of which I may produce in the future.
 
 ***************************************
 * Requirements
