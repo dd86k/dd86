@@ -412,3 +412,27 @@ void panic(ushort code,
 
 	exit(code);
 }
+
+/// Output a string, accepts ANSI escape codes
+/// This function affects the system cursor position
+/// Equivelent to fputs(s, stdout)
+extern (C)
+void dos_put(immutable(char)* s, uint size = 0) {
+	//TODO: dos_put
+}
+
+/// Output a string with a newline, accepts ANSI escape codes
+/// This function affects the system cursor position
+/// Equivelent to puts(s)
+extern (C)
+void dos_putn(immutable(char)* s, uint size = 0) {
+	//TODO: dos_putn
+}
+
+/// Output a formatted string
+/// This function affects the system cursor position
+/// Equivelent to print(s, ...)
+extern (C)
+void dos_printf(immutable(char)* s, ...) {
+	//TODO: __vd_printf
+}

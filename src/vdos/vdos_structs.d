@@ -149,10 +149,10 @@ struct system_struct { align(1):
 	ushort screen_col;
 	ushort video_rbuf_size;	/// Size of current video regenerate buffer in bytes
 	ushort video_rbuf_off;	/// Offset of current video page in video regenerate buffer
-	__cpos[8] cursor_pos;	/// Cursor positions per page
+	__cpos[8] cursor;	/// Cursor positions per page
 	ubyte video_scan_line_bottom;
 	ubyte video_scan_line_top;
-	ubyte video_active_page;
+	ubyte screen_page;	/// current active page
 	ushort crt_base_port;	/// 6845 base port, 3B4h=mono, 3D4h=color
 	ubyte crt_mode;	/// 6845 CRT mode control register value (port 3x8h)
 	ubyte video_cga_palette;	/// CGA current color palette mask setting (port 3D9h)
@@ -162,7 +162,7 @@ struct system_struct { align(1):
 	ubyte bios_break;
 	ushort reset;
 	ubyte disk_last_op;
-	ubyte disk_number;	// attached
+	ubyte disk_number;	// that are attached
 	ubyte disk_control;
 	ubyte disk_adapter_port_offset;
 	ubyte[4] lpt_timeouts;

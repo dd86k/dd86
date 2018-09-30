@@ -33,14 +33,14 @@ void INT(ubyte code) {
 
 			break;
 		case 0x02: // Set cursor position
-			SYSTEM.video_active_page = vCPU.BL > 8 ? 0 : vCPU.BH;
-			__cpos* pos = &SYSTEM.cursor_pos[SYSTEM.video_active_page];
+			SYSTEM.screen_page = vCPU.BL > 8 ? 0 : vCPU.BH;
+			__cpos* pos = &SYSTEM.cursor[SYSTEM.screen_page];
 			pos.row = vCPU.DH; //TODO: Check against system rows/columns current size
 			pos.col = vCPU.DL;
 			SetPos(pos.row, pos.col);
 			break;
 		case 0x03: // Get cursor position and size
-			vCPU.AX = SYSTEM.video_active_page; //TODO: Check if graphical mode
+			vCPU.AX = SYSTEM.screen_page; //TODO: Check if graphical mode
 			//vCPU.DH = cast(ubyte)CursorTop;
 			//vCPU.DL = cast(ubyte)CursorLeft;
 			break;

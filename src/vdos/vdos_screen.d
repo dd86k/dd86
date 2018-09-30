@@ -14,12 +14,8 @@ enum __EGA_ADDRESS = 0xA_0000;
 enum __MDA_ADDRESS = 0xB_0000;
 enum __VGA_ADDRESS = 0xB_8000;
 
-extern (C):
-__gshared:
-nothrow:
-@nogc:
-
-private videochar* vbuffer = void;	/// video buffer
+//TODO: Consider videochar**
+videochar* VIDEO = void;	/// video buffer
 private uint screensize = void;
 
 // When possible, use this VGA reference
@@ -32,10 +28,10 @@ version (Windows) {
 		WriteConsoleOutputA, COORD, SMALL_RECT, CHAR_INFO;
 	import ddcon : hOut;
 
-	private CHAR_INFO* ibuf = void;	/// Intermediate buffer
-	private COORD ibufsize = void;
-	private SMALL_RECT ibufout = void;
-	private COORD bufcoord;	// inits to 0,0
+	private __gshared CHAR_INFO* ibuf = void;	/// Intermediate buffer
+	private __gshared COORD ibufsize = void;
+	private __gshared SMALL_RECT ibufout = void;
+	private __gshared COORD bufcoord;	// inits to 0,0
 }
 version (Posix) {
 	// Should cover Linux, FreeBSD, NetBSD, OpenBSD, DragonflyBSD, Haiku,
@@ -50,6 +46,7 @@ version (Posix) {
 	//      since D characters are UTF-8. Which might avoid us to make a MSB
 	//      version of this table. However, this is safer.
 	//TODO: These kind of tables could very potentially be seperate binary files
+	__gshared
 	immutable uint[256] vctable = [ /// cp437-utf8-le default character translation table
 		0x000020, 0xBA98E2, 0xBB98E2, 0xA599E2, 0xA699E2, 0xA399E2, 0xA099E2, 0x9897E2,
 		0x8B97E2, 0x9997E2, 0x8299E2, 0x8099E2, 0xAA99E2, 0xAB99E2, 0xBC98E2, 0xBA96E2,
@@ -99,6 +96,7 @@ version (Posix) {
 		0xA189E2, 0x00B1C2, 0xA589E2, 0xA489E2, 0xA08CE2, 0xA18CE2, 0x00B7C3, 0x8889E2,
 		0x00B0C2, 0x9988E2, 0x00B7C2, 0x9A88E2, 0xBF81E2, 0x00B2C2, 0xA096E2, 0x000020
 	];
+	__gshared
 	immutable ushort[16] vatable = [ /// xterm-256 attribute translation table
 		// ascii-encoded characters, terminal can accept a leading zero
 		// see https://i.stack.imgur.com/KTSQa.png for reference
@@ -129,10 +127,11 @@ static assert(videochar.sizeof == 2);
 /**
  * Initiates screen, including intermediate buffer.
  */
+extern (C)
 void screen_init() {
 	import core.stdc.string : memset;
 	screensize = 80 * 25; // temporary -- mode 3
-	vbuffer = cast(videochar*)(MEMORY + __VGA_ADDRESS);
+	VIDEO = cast(videochar*)(MEMORY + __VGA_ADDRESS);
 
 	screen_clear;
 
@@ -151,12 +150,13 @@ void screen_init() {
  * (Windows) Uses WriteConsoleOutputA
  * (Linux) WIP
  */
+extern (C)
 void screen_draw() {
 	version (Windows) {
 		uint sc = SYSTEM.screen_col * SYSTEM.screen_row; /// screen size
 		for (size_t i; i < sc; ++i) {
-			ibuf[i].AsciiChar = cast(char)vbuffer[i].ascii;
-			ibuf[i].Attributes = vbuffer[i].attribute;
+			ibuf[i].AsciiChar = cast(char)VIDEO[i].ascii;
+			ibuf[i].Attributes = VIDEO[i].attribute;
 		}
 		WriteConsoleOutputA(hOut, ibuf, ibufsize, bufcoord, &ibufout);
 	}
@@ -197,12 +197,15 @@ void screen_draw() {
 }
 
 /// Clear virtual video RAM
+extern (C)
 void screen_clear() {
-	int t = screensize / 2; uint* v = cast(uint*)vbuffer;
+	int t = screensize / 2;
+	uint* v = cast(uint*)VIDEO;
 	for (size_t i; i < t; ++i) v[i] = 0x0720_0720;
 }
 
 /// Print DD-DOS logo
+extern (C)
 void screen_logo() {
 	/*
 	 * ┌─────────────────────────────────────────────────────┐
@@ -216,23 +219,55 @@ void screen_logo() {
 	//TODO: print screen logo "normally" (using vdos stdio functions)
 }
 
-/// Output a string
+/// Output a string, raw in video memory
 /// This function affects the system cursor position
 /// Equivelent to fputs(s, stdout)
-void __vd_put(immutable(char)* s) {
-	//TODO: __vd_put
+extern (C)
+void __v_put(immutable(char)* s, uint size = 0) {
+	if (size == 0) {
+
+	}
+	int vs = SYSTEM.screen_row * SYSTEM.screen_col; /// video size
+	videochar* v = VIDEO + vs;
+	//while (--size)
+
+	//TODO: __v_put
 }
 
-/// Output a string with a newline
+/// Output a string with a newline, raw in video memory
 /// This function affects the system cursor position
 /// Equivelent to puts(s)
-void __vd_putn(immutable(char)* s) {
-	//TODO: __vd_putn
+extern (C)
+void __v_putn(immutable(char)* s, uint size = 0) {
+	//TODO: __v_putn
 }
 
-/// Output a formatted string
+/// Output a character, raw in video memory
 /// This function affects the system cursor position
-/// Equivelent to print(s, ...)
-void __vd_printf(immutable(char)* s, ...) {
-	//TODO: __vd_printf
+/// Equivelent to puts(s)
+extern (C)
+void __v_putc(char c) {
+	import vdos_structs;
+	__cpos* cpos = &SYSTEM.cursor[SYSTEM.screen_page];
+	uint vpos = (cpos.row * SYSTEM.screen_row) + cpos.col;
+	VIDEO[vpos].ascii = c;
+	++cpos.col;
+
+	if (cpos.col <= SYSTEM.screen_col) return;
+
+	++cpos.row;
+	cpos.col = 0;
+
+	if (cpos.row <= SYSTEM.screen_row) return;
+	
+	--cpos.row;
+	__v_scroll;
+}
+
+extern (C)
+void __v_scroll() {
+	import core.stdc.string : memcpy;
+	ubyte* d = MEMORY + __VGA_ADDRESS;
+	ubyte* s = d + SYSTEM.screen_col;
+	memcpy(s, d, SYSTEM.screen_col * SYSTEM.screen_row);
 }
