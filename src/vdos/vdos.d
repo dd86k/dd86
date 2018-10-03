@@ -433,6 +433,6 @@ void dos_putn(immutable(char)* s, uint size = 0) {
 /// This function affects the system cursor position
 /// Equivelent to print(s, ...)
 extern (C)
-void dos_printf(immutable(char)* s, ...) {
+void dos_printf(immutable(char)* s) {
 	//TODO: __vd_printf
 }

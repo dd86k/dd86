@@ -166,7 +166,6 @@ void screen_draw() {
 
 		uint sc = x * SYSTEM.screen_row; /// screen size
 
-		char NL = '\n';
 		ubyte[] s = [ // "\033[38;5;00m\033[48;5;00m" -- Guarantees byte-alignment
 			0x1b,0x5b,0x33,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // fg
 			0x1b,0x5b,0x34,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // bg
@@ -176,10 +175,10 @@ void screen_draw() {
 		ushort* s_bg = cast(ushort*)(cast(ubyte*)s + 17);
 
 		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // put cursor at 0,0
-		for (size_t i, _x; i < sc; ++i, ++_x) {
-			*s_fg = vatable[vbuffer[i].attribute & 0xF];
-			*s_bg = vatable[(vbuffer[i].attribute >> 4) & 7];
-			c = vctable[vbuffer[i].ascii];
+		for (size_t i, _x; i < sc; ++i) {
+			*s_fg = vatable[VIDEO[i].attribute & 0xF];
+			*s_bg = vatable[(VIDEO[i].attribute >> 4) & 7];
+			c = vctable[VIDEO[i].ascii];
 			write(STDOUT_FILENO, cast(void*)s, 20);
 			if (c < 128)
 				write(STDOUT_FILENO, cast(void*)&c, 1); // s + 1
@@ -187,9 +186,9 @@ void screen_draw() {
 				write(STDOUT_FILENO, cast(void*)&c, 3); // s + 3
 			else
 				write(STDOUT_FILENO, cast(void*)&c, 2); // s + 2
+			++_x;
 			if (_x == x) {
-				// TODO: Check if newline fucks when terminal's witdh is screen_col (80)
-				write(STDOUT_FILENO, &NL, 1);
+				write(STDOUT_FILENO, cast(char*)"\n", 1);
 				_x = 0;
 			}
 		}
