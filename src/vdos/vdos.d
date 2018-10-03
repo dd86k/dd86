@@ -25,6 +25,8 @@ _______ _______        _______  ______  _______
 |______/|______/       |______/\______/\______/
 `; /// Banner screen, fancy!
 
+//TODO: video banner
+
 /// OEM IDs
 enum OEM_ID { // Used for INT 21h AH=30 so far.
 	IBM, Compaq, MSPackagedProduct, ATnT, ZDS
@@ -413,6 +415,7 @@ void panic(ushort code,
 	exit(code);
 }
 
+/*
 /// Output a string, accepts ANSI escape codes
 /// This function affects the system cursor position
 /// Equivelent to fputs(s, stdout)
@@ -436,3 +439,4 @@ extern (C)
 void dos_printf(immutable(char)* s) {
 	//TODO: __vd_printf
 }
+*/

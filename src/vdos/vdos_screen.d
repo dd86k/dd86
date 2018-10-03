@@ -174,11 +174,13 @@ void screen_draw() {
 		ushort* s_fg = cast(ushort*)(cast(ubyte*)s + 7);
 		ushort* s_bg = cast(ushort*)(cast(ubyte*)s + 17);
 
-		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // put cursor at 0,0
+		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
 		for (size_t i, _x; i < sc; ++i) {
 			*s_fg = vatable[VIDEO[i].attribute & 0xF];
 			*s_bg = vatable[(VIDEO[i].attribute >> 4) & 7];
 			c = vctable[VIDEO[i].ascii];
+			// Not possible to reduce this to one write(2) call.
+			// Even tried to align it in s buffer. Only tested on LSB (x86).
 			write(STDOUT_FILENO, cast(void*)s, 20);
 			if (c < 128)
 				write(STDOUT_FILENO, cast(void*)&c, 1); // s + 1
@@ -215,8 +217,29 @@ void screen_logo() {
 	 * │ └──────┘ └──────┘        └──────┘ └──────┘└──────┘  │
 	 * └─────────────────────────────────────────────────────┘
 	 */
-	//TODO: print screen logo "normally" (using vdos stdio functions)
+	//TODO: print screen logo "normally" (using __v_putn)
 }
+
+/* *
+ * Change cursor position. Affects SYSTEM's cursor and host's cursor by default.
+ * The top position, {0, 0}, is located at the most top-left.
+ * Params:
+ *   x = Horizontal value, 0-based
+ *   y = Vertical value, 0-based
+ *   s = Affect host cursor, default: true
+ */
+/*extern (C)
+void __v_cursor(uint x, uint y, bool s = true) {
+
+}*/
+
+/**
+ * @todo
+ */
+/*extern (C)
+void __v_char_p(uint x, uint y, ubyte c) {
+	VIDEO[(y * SYSTEM.screen_col) + x].ascii = c;
+}*/
 
 /// Output a string, raw in video memory
 /// This function affects the system cursor position
@@ -224,13 +247,16 @@ void screen_logo() {
 extern (C)
 void __v_put(immutable(char)* s, uint size = 0) {
 	if (size == 0) {
-
+		size_t max = 255;
+		while (s[size] != 0 && s[size] != '$' && size < max)
+			++size;
 	}
-	int vs = SYSTEM.screen_row * SYSTEM.screen_col; /// video size
-	videochar* v = VIDEO + vs;
-	//while (--size)
+	while (--size)
+		__v_putc(*s++, false);
 
-	//TODO: __v_put
+	//TODO: __v_put optimization
+	//int sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
+	//videochar* v = VIDEO + sc;
 }
 
 /// Output a string with a newline, raw in video memory
@@ -239,34 +265,63 @@ void __v_put(immutable(char)* s, uint size = 0) {
 extern (C)
 void __v_putn(immutable(char)* s, uint size = 0) {
 	//TODO: __v_putn
+	__v_put(s);
+	__v_putc('\n');
 }
 
-/// Output a character, raw in video memory
-/// This function affects the system cursor position
-/// Equivelent to puts(s)
+/**
+ * Output a character, raw in video memory
+ * This function affects the system cursor position
+ * Equivelent to putchar()
+ * Params:
+ *   c = Character
+ *   s = Update host cursor, default: true
+ */
 extern (C)
-void __v_putc(char c) {
+void __v_putc(char c, bool s = true) {
 	import vdos_structs;
-	__cpos* cpos = &SYSTEM.cursor[SYSTEM.screen_page];
-	uint vpos = (cpos.row * SYSTEM.screen_row) + cpos.col;
-	VIDEO[vpos].ascii = c;
-	++cpos.col;
+	__cpos* cur = &SYSTEM.cursor[SYSTEM.screen_page];
+	uint pos = void;
+	switch (c) {
+	case '\n':
+		pos = (++cur.row * SYSTEM.screen_row);
+		cur.row = 0;
+		goto PUTC_NL;
+	case '\t': //TODO: \t handling
 
-	if (cpos.col <= SYSTEM.screen_col) return;
+		break;
+	default:
+		pos = (cur.row * SYSTEM.screen_row) + cur.col;
+	}
+	VIDEO[pos].ascii = c;
+	++cur.col;
 
-	++cpos.row;
-	cpos.col = 0;
+	if (cur.col <= SYSTEM.screen_col) return;
 
-	if (cpos.row <= SYSTEM.screen_row) return;
+	++cur.row;
+	cur.col = 0;
+
+PUTC_NL:
+	if (cur.row <= SYSTEM.screen_row) return;
 	
-	--cpos.row;
+	--cur.row;
 	__v_scroll;
+
+	//TODO: Affect host cursor if s==true
+}
+
+extern (C)
+void __v_printf(immutable(char*) f) { // ...
+	//TODO: __v_printf
 }
 
 extern (C)
 void __v_scroll() {
-	import core.stdc.string : memcpy;
+	import core.stdc.string : memcpy, memset;
+	uint sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
 	ubyte* d = MEMORY + __VGA_ADDRESS;
 	ubyte* s = d + SYSTEM.screen_col;
+	ubyte a = VIDEO[sc - 1].attribute;
 	memcpy(s, d, SYSTEM.screen_col * SYSTEM.screen_row);
+	//TODO: memset attribute byte (var a)
 }

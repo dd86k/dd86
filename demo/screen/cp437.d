@@ -26,6 +26,10 @@ unittest {
 	v[81].ascii = 'o';
 	v[82].ascii = '!';
 
+	SYSTEM.cursor[0].col = 0;
+	SYSTEM.cursor[0].row = 2;
+	__v_putn("\xDA"); //TODO: Print dd-dos logo
+
 	screen_draw;
 
 	SetPos(0,25); // puts test result messages at the send
