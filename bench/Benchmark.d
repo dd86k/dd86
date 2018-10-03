@@ -1,4 +1,4 @@
-module Benchmarks;
+module bench_utils;
 
 import vcpu, vcpu_utils, std.stdio, vdos, utils;
 import std.datetime.stopwatch : StopWatch;
@@ -7,8 +7,9 @@ import core.stdc.string : memcpy;
 
 import test_utils;
 
-unittest
-{
+unittest {
+    vcpu_init;
+    vdos_init;
     section("Benchmark");
 
     sub("String utilities");

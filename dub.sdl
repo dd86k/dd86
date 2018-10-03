@@ -77,16 +77,31 @@ buildType "unittest-gdc" {
   importPaths "tests/"
 }
 
-buildType "bench" {
+###################
+# Benches
+###################
+
+buildType "bench" { # utils
   targetName "bench"
   targetType "executable"
   buildOptions "unittests"
   dflags "-transition=intpromote"
 
-  sourcePaths "bench/"
-  importPaths "bench/"
-  sourceFiles "tests/test_utils.d"
+  sourceFiles "tests/test_utils.d" "bench/Benchmark.d"
 }
+
+buildType "bench-screen" {
+  targetName "bench-screen"
+  targetType "executable"
+  buildOptions "unittests"
+  dflags "-transition=intpromote"
+
+  sourceFiles "bench/screen.d"
+}
+
+###################
+# Demos
+###################
 
 buildType "demo-screen" {
   targetName "demo-screen"
@@ -95,6 +110,4 @@ buildType "demo-screen" {
   dflags "-transition=intpromote"
 
   sourceFiles "demo/screen/cp437.d"
-  #sourcePaths "demo/screen/"
-  #importPaths "demo/screen/"
 }
