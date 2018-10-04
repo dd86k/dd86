@@ -105,6 +105,13 @@ version (Posix) {
 		// dark gray, ^blue, ^green, ^cyan, ^red, ^magenta, yellow, white
 		0x3830, 0x3231, 0x3031, 0x3431, 0x3930, 0x3331, 0x3131, 0x3531
 	];
+	ubyte[] s = [ // "\033[38;5;00m\033[48;5;00m" -- Guarantees byte-alignment
+		0x1b,0x5b,0x33,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // fg
+		0x1b,0x5b,0x34,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // bg
+	];
+	ushort* s_fg = void;//cast(ushort*)(cast(ubyte*)s + 7);
+	ushort* s_bg = void;//cast(ushort*)(cast(ubyte*)s + 17);
+	char* str = void;//cast(char*)malloc(
 }
 
 struct videochar {
@@ -143,6 +150,24 @@ void screen_init() {
 		ibufout.Bottom = 24;
 		ibufout.Right = 79;
 	}
+	version (Posix) {
+		s_fg = cast(ushort*)(cast(ubyte*)s + 7);
+		s_bg = cast(ushort*)(cast(ubyte*)s + 17);
+		str = cast(char*)malloc( // solution 2
+			SYSTEM.screen_row * SYSTEM.screen_col * 24
+			// 10 char fg
+			// 10 char bg
+			// 3 worst-case utf-8 char
+			// 1 newline
+		);
+		/*str = cast(char*)malloc( // solution 3a
+			(SYSTEM.screen_col * 23) + 6
+			// 10 char fg
+			// 10 char bg
+			// 3 worst-case utf-8 char
+			// 1 newline OR 6 escape
+		);*/
+	}
 }
 
 /**
@@ -161,26 +186,31 @@ void screen_draw() {
 		WriteConsoleOutputA(hOut, ibuf, ibufsize, bufcoord, &ibufout);
 	}
 	version (Posix) {
+		import core.stdc.string : memcpy;
 		uint x = SYSTEM.screen_col;
 		//uint y = SYSTEM.screen_row;
 
 		uint sc = x * SYSTEM.screen_row; /// screen size
-
-		ubyte[] s = [ // "\033[38;5;00m\033[48;5;00m" -- Guarantees byte-alignment
-			0x1b,0x5b,0x33,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // fg
-			0x1b,0x5b,0x34,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // bg
-		];
 		uint c = void; /// character to print
-		ushort* s_fg = cast(ushort*)(cast(ubyte*)s + 7);
-		ushort* s_bg = cast(ushort*)(cast(ubyte*)s + 17);
+
+		// one draw / 60 draws (hot-run results only)
+		// solution 1: one write(2) per character and attribute
+		//             3-20 ms / 550-680 ms
+		// solution 2: prepare buffer, one write(2)
+		//   +newline: 0.250-2 ms / 130-160 ms
+		// solution 3: write(2) per line
+		//   +newline: 0.230-2 ms / 150-160 ms
+		//   +escape : 
+		// solution 4: writev(2) with multiple buffers
+		//   +newline: 
+		//   +escape : 
 
 		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
-		for (size_t i, _x; i < sc; ++i) {
+		// solution 1 (per character)
+		/+for (size_t i, _x; i < sc; ++i) {
 			*s_fg = vatable[VIDEO[i].attribute & 0xF];
 			*s_bg = vatable[(VIDEO[i].attribute >> 4) & 7];
 			c = vctable[VIDEO[i].ascii];
-			// Not possible to reduce this to one write(2) call.
-			// Even tried to align it in s buffer. Only tested on LSB (x86).
 			write(STDOUT_FILENO, cast(void*)s, 20);
 			if (c < 128)
 				write(STDOUT_FILENO, cast(void*)&c, 1); // s + 1
@@ -193,7 +223,60 @@ void screen_draw() {
 				write(STDOUT_FILENO, cast(char*)"\n", 1);
 				_x = 0;
 			}
+		}+/
+		// solution 2 (one buffer with newlines)
+		uint bi; /// buffer index
+		for (size_t i, _x; i < sc; ++i) {
+			*s_fg = vatable[VIDEO[i].attribute & 0xF];
+			*s_bg = vatable[(VIDEO[i].attribute >> 4) & 7];
+			c = vctable[VIDEO[i].ascii];
+			memcpy(str + bi, cast(void*)s, 20);
+			bi += 20;
+			if (c < 128) { // +1
+				str[bi] = cast(ubyte)c;
+				++bi;
+			} else if (c > 0xFFFF) { // +3
+				memcpy(str + bi, &c, 3);
+				bi += 3;
+			} else { // +2
+				*cast(ushort*)(str + bi) = cast(ushort)c;
+				bi += 2;
+			}
+			++_x;
+			if (_x == x) {
+				str[bi] = '\n';
+				_x = 0;
+				++bi;
+			}
 		}
+		write(STDOUT_FILENO, cast(void*)str, bi);
+		// solution 3 (change cursor on new lines, write per line)
+		/*uint bi; /// buffer index
+		for (size_t i, _x; i < sc; ++i) {
+			*s_fg = vatable[VIDEO[i].attribute & 0xF];
+			*s_bg = vatable[(VIDEO[i].attribute >> 4) & 7];
+			c = vctable[VIDEO[i].ascii];
+			memcpy(str + bi, cast(void*)s, 20);
+			bi += 20;
+			if (c < 128) { // +1
+				str[bi] = cast(ubyte)c;
+				++bi;
+			} else if (c > 0xFFFF) { // +3
+				memcpy(str + bi, &c, 3);
+				bi += 3;
+			} else { // +2
+				*cast(ushort*)(str + bi) = cast(ushort)c;
+				bi += 2;
+			}
+			++_x;
+			if (_x == x) {
+				str[bi] = '\n';
+				write(STDOUT_FILENO, cast(void*)str, bi);
+				_x = 0;
+				bi = 0;
+			}
+		}*/
+		// solution 4 (writev with multiple buffers with newlines)
 	}
 }
 

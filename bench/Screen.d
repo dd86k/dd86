@@ -15,8 +15,14 @@ unittest {
 	vdos_init;
 	Clear;
 
+	VIDEO[0].ascii = 'a';
+	VIDEO[0].attribute = 0x2E;
 	VIDEO[1].ascii = 'e';
 	VIDEO[1].attribute = 0x2E;
+	VIDEO[80].ascii = 'F';
+	VIDEO[80].attribute = 0x1A;
+	VIDEO[81].ascii = 'e';
+	VIDEO[81].attribute = 0x1A;
 
 	sw.start;
 	screen_draw;
@@ -31,6 +37,6 @@ unittest {
 	r_multiple = sw.peek;
 
 	SetPos(0, 25);
-	writefln("Once: %s", r_once);
-	writefln("%d times: %s", RUNS, r_multiple);
+	writefln("one draw: %s", r_once);
+	writefln("%d draws: %s", RUNS, r_multiple);
 }
