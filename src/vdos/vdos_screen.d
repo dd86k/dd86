@@ -25,13 +25,64 @@ private uint screensize = void;
 
 version (Windows) {
 	import core.sys.windows.wincon :
-		WriteConsoleOutputA, COORD, SMALL_RECT, CHAR_INFO;
+		WriteConsoleOutputW, WriteConsoleOutputA,
+		COORD, SMALL_RECT, CHAR_INFO, SetConsoleOutputCP;
 	import ddcon : hOut;
 
 	private __gshared CHAR_INFO* ibuf = void;	/// Intermediate buffer
 	private __gshared COORD ibufsize = void;
 	private __gshared SMALL_RECT ibufout = void;
 	private __gshared COORD bufcoord;	// inits to 0,0
+	__gshared immutable ushort[256] vctable = [
+		/// cp437-utf16-le default character translation table
+		0x0020, 0x3A26, 0x3B26, 0x6526, 0x6626, 0x6326, 0x6026, 0x2220,
+		0xD825, 0xCB25, 0xD925, 0x4226, 0x4026, 0x6A26, 0x6B26, 0x3C26,
+		// 1_ -- 16 (offset)
+		0xBA25, 0xC425, 0x9521, 0x3C20, 0xB600, 0xA700, 0xAC25, 0xA821,
+		0x9121, 0x9321, 0x9221, 0x9021, 0x1F22, 0x9421, 0xB225, 0xBC25,
+		// 2_ -- 32
+		0x2000, 0x2100, 0x2200, 0x2300, 0x2400, 0x2500, 0x2600, 0x2700,
+		0x2800, 0x2900, 0x2a00, 0x2b00, 0x2c00, 0x2d00, 0x2e00, 0x2f00,
+		// 3_ -- 48
+		0x3000, 0x3100, 0x3200, 0x3300, 0x3400, 0x3500, 0x3600, 0x3700,
+		0x3800, 0x3900, 0x3a00, 0x3b00, 0x3c00, 0x3d00, 0x3e00, 0x3f00,
+		// 4_ -- 64
+		0x4000, 0x4100, 0x4200, 0x4300, 0x4400, 0x4500, 0x4600, 0x4700,
+		0x4800, 0x4900, 0x4a00, 0x4b00, 0x4c00, 0x4d00, 0x4e00, 0x4f00,
+		// 5_ -- 80
+		0x5000, 0x5100, 0x5200, 0x5300, 0x5400, 0x5500, 0x5600, 0x5700,
+		0x5800, 0x5900, 0x5a00, 0x5b00, 0x5c00, 0x5d00, 0x5e00, 0x5f00,
+		// 6_ -- 96
+		0x6000, 0x6100, 0x6200, 0x6300, 0x6400, 0x6500, 0x6600, 0x6700,
+		0x6800, 0x6900, 0x6a00, 0x6b00, 0x6c00, 0x6d00, 0x6e00, 0x6f00,
+		// 7_ -- 112
+		0x7000, 0x7100, 0x7200, 0x7300, 0x7400, 0x7500, 0x7600, 0x7700,
+		0x7800, 0x7900, 0x7a00, 0x7b00, 0x7c00, 0x7d00, 0x7e00, 0x0223,
+		// 8_ -- 128
+		0xC700, 0xFC00, 0xE900, 0xE200, 0xE400, 0xE000, 0xE500, 0xE700,
+		0xEA00, 0xEB00, 0xE800, 0xEF00, 0xEE00, 0xEC00, 0xC400, 0xC500,
+		// 9_ -- 144
+		0xC900, 0xE600, 0xC600, 0xF400, 0xF600, 0xF200, 0xFB00, 0xF900,
+		0xFF00, 0xD600, 0xDC00, 0xA200, 0xA300, 0xA500, 0xA720, 0x9201,
+		// A_ -- 160
+		0xE100, 0xED00, 0xF300, 0xFA00, 0xF100, 0xD100, 0xAA00, 0xBA00,
+		0xBF00, 0x1023, 0xAC00, 0xBD00, 0xBC00, 0xA100, 0xAB00, 0xBB00,
+		// B_ -- 176
+		0x9125, 0x9225, 0x9325, 0x0225, 0x2425, 0x6125, 0x6225, 0x5625,
+		0x5525, 0x6325, 0x5125, 0x5725, 0x5D25, 0x5C25, 0x5B25, 0x1025,
+		// C_ -- 192
+		0x1425, 0x3425, 0x2C25, 0x1C25, 0x0025, 0x3C25, 0x5E25, 0x5F25,
+		0x5A25, 0x5425, 0x6925, 0x6625, 0x6025, 0x5025, 0x6C25, 0x6725,
+		// D_ -- 208
+		0x6825, 0x6425, 0x6525, 0x5925, 0x5825, 0x5225, 0x5325, 0x6B25,
+		0x6A25, 0x1825, 0x0C25, 0x8825, 0x8425, 0x8C25, 0x9025, 0x8025,
+		// E_ -- 224
+		0xB103, 0xDF00, 0x9303, 0xC003, 0xA303, 0xC303, 0xB500, 0xC403,
+		0xA603, 0x9803, 0xA903, 0xB403, 0xE122, 0xC603, 0xB503, 0x2922,
+		// F_ -- 240
+		0x6122, 0xB100, 0x6522, 0x6422, 0x2023, 0x2123, 0xF700, 0x4822,
+		0xB000, 0x1922, 0xB700, 0x1A22, 0x7F20, 0xB200, 0xA025, 0x2000
+	];
 }
 version (Posix) {
 	// Should cover Linux, FreeBSD, NetBSD, OpenBSD, DragonflyBSD, Haiku,
@@ -46,8 +97,8 @@ version (Posix) {
 	//      since D characters are UTF-8. Which might avoid us to make a MSB
 	//      version of this table. However, this is safer.
 	//TODO: These kind of tables could very potentially be seperate binary files
-	__gshared
-	immutable uint[256] vctable = [ /// cp437-utf8-le default character translation table
+	__gshared immutable uint[256] vctable = [
+		/// cp437-utf8-le default character translation table
 		0x000020, 0xBA98E2, 0xBB98E2, 0xA599E2, 0xA699E2, 0xA399E2, 0xA099E2, 0x9897E2,
 		0x8B97E2, 0x9997E2, 0x8299E2, 0x8099E2, 0xAA99E2, 0xAB99E2, 0xBC98E2, 0xBA96E2,
 		// 16 (offset)
@@ -172,18 +223,20 @@ void screen_init() {
 
 /**
  * Draw a frame from the video adapter memory region.
- * (Windows) Uses WriteConsoleOutputA
- * (Linux) WIP
+ * (Windows) Uses WriteConsoleOutputW
+ * (Posix) Uses write(2) to STDOUT_FILENO
  */
 extern (C)
 void screen_draw() {
 	version (Windows) {
 		uint sc = SYSTEM.screen_col * SYSTEM.screen_row; /// screen size
 		for (size_t i; i < sc; ++i) {
-			ibuf[i].AsciiChar = cast(char)VIDEO[i].ascii;
+			//ibuf[i].UnicodeChar = vctable[VIDEO[i].ascii];
+			ibuf[i].AsciiChar = VIDEO[i].ascii;
 			ibuf[i].Attributes = VIDEO[i].attribute;
 		}
 		WriteConsoleOutputA(hOut, ibuf, ibufsize, bufcoord, &ibufout);
+		//WriteConsoleOutputW(hOut, ibuf, ibufsize, bufcoord, &ibufout);
 	}
 	version (Posix) {
 		import core.stdc.string : memcpy;
@@ -194,7 +247,7 @@ void screen_draw() {
 		uint c = void; /// character to print
 
 		// one draw / 60 draws (hot-run results only)
-		// solution 1: one write(2) per character and attribute
+		// solution 1: one write(2) per character and attribute (scrapped)
 		//             3-20 ms / 550-680 ms
 		// solution 2: prepare buffer, one write(2)
 		//   +newline: 0.250-2 ms / 130-160 ms
@@ -206,24 +259,6 @@ void screen_draw() {
 		//   +escape : 
 
 		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
-		// solution 1 (per character)
-		/+for (size_t i, _x; i < sc; ++i) {
-			*s_fg = vatable[VIDEO[i].attribute & 0xF];
-			*s_bg = vatable[(VIDEO[i].attribute >> 4) & 7];
-			c = vctable[VIDEO[i].ascii];
-			write(STDOUT_FILENO, cast(void*)s, 20);
-			if (c < 128)
-				write(STDOUT_FILENO, cast(void*)&c, 1); // s + 1
-			else if (c > 0xFFFF)
-				write(STDOUT_FILENO, cast(void*)&c, 3); // s + 3
-			else
-				write(STDOUT_FILENO, cast(void*)&c, 2); // s + 2
-			++_x;
-			if (_x == x) {
-				write(STDOUT_FILENO, cast(char*)"\n", 1);
-				_x = 0;
-			}
-		}+/
 		// solution 2 (one buffer with newlines)
 		uint bi; /// buffer index
 		for (size_t i, _x; i < sc; ++i) {

@@ -6,25 +6,32 @@ unittest {
 	vcpu_init;
 	vdos_init;
 
-	videochar* v = cast(videochar*)(MEMORY + __VGA_ADDRESS);
-
 	Clear;
 
 	for (size_t i; i < 80 * 25; ++i)
-		v[i].attribute = 0x1F;
+		VIDEO[i].attribute = 0x1F;
 
-	v[0].ascii = 'H';
-	v[1].ascii = 'e';
-	v[2].ascii = 'l';
-	v[3].ascii = 'l';
-	v[4].ascii = 'o';
-	v[5].ascii = '!';
-	v[77].ascii = 'H';
-	v[78].ascii = 'e';
-	v[79].ascii = 'l';
-	v[80].ascii = 'l';
-	v[81].ascii = 'o';
-	v[82].ascii = '!';
+	VIDEO[0].ascii = 'H';
+	VIDEO[1].ascii = 'e';
+	VIDEO[2].ascii = 'l';
+	VIDEO[3].ascii = 'l';
+	VIDEO[4].ascii = 'o';
+	VIDEO[5].ascii = '!';
+	VIDEO[77].ascii = 'H';
+	VIDEO[78].ascii = 'e';
+	VIDEO[79].ascii = 'l';
+	VIDEO[80].ascii = 'l';
+	VIDEO[81].ascii = 'o';
+	VIDEO[82].ascii = '!';
+
+	VIDEO[160].ascii = 0xda;
+	VIDEO[160].attribute = 0x2E;
+	VIDEO[161].ascii = 0xc4;
+	VIDEO[161].attribute = 0x2E;
+	VIDEO[162].ascii = 0xbf;
+	VIDEO[162].attribute = 0x1A;
+	VIDEO[241].ascii = 'e';
+	VIDEO[241].attribute = 0x1A;
 
 	SYSTEM.cursor[0].col = 0;
 	SYSTEM.cursor[0].row = 2;

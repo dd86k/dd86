@@ -24,6 +24,15 @@ unittest {
 	VIDEO[81].ascii = 'e';
 	VIDEO[81].attribute = 0x1A;
 
+	VIDEO[160].ascii = 0xda;
+	VIDEO[160].attribute = 0x2E;
+	VIDEO[161].ascii = 0xc4;
+	VIDEO[161].attribute = 0x2E;
+	VIDEO[162].ascii = 0xbf;
+	VIDEO[162].attribute = 0x1A;
+	VIDEO[241].ascii = 'e';
+	VIDEO[241].attribute = 0x1A;
+
 	sw.start;
 	screen_draw;
 	sw.stop;
