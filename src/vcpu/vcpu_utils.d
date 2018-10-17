@@ -233,6 +233,7 @@ void __hflag16_2(int r) {
  * SF, ZF, and PF affected
  * OF, CF cleared
  * AF undefined
+ * Params: r = Input number
  */
 extern (C)
 void __hflag8_3(int r) {
@@ -247,6 +248,7 @@ void __hflag8_3(int r) {
  * SF, ZF, and PF affected
  * OF, CF cleared
  * AF undefined
+ * Params: r = Input number
  */
 extern (C)
 void __hflag16_3(int r) {
@@ -260,6 +262,7 @@ void __hflag16_3(int r) {
  * Handle result for MUL (BYTE)
  * OF, CF affected
  * SF, ZF, AF, PF undefined
+ * Params: r = Input number
  */
 extern (C)
 void __hflag8_4(int r) {
@@ -271,6 +274,7 @@ void __hflag8_4(int r) {
  * Handle result for MUL (WORD)
  * OF, CF affected
  * SF, ZF, AF, PF undefined
+ * Params: r = Input number
  */
 extern (C)
 void __hflag16_4(int r) {
@@ -282,6 +286,7 @@ void __hflag16_4(int r) {
  * Handle result for BYTE
  * SF, ZF, and PF affected
  * OF, CF, and AF undefined
+ * Params: r = Input number
  */
 extern (C)
 void __hflag8_5(int r) {
@@ -294,6 +299,7 @@ void __hflag8_5(int r) {
  * Handle result for WORD
  * SF, ZF, and PF affected
  * OF, CF, and AF undefined
+ * Params: r = Input number
  */
 extern (C)
 void __hflag16_5(int r) {
@@ -305,7 +311,7 @@ void __hflag16_5(int r) {
 // Conditional flag handlers
 
 private extern (C)
-pragma(inline) {
+pragma(inline, true) {
 	void setCF_8(int r) {
 		vCPU.CF = (r & 0x100) != 0;
 	}
@@ -533,7 +539,7 @@ short __fi16_i(uint n = 0) {
 pragma(inline, true)
 extern (C)
 bool C_OVERFLOW(size_t addr) {
-	return addr < 0 || addr > (SYSTEM.memsize * 1024);
+	return addr < 0 || addr > MEMORYSIZE;
 }
 
 /*****************************************************************************

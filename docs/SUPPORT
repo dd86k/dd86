@@ -24,7 +24,7 @@ Fourth tier | UEFI [2]
     cannot run on the operating system. May include others untagged by this
     footnote.
     (Haiku) DMD version in the depot is 2.067.1, dating 2014.
-    (DragonflyBSD) DMD in repo is 1.076_2, curl fails writing body.
+    (DragonflyBSD) DMD in repo is 1.076_2, curl (from script)  fails writing body.
 [2] Requires a toolkit of which I may produce in the future.
 
 ***************************************

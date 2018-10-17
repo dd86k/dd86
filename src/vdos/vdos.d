@@ -54,7 +54,7 @@ extern (C)
 void vdos_init() {
 	// ubyte* -> vdos_settings* is not supported in CTFE, done in run-time instead
 	SYSTEM = cast(system_struct*)MEMORY;
-	SYSTEM.memsize = INIT_MEM / 1024;
+	SYSTEM.memsize = INIT_MEM >> 10; // /1024
 	SYSTEM.video_mode = 3;
 	SYSTEM.screen_row = 25;
 	SYSTEM.screen_col = 80;
@@ -173,7 +173,7 @@ VER ......... Show DD-DOS and MS-DOS version`
 
 	if (strcmp(*argv, "mem") == 0) {
 		if (strcmp(argv[1], "/stats") == 0) {
-			const uint t_size = SYSTEM.memsize * 1024;
+			const uint t_size = MEMORYSIZE;
 			const ubyte ext = t_size > 0xA_0000; // extended?
 			const size_t ct = ext ? 0xA_0000 : t_size; /// convential memsize
 			const size_t tt = t_size - ct; /// total memsize excluding convential

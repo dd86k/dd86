@@ -11,7 +11,7 @@ import vdos_codes;
 import vdos_loader : vdos_load;
 import vdos_screen : screen_draw, screen_clear, __VGA_ADDRESS;
 import Logger;
-import ddcon : vcon_init, Clear;
+import ddcon : con_init, Clear;
 import os_utils : os_pexist;
 import sleep : sleep_init;
 import compile_config : APP_VERSION;
@@ -113,18 +113,18 @@ private int main(int argc, char** argv) {
 		return EDOS_INVALID_FUNCTION;
 	}
 
+	// Initiation
+
+	con_init;	// ddcon
+	//sleep_init;	// sleep
+	vcpu_init;	// vcpu
+	vdos_init;	// vdos, screen
+
 	if (arg_banner)
 		puts("DD-DOS is starting...");
 
 	if (opt_sleep == 0)
 		info("NOTICE: MAX_PERF");
-
-	// Initiation
-
-	vcon_init;	// ddcon
-	//sleep_init;	// sleep
-	vcpu_init;	// vcpu
-	vdos_init;	// vdos, screen
 
 	/*Clear;
 

@@ -2,7 +2,7 @@ import vcpu, vdos, vdos_screen, ddcon;
 import core.stdc.string : memset;
 
 unittest {
-	vcon_init;
+	con_init;
 	vcpu_init;
 	vdos_init;
 
@@ -28,13 +28,17 @@ unittest {
 	VIDEO[160].attribute = 0x2E;
 	VIDEO[161].ascii = 0xc4;
 	VIDEO[161].attribute = 0x2E;
-	VIDEO[162].ascii = 0xbf;
-	VIDEO[162].attribute = 0x1A;
-	VIDEO[241].ascii = 'e';
+	VIDEO[162].ascii = 0xc4;
+	VIDEO[162].attribute = 0x2E;
+	VIDEO[163].ascii = 0xbf;
+	VIDEO[163].attribute = 0x1A;
+	VIDEO[241].ascii = 219;
 	VIDEO[241].attribute = 0x1A;
+	VIDEO[242].ascii = 151;
+	VIDEO[242].attribute = 0x1A;
 
 	SYSTEM.cursor[0].col = 0;
-	SYSTEM.cursor[0].row = 2;
+	SYSTEM.cursor[0].row = 5;
 	__v_putn("\xDA"); //TODO: Print dd-dos logo
 
 	screen_draw;

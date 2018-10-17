@@ -141,6 +141,7 @@ int os_pexist(char* p) {
 
 /**
  * Verifies if given path is a directory
+ * Params: p = Path buffer
  * Returns: Non-zero if directory
  */
 extern (C)

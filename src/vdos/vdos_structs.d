@@ -116,20 +116,14 @@ static assert(__ivt.sizeof == 4, "IVT structure must be size of 4");
 struct system_struct { align(1):
 	union {
 		__ivt[256] IVT;
-		private ubyte[0x104] _pad;
+		private ubyte[0x104] _padding0;
 		ushort hdd_offset;	/// HDD address Parameter
 		ushort hdd_segment;	/// HDD address Parameter
 	}
 	// 300h would usually contain bootstrap code on an actual IBM PC
 	// 400h
-	ushort COM1;
-	ushort COM2;
-	ushort COM3;
-	ushort COM4;
-	ushort LPT1;
-	ushort LPT2;
-	ushort LPT3;
-	ushort LPT4;
+	ushort COM1; ushort COM2; ushort COM3; ushort COM4;
+	ushort LPT1; ushort LPT2; ushort LPT3; ushort LPT4;
 	ushort equip_flag;	/// See INT 11h
 	ubyte pcjr_ir_kb_er_count;	/// (PCjr) Infrared keyboard link error count
 	ushort memsize;	/// Memory size (in KB)
@@ -216,7 +210,7 @@ struct system_struct { align(1):
 	uint basic_int24;
 	ushort dos_storage;
 	ubyte[14] diskette_init_table;	/// DOS
-	ushort mode;
+	ushort mode;	// Referring to the MODE command
 }
 
 static assert(

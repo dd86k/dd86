@@ -9,6 +9,7 @@ import Logger : info;
 import vcpu_8086 : exec16;
 import vcpu_utils;
 import compile_config : INIT_MEM, TSC_SLEEP;
+import vdos : SYSTEM;
 
 /*enum : ubyte { // Emulated CPU
 	CPU_TYPE_8086,
@@ -22,7 +23,7 @@ import compile_config : INIT_MEM, TSC_SLEEP;
 	// No LONG modes
 }*/
 
-__gshared ubyte Seg; /// Preferred Segment register
+__gshared ubyte Seg; /// Preferred Segment register, defaults to SEG_NONE
 
 enum : ubyte { // Segment override (for Seg)
 	SEG_NONE,	/// None, default
@@ -75,6 +76,17 @@ __gshared short RLEVEL = 1;
 __gshared ubyte opt_sleep = 1; /// Is sleeping available to use? If so, use it
 
 __gshared ubyte* MEMORY; /// Main memory bank
+
+/**
+ * Get the system's memory size in bytes.
+ * This function retrieves from SYSTEM.memsize (BIOS+413h), which is in
+ * kilobytes.
+ * Returns: Memory size in bytes
+ */
+extern (C) public @property
+int MEMORYSIZE() nothrow {
+	return SYSTEM.memsize << 10;
+}
 
 /*
  * Code might be ugly, but:

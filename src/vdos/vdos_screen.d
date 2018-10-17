@@ -33,7 +33,7 @@ version (Windows) {
 	private __gshared COORD ibufsize = void;
 	private __gshared SMALL_RECT ibufout = void;
 	private __gshared COORD bufcoord;	// inits to 0,0
-	__gshared immutable ushort[256] vctable = [
+	__gshared ushort[256] vctable = [
 		/// cp437-utf16-le default character translation table
 		0x0020, 0x3A26, 0x3B26, 0x6526, 0x6626, 0x6326, 0x6026, 0x2220,
 		0xD825, 0xCB25, 0xD925, 0x4226, 0x4026, 0x6A26, 0x6B26, 0x3C26,
@@ -97,7 +97,7 @@ version (Posix) {
 	//      since D characters are UTF-8. Which might avoid us to make a MSB
 	//      version of this table. However, this is safer.
 	//TODO: These kind of tables could very potentially be seperate binary files
-	__gshared immutable uint[256] vctable = [
+	__gshared uint[256] vctable = [
 		/// cp437-utf8-le default character translation table
 		0x000020, 0xBA98E2, 0xBB98E2, 0xA599E2, 0xA699E2, 0xA399E2, 0xA099E2, 0x9897E2,
 		0x8B97E2, 0x9997E2, 0x8299E2, 0x8099E2, 0xAA99E2, 0xAB99E2, 0xBC98E2, 0xBA96E2,
@@ -147,8 +147,7 @@ version (Posix) {
 		0xA189E2, 0x00B1C2, 0xA589E2, 0xA489E2, 0xA08CE2, 0xA18CE2, 0x00B7C3, 0x8889E2,
 		0x00B0C2, 0x9988E2, 0x00B7C2, 0x9A88E2, 0xBF81E2, 0x00B2C2, 0xA096E2, 0x000020
 	];
-	__gshared
-	immutable ushort[16] vatable = [ /// xterm-256 attribute translation table
+	__gshared ushort[16] vatable = [ /// xterm-256 attribute translation table
 		// ascii-encoded characters, terminal can accept a leading zero
 		// see https://i.stack.imgur.com/KTSQa.png for reference
 		// black, blue, green, cyan, red, magenta, brown, lightgray
@@ -229,7 +228,7 @@ void screen_init() {
 extern (C)
 void screen_draw() {
 	version (Windows) {
-		uint sc = SYSTEM.screen_col * SYSTEM.screen_row; /// screen size
+		const uint sc = SYSTEM.screen_col * SYSTEM.screen_row; /// screen size
 		for (size_t i; i < sc; ++i) {
 			//ibuf[i].UnicodeChar = vctable[VIDEO[i].ascii];
 			ibuf[i].AsciiChar = VIDEO[i].ascii;
@@ -240,10 +239,10 @@ void screen_draw() {
 	}
 	version (Posix) {
 		import core.stdc.string : memcpy;
-		uint x = SYSTEM.screen_col;
+		const uint x = SYSTEM.screen_col;
 		//uint y = SYSTEM.screen_row;
 
-		uint sc = x * SYSTEM.screen_row; /// screen size
+		const uint sc = x * SYSTEM.screen_row; /// screen size
 		uint c = void; /// character to print
 
 		// one draw / 60 draws (hot-run results only)
@@ -258,7 +257,6 @@ void screen_draw() {
 		//   +newline: 
 		//   +escape : 
 
-		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
 		// solution 2 (one buffer with newlines)
 		uint bi; /// buffer index
 		for (size_t i, _x; i < sc; ++i) {
@@ -284,6 +282,7 @@ void screen_draw() {
 				++bi;
 			}
 		}
+		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
 		write(STDOUT_FILENO, cast(void*)str, bi);
 		// solution 3 (change cursor on new lines, write per line)
 		/*uint bi; /// buffer index
@@ -318,7 +317,7 @@ void screen_draw() {
 /// Clear virtual video RAM
 extern (C)
 void screen_clear() {
-	int t = screensize / 2;
+	const int t = screensize / 2;
 	uint* v = cast(uint*)VIDEO;
 	for (size_t i; i < t; ++i) v[i] = 0x0720_0720;
 }

@@ -22,7 +22,7 @@ extern (C)
 int sargs(const char* t, char** argv) {
 	int j, a;
 
-	size_t sl = strlen(t);
+	const size_t sl = strlen(t);
 
 	for (int i = 0; i <= sl; ++i) {
 		if (t[i] == 0 || t[i] == ' ' || t[i] == '\n') {
@@ -72,7 +72,7 @@ void lowercase(char* c) {
 
 /**
  * Byte swap a 2-byte number.
- * Params: num = 2-byte number to swap.
+ * Params: n = 2-byte number to swap.
  * Returns: Byte swapped number.
  */
 pragma(inline, true)
@@ -83,7 +83,7 @@ ushort bswap16(ushort n) {
 
 /**
  * Byte swap a 4-byte number.
- * Params: num = 4-byte number to swap.
+ * Params: n = 4-byte number to swap.
  * Returns: Byte swapped number.
  */
 pragma(inline, true)

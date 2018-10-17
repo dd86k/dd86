@@ -35,7 +35,7 @@ version (Posix) {
 
 /// Initiate ddcon
 extern (C)
-void vcon_init() {
+void con_init() {
 	version (Windows) {
 		hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 		hIn  = GetStdHandle(STD_INPUT_HANDLE);

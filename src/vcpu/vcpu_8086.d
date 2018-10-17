@@ -144,14 +144,14 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x04: { // ADD AL, IMM8
-		int r = vCPU.AL + __fu8_i;
+		const int r = vCPU.AL + __fu8_i;
 		__hflag8_1(r);
 		vCPU.AL = cast(ubyte)r;
 		vCPU.EIP += 2;
 		return;
 	}
 	case 0x05: { // ADD vCPU.AX, IMM16
-		int r = vCPU.AX + __fu16_i;
+		const int r = vCPU.AX + __fu16_i;
 		__hflag16_1(r);
 		vCPU.AX = cast(ushort)r;
 		vCPU.EIP += 2;
@@ -292,14 +292,14 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x0C: { // OR AL, IMM8
-		int r = vCPU.AL | __fu8_i;
+		const int r = vCPU.AL | __fu8_i;
 		__hflag8_3(r);
 		vCPU.AL = cast(ubyte)r;
 		vCPU.EIP += 2;
 		return;
 	}
 	case 0x0D: { // OR AX, IMM16
-		int r = vCPU.AX | __fu16_i;
+		const int r = vCPU.AX | __fu16_i;
 		__hflag16_3(r);
 		vCPU.AX = cast(ushort)r;
 		vCPU.EIP += 3;
@@ -512,14 +512,14 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x24: { // AND AL, IMM8
-		int r = vCPU.AL & __fu8_i;
+		const int r = vCPU.AL & __fu8_i;
 		__hflag8_3(r);
 		vCPU.AL = cast(ubyte)r;
 		vCPU.EIP += 2;
 		return;
 	}
 	case 0x25: { // AND AX, IMM16
-		int r = vCPU.AX & __fu16_i;
+		const int r = vCPU.AX & __fu16_i;
 		__hflag16_3(r);
 		vCPU.AX = cast(ushort)r;
 		vCPU.EIP += 3;
@@ -675,14 +675,14 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x2C: { // SUB AL, IMM8
-		int r = vCPU.AL - __fu8_i;
+		const int r = vCPU.AL - __fu8_i;
 		__hflag8_1(r);
 		vCPU.AL = cast(ubyte)r;
 		vCPU.EIP += 2;
 		return;
 	}
 	case 0x2D: { // SUB AX, IMM16
-		int r = vCPU.AX - __fu16_i;
+		const int r = vCPU.AX - __fu16_i;
 		__hflag16_1(r);
 		vCPU.AX = cast(ushort)r;
 		vCPU.EIP += 3;
@@ -838,14 +838,14 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x34: { // XOR AL, IMM8
-		int r = vCPU.AL ^ __fu8_i;
+		const int r = vCPU.AL ^ __fu8_i;
 		__hflag8_3(r);
 		vCPU.AL = cast(ubyte)r;
 		vCPU.EIP += 2;
 		return;
 	}
 	case 0x35: { // XOR AX, IMM16
-		int r = vCPU.AX ^ __fu16_i;
+		const int r = vCPU.AX ^ __fu16_i;
 		__hflag16_3(r);
 		vCPU.AX = cast(ushort)r;
 		vCPU.EIP += 3;
@@ -1369,7 +1369,7 @@ void exec16(ubyte op) {
 	}
 	case 0x84: { // TEST R/M8, REG8
 		const ubyte rm = __fu8_i;
-		int n = __fu8(get_rm16(rm));
+		const int n = __fu8(get_rm16(rm));
 		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: r = vCPU.AL & n; break;
@@ -1388,7 +1388,7 @@ void exec16(ubyte op) {
 	}
 	case 0x85: { // TEST R/M16, REG16
 		const ubyte rm = __fu8_i;
-		int n = __fu16(get_rm16(rm, 1));
+		const int n = __fu16(get_rm16(rm, 1));
 		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: r = vCPU.AX & n; break;
@@ -1411,7 +1411,7 @@ void exec16(ubyte op) {
 		// temp <- REG
 		// REG  <- MEM
 		// MEM  <- temp
-		ubyte r = void; ubyte s = __fu8(addr);
+		ubyte r = void; const ubyte s = __fu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r = vCPU.AL; vCPU.AL = s;
@@ -1449,7 +1449,7 @@ void exec16(ubyte op) {
 		// temp <- REG
 		// REG  <- MEM
 		// MEM  <- temp
-		ushort r = void; ushort s = __fu16(addr);
+		ushort r = void; const ushort s = __fu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r = vCPU.AX; vCPU.AX = s;
@@ -2206,14 +2206,14 @@ void exec16(ubyte op) {
 			break;
 		case RM_REG_110: // 110 - DIV
 		//TODO: Check if im == 0 (#DE), DIV
-			ubyte d = __fu8(addr);
+			const ubyte d = __fu8(addr);
 			r = vCPU.AX / d;
 			vCPU.AH = cast(ubyte)(vCPU.AX % d);
 			vCPU.AL = cast(ubyte)(r);
 			break;
 		case RM_REG_111: // 111 - IDIV
 		//TODO: Check if im == 0 (#DE), IDIV
-			byte d = __fi8(addr);
+			const byte d = __fi8(addr);
 			r = cast(short)vCPU.AX / d;
 			vCPU.AH = cast(ubyte)(cast(short)vCPU.AX % d);
 			vCPU.AL = cast(ubyte)r;
