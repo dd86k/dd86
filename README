@@ -7,12 +7,16 @@
 └─────────────────────────────────────────────────────┘
 DD-DOS -- Small DOS Virtual Machine Emulation Layer
 
-This project aims to be a simple x86/DOS emulation layer, like NTVDM and
-dosemu, for multiple operating systems. For operating system support,
-please see docs/SUPPORT.
+This project aims to be a simple and complete IBM PC emulation layer for DOS
+applications, like NTVDM and dosemu, for multiple operating systems.
 
 "I have not failed. I've just found 10,000 ways that won't work."
 - Thomas Edison
 
-Wiki: https://github.com/dd86k/dd-dos/wiki
-Manual: https://dd86k.space/pub/dd-dos-manual.pdf
+Technical Manual: https://dd86k.space/docs/dd-dos-manual.pdf
+
+User Manual (ROFF): docs/dd-dos.1
+
+For disclaimer and licensing information, see docs/LICENSE.
+For operating system support, see docs/SUPPORT.
+For a list of maintainers, see docs/CREDIT.
