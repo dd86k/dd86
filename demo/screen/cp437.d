@@ -22,7 +22,7 @@ unittest {
 	VIDEO[79].ascii = 'l';
 	VIDEO[80].ascii = 'l';
 	VIDEO[81].ascii = 'o';
-	VIDEO[82].ascii = '!';
+	VIDEO[82].ascii = '~';
 
 	VIDEO[160].ascii = 0xda;
 	VIDEO[160].attribute = 0x2E;
@@ -38,10 +38,36 @@ unittest {
 	VIDEO[242].attribute = 0x1A;
 
 	SYSTEM.cursor[0].col = 0;
-	SYSTEM.cursor[0].row = 5;
-	__v_putn("\xDA"); //TODO: Print dd-dos logo
+	SYSTEM.cursor[0].row = 3;
 
-	screen_draw;
+	__v_putn("Now testing __v_putn");
 
-	SetPos(0,25); // puts test result messages at the send
+	__v_putn("1");
+	__v_putn("2");
+	__v_putn("3");
+	__v_putn("4");
+	__v_putn("5");
+	__v_putn("6");
+	__v_putn("7");
+	__v_putn("8");
+	__v_putn("10");
+	__v_putn("11");
+	__v_putn("12");
+	__v_putn("13");
+	__v_putn("14");
+	__v_putn("15");
+	__v_putn("16");
+	__v_putn("17");
+	__v_putn("18");
+	__v_putn("19");
+
+	__v_putn("Hello again!");
+
+	screen_logo; // print logo
+
+	__v_putn("END");
+
+	screen_draw; // draw on screen
+
+	SetPos(0, 26); // puts test result messages at the send
 }

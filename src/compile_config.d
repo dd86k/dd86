@@ -63,9 +63,9 @@ private enum i486_FREQ = 16; // to 100
 enum uint TSC_SLEEP = cast(uint)(
 	(SLEEP_TIME * 1_000_000) / ((cast(float)1 / i8086_FREQ) * 1000)
 );
-pragma(msg, "[CONFIG]\tIntel 8086 = ", i8086_FREQ, " MHz");
+//pragma(msg, "[CONFIG]\tIntel 8086 = ", i8086_FREQ, " MHz");
 //pragma(msg, "[CONFIG]\tIntel i486 = ", i486_FREQ, " MHz");
-pragma(msg, "[CONFIG]\tvcpu sleeps every ", TSC_SLEEP, " instructions");
+//pragma(msg, "[CONFIG]\tvcpu sleeps every ", TSC_SLEEP, " instructions");
 
 /********************************************************************
  * Memory

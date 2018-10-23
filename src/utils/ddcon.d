@@ -39,11 +39,6 @@ void con_init() {
 	version (Windows) {
 		hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 		hIn  = GetStdHandle(STD_INPUT_HANDLE);
-
-		// ~ENABLE_PROCESSED_OUTPUT
-		// ~ENABLE_WRAP_AT_EOL_OUTPUT
-		SetConsoleMode(hOut, 0);
-		SetConsoleOutputCP(437); // default
 	}
 	version (Posix) {
 		tcgetattr(STDIN_FILENO, &old_tio);

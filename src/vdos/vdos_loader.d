@@ -167,8 +167,7 @@ int vdos_load(char* path) {
  * Params: path = Path placed in PSP for command-line
  * Returns: 0 on success
  */
-private
-extern (C)
+extern (C) private
 int MakePSP(immutable(char)* path = NULL_CHAR) { //TODO: Consider default "NULL"
 	PSP* psp = cast(PSP*)(MEMORY + get_ip - 0x100);
 

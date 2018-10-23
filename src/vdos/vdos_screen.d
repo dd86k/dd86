@@ -155,7 +155,7 @@ version (Posix) {
 		// dark gray, ^blue, ^green, ^cyan, ^red, ^magenta, yellow, white
 		0x3830, 0x3231, 0x3031, 0x3431, 0x3930, 0x3331, 0x3131, 0x3531
 	];
-	ubyte[] s = [ // "\033[38;5;00m\033[48;5;00m" -- Guarantees byte-alignment
+	ubyte* esc = [ // "\033[38;5;00m\033[48;5;00m" -- Guarantees byte-alignment
 		0x1b,0x5b,0x33,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // fg
 		0x1b,0x5b,0x34,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // bg
 	];
@@ -187,13 +187,19 @@ static assert(videochar.sizeof == 2);
 extern (C)
 void screen_init() {
 	import core.stdc.string : memset;
-	screensize = 80 * 25; // temporary -- mode 3
 	VIDEO = cast(videochar*)(MEMORY + __VGA_ADDRESS);
 
 	screen_clear;
 
 	version (Windows) {
-		ibuf = cast(CHAR_INFO*)malloc(CHAR_INFO.sizeof * screensize);
+		import core.sys.windows.windows : SetConsoleMode, SetConsoleOutputCP;
+
+		// ~ENABLE_PROCESSED_OUTPUT
+		// ~ENABLE_WRAP_AT_EOL_OUTPUT
+		SetConsoleMode(hOut, 0);
+		SetConsoleOutputCP(437); // default
+
+		ibuf = cast(CHAR_INFO*)malloc(CHAR_INFO.sizeof * (80 * 25));
 		ibufsize.X = 80;
 		ibufsize.Y = 25;
 		ibufout.Top = ibufout.Left = 0;
@@ -201,10 +207,11 @@ void screen_init() {
 		ibufout.Right = 79;
 	}
 	version (Posix) {
-		s_fg = cast(ushort*)(cast(ubyte*)s + 7);
-		s_bg = cast(ushort*)(cast(ubyte*)s + 17);
-		str = cast(char*)malloc( // solution 2
+		s_fg = cast(ushort*)(s + 7);
+		s_bg = cast(ushort*)(s + 17);
+		str = cast(char*)malloc(
 			SYSTEM.screen_row * SYSTEM.screen_col * 24
+			// 24 for:
 			// 10 char fg
 			// 10 char bg
 			// 3 worst-case utf-8 char
@@ -240,10 +247,11 @@ void screen_draw() {
 	version (Posix) {
 		import core.stdc.string : memcpy;
 		const uint x = SYSTEM.screen_col;
-		//uint y = SYSTEM.screen_row;
+		const uint y = SYSTEM.screen_row;
 
 		const uint sc = x * SYSTEM.screen_row; /// screen size
 		uint c = void; /// character to print
+		ubyte* cp = cast(ubyte*)&c + 2; // third byte
 
 		// one draw / 60 draws (hot-run results only)
 		// solution 1: one write(2) per character and attribute (scrapped)
@@ -252,74 +260,73 @@ void screen_draw() {
 		//   +newline: 0.250-2 ms / 130-160 ms
 		// solution 3: write(2) per line
 		//   +newline: 0.230-2 ms / 150-160 ms
-		//   +escape : 
 		// solution 4: writev(2) with multiple buffers
 		//   +newline: 
-		//   +escape : 
 
 		// solution 2 (one buffer with newlines)
 		uint bi; /// buffer index
 		for (size_t i, _x; i < sc; ++i) {
-			*s_fg = vatable[VIDEO[i].attribute & 0xF];
-			*s_bg = vatable[(VIDEO[i].attribute >> 4) & 7];
-			c = vctable[VIDEO[i].ascii];
-			memcpy(str + bi, cast(void*)s, 20);
+			// Copy 20 bytes into buffer
+			// Equivelent to memcpy(str + bi, cast(void*)esc, 20);
+			/*version (D_SIMD) {
+				// According to core.simd, the instruction enumeration
+				// comments incites that that nothing is being written
+				// to memory, so we can't really use this
+				//import core.simd : ubyte16;
+				alias __vector(ubyte[16]) ubyte16;
+
+				*cast(ubyte16*)(str + bi) = *cast(ubyte16*)s;
+				*cast(uint*)(str + bi + 16) = *cast(uint*)(s + 16);
+			} else */version (D_LP64) { // -m64
+				*cast(ulong*)(str + bi) = *cast(ulong*)esc;
+				*cast(ulong*)(str + bi + 8) = *cast(ulong*)(esc + 8);
+				*cast(uint*)(str + bi + 16) = *cast(uint*)(esc + 16);
+			} else { // -m32
+				*cast(uint*)(str + bi) = *cast(uint*)esc;
+				*cast(uint*)(str + bi + 4) = *cast(uint*)(esc + 4);
+				*cast(uint*)(str + bi + 8) = *cast(uint*)(esc + 8);
+				*cast(uint*)(str + bi + 12) = *cast(uint*)(esc + 12);
+				*cast(uint*)(str + bi + 16) = *cast(uint*)(esc + 16);
+			}
 			bi += 20;
+			// Small bug where attributes are offset by +1, thus i+1
+			*s_fg = vatable[VIDEO[i+1].attribute & 0xF];
+			*s_bg = vatable[(VIDEO[i+1].attribute >> 4) & 7];
+			c = vctable[VIDEO[i].ascii];
 			if (c < 128) { // +1
 				str[bi] = cast(ubyte)c;
 				++bi;
 			} else if (c > 0xFFFF) { // +3
-				memcpy(str + bi, &c, 3);
+				*cast(ushort*)(str + bi) = cast(ushort)c;
+				*(str + bi + 2) = *cp;
 				bi += 3;
 			} else { // +2
 				*cast(ushort*)(str + bi) = cast(ushort)c;
 				bi += 2;
 			}
 			++_x;
-			if (_x == x) {
-				str[bi] = '\n';
+			if (_x == x && i < y) {
+				*(str + bi) = '\n';
 				_x = 0;
 				++bi;
 			}
 		}
 		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
 		write(STDOUT_FILENO, cast(void*)str, bi);
-		// solution 3 (change cursor on new lines, write per line)
-		/*uint bi; /// buffer index
-		for (size_t i, _x; i < sc; ++i) {
-			*s_fg = vatable[VIDEO[i].attribute & 0xF];
-			*s_bg = vatable[(VIDEO[i].attribute >> 4) & 7];
-			c = vctable[VIDEO[i].ascii];
-			memcpy(str + bi, cast(void*)s, 20);
-			bi += 20;
-			if (c < 128) { // +1
-				str[bi] = cast(ubyte)c;
-				++bi;
-			} else if (c > 0xFFFF) { // +3
-				memcpy(str + bi, &c, 3);
-				bi += 3;
-			} else { // +2
-				*cast(ushort*)(str + bi) = cast(ushort)c;
-				bi += 2;
-			}
-			++_x;
-			if (_x == x) {
-				str[bi] = '\n';
-				write(STDOUT_FILENO, cast(void*)str, bi);
-				_x = 0;
-				bi = 0;
-			}
-		}*/
 		// solution 4 (writev with multiple buffers with newlines)
 	}
 }
 
 /// Clear virtual video RAM
 extern (C)
-void screen_clear() {
-	const int t = screensize / 2;
+void screen_clear(bool host = false) {
+	import ddcon : Clear;
+
+	const int t = (SYSTEM.screen_row * SYSTEM.screen_col) / 2;
 	uint* v = cast(uint*)VIDEO;
 	for (size_t i; i < t; ++i) v[i] = 0x0720_0720;
+
+	if (host) Clear;
 }
 
 /// Print DD-DOS logo
@@ -334,19 +341,52 @@ void screen_logo() {
 	 * │ └──────┘ └──────┘        └──────┘ └──────┘└──────┘  │
 	 * └─────────────────────────────────────────────────────┘
 	 */
-	//TODO: print screen logo "normally" (using __v_putn)
+	__v_putn( // ┌─────────────────────────────────────────────────────┐
+		"\xDA\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
+		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
+		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xBF"
+	);
+	__v_putn( // │ ┌──────┐ ┌──────┐        ┌──────┐ ┌──────┐ ┌──────┐ │
+		"\xB3 \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF"~
+		"        \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF"~
+		" \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF \xB3"
+	);
+	__v_putn( // │ │ ┌──┐ └┐│ ┌──┐ └┐ ┌───┐ │ ┌──┐ └┐│ ┌──┐ │┌┘ ────┬┘ │
+		"\xB3 \xB3 \xDA\xC4\xC4\xBF \xC0\xBF\xB3 \xDA\xC4\xC4\xBF \xC0\xBF"~
+		" \xDA\xC4\xC4\xC4\xBF \xB3 \xDA\xC4\xC4\xBF \xC0\xBF\xB3 \xDA\xC4\xC4\xBF "~
+		"\xB3\xDA\xD9 \xC4\xC4\xC4\xC4\xC2\xD9 \xB3"
+	);
+	__v_putn( // │ │ │  │  ││ │  │  │ └───┘ │ │  │  ││ │  │ │└────┐ │  │
+		"\xB3 \xB3 \xB3  \xB3  \xB3\xB3 \xB3  \xB3  \xB3 \xC0\xC4\xC4\xC4\xD9 \xB3"~
+		" \xB3  \xB3  \xB3\xB3 \xB3  \xB3 \xB3\xC0\xC4\xC4\xC4\xC4\xBF \xB3  \xB3"
+	);
+	__v_putn( // │ │ └──┘ ┌┘│ └──┘ ┌┘       │ └──┘ ┌┘│ └──┘ │┌────┘ │  │
+		"\xB3 \xB3 \xC0\xC4\xC4\xD9 \xDA\xD9\xB3 \xC0\xC4\xC4\xD9 \xDA\xD9       "~
+		"\xB3 \xC0\xC4\xC4\xD9 \xDA\xD9\xB3 \xC0\xC4\xC4\xD9 \xB3"~
+		"\xDA\xC4\xC4\xC4\xC4\xD9 \xB3  \xB3"
+	);
+	__v_putn( // │ └──────┘ └──────┘        └──────┘ └──────┘└──────┘  │
+		"\xB3 \xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9 \xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9    "~
+		"    \xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9 \xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9"~
+		"\xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9  \xB3"
+	);
+	__v_putn( // └─────────────────────────────────────────────────────┘
+		"\xC0\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
+		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
+		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xD9"
+	);
 }
 
-/* *
- * Change cursor position. Affects SYSTEM's cursor and host's cursor by default.
+/**
+ * Change cursor position.
  * The top position, {0, 0}, is located at the most top-left.
  * Params:
  *   x = Horizontal value, 0-based
  *   y = Vertical value, 0-based
- *   s = Affect host cursor, default: true
+ *   s = Affect host cursor, default: false
  */
 /*extern (C)
-void __v_cursor(uint x, uint y, bool s = true) {
+void __v_cursor(uint x, uint y, bool s = false) {
 
 }*/
 
@@ -358,87 +398,110 @@ void __v_char_p(uint x, uint y, ubyte c) {
 	VIDEO[(y * SYSTEM.screen_col) + x].ascii = c;
 }*/
 
-/// Output a string, raw in video memory
-/// This function affects the system cursor position
-/// Equivelent to fputs(s, stdout)
-extern (C)
+/**
+ * Output a string, raw in video memory
+ * This function affects the system cursor position
+ * Equivelent to fputs(s, stdout)
+ * Params:
+ *   s = String
+ *   size = String length
+ */
+extern (C) public
 void __v_put(immutable(char)* s, uint size = 0) {
 	if (size == 0) {
-		size_t max = 255;
-		while (s[size] != 0 && s[size] != '$' && size < max)
+		enum MAX_STR = 255;
+		while (s[size] != 0 && size < MAX_STR)
 			++size;
 	}
-	while (--size)
-		__v_putc(*s++, false);
+	do __v_putc(*s++, false);
+	while (--size);
 
 	//TODO: __v_put optimization
 	//int sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
 	//videochar* v = VIDEO + sc;
 }
 
-/// Output a string with a newline, raw in video memory
-/// This function affects the system cursor position
-/// Equivelent to puts(s)
-extern (C)
+/**
+ * Output a string with a newline, raw in video memory
+ * This function affects the system cursor position
+ * Equivelent to puts(s)
+ * Params:
+ *   s = String
+ *   size = String length
+ */
+extern (C) public
 void __v_putn(immutable(char)* s, uint size = 0) {
-	//TODO: __v_putn
-	__v_put(s);
+	__v_put(s, size);
 	__v_putc('\n');
 }
 
 /**
- * Output a character, raw in video memory
- * This function affects the system cursor position
+ * Output a character in video memory.
+ * This function affects the system cursor position.
  * Equivelent to putchar()
  * Params:
  *   c = Character
  *   s = Update host cursor, default: true
  */
-extern (C)
+extern (C) public
 void __v_putc(char c, bool s = true) {
-	import vdos_structs;
+	import vdos_structs : __cpos;
+
 	__cpos* cur = &SYSTEM.cursor[SYSTEM.screen_page];
-	uint pos = void;
+	uint pos = void; /// character position on screen
+
 	switch (c) {
+	case '\a': return;
 	case '\n':
-		pos = (++cur.row * SYSTEM.screen_row);
-		cur.row = 0;
-		goto PUTC_NL;
-	case '\t': //TODO: \t handling
+		++cur.row;
+		cur.col = 0;
+		if (cur.row >= SYSTEM.screen_row) {
+			--cur.row;
+			__v_scroll;
+		}
+		return;
+	case '\t': //TODO: \t handling, +8 cols?
 
 		break;
 	default:
-		pos = (cur.row * SYSTEM.screen_row) + cur.col;
+		pos = (cur.row * SYSTEM.screen_col) + cur.col;
+		++cur.col;
+		if (cur.col >= SYSTEM.screen_col) {
+			cur.col = 0;
+			++cur.row;
+		}
+		if (cur.row >= SYSTEM.screen_row) {
+			--cur.row;
+			__v_scroll;
+		}
+		VIDEO[pos].ascii = c;
 	}
-	VIDEO[pos].ascii = c;
-	++cur.col;
-
-	if (cur.col <= SYSTEM.screen_col) return;
-
-	++cur.row;
-	cur.col = 0;
-
-PUTC_NL:
-	if (cur.row <= SYSTEM.screen_row) return;
-	
-	--cur.row;
-	__v_scroll;
-
 	//TODO: Affect host cursor if s==true
 }
 
-extern (C)
+extern (C) public
 void __v_printf(immutable(char*) f) { // ...
 	//TODO: __v_printf
 }
 
-extern (C)
+extern (C) public
 void __v_scroll() {
-	import core.stdc.string : memcpy, memset;
+	import core.stdc.string : memmove;
+
 	uint sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
-	ubyte* d = MEMORY + __VGA_ADDRESS;
-	ubyte* s = d + SYSTEM.screen_col;
-	ubyte a = VIDEO[sc - 1].attribute;
-	memcpy(s, d, SYSTEM.screen_col * SYSTEM.screen_row);
-	//TODO: memset attribute byte (var a)
+	const ubyte a = VIDEO[sc - 1].attribute;
+	videochar* d = cast(videochar*)VIDEO;
+	videochar* s = cast(videochar*)(d + SYSTEM.screen_col);
+
+	videochar* ss = d + sc;
+	videochar tp = void;
+	tp.ascii = 0;
+	tp.attribute = a;
+	for (size_t i; i < SYSTEM.screen_col; ++i)
+		ss[i].WORD = tp.WORD;
+
+	while (--sc) {
+		d.WORD = s.WORD;
+		++d; ++s;
+	}
 }

@@ -7,31 +7,42 @@ import core.time, std.conv;
 private enum RUNS = 60;
 
 unittest {
+	con_init;
+	vcpu_init;
+	vdos_init;
+
+	Clear;
+
 	StopWatch sw;
 	Duration r_once, r_multiple;
 
-	vcon_init;
-	vcpu_init;
-	vdos_init;
-	Clear;
-
-	VIDEO[0].ascii = 'a';
-	VIDEO[0].attribute = 0x2E;
+	VIDEO[0].ascii = 'H';
 	VIDEO[1].ascii = 'e';
-	VIDEO[1].attribute = 0x2E;
-	VIDEO[80].ascii = 'F';
-	VIDEO[80].attribute = 0x1A;
-	VIDEO[81].ascii = 'e';
-	VIDEO[81].attribute = 0x1A;
+	VIDEO[2].ascii = 'l';
+	VIDEO[3].ascii = 'l';
+	VIDEO[4].ascii = 'o';
+	VIDEO[5].ascii = '!';
+	VIDEO[77].ascii = 'H';
+	VIDEO[78].ascii = 'e';
+	VIDEO[79].ascii = 'l';
+	VIDEO[80].ascii = 'l';
+	VIDEO[81].ascii = 'o';
+	VIDEO[82].ascii = '!';
 
 	VIDEO[160].ascii = 0xda;
 	VIDEO[160].attribute = 0x2E;
 	VIDEO[161].ascii = 0xc4;
 	VIDEO[161].attribute = 0x2E;
-	VIDEO[162].ascii = 0xbf;
-	VIDEO[162].attribute = 0x1A;
-	VIDEO[241].ascii = 'e';
+	VIDEO[162].ascii = 0xc4;
+	VIDEO[162].attribute = 0x2E;
+	VIDEO[163].ascii = 0xbf;
+	VIDEO[163].attribute = 0x1A;
+	VIDEO[241].ascii = 219;
 	VIDEO[241].attribute = 0x1A;
+	VIDEO[242].ascii = 151;
+	VIDEO[242].attribute = 0x1A;
+
+	screen_draw; // "in case" warm up
 
 	sw.start;
 	screen_draw;
@@ -40,12 +51,12 @@ unittest {
 	r_once = sw.peek;
 
 	sw.reset; // won't pause
-	for (uint i; i < RUNS; ++i) screen_draw;
+	for (size_t i; i < RUNS; ++i) screen_draw;
 	sw.stop;
 
 	r_multiple = sw.peek;
 
-	SetPos(0, 25);
+	SetPos(0, 26);
 	writefln("one draw: %s", r_once);
 	writefln("%d draws: %s", RUNS, r_multiple);
 }

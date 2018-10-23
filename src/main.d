@@ -9,7 +9,7 @@ import vcpu;
 import vdos : BANNER, vdos_shell, vdos_init;
 import vdos_codes;
 import vdos_loader : vdos_load;
-import vdos_screen : screen_draw, screen_clear, __VGA_ADDRESS;
+import vdos_screen;
 import Logger;
 import ddcon : con_init, Clear;
 import os_utils : os_pexist;
@@ -19,7 +19,7 @@ import compile_config : APP_VERSION;
 extern (C)
 private void _version() {
 	printf(
-		"%s\n" ~
+		BANNER ~
 		"Copyright (c) 2017-2018 dd86k, MIT license\n" ~
 		"Project page: <https://github.com/dd86k/dd-dos>\n" ~
 		"License: <https://opensource.org/licenses/MIT>\n\n" ~
@@ -30,14 +30,14 @@ private void _version() {
 dd86k ................................. Original author
 
 `,
-		BANNER, __VERSION__
+		__VERSION__
 	);
 }
 
 extern (C)
 private void help() {
 	puts(
-`A 8088/DOS virtual machine and emulation layer
+`IBM PC Virtual Machine and DOS Emulation Layer
 USAGE
 	dd-dos [-vPN] [FILE [FILEARGS]]
 	dd-dos {-V|--version|-h|--help}
@@ -121,19 +121,16 @@ private int main(int argc, char** argv) {
 	vdos_init;	// vdos, screen
 
 	if (arg_banner)
-		puts("DD-DOS is starting...");
+		puts/*__v_putn*/("DD-DOS is starting...");
 
 	if (opt_sleep == 0)
-		info("NOTICE: MAX_PERF");
-
-	/*Clear;
-
-	// Place banner in memory here
-
-	screen_draw;*/
+		info/*__v_putn*/("NOTICE: MAX_PERF"); // info later
 
 	if (arg_banner)
 		puts(BANNER); // Defined in vdos.d
+
+	//screen_logo;
+	//screen_draw;
 
 	if (cast(int)prog) {
 		if (os_pexist(prog)) {

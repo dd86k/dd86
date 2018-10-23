@@ -17,7 +17,7 @@ import ddcon, Logger;
 import compile_config :
 	__MM_SYS_DOS, C_RUNTIME, APP_VERSION, BUILD_TYPE, INIT_MEM;
 
-immutable(char)* BANNER = `
+enum BANNER = `
 _______ _______        _______  ______  _______
 |  __  \|  __  \  ___  |  __  \/  __  \/ _____/
 | |  \ || |  \ | |___| | |  \ || /  \ |\____ \
@@ -54,7 +54,7 @@ extern (C)
 void vdos_init() {
 	// ubyte* -> vdos_settings* is not supported in CTFE, done in run-time instead
 	SYSTEM = cast(system_struct*)MEMORY;
-	SYSTEM.memsize = INIT_MEM >> 10; // /1024
+	SYSTEM.memsize = INIT_MEM >> 10; // DIV 1024
 	SYSTEM.video_mode = 3;
 	SYSTEM.screen_row = 25;
 	SYSTEM.screen_col = 80;
@@ -70,6 +70,8 @@ void vdos_init() {
  */
 extern (C)
 void vdos_shell() {
+	//TODO: Take a portion out of MEMORY instead
+	//TODO: Use __v_* functions once timer and __v_printf is done
 	char* inb = // also used for CWD buffering
 		cast(char*)malloc(_BUFS); /// internal input buffer
 	char** argv = // sizeof(char *)
@@ -319,7 +321,7 @@ By default, MEM will show memory usage`
 	}
 	if (strcmp(*argv, "?p") == 0) {
 		opt_sleep = !opt_sleep;
-		printf("CpuSleep mode: %s\n", opt_sleep ? "ON" : cast(char*)"OFF");
+		printf("CPU SLEEP mode: %s\n", opt_sleep ? "ON" : cast(char*)"OFF");
 		goto SHELL_SHART;
 	}
 	if (strcmp(*argv, "?r") == 0) {
@@ -414,29 +416,3 @@ void panic(ushort code,
 
 	exit(code);
 }
-
-/*
-/// Output a string, accepts ANSI escape codes
-/// This function affects the system cursor position
-/// Equivelent to fputs(s, stdout)
-extern (C)
-void dos_put(immutable(char)* s, uint size = 0) {
-	//TODO: dos_put
-}
-
-/// Output a string with a newline, accepts ANSI escape codes
-/// This function affects the system cursor position
-/// Equivelent to puts(s)
-extern (C)
-void dos_putn(immutable(char)* s, uint size = 0) {
-	//TODO: dos_putn
-}
-
-/// Output a formatted string
-/// This function affects the system cursor position
-/// Equivelent to print(s, ...)
-extern (C)
-void dos_printf(immutable(char)* s) {
-	//TODO: __vd_printf
-}
-*/
