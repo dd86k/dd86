@@ -103,47 +103,51 @@ private int main(int argc, char** argv) {
 		//      Don't forget to null it after while loop, keep arg_i updated
 	}
 
+	if (cast(int)prog) {
+		if (os_pexist(prog) == 0) {
+			fputs("E: File not found\n", stderr);
+			return EDOS_FILE_NOT_FOUND;
+		}
+	}
+
 	switch (Verbose) {
 	case LOG_SILENCE, LOG_CRIT, LOG_ERROR: break;
-	case LOG_WARN: info("-- Log level: LOG_WARN"); break;
-	case LOG_INFO: info("-- Log level: LOG_INFO"); break;
-	case LOG_DEBUG: info("-- Log level: LOG_DEBUG"); break;
+	case LOG_WARN: info("I: Log level: LOG_WARN"); break;
+	case LOG_INFO: info("I: Log level: LOG_INFO"); break;
+	case LOG_DEBUG: info("I: Log level: LOG_DEBUG"); break;
 	default:
 		printf("E: Unknown log level: %d\n", Verbose);
 		return EDOS_INVALID_FUNCTION;
 	}
 
-	// Initiation
+	if (opt_sleep == 0)
+		info("I: MAX_PERF");
+
+	// Where the real fun starts
 
 	con_init;	// ddcon
 	//sleep_init;	// sleep
 	vcpu_init;	// vcpu
+
+	if (cast(int)prog) {
+		if (vdos_load(prog)) {
+			fputs("E: Could not load executable image\n", stderr);
+			return PANIC_FILE_NOT_LOADED;
+		}
+	}
+
 	vdos_init;	// vdos, screen
 
 	if (arg_banner)
-		puts/*__v_putn*/("DD-DOS is starting...");
+		__v_putn("DD-DOS is starting...");
 
-	if (opt_sleep == 0)
-		info/*__v_putn*/("NOTICE: MAX_PERF"); // info later
+	// Should be loading settings here
 
-	if (arg_banner)
-		puts(BANNER); // Defined in vdos.d
-
-	//screen_logo;
-	//screen_draw;
+	screen_logo;
 
 	if (cast(int)prog) {
-		if (os_pexist(prog)) {
-			vCPU.CS = 0; vCPU.IP = 0x100; // Temporary
-			if (vdos_load(prog)) {
-				fputs("E: Could not load executable image\n", stderr);
-				return PANIC_FILE_NOT_LOADED;
-			}
-			vcpu_run;
-		} else {
-			fputs("E: File not found\n", stderr);
-			return EDOS_FILE_NOT_FOUND;
-		}
+		vCPU.CS = 0; vCPU.IP = 0x100; // Temporary
+		vcpu_run;
 	} else vdos_shell;
 
 	return 0;

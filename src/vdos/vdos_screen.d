@@ -329,7 +329,7 @@ void screen_clear(bool host = false) {
 	if (host) Clear;
 }
 
-/// Print DD-DOS logo
+/// Print the pretty DD-DOS logo
 extern (C)
 void screen_logo() {
 	/*

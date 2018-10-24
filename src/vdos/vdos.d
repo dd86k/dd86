@@ -11,7 +11,7 @@ import vcpu, vcpu_utils;
 import vdos_codes, vdos_int;
 import vdos_loader : vdos_load;
 import vdos_structs : system_struct, dos_struct;
-import vdos_screen : screen_init;
+import vdos_screen;
 import utils, os_utils;
 import ddcon, Logger;
 import compile_config :
@@ -76,29 +76,28 @@ void vdos_shell() {
 		cast(char*)malloc(_BUFS); /// internal input buffer
 	char** argv = // sizeof(char *)
 		cast(char**)malloc(_BUFS * size_t.sizeof); /// argument vector
-SHELL_SHART:
+SHL_S:
 	//TODO: Print $PROMPT
 	if (os_gcwd(inb))
-		printf("\n%s%% ", inb);
+		__v_printf("\n%s%% ", inb);
 	else // just-in-case
-		fputs("\n% ", stdout);
+		__v_put("\n% ");
 
 	fgets(inb, _BUFS, stdin);
-	if (*inb == '\n') goto SHELL_SHART; // Nothing to process
+	if (*inb == '\n') goto SHL_S; // Nothing to process
 
 	const int argc = sargs(inb, argv); /// argument count
 
-	//TODO: TREE, DIR
 	lowercase(*argv);
 
-	//TODO: Consider string-switch usage in betterC code (#24)
+	//TODO: TREE, DIR
 
 	// C
 
 	if (strcmp(*argv, "cd") == 0 || strcmp(*argv, "chdir") == 0) {
 		if (argc > 1) {
 			if (strcmp(argv[1], "/?") == 0) {
-				puts(
+				__v_putn(
 `Display or set current working directory
   CD [FOLDER]
   CHDIR [FOLDER]
@@ -109,7 +108,7 @@ By default, CD will display the current working directory`
 				if (os_pisdir(argv[1])) {
 					os_scwd(argv[1]);
 				} else {
-					puts("Directory not found or entry is not a directory");
+					__v_putn("Directory not found or entry is not a directory");
 				}
 			}
 		} else {
@@ -117,11 +116,11 @@ By default, CD will display the current working directory`
 				puts(cast(char*)inb);
 			else puts("E: Error getting CWD");
 		}
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 	if (strcmp(*argv, "cls") == 0) {
 		Clear;
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 
 	// D
@@ -129,19 +128,19 @@ By default, CD will display the current working directory`
 	if (strcmp(*argv, "date") == 0) {
 		vCPU.AH = 0x2A;
 		INT(0x21);
-		printf("It is currently ");
+		__v_put("It is currently ");
 		switch (vCPU.AL) {
-		case 0, 7: printf("Sun"); break;
-		case 1: printf("Mon"); break;
-		case 2: printf("Tue"); break;
-		case 3: printf("Wed"); break;
-		case 4: printf("Thu"); break;
-		case 5: printf("Fri"); break;
-		case 6: printf("Sat"); break;
+		case 0, 7: __v_put("Sun"); break;
+		case 1: __v_put("Mon"); break;
+		case 2: __v_put("Tue"); break;
+		case 3: __v_put("Wed"); break;
+		case 4: __v_put("Thu"); break;
+		case 5: __v_put("Fri"); break;
+		case 6: __v_put("Sat"); break;
 		default:
 		}
-		printf(" %d-%02d-%02d\n", vCPU.CX, vCPU.DH, vCPU.DL);
-		goto SHELL_SHART;
+		__v_printf(" %d-%02d-%02d\n", vCPU.CX, vCPU.DH, vCPU.DL);
+		goto SHL_S;
 	}
 
 	// E
@@ -155,7 +154,7 @@ By default, CD will display the current working directory`
 	// H
 
 	if (strcmp(*argv, "help") == 0) {
-		puts(
+		__v_putn(
 `Internal commands available
 
 CD .......... Change working directory
@@ -168,7 +167,7 @@ TIME ........ Get current time
 MEM ......... Show memory information
 VER ......... Show DD-DOS and MS-DOS version`
 		);
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 
 	// M
@@ -190,7 +189,7 @@ VER ......... Show DD-DOS and MS-DOS version`
 						++nzt;
 				}
 			}
-			printf(
+			__v_printf(
 				"Memory Type             Zero +    Data =   Total\n" ~
 				"-------------------  -------   -------   -------\n" ~
 				"Conventional         %6dK   %6dK   %6dK\n" ~
@@ -201,11 +200,11 @@ VER ......... Show DD-DOS and MS-DOS version`
 				(tt - nzt) / 1024, nzt / 1024, tt / 1024,
 				(t_size - nzt) / 1024, (nzt + nzc) / 1024, t_size / 1024);
 		} else if (strcmp(argv[1], "/debug") == 0) {
-			puts("Not implemented");
+			__v_putn("Not implemented");
 		} else if (strcmp(argv[1], "/free") == 0) {
-			puts("Not implemented");
+			__v_putn("Not implemented");
 		} else if (strcmp(argv[1], "/?") == 0) {
-			puts(
+			__v_putn(
 `Display memory statistics
   MEM [OPTIONS]
 
@@ -217,9 +216,9 @@ OPTIONS
 By default, MEM will show memory usage`
 			);
 		} else {
-			puts("Not implemented. Only /stats is implemented");
+			__v_putn("Not implemented. Only /stats is implemented");
 		}
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 
 	// T
@@ -227,28 +226,28 @@ By default, MEM will show memory usage`
 	if (strcmp(*argv, "time") == 0) {
 		vCPU.AH = 0x2C;
 		INT(0x21);
-		printf("It is currently %02d:%02d:%02d.%02d\n",
+		__v_printf("It is currently %02d:%02d:%02d.%02d\n",
 			vCPU.CH, vCPU.CL, vCPU.DH, vCPU.DL);
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 
 	// V
 
 	if (strcmp(*argv, "ver") == 0) {
-		printf(
+		__v_printf(
 			"\nDD-DOS Version " ~
 			APP_VERSION ~
 			"\nMS-DOS Version %d.%d (compiled: %d.%d)\n",
 			MajorVersion, MinorVersion,
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION
 		);
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 
 	// ? -- debugging
 
 	if (strcmp(*argv, "??") == 0) {
-		puts(
+		__v_putn(
 `?diag       Print diagnostic information screen
 ?load FILE  Load an executable FILE into memory
 ?p          Toggle performance mode
@@ -258,7 +257,7 @@ By default, MEM will show memory usage`
 ?s          Print stack (Not implemented)
 ?v          Toggle verbose mode`
 		);
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 	if (strcmp(*argv, "?load") == 0) {
 		if (argc > 1) {
@@ -266,78 +265,78 @@ By default, MEM will show memory usage`
 				vCPU.CS = 0; vCPU.IP = 0x100; // Temporary
 				vdos_load(argv[1]);
 			} else
-				puts("File not found");
-		} else puts("Executable required");
-		goto SHELL_SHART;
+				__v_putn("File not found");
+		} else __v_putn("Executable required");
+		goto SHL_S;
 	}
 	if (strcmp(*argv, "?run") == 0) {
 		vcpu_run;
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 	if (strcmp(*argv, "?v") == 0) {
-		printf("Verbose set to ");
+		__v_printf("Verbose set to ");
 		if (argc >= 2) {
 			switch (argv[1][0]) {
 			case '0', 's':
 				Verbose = LOG_DEBUG;
-				puts("DEBUG");
+				__v_putn("DEBUG");
 				break;
 			case '1', 'c':
 				Verbose = LOG_CRIT;
-				puts("CRTICAL");
+				__v_putn("CRTICAL");
 				break;
 			case '2', 'e':
 				Verbose = LOG_ERROR;
-				puts("ERRORS");
+				__v_putn("ERRORS");
 				break;
 			case '3', 'w':
 				Verbose = LOG_WARN;
-				puts("WARNINGS");
+				__v_putn("WARNINGS");
 				break;
 			case '4', 'i':
 				Verbose = LOG_INFO;
-				puts("INFORMAL");
+				__v_putn("INFORMAL");
 				break;
 			case '5', 'd':
 				Verbose = LOG_DEBUG;
-				puts("DEBUG");
+				__v_putn("DEBUG");
 				break;
 			default:
-				puts("Invalid log level");
+				__v_putn("Invalid log level");
 			} // switch
 		} else if (Verbose) {
 			Verbose = LOG_SILENCE;
-			puts("SILENCE");
+			__v_putn("SILENCE");
 		} else {
 			debug {
 				Verbose = LOG_DEBUG;
-				puts("DEBUG");
+				__v_putn("DEBUG");
 			} else {
 				Verbose = LOG_INFO;
-				puts("INFO");
+				__v_putn("INFO");
 			}
 		}
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 	if (strcmp(*argv, "?p") == 0) {
 		opt_sleep = !opt_sleep;
-		printf("CPU SLEEP mode: %s\n", opt_sleep ? "ON" : cast(char*)"OFF");
-		goto SHELL_SHART;
+		__v_printf("CPU SLEEP mode: %s\n", opt_sleep ? "ON" : cast(char*)"OFF");
+		goto SHL_S;
 	}
 	if (strcmp(*argv, "?r") == 0) {
 		print_regs;
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 	if (strcmp(*argv, "?s") == 0) {
 		print_stack;
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 	if (strcmp(*argv, "?panic") == 0) {
 		panic(PANIC_MANUAL);
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 	if (strcmp(*argv, "?diag") == 0) {
-		printf(
+		__v_printf(
 			"MS-DOS version: %d.%d (%d.%d)\n" ~
 			"DD-DOS version: " ~ APP_VERSION ~ "\n" ~
 			"Compiler: " ~ __VENDOR__ ~ " v%d\n" ~
@@ -347,21 +346,21 @@ By default, MEM will show memory usage`
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION,
 			__VERSION__
 		);
-		goto SHELL_SHART;
+		goto SHL_S;
 	}
 
 	//TODO: See if command is not an executable (COM/EXE (MZ)/BAT)
 	//      to evaluate before passing to system, like check_exe
-	system(inb);
-	//puts("Bad command or file name");
+	//system(inb);
+	__v_put("Bad command or file name");
 
-//SHELL_END:
-	goto SHELL_SHART;
+//SHL_E:
+	goto SHL_S;
 }
 
 extern (C)
 void print_regs() {
-	printf(
+	__v_printf(
 `EIP=%08X  IP=%04X  (get_ip=%08X)
 EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X
 CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X
@@ -370,22 +369,22 @@ CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X
 		vCPU.EAX, vCPU.EBX, vCPU.ECX, vCPU.EDX,
 		vCPU.CS, vCPU.DS, vCPU.ES, vCPU.SS, vCPU.SP, vCPU.BP, vCPU.SI, vCPU.DI,
 	);
-	printf("FLAG=");
-	if (vCPU.OF) fputs("OF ", stdout);
-	if (vCPU.DF) fputs("DF ", stdout);
-	if (vCPU.IF) fputs("IF ", stdout);
-	if (vCPU.TF) fputs("TF ", stdout);
-	if (vCPU.SF) fputs("SF ", stdout);
-	if (vCPU.ZF) fputs("ZF ", stdout);
-	if (vCPU.AF) fputs("AF ", stdout);
-	if (vCPU.PF) fputs("PF ", stdout);
-	if (vCPU.CF) fputs("CF ", stdout);
-	printf("(%4Xh)\n", FLAG);
+	__v_printf("FLAG=");
+	if (vCPU.OF) __v_putn("OF ");
+	if (vCPU.DF) __v_putn("DF ");
+	if (vCPU.IF) __v_putn("IF ");
+	if (vCPU.TF) __v_putn("TF ");
+	if (vCPU.SF) __v_putn("SF ");
+	if (vCPU.ZF) __v_putn("ZF ");
+	if (vCPU.AF) __v_putn("AF ");
+	if (vCPU.PF) __v_putn("PF ");
+	if (vCPU.CF) __v_putn("CF ");
+	__v_printf("(%4Xh)\n", FLAG);
 }
 
 extern (C)
 void print_stack() {
-	puts("print_stack::Not implemented");
+	__v_putn("print_stack::Not implemented");
 }
 
 extern (C)
@@ -393,8 +392,10 @@ void panic(ushort code,
 	immutable(char)* modname = cast(immutable(char)*)__MODULE__,
 	int line = __LINE__) {
 	import core.stdc.stdlib : exit;
+	//TODO: Setup SEH that points here
+
 	enum RANGE = 26, TARGET = RANGE / 2;
-	printf(
+	__v_printf(
 		"\n\n\n\n" ~
 		"A fatal exception occured, which DD-DOS couldn't recover.\n\n" ~
 		"STOP: %4Xh (%s@L%d)\nEXEC:\n",
@@ -404,15 +405,15 @@ void panic(ushort code,
 	ubyte* p = MEMORY + vCPU.EIP - TARGET;
 	while (--i) {
 		if (i == (TARGET - 1))
-			printf(" > %02X<", *p);
+			__v_printf(" > %02X<", *p);
 		else
-			printf(" %02X", *p);
+			__v_printf(" %02X", *p);
 		++p;
 	}
-	printf("\n--\n");
+	__put("\n--\n");
 	print_regs;
 	/*printf("--\n"); Temporary commented until print_stack is implemented
 	print_stack;*/
 
-	exit(code);
+	exit(code); //TODO: Consider another strategy
 }
