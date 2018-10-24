@@ -12,13 +12,7 @@
 
 module ddc;
 
-enum __DDC_VERSION = 2018_0;
-
 enum NULL_CHAR = cast(char*)0; /// Null character pointer
-
-/*
- * Standard C runtime function fixes.
- */
 
 public extern (C) {
 	void putchar(int);

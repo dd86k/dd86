@@ -38,28 +38,11 @@ unittest {
 	VIDEO[242].attribute = 0x1A;
 
 	SYSTEM.cursor[0].col = 0;
-	SYSTEM.cursor[0].row = 3;
+	SYSTEM.cursor[0].row = 5;
 
-	__v_putn("Now testing __v_putn");
+	__v_putn("__v_putn");
 
-	__v_putn("1");
-	__v_putn("2");
-	__v_putn("3");
-	__v_putn("4");
-	__v_putn("5");
-	__v_putn("6");
-	__v_putn("7");
-	__v_putn("8");
-	__v_putn("10");
-	__v_putn("11");
-	__v_putn("12");
-	__v_putn("13");
-	__v_putn("14");
-	__v_putn("15");
-	__v_putn("16");
-	__v_putn("17");
-	__v_putn("18");
-	__v_putn("19");
+	__v_printf("%d\n", 0);
 
 	__v_putn("Hello again!");
 

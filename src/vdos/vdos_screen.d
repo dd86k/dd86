@@ -413,8 +413,10 @@ void __v_put(immutable(char)* s, uint size = 0) {
 		while (s[size] != 0 && size < MAX_STR)
 			++size;
 	}
-	do __v_putc(*s++, false);
-	while (--size);
+	while (size) {
+		__v_putc(*s++, false);
+		--size;
+	}
 
 	//TODO: __v_put optimization
 	//int sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
@@ -480,14 +482,23 @@ void __v_putc(char c, bool s = true) {
 }
 
 extern (C) public
-void __v_printf(immutable(char*) f) { // ...
-	//TODO: __v_printf
+void __v_printf(immutable(char)* f, ...) {
+	import core.stdc.stdio : _vsnprintf;
+	import core.stdc.stdarg : va_list, va_start;
+
+	va_list args = void;
+	va_start(args, f);
+
+	char[256] b = void;
+	uint c = _vsnprintf(cast(char*)b, 256, f, args);
+
+	if (c > 0) {
+		__v_put(cast(immutable(char)*)b, c);
+	}
 }
 
 extern (C) public
 void __v_scroll() {
-	import core.stdc.string : memmove;
-
 	uint sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
 	const ubyte a = VIDEO[sc - 1].attribute;
 	videochar* d = cast(videochar*)VIDEO;
