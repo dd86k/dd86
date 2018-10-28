@@ -14,13 +14,10 @@ enum __EGA_ADDRESS = 0xA_0000;
 enum __MDA_ADDRESS = 0xB_0000;
 enum __VGA_ADDRESS = 0xB_8000;
 
-//TODO: Consider videochar**
 videochar* VIDEO = void;	/// video buffer
 private uint screensize = void;
 
-// When possible, use this VGA reference
-// http://www.brackeen.com/vga/basics.html
-
+// VGA reference: http://www.brackeen.com/vga/basics.html
 // Unicode reference: https://unicode-table.com
 
 version (Windows) {
@@ -93,12 +90,12 @@ version (Posix) {
 	// It could of been a three-byte table, which yes could of saved us 256
 	// bytes of memory, but due to alignment (fetch performance) reasons, it's
 	// better to have this 4 bytes wide.
+	// The table can also be put into a file and read at run-time.
 	//TODO: See if the table should be filled with actual characters
 	//      since D characters are UTF-8. Which might avoid us to make a MSB
 	//      version of this table. However, this is safer.
-	//TODO: These kind of tables could very potentially be seperate binary files
+	/// cp437-utf8-le default character translation table
 	__gshared uint[256] vctable = [
-		/// cp437-utf8-le default character translation table
 		0x000020, 0xBA98E2, 0xBB98E2, 0xA599E2, 0xA699E2, 0xA399E2, 0xA099E2, 0x9897E2,
 		0x8B97E2, 0x9997E2, 0x8299E2, 0x8099E2, 0xAA99E2, 0xAB99E2, 0xBC98E2, 0xBA96E2,
 		// 16 (offset)
@@ -207,8 +204,8 @@ void screen_init() {
 		ibufout.Right = 79;
 	}
 	version (Posix) {
-		s_fg = cast(ushort*)(s + 7);
-		s_bg = cast(ushort*)(s + 17);
+		s_fg = cast(ushort*)(esc + 7);
+		s_bg = cast(ushort*)(esc + 17);
 		str = cast(char*)malloc(
 			SYSTEM.screen_row * SYSTEM.screen_col * 24
 			// 24 for:
@@ -483,14 +480,14 @@ void __v_putc(char c, bool s = true) {
 
 extern (C) public
 void __v_printf(immutable(char)* f, ...) {
-	import core.stdc.stdio : _vsnprintf;
+	import core.stdc.stdio : vsnprintf;
 	import core.stdc.stdarg : va_list, va_start;
 
 	va_list args = void;
 	va_start(args, f);
 
 	char[256] b = void;
-	uint c = _vsnprintf(cast(char*)b, 256, f, args);
+	uint c = vsnprintf(cast(char*)b, 256, f, args);
 
 	if (c > 0) {
 		__v_put(cast(immutable(char)*)b, c);

@@ -90,7 +90,7 @@ void INT(ubyte code) {
 		case 0: // Get system time by number of clock ticks since midnight
 			OSTime t = void;
 			os_time(&t);
-			uint c = cast(uint)( //TODO: fix?
+			uint c = cast(uint)( //TODO: FIXME
 				((cast(float)t.hour * 60 * 60) +
 				(cast(float)t.minute * 60) +
 				cast(float)t.second) * BIOS_TICK

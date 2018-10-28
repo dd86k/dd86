@@ -39,11 +39,15 @@ void con_init() {
 	version (Windows) {
 		hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 		hIn  = GetStdHandle(STD_INPUT_HANDLE);
+		SetPos(0, 0);
 	}
 	version (Posix) {
 		tcgetattr(STDIN_FILENO, &old_tio);
 		new_tio = old_tio;
 		new_tio.c_lflag &= TERM_ATTR;
+		
+		//TODO: See flags we can put
+		// tty_ioctl TIOCSETD
 	}
 }
 
@@ -79,7 +83,7 @@ void Clear() {
 		COORD c;
 		GetConsoleScreenBufferInfo(hOut, &csbi);
 		const int size = csbi.dwSize.X * csbi.dwSize.Y;
-		DWORD num;
+		DWORD num = void;
 		if (FillConsoleOutputCharacterA(hOut, ' ', size, c, &num) == 0
 			/*|| // .NET uses this but no idea why yet.
 			FillConsoleOutputAttribute(hOut, csbi.wAttributes, size, c, &num) == 0*/) {
@@ -255,11 +259,6 @@ KeyInfo ReadKey(ubyte echo = false) {
 		tcsetattr(STDIN_FILENO,TCSANOW, &new_tio);
 
 		uint c = getchar;
-
-		if (c >= 'a' && c <= 'z') {
-			k.keyCode = cast(Key)(c - 32);
-			goto _READKEY_END;
-		}
 
 		with (k) switch (c) {
 		case '\n': // \n (ENTER)

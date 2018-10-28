@@ -125,7 +125,6 @@ private int main(int argc, char** argv) {
 
 	// Where the real fun starts
 
-	con_init;	// ddcon
 	//sleep_init;	// sleep
 	vcpu_init;	// vcpu
 
@@ -136,6 +135,7 @@ private int main(int argc, char** argv) {
 		}
 	}
 
+	con_init;	// ddcon
 	vdos_init;	// vdos, screen
 
 	if (arg_banner)

@@ -25,8 +25,6 @@ _______ _______        _______  ______  _______
 |______/|______/       |______/\______/\______/
 `; /// Banner screen, fancy!
 
-//TODO: video banner
-
 /// OEM IDs
 enum OEM_ID { // Used for INT 21h AH=30 so far.
 	IBM, Compaq, MSPackagedProduct, ATnT, ZDS
@@ -65,23 +63,21 @@ void vdos_init() {
 }
 
 /**
- * Enter virtual shell (vDOS)
- * This function allocates memory on the heap and frees it when exiting.
+ * Enter virtual shell (vDOS), assuming all modules have been initiated
  */
 extern (C)
 void vdos_shell() {
-	//TODO: Take a portion out of MEMORY instead
-	//TODO: Use __v_* functions once timer and __v_printf is done
-	char* inb = // also used for CWD buffering
-		cast(char*)malloc(_BUFS); /// internal input buffer
-	char** argv = // sizeof(char *)
-		cast(char**)malloc(_BUFS * size_t.sizeof); /// argument vector
+	char* inb = // internal input buffer, also used for CWD buffering
+		cast(char*)(MEMORY + 0x900);
+	char** argv = // argument vector, sizeof(char *)
+		cast(char**)(MEMORY + 0x900 + _BUFS);
+
 SHL_S:
 	//TODO: Print $PROMPT
 	if (os_gcwd(inb))
 		__v_printf("\n%s%% ", inb);
 	else // just-in-case
-		__v_put("\n% ");
+		__v_put("\n% "); screen_draw;
 
 	fgets(inb, _BUFS, stdin);
 	if (*inb == '\n') goto SHL_S; // Nothing to process
@@ -90,7 +86,7 @@ SHL_S:
 
 	lowercase(*argv);
 
-	//TODO: TREE, DIR
+	//TODO: TREE, DIR (waiting on OS directory crawler)
 
 	// C
 
@@ -105,8 +101,8 @@ SHL_S:
 By default, CD will display the current working directory`
 				);
 			} else {
-				if (os_pisdir(argv[1])) {
-					os_scwd(argv[1]);
+				if (os_pisdir(*(argv + 1))) {
+					os_scwd(*(argv + 1));
 				} else {
 					__v_putn("Directory not found or entry is not a directory");
 				}
@@ -119,7 +115,10 @@ By default, CD will display the current working directory`
 		goto SHL_S;
 	}
 	if (strcmp(*argv, "cls") == 0) {
-		Clear;
+		SYSTEM.cursor[SYSTEM.screen_page].row = 0;
+		SYSTEM.cursor[SYSTEM.screen_page].col = 0;
+		screen_clear;
+		//Clear;
 		goto SHL_S;
 	}
 
@@ -146,8 +145,8 @@ By default, CD will display the current working directory`
 	// E
 
 	if (strcmp(*argv, "exit") == 0) {
-		free(argv);
-		free(inb);
+		//free(inb);
+		//free(argv);
 		return;
 	}
 
@@ -173,15 +172,17 @@ VER ......... Show DD-DOS and MS-DOS version`
 	// M
 
 	if (strcmp(*argv, "mem") == 0) {
+		if (argc <= 1) goto MEM_HELP;
+
 		if (strcmp(argv[1], "/stats") == 0) {
-			const uint t_size = MEMORYSIZE;
-			const ubyte ext = t_size > 0xA_0000; // extended?
-			const size_t ct = ext ? 0xA_0000 : t_size; /// convential memsize
-			const size_t tt = t_size - ct; /// total memsize excluding convential
+			const uint msize = MEMORYSIZE;
+			const ubyte ext = msize > 0xA_0000; // extended?
+			const size_t ct = ext ? 0xA_0000 : msize; /// convential memsize
+			const size_t tt = msize - ct; /// total memsize excluding convential
 
 			int nzt; /// Non-zero (total/excluded from conventional in some cases)
 			int nzc; /// Convential (<640K) non-zero
-			for (size_t i; i < t_size; ++i) {
+			for (size_t i; i < msize; ++i) {
 				if (MEMORY[i]) {
 					if (i < 0xA_0000)
 						++nzc;
@@ -198,15 +199,16 @@ VER ......... Show DD-DOS and MS-DOS version`
 				"Total                %6dK   %6dK   %6dK\n",
 				(ct - nzc) / 1024, nzc / 1024, ct / 1024,
 				(tt - nzt) / 1024, nzt / 1024, tt / 1024,
-				(t_size - nzt) / 1024, (nzt + nzc) / 1024, t_size / 1024);
+				(msize - nzt) / 1024, (nzt + nzc) / 1024, msize / 1024);
 		} else if (strcmp(argv[1], "/debug") == 0) {
 			__v_putn("Not implemented");
 		} else if (strcmp(argv[1], "/free") == 0) {
 			__v_putn("Not implemented");
 		} else if (strcmp(argv[1], "/?") == 0) {
+MEM_HELP:
 			__v_putn(
 `Display memory statistics
-  MEM [OPTIONS]
+MEM [OPTIONS]
 
 OPTIONS
 /DEBUG    Not implemented
@@ -215,9 +217,9 @@ OPTIONS
 
 By default, MEM will show memory usage`
 			);
-		} else {
-			__v_putn("Not implemented. Only /stats is implemented");
+			goto SHL_S;
 		}
+		__v_putn("Not implemented. Only /stats is implemented");
 		goto SHL_S;
 	}
 
@@ -410,7 +412,7 @@ void panic(ushort code,
 			__v_printf(" %02X", *p);
 		++p;
 	}
-	__put("\n--\n");
+	__v_put("\n--\n");
 	print_regs;
 	/*printf("--\n"); Temporary commented until print_stack is implemented
 	print_stack;*/

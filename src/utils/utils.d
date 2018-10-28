@@ -20,13 +20,17 @@ import core.stdc.string : strncpy, strlen;
  */
 extern (C)
 int sargs(const char* t, char** argv) {
+	//TODO: Use memory locations from MEMORY instead of malloc
 	int j, a;
+	//char* mloc = cast(char*)MEMORY;
 
 	const size_t sl = strlen(t);
 
 	for (int i = 0; i <= sl; ++i) {
 		if (t[i] == 0 || t[i] == ' ' || t[i] == '\n') {
 			argv[a] = cast(char*)malloc(i - j + 1);
+			//mloc +=
+			//argv[a] = cast(char*)(MEMORY + 0x1200);
 			strncpy(argv[a], t + j, i - j);
 			argv[a][i - j] = 0;
 			while (t[i + 1] == ' ') ++i;
@@ -37,6 +41,7 @@ int sargs(const char* t, char** argv) {
 			while (t[i] != '\"' && t[i] != 0) ++i;
 			if (t[i] == 0) continue;
 			argv[a] = cast(char*)malloc(i - j + 1);
+			//argv[a] = cast(char*)(MEMORY + 0x1200);
 			strncpy(argv[a], t + j, i - j);
 			argv[a][i - j] = 0;
 			while(t[i + 1] == ' ') ++i;
@@ -95,7 +100,7 @@ uint bswap32(uint n) {
 }
 
 // Disable bswap64 as long as we don't need it
-version (none)
+version (0)
 /**
  * Byte swap a 8-byte number.
  * Params: num = 8-byte number to swap.
@@ -104,7 +109,13 @@ version (none)
 pragma(inline, true)
 extern (C)
 ulong bswap64(ulong n) {
-	ubyte* p = cast(ubyte*)&n;
+	// NOTE: D compilers (at least DMD) does not allow bit-shifting past
+	// 32 bits
+	uint* p = cast(uint*)n;
+	const uint a = bswap32(p[0]);
+	p[0] = bswap32(p[1]);
+	p[1] = a;
+	/*ubyte* p = cast(ubyte*)&n;
 	version (DigitarMars) { // Compiler optimized
 		ubyte c = *p;
 		*p = *(p + 7);
@@ -129,6 +140,6 @@ ulong bswap64(ulong n) {
 		*(p + 5) = *(ip + 2);
 		*(p + 6) = *(ip + 1);
 		*(p + 7) = *(ip + 0);
-	}
+	}*/
 	return n;
 }
