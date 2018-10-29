@@ -24,6 +24,7 @@ unittest {
 	VIDEO[81].ascii = 'o';
 	VIDEO[82].ascii = '~';
 
+	//TODO: Finish colourful 'thing'
 	VIDEO[160].ascii = 0xda;
 	VIDEO[160].attribute = 0x2E;
 	VIDEO[161].ascii = 0xc4;
@@ -40,11 +41,9 @@ unittest {
 	SYSTEM.cursor[0].col = 0;
 	SYSTEM.cursor[0].row = 5;
 
+	__v_put("__v_put\n");
 	__v_putn("__v_putn");
-
-	__v_printf("%d\n", 0);
-
-	__v_putn("Hello again!");
+	__v_printf("__v_printf: %d\n", 32);
 
 	screen_logo; // print logo
 
@@ -52,5 +51,5 @@ unittest {
 
 	screen_draw; // draw on screen
 
-	SetPos(0, 26); // puts test result messages at the send
+	SetPos(0, 26); // puts test result messages at the end
 }
