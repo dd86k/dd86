@@ -22,7 +22,7 @@ private void _version() {
 		BANNER ~
 		"\ndd-dos-"~PLATFORM~" v"~APP_VERSION~" ("~__TIMESTAMP__~")\n"~
 		"Copyright (c) 2017-2018 dd86k\n"~
-		"Project page: <https://github.com/dd86k/dd-dos>\n"~
+		"Project page: <https://git.dd86k.space/dd86k/dd-dos>\n"~
 		"License: <https://opensource.org/licenses/MIT>\n"~
 		"Compiler: "~__VENDOR__~" v%d\n\n"~
 		// Credit roles start at 40 characters
