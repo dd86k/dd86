@@ -480,8 +480,7 @@ void __v_putc(char c, bool s = true) {
 
 extern (C) public
 void __v_printf(immutable(char)* f, ...) {
-	import core.stdc.stdio : vsnprintf;
-	import core.stdc.stdarg : va_list, va_start;
+	import ddc : vsnprintf, va_list, va_start;
 
 	va_list args = void;
 	va_start(args, f);

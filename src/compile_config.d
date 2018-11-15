@@ -47,7 +47,27 @@ version (CRuntime_Bionic) {
 	enum C_RUNTIME = "UNKNOWN";
 }
 
-enum APP_VERSION = "0.0.0-0"; /// DD-DOS version
+version (X86) {
+	enum PLATFORM = "x86";
+} else version (X86_64) {
+	enum PLATFORM = "amd64";
+} else version (ARM) {
+	version (LittleEndian) enum PLATFORM = "aarch32le";
+	version (BigEndian) enum PLATFORM = "aarch32be";
+	static assert(0,
+		"ARM32 is not supported");
+} else version (AArch64) {
+	version (LittleEndian) enum PLATFORM = "aarch64le";
+	version (BigEndian) enum PLATFORM = "aarch64be";
+	static assert(0,
+		"ARM64 is not supported");
+} else {
+	static assert(0,
+		"This platform is not supported");
+
+}
+
+enum APP_VERSION = "0.0.0"; /// DD-DOS version
 
 /********************************************************************
  * vCPU

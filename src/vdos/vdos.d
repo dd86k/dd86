@@ -45,12 +45,13 @@ __gshared ubyte
 
 // Live structures in MEMORY
 
-__gshared dos_struct* DOS;
-__gshared system_struct* SYSTEM;
+__gshared dos_struct* DOS = void;
+__gshared system_struct* SYSTEM = void;
 
 extern (C)
 void vdos_init() {
-	// ubyte* -> vdos_settings* is not supported in CTFE, done in run-time instead
+	// Setting a memory pointer as ubyte* (as vdos_settings*) is not
+	// supported in CTFE, so done in run-time instead
 	SYSTEM = cast(system_struct*)MEMORY;
 	SYSTEM.memsize = INIT_MEM >> 10; // DIV 1024
 	SYSTEM.video_mode = 3;

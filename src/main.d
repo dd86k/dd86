@@ -14,17 +14,17 @@ import Logger;
 import ddcon : con_init, Clear;
 import os_utils : os_pexist;
 import sleep : sleep_init;
-import compile_config : APP_VERSION;
+import compile_config : APP_VERSION, PLATFORM;
 
 extern (C)
 private void _version() {
 	printf(
 		BANNER ~
-		"Copyright (c) 2017-2018 dd86k, MIT license\n" ~
-		"Project page: <https://github.com/dd86k/dd-dos>\n" ~
-		"License: <https://opensource.org/licenses/MIT>\n\n" ~
-		"dd-dos " ~ APP_VERSION ~ "  (" ~ __TIMESTAMP__ ~ ")\n" ~
-		"Compiled using the " ~ __VENDOR__ ~ " compiler v%d\n\n" ~
+		"dd-dos-"~PLATFORM~" v"~APP_VERSION~"  ("~__TIMESTAMP__~")\n"~
+		"Copyright (c) dd86k 2017-2018\n"~
+		"Project page: <https://github.com/dd86k/dd-dos>\n"~
+		"License: <https://opensource.org/licenses/MIT>\n\n"~
+		"Compiled using the "~__VENDOR__~" compiler v%d\n\n"~
 		// Credit roles start at 40 characters
 		`Credits
 dd86k ................................. Original author

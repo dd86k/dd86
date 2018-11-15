@@ -7,7 +7,7 @@ module sleep;
 version (Posix) {
 	private import core.sys.posix.time : nanosleep, timespec;
 	private import core.stdc.errno;
-	private __gshared timespec _t;
+	private __gshared timespec _t = void;
 }
 version (Windows) {
 	private import core.sys.windows.windows;

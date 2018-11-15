@@ -18,7 +18,7 @@ version (Windows) {
 	private enum DISABLE_NEWLINE_AUTO_RETURN = 0x0008;
 	/// Necessary handles.
 	//TODO: Get external handles from C runtimes instead if possible (depending on version)
-	__gshared HANDLE hIn, hOut;
+	__gshared HANDLE hIn = void, hOut = void;
 	private __gshared USHORT defaultColor = DEFAULT_COLOR;
 }
 version (Posix) {
@@ -26,7 +26,7 @@ version (Posix) {
 	private import core.sys.posix.unistd;
 	private import core.sys.posix.termios;
 	private enum TERM_ATTR = ~ICANON & ~ECHO;
-	private __gshared termios old_tio, new_tio;
+	private __gshared termios old_tio = void, new_tio = void;
 }
 
 /*******************************************************************

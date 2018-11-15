@@ -1,13 +1,13 @@
 /*
  * ddc.d : For people who want to C.
  *
- * C runtime bindings, subset of DD's C extern definitions (signatures)
+ * It's a set of C runtime external bindings and enumerations and aliases to
+ * aid development in betterC modes.
  *
  * Why? Because some functions are externed as (D) in core.stdc, which does not
- * mangle well with the linker (D mangles for C externs, really?!). This source
- * is also the beginning of the departure of the standard D library (core.stdc).
+ * mangle well with the linker (i.e. D name mangling for C symbols).
  *
- * This also adds some enumerations and aliases to aid development.
+ * This also avoids using the druntime and D stdlib functions and aliases.
  */
 
 module ddc;
@@ -22,6 +22,10 @@ public extern (C) {
 }
 
 version (CRuntime_Microsoft) {
+	//
+	// stdio.h
+	//
+
 	enum _NFILE = 20;
 
 	struct _iobuf { align(1):
@@ -62,6 +66,11 @@ version (CRuntime_Microsoft) {
 	shared stdaux = &_iob[3];
 	shared stdprn = &_iob[4];
 
+	extern (C) // 10.0.17134.0 stdio.h@L1337
+	int   __stdio_common_vsprintf(char* s, size_t n, immutable(char)* format, va_list arg);
+	alias __stdio_common_vsprintf vsnprintf;
+
+	public import core.stdc.stdarg : va_list, va_start;
 	public import core.stdc.stdio : printf, puts;
 } else {
 	public import core.stdc.stdio;
