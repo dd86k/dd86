@@ -74,6 +74,7 @@ version (CRuntime_Microsoft) {
 	public import core.stdc.stdio : printf, puts;
 } else {
 	public import core.stdc.stdio;
+	public import core.stdc.stdarg : va_list, va_start;
 }
 
 /*
