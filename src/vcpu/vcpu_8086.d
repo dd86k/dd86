@@ -2129,7 +2129,7 @@ void exec16(ubyte op) {
 		vCPU.EIP += __fi16_i; // Direct within segment
 		return;
 	case 0xE9: // JMP NEAR-LABEL
-		vCPU.EIP += __fi16_i; // ±32 KB
+		vCPU.EIP += __fi16_i + 3; // ±32 KB
 		return;
 	case 0xEA: // JMP FAR-LABEL
 		// Any segment, any fragment, 5 byte instruction.
@@ -2138,7 +2138,7 @@ void exec16(ubyte op) {
 		vCPU.CS = __fu16_i(2);
 		return;
 	case 0xEB: // JMP SHORT-LABEL
-		vCPU.EIP += __fi8_i; // ±128 B
+		vCPU.EIP += __fi8_i + 2; // ±128 B
 		return;
 	case 0xEC: // IN AL, DX
 
