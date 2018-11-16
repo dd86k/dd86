@@ -152,7 +152,7 @@ int os_pisdir(char* p) {
 		return GetFileAttributesA(p) == FILE_ATTRIBUTE_DIRECTORY;
 	}
 	version (Posix) {
-		import ddc : stat_t, stat, S_IFDIR;
+		import core.sys.posix.sys.stat : stat_t, stat, S_IFDIR;
 		stat_t s = void;
 		stat(p, &s);
 		return s.st_mode & S_IFDIR;

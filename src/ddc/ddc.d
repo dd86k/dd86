@@ -21,11 +21,11 @@ public extern (C) {
 	int getchar();
 }
 
-version (CRuntime_Microsoft) {
-	//
-	// stdio.h
-	//
+//
+// stdio.h
+//
 
+version (CRuntime_Microsoft) {
 	enum _NFILE = 20;
 
 	struct _iobuf { align(1):
@@ -70,34 +70,9 @@ version (CRuntime_Microsoft) {
 	int   __stdio_common_vsprintf(char* s, size_t n, immutable(char)* format, va_list arg);
 	alias __stdio_common_vsprintf vsnprintf;
 
-	public import core.stdc.stdarg : va_list, va_start;
 	public import core.stdc.stdio : printf, puts;
 } else {
 	public import core.stdc.stdio;
-	public import core.stdc.stdarg : va_list, va_start;
 }
 
-/*
- * sys/stat.h
- */
-version (Posix) {
-	public import core.sys.posix.sys.stat;
-	/*struct stat_t { align(1):
-		mode_t st_mode;
-		ino_t st_ino;
-		dev_t st_dev;
-		dev_t st_rdev;
-		nlink_t st_nlink;
-		uid_t st_uid;
-		gid_t st_gid;
-		off_t st_size;
-		timespec st_atim;
-		timespec st_mtim;
-		timespec st_ctim;
-		blksize_t st_blksize;
-		blkcnt_t st_blocks;
-	}
-	extern (C) int stat(char*, stat_t*);
-	extern (C) int lstat(immutable(char*) filename, stat* buf);
-	extern (C) int fstat(int filedesc, stat* buf);*/
-}
+public import core.stdc.stdarg : va_list, va_start;

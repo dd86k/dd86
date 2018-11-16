@@ -30,6 +30,7 @@ version (Windows) {
 	private __gshared COORD ibufsize = void;
 	private __gshared SMALL_RECT ibufout = void;
 	private __gshared COORD bufcoord;	// inits to 0,0
+	version (none) // disable until W variant is needed...
 	__gshared ushort[256] vctable = [
 		/// cp437-utf16-le default character translation table
 		0x0020, 0x3A26, 0x3B26, 0x6526, 0x6626, 0x6326, 0x6026, 0x2220,
@@ -165,13 +166,12 @@ struct videochar {
 	union {
 		ushort WORD;
 		struct {
-			// should be CP437
-			ubyte ascii;	/// ascii character
+			ubyte ascii;	/// character, usually CP437
 			// 7 6 5 4 3 2 1 0
 			// |-|-|-|-|-|-|-| attribute structure
 			// | | | | +-+-+-+- foreground (4 bits)
 			// | +-+-+--------- background (3 bits)
-			// +--------------- blink or special (1 bit)
+			// +--------------- blink/special (1 bit)
 			ubyte attribute;	/// character attributes
 		}
 	}
@@ -191,8 +191,7 @@ void screen_init() {
 	version (Windows) {
 		import core.sys.windows.windows : SetConsoleMode, SetConsoleOutputCP;
 
-		// ~ENABLE_PROCESSED_OUTPUT
-		// ~ENABLE_WRAP_AT_EOL_OUTPUT
+		// ~ENABLE_PROCESSED_OUTPUT & ~ENABLE_WRAP_AT_EOL_OUTPUT
 		SetConsoleMode(hOut, 0);
 		SetConsoleOutputCP(437); // default
 
@@ -214,13 +213,6 @@ void screen_init() {
 			// 3 worst-case utf-8 char
 			// 1 newline
 		);
-		/*str = cast(char*)malloc( // solution 3a
-			(SYSTEM.screen_col * 23) + 6
-			// 10 char fg
-			// 10 char bg
-			// 3 worst-case utf-8 char
-			// 1 newline OR 6 escape
-		);*/
 	}
 }
 
@@ -488,9 +480,8 @@ void __v_printf(immutable(char)* f, ...) {
 	char[256] b = void;
 	uint c = vsnprintf(cast(char*)b, 256, f, args);
 
-	if (c > 0) {
+	if (c > 0)
 		__v_put(cast(immutable(char)*)b, c);
-	}
 }
 
 extern (C) public

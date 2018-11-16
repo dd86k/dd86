@@ -28,6 +28,7 @@ private void _version() {
 		// Credit roles start at 40 characters
 		`Credits
 dd86k ................................. Original author
+
 `,
 		__VERSION__
 	);

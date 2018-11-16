@@ -45,7 +45,6 @@ buildType "release-gdc" {
 buildType "release-nobounds" {
   targetType "executable"
   buildOptions "releaseMode" "noBoundsCheck" "optimize"
-  dflags "-betterC" "-transition=intpromote"
 }
 
 buildType "release-inline" {
