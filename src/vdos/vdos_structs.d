@@ -27,12 +27,12 @@ struct PSP { align(1):
 	ushort cpm_exit;	/// CP/M Exit (INT 20h) pointer
 	ushort first_seg;	/// First segment location pointer
 	ubyte reserved1;	// likely to pad with cpm_comp
-	ubyte[5] cpm_comp;	/// Far call to CP/M combability mode within DOS (instructions)
+	ubyte [5]cpm_comp;	/// Far call to CP/M combability mode within DOS (instructions)
 	uint prev_term;	/// Previous programs terminate address (INT 22h)
 	uint prev_break;	/// Previous programs break address (INT 23h)
 	uint prev_crit;	/// Previous programs critical address (INT 24h)
 	ushort parent_psp;	/// Parent’s PSP segment (usually COMMAND.COM internal)
-	ubyte[20] jft;	/// Job File Table (used for file redirection, internal)
+	ubyte [20]jft;	/// Job File Table (used for file redirection, internal)
 	ushort env_seg;	/// Environment segment
 	uint int21h;	/// Entry to call INT 21h (SS:SP) (internal)
 	ushort jft_size;	/// JFT size (internal)
@@ -43,14 +43,14 @@ struct PSP { align(1):
 		ushort version_;	/// DOS version
 		ubyte majorversion, minorversion;
 	}
-	ubyte[14] reserved3;
-	ubyte[3] dos_far;	/// DOS far call (instructions)
+	ubyte [14]reserved3;
+	ubyte [3]dos_far;	/// DOS far call (instructions)
 	ushort reserved4;
-	ubyte[7] reserved5;	// Could be used to extend FCB1, usually struct padding
-	ubyte[16] fcb1;	/// Unopened Standard FCB 1 (see File Control Block)
-	ubyte[20] fcb2;	/// Unopened Standard FCB 2 (overwritten if FCB 1 is opened)
+	ubyte [7]reserved5;	// Could be used to extend FCB1, usually struct padding
+	ubyte [16]fcb1;	/// Unopened Standard FCB 1 (see File Control Block)
+	ubyte [20]fcb2;	/// Unopened Standard FCB 2 (overwritten if FCB 1 is opened)
 	ubyte cmd_length;	/// Number of bytes on the command-line
-	ubyte[127] cmd;	/// Command-line, terminates with CR character (Dh)
+	ubyte [127]cmd;	/// Command-line, terminates with CR character (Dh)
 }
 
 static assert(PSP.sizeof == 256);
@@ -87,7 +87,7 @@ struct dos_struct { align(1):
 	ushort dev_printer;	/// LPT device driver, far call
 	ushort dev_aux;	/// auxiliery device driver, far call
 	ushort dev_block;	/// Disk device driver, far call
-	char[15] HOSTNAME;	/// Network NetBIOS HOSTNAME
+	char [15]HOSTNAME;	/// Network NetBIOS HOSTNAME
 	private ubyte _pad0;
 	ubyte ERRORLEVEL;
 }
@@ -99,11 +99,7 @@ struct __cpos { align(1):
 }
 
 struct __ivt { align(1):
-	union {
-		uint address;
-		ushort offset;
-		ushort segment;
-	}
+	ushort offset, segment;
 }
 
 static assert(__ivt.sizeof == 4, "IVT structure must be size of 4");
@@ -115,8 +111,8 @@ static assert(__ivt.sizeof == 4, "IVT structure must be size of 4");
 // - 500h -- DOS Communication Area
 struct system_struct { align(1):
 	union {
-		__ivt[256] IVT;
-		private ubyte[0x104] _padding0;
+		__ivt [256]IVT;
+		private ubyte [0x104]_padding0;
 		ushort hdd_offset;	/// HDD address Parameter
 		ushort hdd_segment;	/// HDD address Parameter
 	}
@@ -133,24 +129,24 @@ struct system_struct { align(1):
 	ubyte keypad_storage;
 	ushort kb_buf_head_offset;	/// from 400h
 	ushort kb_buf_tail_offset;	/// from 400h
-	ubyte[32] kb_buffer;
+	ubyte [32]kb_buffer;
 	ubyte drive_recal_status;	// 43Eh
 	ubyte diskette_motor_status;	// 43Fh
 	ubyte diskette_shutoff_counter;	// 440h
 	ubyte diskette_last_op_status;	// 441h, see INT 13h AH=01h
-	ubyte[7] nec765_status;
+	ubyte [7]nec765_status;
 	ubyte video_mode;	/// Current video mode
 	ushort screen_col;
 	ushort video_rbuf_size;	/// Size of current video regenerate buffer in bytes
 	ushort video_rbuf_off;	/// Offset of current video page in video regenerate buffer
-	__cpos[8] cursor;	/// Cursor positions per page
+	__cpos [8]cursor;	/// Cursor positions per page
 	ubyte video_scan_line_bottom;
 	ubyte video_scan_line_top;
 	ubyte screen_page;	/// current active page
 	ushort crt_base_port;	/// 6845 base port, 3B4h=mono, 3D4h=color
 	ubyte crt_mode;	/// 6845 CRT mode control register value (port 3x8h)
 	ubyte video_cga_palette;	/// CGA current color palette mask setting (port 3D9h)
-	ubyte[5] cassette_control;
+	ubyte [5]cassette_control;
 	uint clock_counter;
 	ubyte clock_rollover;
 	ubyte bios_break;
@@ -159,8 +155,8 @@ struct system_struct { align(1):
 	ubyte disk_number;	// that are attached
 	ubyte disk_control;
 	ubyte disk_adapter_port_offset;
-	ubyte[4] lpt_timeouts;
-	ubyte[4] com_timeouts;
+	ubyte [4]lpt_timeouts;
+	ubyte [4]com_timeouts;
 	// 480h
 	ushort kb_buf_off_start;
 	ushort kb_buf_off_end;
@@ -175,7 +171,7 @@ struct system_struct { align(1):
 	ubyte disk_error;
 	ubyte disk_int_control;
 	ubyte disk_floppy_card;
-	ubyte[4] drive_status;	// 0 through 3
+	ubyte [4]drive_status;	// 0 through 3
 	ubyte drive0_seek;
 	ubyte drive1_seek;
 	ubyte kb_mode;
@@ -188,28 +184,28 @@ struct system_struct { align(1):
 	ubyte lana1_status;
 	uint disk_int;
 	uint video_table_addr;	/// BIOS Video Save/Override Pointer Table address
-	private ubyte[8] _res1;
+	private ubyte [8]_res1;
 	ubyte kb_nmi_control;
 	uint kb_break;
 	ubyte port60_queue;
 	ubyte kb_last_scancode;
 	ubyte nmi_buf_head;	// pointer
 	ubyte nmi_buf_tail;	// pointer
-	ubyte[16] nmi_scancode_buf;
+	ubyte [16]nmi_scancode_buf;
 	ushort clock_counter_conv;
-	ubyte[16] app_comm_area;	/// Intra-Applications Communications Area
+	ubyte [16]app_comm_area;	/// Intra-Applications Communications Area
 	// 500h
 	ubyte print_scr_status;
-	ubyte[3] basic;
+	ubyte [3]basic;
 	ubyte diskette_dos_mode;
-	ubyte[10] post;
+	ubyte [10]post;
 	ubyte basic_shell;
 	ushort basic_ds;
 	uint basic_int1c;
 	uint basic_int23;
 	uint basic_int24;
 	ushort dos_storage;
-	ubyte[14] diskette_init_table;	/// DOS
+	ubyte [14]diskette_init_table;	/// DOS
 	ushort mode;	// Referring to the MODE command
 }
 

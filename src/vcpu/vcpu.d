@@ -75,7 +75,7 @@ enum : ubyte {
 __gshared short RLEVEL = 1;
 __gshared ubyte opt_sleep = 1; /// Is sleeping available to use? If so, use it
 
-__gshared ubyte* MEMORY = void; /// Main memory bank
+__gshared ubyte *MEMORY = void; /// Main memory bank
 
 /**
  * Get the system's memory size in bytes.

@@ -20,7 +20,7 @@ else
 public __gshared ubyte Verbose = LOG_SILENCE;
 
 //TODO: Figure out template to avoid re-typing debug everytime
-debug void _debug(immutable(char)* msg) {
+debug void _debug(immutable(char) *msg) {
 	printf("[....] %s\n", msg);
 }
 debug void logexec(ushort seg, ushort ip, ubyte op) {
@@ -29,26 +29,26 @@ debug void logexec(ushort seg, ushort ip, ubyte op) {
 
 /// Log an informational message
 /// Params: msg = Message
-void info(immutable(char)* msg) {
+void info(immutable(char) *msg) {
 	if (Verbose < LOG_INFO) return;
 	printf("[INFO] %s\n", msg);
 }
 
 /// Log a warning message
 /// Params: msg = Message
-void warn(immutable(char)* msg) {
+void warn(immutable(char) *msg) {
 	if (Verbose < LOG_WARN) return;
 	printf("[WARN] %s\n", msg);
 }
 
 /// Log an error
 /// Params: msg = Message
-void error(immutable(char)* msg) {
+void error(immutable(char) *msg) {
 	if (Verbose < LOG_ERROR) return;
 	printf("[ERR ] %s\n", msg);
 }
 
-void crit(immutable(char)* msg, ushort code = PANIC_UNKNOWN) {
+void crit(immutable(char) *msg, ushort code = PANIC_UNKNOWN) {
 	import core.stdc.stdlib : exit;
 	import vdos : panic;
 	//if (Verbose >= LOG_CRIT)

@@ -25,7 +25,7 @@ struct OSDate {
  * Returns: 0 on success, non-zero on error when applicable
  */
 extern (C)
-int os_time(OSTime* ost) {
+int os_time(OSTime *ost) {
 	version (Windows) {
 		import core.sys.windows.windows : SYSTEMTIME, GetLocalTime;
 		SYSTEMTIME s;
@@ -41,7 +41,7 @@ int os_time(OSTime* ost) {
 		//TODO: Consider moving from gettimeofday(2) to clock_gettime(2)
 		//      https://linux.die.net/man/2/gettimeofday
 		//      gettimeofday is deprecated since POSIX.2008
-		tm* s; timeval tv;
+		tm *s; timeval tv;
 		gettimeofday(&tv, null);
 		s = localtime(&tv.tv_sec);
 
@@ -61,7 +61,7 @@ int os_time(OSTime* ost) {
  * Returns: 0 on success
  */
 extern (C)
-int os_date(OSDate* osd) {
+int os_date(OSDate *osd) {
 	version (Windows) {
 		import core.sys.windows.winbase : SYSTEMTIME, GetLocalTime;
 		SYSTEMTIME s;
@@ -74,7 +74,7 @@ int os_date(OSDate* osd) {
 	} else version (Posix) {
 		import core.sys.posix.time : time_t, time, localtime, tm;
 		time_t r; time(&r);
-		const tm* s = localtime(&r);
+		const tm *s = localtime(&r);
 
 		osd.year = cast(ushort)(1900 + s.tm_year);
 		osd.month = cast(ubyte)(s.tm_mon + 1);
@@ -92,7 +92,7 @@ int os_date(OSDate* osd) {
  * Returns: 0 on success
  */
 extern (C)
-int os_scwd(char* p) {
+int os_scwd(char *p) {
 	version (Windows) {
 		import core.sys.windows.winbase : SetCurrentDirectoryA;
 		return SetCurrentDirectoryA(p) != 0;
@@ -109,7 +109,7 @@ int os_scwd(char* p) {
  * Returns: non-zero on success
  */
 extern (C)
-int os_gcwd(char* p) {
+int os_gcwd(char *p) {
 	version (Windows) {
 		import core.sys.windows.winbase : GetCurrentDirectoryA;
 		return GetCurrentDirectoryA(255, p);
@@ -127,7 +127,7 @@ int os_gcwd(char* p) {
  * Returns: Non-zero if exists
  */
 extern (C)
-int os_pexist(char* p) {
+int os_pexist(char *p) {
 	version (Windows) {
 		import core.sys.windows.windows : GetFileAttributesA;
 		return GetFileAttributesA(p) != 0xFFFF_FFFF;
@@ -145,7 +145,7 @@ int os_pexist(char* p) {
  * Returns: Non-zero if directory
  */
 extern (C)
-int os_pisdir(char* p) {
+int os_pisdir(char *p) {
 	version (Windows) {
 		import core.sys.windows.windows :
 			GetFileAttributesA, FILE_ATTRIBUTE_DIRECTORY;

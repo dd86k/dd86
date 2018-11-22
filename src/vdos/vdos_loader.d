@@ -29,11 +29,11 @@ private enum {
  * Notes: Refer to EXEC2BIN.ASM from MS-DOS 2.0 for details, at EXELOAD.
  */
 extern (C)
-int vdos_load(char* path) {
-	FILE* f = fopen(path, "rb"); /// file handle
+int vdos_load(char *path) {
+	FILE *f = fopen(path, "rb"); /// file handle
 	fseek(f, 0, SEEK_END);
 	// leave the cast in case of 64-bit compiles
-	int fsize = cast(int)ftell(f); // who the hell would have a >2G exec to run in DOS
+	uint fsize = cast(uint)ftell(f); // who the hell would have a >2G exec to run in DOS
 
 	debug printf("[....] File size: %d\n", fsize);
 
@@ -168,7 +168,7 @@ int vdos_load(char* path) {
  * Returns: 0 on success
  */
 extern (C) private
-int MakePSP(immutable(char)* path = NULL_CHAR) { //TODO: Consider default "NULL"
+int MakePSP(immutable(char) *path = NULL_CHAR) { //TODO: Consider default "NULL"
 	PSP* psp = cast(PSP*)(MEMORY + get_ip - 0x100);
 
 	psp.minorversion = MinorVersion;

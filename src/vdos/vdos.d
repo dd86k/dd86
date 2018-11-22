@@ -45,8 +45,8 @@ __gshared ubyte
 
 // Live structures in MEMORY
 
-__gshared dos_struct* DOS = void;
-__gshared system_struct* SYSTEM = void;
+__gshared dos_struct *DOS = void;
+__gshared system_struct *SYSTEM = void;
 
 extern (C)
 void vdos_init() {
@@ -68,9 +68,9 @@ void vdos_init() {
  */
 extern (C)
 void vdos_shell() {
-	char* inb = // internal input buffer, also used for CWD buffering
+	char *inb = // internal input buffer, also used for CWD buffering
 		cast(char*)(MEMORY + 0x900);
-	char** argv = // argument vector, sizeof(char *)
+	char **argv = // argument vector, sizeof(char *)
 		cast(char**)(MEMORY + 0x900 + _BUFS);
 
 SHL_S:
@@ -392,7 +392,7 @@ void print_stack() {
 
 extern (C)
 void panic(ushort code,
-	immutable(char)* modname = cast(immutable(char)*)__MODULE__,
+	immutable(char) *modname = cast(immutable(char)*)__MODULE__,
 	int line = __LINE__) {
 	import core.stdc.stdlib : exit;
 	//TODO: Setup SEH that points here
@@ -405,7 +405,7 @@ void panic(ushort code,
 		code, modname, line
 	);
 	int i = RANGE;
-	ubyte* p = MEMORY + vCPU.EIP - TARGET;
+	ubyte *p = MEMORY + vCPU.EIP - TARGET;
 	while (--i) {
 		if (i == (TARGET - 1))
 			__v_printf(" > %02X<", *p);

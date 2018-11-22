@@ -396,7 +396,7 @@ void __iu32(uint op, int addr) {
  *   addr = Memory location
  */
 extern (C)
-void __iarr(void* ops, size_t size, size_t addr) {
+void __iarr(void *ops, size_t size, size_t addr) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iarr", PANIC_MEMORY_ACCESS);
 	memcpy(cast(void*)MEMORY + addr, ops, size);
 }
@@ -408,7 +408,7 @@ void __iarr(void* ops, size_t size, size_t addr) {
  *   addr = Memory address, default: CS:IP
  */
 extern (C)
-void __istr(immutable(char)* data, size_t addr = vCPU.EIP) {
+void __istr(immutable(char) *data, size_t addr = vCPU.EIP) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __istr", PANIC_MEMORY_ACCESS);
 	strcpy(cast(char*)MEMORY + addr, data);
 }

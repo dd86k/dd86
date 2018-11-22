@@ -19,7 +19,7 @@ import core.stdc.string : strncpy, strlen;
  * Notes: Original function by Nuke928. Modified by dd86k.
  */
 extern (C)
-int sargs(const char* t, char** argv) {
+int sargs(const char *t, char **argv) {
 	//TODO: Use memory locations from MEMORY instead of malloc
 	int j, a;
 	//char* mloc = cast(char*)MEMORY;
@@ -67,7 +67,7 @@ char[] MemString(uint pos) {
 }
 
 extern (C)
-void lowercase(char* c) {
+void lowercase(char *c) {
 	while (*c) {
 		if (*c >= 'A' && *c <= 'Z')
 			*c = cast(char)(*c + 32);

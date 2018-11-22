@@ -4,7 +4,7 @@ description "Small DOS Virtual Machine"
 authors "dd86k"
 copyright "Copyright © dd86k 2017-2018"
 license "MIT"
-homepage "https://github.com/dd86k/dd-dos"
+homepage "https://git.dd86k.space/dd86k/dd-dos"
 
 ###################
 # Debug builds

@@ -26,12 +26,12 @@ version (Windows) {
 		COORD, SMALL_RECT, CHAR_INFO, SetConsoleOutputCP;
 	import ddcon : hOut;
 
-	private __gshared CHAR_INFO* ibuf = void;	/// Intermediate buffer
+	private __gshared CHAR_INFO *ibuf = void;	/// Intermediate buffer
 	private __gshared COORD ibufsize = void;
 	private __gshared SMALL_RECT ibufout = void;
 	private __gshared COORD bufcoord;	// inits to 0,0
 	version (none) // disable until W variant is needed...
-	__gshared ushort[256] vctable = [
+	__gshared ushort [256]vctable = [
 		/// cp437-utf16-le default character translation table
 		0x0020, 0x3A26, 0x3B26, 0x6526, 0x6626, 0x6326, 0x6026, 0x2220,
 		0xD825, 0xCB25, 0xD925, 0x4226, 0x4026, 0x6A26, 0x6B26, 0x3C26,
@@ -96,7 +96,7 @@ version (Posix) {
 	//      since D characters are UTF-8. Which might avoid us to make a MSB
 	//      version of this table. However, this is safer.
 	/// cp437-utf8-le default character translation table
-	__gshared uint[256] vctable = [
+	__gshared uint [256]vctable = [
 		0x000020, 0xBA98E2, 0xBB98E2, 0xA599E2, 0xA699E2, 0xA399E2, 0xA099E2, 0x9897E2,
 		0x8B97E2, 0x9997E2, 0x8299E2, 0x8099E2, 0xAA99E2, 0xAB99E2, 0xBC98E2, 0xBA96E2,
 		// 16 (offset)
@@ -145,7 +145,7 @@ version (Posix) {
 		0xA189E2, 0x00B1C2, 0xA589E2, 0xA489E2, 0xA08CE2, 0xA18CE2, 0x00B7C3, 0x8889E2,
 		0x00B0C2, 0x9988E2, 0x00B7C2, 0x9A88E2, 0xBF81E2, 0x00B2C2, 0xA096E2, 0x000020
 	];
-	__gshared ushort[16] vatable = [ /// xterm-256 attribute translation table
+	__gshared ushort [16]vatable = [ /// xterm-256 attribute translation table
 		// ascii-encoded characters, terminal can accept a leading zero
 		// see https://i.stack.imgur.com/KTSQa.png for reference
 		// black, blue, green, cyan, red, magenta, brown, lightgray
@@ -153,13 +153,13 @@ version (Posix) {
 		// dark gray, ^blue, ^green, ^cyan, ^red, ^magenta, yellow, white
 		0x3830, 0x3231, 0x3031, 0x3431, 0x3930, 0x3331, 0x3131, 0x3531
 	];
-	ubyte* esc = [ // "\033[38;5;00m\033[48;5;00m" -- Guarantees byte-alignment
+	ubyte *esc = [ // "\033[38;5;00m\033[48;5;00m" -- Guarantees byte-alignment
 		0x1b,0x5b,0x33,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // fg
 		0x1b,0x5b,0x34,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // bg
 	];
-	ushort* s_fg = void;//cast(ushort*)(cast(ubyte*)s + 7);
-	ushort* s_bg = void;//cast(ushort*)(cast(ubyte*)s + 17);
-	char* str = void;//cast(char*)malloc(
+	ushort *s_fg = void;//cast(ushort*)(cast(ubyte*)s + 7);
+	ushort *s_bg = void;//cast(ushort*)(cast(ubyte*)s + 17);
+	char *str = void;//cast(char*)malloc(
 }
 
 struct videochar {
@@ -240,7 +240,7 @@ void screen_draw() {
 
 		const uint sc = x * SYSTEM.screen_row; /// screen size
 		uint c = void; /// character to print
-		ubyte* cp = cast(ubyte*)&c + 2; // third byte
+		ubyte *cp = cast(ubyte*)&c + 2; // third byte
 
 		// one draw / 60 draws (hot-run results only)
 		// solution 1: one write(2) per character and attribute (scrapped)
@@ -312,7 +312,7 @@ void screen_clear(bool host = false) {
 	import ddcon : Clear;
 
 	const int t = (SYSTEM.screen_row * SYSTEM.screen_col) / 2;
-	uint* v = cast(uint*)VIDEO;
+	uint *v = cast(uint*)VIDEO;
 	for (size_t i; i < t; ++i) v[i] = 0x0720_0720;
 
 	if (host) Clear;
@@ -396,7 +396,7 @@ void __v_char_p(uint x, uint y, ubyte c) {
  *   size = String length
  */
 extern (C) public
-void __v_put(immutable(char)* s, uint size = 0) {
+void __v_put(immutable(char) *s, uint size = 0) {
 	if (size == 0) {
 		enum MAX_STR = 255;
 		while (s[size] != 0 && size < MAX_STR)
@@ -421,7 +421,7 @@ void __v_put(immutable(char)* s, uint size = 0) {
  *   size = String length
  */
 extern (C) public
-void __v_putn(immutable(char)* s, uint size = 0) {
+void __v_putn(immutable(char) *s, uint size = 0) {
 	__v_put(s, size);
 	__v_putc('\n');
 }
@@ -438,7 +438,7 @@ extern (C) public
 void __v_putc(char c, bool s = true) {
 	import vdos_structs : __cpos;
 
-	__cpos* cur = &SYSTEM.cursor[SYSTEM.screen_page];
+	__cpos *cur = &SYSTEM.cursor[SYSTEM.screen_page];
 	uint pos = void; /// character position on screen
 
 	switch (c) {
@@ -477,7 +477,7 @@ void __v_printf(immutable(char)* f, ...) {
 	va_list args = void;
 	va_start(args, f);
 
-	char[256] b = void;
+	char [256]b = void;
 	uint c = vsnprintf(cast(char*)b, 256, f, args);
 
 	if (c > 0)
