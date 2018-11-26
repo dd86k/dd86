@@ -503,3 +503,12 @@ void __v_scroll() {
 		++d; ++s;
 	}
 }
+
+/// Update cursor positions on host machine using current screen page
+extern (C) public
+void __v_ucpos() {
+	import vdos_structs : __cpos;
+	import ddcon : SetPos;
+	const __cpos w = SYSTEM.cursor[SYSTEM.screen_page];
+	SetPos(w.col, w.row);
+}

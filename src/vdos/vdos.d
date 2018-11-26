@@ -10,7 +10,7 @@ import core.stdc.stdlib : malloc, free, system;
 import vcpu, vcpu_utils;
 import vdos_codes, vdos_int;
 import vdos_loader : vdos_load;
-import vdos_structs : system_struct, dos_struct;
+import vdos_structs : system_struct, dos_struct, __cpos;
 import vdos_screen;
 import utils, os_utils;
 import ddcon, Logger;
@@ -80,7 +80,8 @@ SHL_S:
 	else // just-in-case
 		__v_put("\n% "); screen_draw;
 
-	fgets(inb, _BUFS, stdin);
+	//fgets(inb, _BUFS, stdin);
+	vdos_readline(inb, _BUFS);
 	if (*inb == '\n') goto SHL_S; // Nothing to process
 
 	const int argc = sargs(inb, argv); /// argument count
@@ -359,6 +360,94 @@ By default, MEM will show memory usage`
 
 //SHL_E:
 	goto SHL_S;
+}
+
+extern (C)
+int vdos_readline(char *buf, int len) {
+	__cpos c = SYSTEM.cursor[SYSTEM.screen_page];
+	uint s;	/// string size
+	uint i;	/// selection index
+	videochar *v = &VIDEO[(c.row * SYSTEM.screen_col) + c.col];	/// video index
+	KeyInfo k = void;
+READ_S:
+	k = ReadKey;
+	switch (k.keyCode) {
+	case Key.Backspace:
+		if (s) {
+			if (i == 0) break;
+
+			--i;
+			char *p = buf + i;
+			videochar *vc = v + i;
+
+			if (i == s) {
+				*p = 0;
+				vc.ascii = 0;
+			} else {
+				uint l = s - i + 1;
+				while (--l > 0) {
+					*p = *(p + 1);
+					vc.ascii = (vc + 1).ascii;
+					++p; ++vc;
+				}
+			}
+			--s;
+		}
+		break;
+	case Key.LeftArrow:
+		if (i > 0) {
+			--i;
+		}
+		break;
+	case Key.RightArrow:
+		if (i + 1 < s) {
+			++i;
+		}
+		break;
+	case Key.Delete:
+
+		break;
+	case Key.Enter:
+		buf[s] = '\n';
+		++s;
+		return s;
+	case Key.Home:
+		i = 0;
+		break;
+	case Key.End:
+		i = s - 1;
+		break;
+	default:
+		if ( // anything that doesn't fit a character, shoo
+			(k.keyCode < Key.D0 || k.keyCode > Key.D9) &&
+			(k.keyCode < Key.A || k.keyCode > Key.Z)
+			) break;
+
+		if (s + 1 >= len) break; // no space in buffer, abandon
+
+		// 012345   s=6, i=6, i == s
+		//       ^
+		// 012345   s=6, i=5, i < s
+		//      ^
+		if (i < s) { // cursor is not at the end, see examples above
+			char *p = buf + s;
+			uint l = s - i;
+			while (--l >= 0) {
+				*(p + 1) = *p;
+				++p;
+			}
+		}
+		//TODO: translate character in case of special codes
+		v[i].ascii = k.keyChar;
+		buf[i] = k.keyChar;
+		++i; ++s;
+		break;
+	}
+	//TODO: update cursor position
+	
+	screen_draw;
+	__v_ucpos;
+	goto READ_S;
 }
 
 extern (C)

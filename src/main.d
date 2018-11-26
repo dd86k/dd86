@@ -125,7 +125,7 @@ private int main(int argc, char** argv) {
 
 	// Where the real fun starts
 
-	//sleep_init;	// sleep
+	//sleep_init;	// sleep timers
 	vcpu_init;	// vcpu
 
 	if (cast(int)prog) {
