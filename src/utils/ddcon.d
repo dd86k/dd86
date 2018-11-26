@@ -80,19 +80,22 @@ extern (C)
 void Clear() {
 	version (Windows) {
 		CONSOLE_SCREEN_BUFFER_INFO csbi = void;
-		COORD c;
+		COORD c; // 0, 0
 		GetConsoleScreenBufferInfo(hOut, &csbi);
-		const int size = csbi.dwSize.X * csbi.dwSize.Y;
-		DWORD num = void;
-		if (FillConsoleOutputCharacterA(hOut, ' ', size, c, &num) == 0
-			/*|| // .NET uses this but no idea why yet.
-			FillConsoleOutputAttribute(hOut, csbi.wAttributes, size, c, &num) == 0*/) {
-			SetPos(0, 0);
-		}
-		else // If that fails, run cls.
-			sys ("cls");
-	} else version (Posix) { //TODO: Clear (Posix)
-		sys ("clear");
+		//const int size = csbi.dwSize.X * csbi.dwSize.Y; buffer size
+		const int size = // window size
+			(csbi.srWindow.Right - csbi.srWindow.Left + 1) * // width
+			(csbi.srWindow.Bottom - csbi.srWindow.Top + 1); // height
+		DWORD num = void; // kind of ala .NET
+		FillConsoleOutputCharacterA(hOut, ' ', size, c, &num);
+		FillConsoleOutputAttribute(hOut, csbi.wAttributes, size, c, &num);
+		SetPos(0, 0);
+	} else version (Posix) {
+		const winsize ws = void;
+		GetWinSize(&ws);
+		const int size = ws.Height * ws.Width;
+		//TODO: write 'default' attribute character
+		printf("\033[0;0H%*s\033[0;0H", size, cast(char*)"");
 	}
 	else static assert(0, "Clear: Not implemented");
 }
@@ -103,59 +106,19 @@ void Clear() {
 
 // Note: A COORD uses SHORT (short) and Linux uses unsigned shorts.
 
-/// Window width
-@property ushort WindowWidth() {
+extern (C)
+void GetWinSize(WindowSize *ws) {
 	version (Windows) {
 		CONSOLE_SCREEN_BUFFER_INFO c = void;
 		GetConsoleScreenBufferInfo(hOut, &c);
-		return cast(ushort)(c.srWindow.Right - c.srWindow.Left + 1);
-	} else version (Posix) {
-		winsize ws = void;
-		ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
-		return ws.ws_col;
-	} else {
-		static assert(0, "WindowWidth : Not implemented");
+		ws.Width = cast(ushort)(c.srWindow.Right - c.srWindow.Left + 1);
+		ws.Height = cast(ushort)(c.srWindow.Bottom - c.srWindow.Top + 1);
 	}
-}
-
-/// Window width
-@property void WindowWidth(int w) {
-	version (Windows) {
-		COORD c = { cast(SHORT)w, cast(SHORT)WindowWidth };
-		SetConsoleScreenBufferSize(hOut, c);
-	} else version (Posix) {
-		winsize ws = { cast(ushort)w, WindowWidth };
-		ioctl(STDOUT_FILENO, TIOCSWINSZ, &ws);
-	} else {
-		static assert(0, "WindowWidth : Not implemented");
-	}
-}
-
-/// Window height
-@property ushort WindowHeight() {
-	version (Windows) {
-		CONSOLE_SCREEN_BUFFER_INFO c = void;
-		GetConsoleScreenBufferInfo(hOut, &c);
-		return cast(ushort)(c.srWindow.Bottom - c.srWindow.Top + 1);
-	} else version (Posix) {
-		winsize ws = void;
-		ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
-		return ws.ws_row;
-	} else {
-		static assert(0, "WindowHeight : Not implemented");
-	}
-}
-
-/// Window height
-@property void WindowHeight(int h) {
-	version (Windows) {
-		COORD c = { cast(SHORT)WindowWidth, cast(SHORT)h };
-		SetConsoleScreenBufferSize(hOut, c);
-	} else version (Posix) {
-		winsize ws = { WindowWidth, cast(ushort)h, 0, 0 };
-		ioctl(STDOUT_FILENO, TIOCSWINSZ, &ws);
-	} else {
-		static assert(0, "WindowHeight : Not implemented");
+	version (Posix) {
+		winsize w = void;
+		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+		ws.Width = w.ws_col;
+		ws.Height = w.ws_row;
 	}
 }
 
@@ -342,6 +305,7 @@ RawEvent ReadGlobal()
 	}
 }
 */
+
 /*******************************************************************
  * Handlers
  *******************************************************************/
