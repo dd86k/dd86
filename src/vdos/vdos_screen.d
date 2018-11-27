@@ -421,8 +421,8 @@ void __v_put(immutable(char) *s, uint size = 0) {
  *   size = String length
  */
 extern (C) public
-void __v_putn(immutable(char) *s, uint size = 0) {
-	__v_put(s, size);
+void __v_putn(immutable(char) *s = null, uint size = 0) {
+	if (s) __v_put(s, size);
 	__v_putc('\n');
 }
 
