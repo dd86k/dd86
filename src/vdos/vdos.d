@@ -68,23 +68,24 @@ void vdos_init() {
  */
 extern (C)
 void vdos_shell() {
-	char *inb = // internal input buffer, also used for CWD buffering
+	char *inbuf = // internal input buffer, also used for CWD buffering
 		cast(char*)(MEMORY + 0x900);
 	char **argv = // argument vector, sizeof(char *)
 		cast(char**)(MEMORY + 0x900 + _BUFS);
 
 SHL_S:
 	//TODO: Print $PROMPT
-	if (os_gcwd(inb))
-		__v_printf("\n%s%% ", inb);
+	if (os_gcwd(inbuf))
+		__v_printf("\n%s%% ", inbuf);
 	else // just-in-case
 		__v_put("\n% "); screen_draw;
 
-	//fgets(inb, _BUFS, stdin);
-	vdos_readline(inb, _BUFS);
-	if (*inb == '\n') goto SHL_S; // Nothing to process
+	//fgets(inbuf, _BUFS, stdin);
+	__v_ucpos; // update cursor pos
+	vdos_readline(inbuf, _BUFS);
+	if (*inbuf == '\n') goto SHL_S; // Nothing to process
 
-	const int argc = sargs(inb, argv); /// argument count
+	const int argc = sargs(inbuf, argv); /// argument count
 
 	lowercase(*argv);
 
@@ -110,8 +111,8 @@ By default, CD will display the current working directory`
 				}
 			}
 		} else {
-			if (os_gcwd(cast(char*)inb))
-				puts(cast(char*)inb);
+			if (os_gcwd(cast(char*)inbuf))
+				puts(cast(char*)inbuf);
 			else puts("E: Error getting CWD");
 		}
 		goto SHL_S;
@@ -147,7 +148,7 @@ By default, CD will display the current working directory`
 	// E
 
 	if (strcmp(*argv, "exit") == 0) {
-		//free(inb);
+		//free(inbuf);
 		//free(argv);
 		return;
 	}
@@ -355,7 +356,7 @@ By default, MEM will show memory usage`
 
 	//TODO: See if command is not an executable (COM/EXE (MZ)/BAT)
 	//      to evaluate before passing to system, like check_exe
-	//system(inb);
+	//system(inbuf);
 	__v_put("Bad command or file name");
 
 //SHL_E:
@@ -364,10 +365,12 @@ By default, MEM will show memory usage`
 
 extern (C)
 int vdos_readline(char *buf, int len) {
-	__cpos c = SYSTEM.cursor[SYSTEM.screen_page];
+	__cpos *c = &SYSTEM.cursor[SYSTEM.screen_page];
+	ushort x = c.col; // To update cursor position later
+	ushort y = c.row; // To update cursor position later
 	uint s;	/// string size
 	uint i;	/// selection index
-	videochar *v = &VIDEO[(c.row * SYSTEM.screen_col) + c.col];	/// video index
+	videochar *v = &VIDEO[(y * SYSTEM.screen_col) + x];	/// video index
 	KeyInfo k = void;
 READ_S:
 	k = ReadKey;
@@ -395,14 +398,10 @@ READ_S:
 		}
 		break;
 	case Key.LeftArrow:
-		if (i > 0) {
-			--i;
-		}
+		if (i > 0) --i;
 		break;
 	case Key.RightArrow:
-		if (i + 1 < s) {
-			++i;
-		}
+		if (i < s) ++i;
 		break;
 	case Key.Delete:
 
@@ -410,58 +409,66 @@ READ_S:
 	case Key.Enter:
 		buf[s] = '\n';
 		++s;
+		__v_putn;
 		return s;
 	case Key.Home:
 		i = 0;
 		break;
 	case Key.End:
-		i = s - 1;
+		i = s;
 		break;
 	default:
 		if ( // anything that doesn't fit a character, shoo
-			(k.keyCode < Key.D0 || k.keyCode > Key.D9) &&
+			(k.keyCode < Key.Spacebar || k.keyCode > Key.D9) &&
 			(k.keyCode < Key.A || k.keyCode > Key.Z)
 			) break;
 
-		if (s + 1 >= len) break; // no space in buffer, abandon
+		if (s + 1 >= len) break; // no space in buffer, abort
 
 		// 012345   s=6, i=6, i == s
 		//       ^
 		// 012345   s=6, i=5, i < s
 		//      ^
 		if (i < s) { // cursor is not at the end, see examples above
-			char *p = buf + s;
+			//TODO: FIXME
+			char *p = buf + s - 1; // start at the end
 			uint l = s - i;
-			while (--l >= 0) {
+			while (--l >= 0) { // and "pull" characters to the end
 				*(p + 1) = *p;
-				++p;
+				--p;
 			}
 		}
 		//TODO: translate character in case of special codes
-		v[i].ascii = k.keyChar;
-		buf[i] = k.keyChar;
+		// depending on current charset (cp437 or others)
+		v[i].ascii = buf[i] = k.keyChar;
 		++i; ++s;
 		break;
 	}
-	//TODO: update cursor position
-	
+	// Update cursor position
+	int xi = x + i;
+	int yi = y;
+	if (xi >= SYSTEM.screen_col) {
+		xi -= SYSTEM.screen_col;
+		yi += (xi / SYSTEM.screen_col) + 1;
+	}
+	c.col = cast(ubyte)xi;
+	c.row = cast(ubyte)yi;
+	__v_ucpos; // update to host
 	screen_draw;
-	__v_ucpos;
 	goto READ_S;
 }
 
 extern (C)
 void print_regs() {
 	__v_printf(
-`EIP=%08X  IP=%04X  (get_ip=%08X)
-EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X
-CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X
-`,
+		"EIP=%08X  IP=%04X  (get_ip=%08X)\n"~
+		"EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X\n"~
+		"CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X\n",
 		vCPU.EIP, vCPU.IP, get_ip,
 		vCPU.EAX, vCPU.EBX, vCPU.ECX, vCPU.EDX,
 		vCPU.CS, vCPU.DS, vCPU.ES, vCPU.SS, vCPU.SP, vCPU.BP, vCPU.SI, vCPU.DI,
 	);
-	__v_printf("FLAG=");
+	__v_put("FLAG=");
 	if (vCPU.OF) __v_putn("OF ");
 	if (vCPU.DF) __v_putn("DF ");
 	if (vCPU.IF) __v_putn("IF ");
@@ -486,17 +493,19 @@ void panic(ushort code,
 	import core.stdc.stdlib : exit;
 	//TODO: Setup SEH that points here
 
-	enum RANGE = 26, TARGET = RANGE / 2;
+	enum RANGE = 26, TARGET = (RANGE / 2) - 1;
 	__v_printf(
-		"\n\n\n\n" ~
-		"A fatal exception occured, which DD-DOS couldn't recover.\n\n" ~
+		"\n\n\n\n"~
+		"A fatal exception occured, which DD-DOS couldn't recover.\n\n"~
 		"STOP: %4Xh (%s@L%d)\nEXEC:\n",
+		//TODO: if SEH is setup, remove modname and line
+		// Otherwise it'll be even more debugging
 		code, modname, line
 	);
 	int i = RANGE;
 	ubyte *p = MEMORY + vCPU.EIP - TARGET;
 	while (--i) {
-		if (i == (TARGET - 1))
+		if (i == TARGET)
 			__v_printf(" > %02X<", *p);
 		else
 			__v_printf(" %02X", *p);
@@ -507,5 +516,6 @@ void panic(ushort code,
 	/*printf("--\n"); Temporary commented until print_stack is implemented
 	print_stack;*/
 
+	screen_draw;
 	exit(code); //TODO: Consider another strategy
 }
