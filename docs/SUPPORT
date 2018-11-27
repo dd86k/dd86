@@ -2,36 +2,33 @@
 * OPERATING SYSTEM SUPPORT
 ***************************************
 
-This page features a list of operating systems I wish to support. The higher
-the tier, the likely the operating systems will receive new features and bug
-fixes.
+DD-DOS is currently available for a few platforms. In the
+hopefully near future, I hope to support these additional platforms:
 
-Getting DD-DOS to work on Windows and Linux is my main current priority.
-
-First tier  | Windows (including ReactOS)
-            | Linux
-Second tier | FreeBSD
-            | macOS (OS X)
-            | OpenIndiana (based on OpenSolaris/Illios)
-Third tier  | OpenBSD
-            | NetBSD
-            | HardenedBSD (based on FreeBSD)
-            | DragonflyBSD [1]
-            | Haiku [1] (based on BeOS)
-Fourth tier | UEFI [2]
+- Windows, ReactOS
+- Linux
+- FreeBSD [3]
+- macOS (Mac OS X) [3]
+- OpenBSD [3]
+- NetBSD [3]
+- OpenIndiana (OpenSolaris/Illios) [3]
+- DragonflyBSD [1] [3]
+- Haiku [1] [3] (BeOS)
+- UEFI [2] [3]
 
 [1] The DMD install script mentions not supporting this operating system or script
     cannot run on the operating system. May include others untagged by this
     footnote.
     (Haiku) DMD version in the depot is 2.067.1, dating 2014.
-    (DragonflyBSD) DMD in repo is 1.076_2, curl (from script)  fails writing body.
-[2] Requires a toolkit of which I may produce in the future.
+    (DragonflyBSD) DMD in repo is 1.076_2, curl (from script), fails writing body.
+[2] Will require a toolkit, which I may make in the future.
+[3] This platform is planned to be supported.
 
 ***************************************
 * Requirements
 ***************************************
 
-* UNIX
+* UNIX-like
 
 On UNIX platforms, the terminal must support the UTF-8 character encoding and
-the xterm-256color escape codes.
+the xterm-256 color escape codes.
