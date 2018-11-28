@@ -17,13 +17,13 @@ import ddcon, Logger;
 import compile_config :
 	__MM_SYS_DOS, C_RUNTIME, APP_VERSION, BUILD_TYPE, INIT_MEM;
 
-enum BANNER = `
-_______ _______        _______  ______  _______
-|  __  \|  __  \  ___  |  __  \/  __  \/ _____/
-| |  \ || |  \ | |___| | |  \ || /  \ |\____ \
-| |__/ || |__/ |       | |__/ || \__/ |_____\ \
-|______/|______/       |______/\______/\______/
-`; /// Banner screen, fancy!
+enum BANNER = 
+	`_______ _______        _______  ______  _______`~"\n"~
+	`|  __  \|  __  \  ___  |  __  \/  __  \/ _____/`~"\n"~
+	`| |  \ || |  \ | |___| | |  \ || /  \ |\____ \`~"\n"~
+	`| |__/ || |__/ |       | |__/ || \__/ |_____\ \`~"\n"~
+	`|______/|______/       |______/\______/\______/`~"\n"
+	; /// Banner screen, fancy!
 
 /// OEM IDs
 enum OEM_ID { // Used for INT 21h AH=30 so far.
@@ -34,10 +34,12 @@ enum
 	DOS_MAJOR_VERSION = 5, /// Default major DOS version
 	DOS_MINOR_VERSION = 0; /// Default minor DOS version
 
+enum float BIOS_TICK = 1 / 18.2f;
+
 // Internal input buffer length.
 private enum _BUFS = 127;
 
-enum float BIOS_TICK = 1 / 18.2f;
+extern (C):
 
 __gshared ubyte
 	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
@@ -69,15 +71,15 @@ void vdos_init() {
 extern (C)
 void vdos_shell() {
 	char *inbuf = // internal input buffer, also used for CWD buffering
-		cast(char*)(MEMORY + 0x900);
+	//	cast(char*)(MEMORY + 0x900);
+		cast(char*)malloc(4096);
 	char **argv = // argument vector, sizeof(char *)
 		cast(char**)(MEMORY + 0x900 + _BUFS);
-
 SHL_S:
 	//TODO: Print $PROMPT
-	if (os_gcwd(inbuf))
-		__v_printf("\n%s%% ", inbuf);
-	else // just-in-case
+//	if (os_gcwd(inbuf))
+//		__v_printf("\n%s%% ", inbuf);
+//	else // just-in-case
 		__v_put("\n% "); screen_draw;
 
 	//fgets(inbuf, _BUFS, stdin);

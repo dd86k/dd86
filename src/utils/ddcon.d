@@ -195,11 +195,10 @@ void ResetPos() {
 
 /**
  * Read a single character.
- * Params: echo = Echo character to output.
  * Returns: A KeyInfo structure.
  */
 extern (C)
-KeyInfo ReadKey(ubyte echo = false) {
+KeyInfo ReadKey() {
 	KeyInfo k;
 	version (Windows) { // Sort of is like .NET's ReadKey
 		INPUT_RECORD ir = void;
@@ -213,8 +212,6 @@ KeyInfo ReadKey(ubyte echo = false) {
 				k.keyChar  = ir.KeyEvent.AsciiChar;
 				k.keyCode  = ir.KeyEvent.wVirtualKeyCode;
 				k.scanCode = ir.KeyEvent.wVirtualScanCode;
- 
-				if (echo) putchar(k.keyChar);
 			}
 		}
 	} else version (Posix) {
@@ -493,7 +490,7 @@ enum Key : ushort {
  * Structs
  *******************************************************************/
 /*
-struct RawEvent {
+struct GlobalEvent {
 	EventType Type;
 	KeyInfo Key;
 	MouseInfo Mouse;

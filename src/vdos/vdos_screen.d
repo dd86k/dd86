@@ -13,6 +13,10 @@ import vdos : SYSTEM;
 enum __EGA_ADDRESS = 0xA_0000;
 enum __MDA_ADDRESS = 0xB_0000;
 enum __VGA_ADDRESS = 0xB_8000;
+enum __V_ADDRESS = __VGA_ADDRESS; /// Default video address
+
+extern (C):
+__gshared:
 
 videochar* VIDEO = void;	/// video buffer
 private uint screensize = void;
@@ -184,7 +188,7 @@ static assert(videochar.sizeof == 2);
 extern (C)
 void screen_init() {
 	import core.stdc.string : memset;
-	VIDEO = cast(videochar*)(MEMORY + __VGA_ADDRESS);
+	VIDEO = cast(videochar*)(MEMORY + __V_ADDRESS);
 
 	screen_clear;
 
@@ -439,14 +443,14 @@ void __v_putc(char c) {
 }
 
 extern (C) public
-void __v_printf(immutable(char)* f, ...) {
-	import ddc : vsnprintf, va_list, va_start;
+void __v_printf(immutable(char) *f, ...) {
+	import ddc : vsnprintf, va_list, va_start, puts;
 
 	va_list args = void;
 	va_start(args, f);
 
-	char [256]b = void;
-	uint c = vsnprintf(cast(char*)b, 256, f, args);
+	char [512]b = void;
+	uint c = vsnprintf(cast(char*)b, 512, f, args);
 
 	if (c > 0)
 		__v_put(cast(immutable(char)*)b, c);
