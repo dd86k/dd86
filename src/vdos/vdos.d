@@ -157,17 +157,16 @@ By default, CD will display the current working directory`
 
 	if (strcmp(*argv, "help") == 0) {
 		__v_putn(
-`Internal commands available
-
-CD .......... Change working directory
-CLS ......... Clear screen
-DATE ........ Get current date
-DIR ......... Show directory content
-EXIT ........ Exit DD-DOS or script
-TREE ........ Show directory structure
-TIME ........ Get current time
-MEM ......... Show memory information
-VER ......... Show DD-DOS and MS-DOS version`
+			"Internal commands available\n\n"~
+			"CD .......... Change working directory\n"~
+			"CLS ......... Clear screen\n"~
+			"DATE ........ Get current date\n"~
+			"DIR ......... Show directory content\n"~
+			"EXIT ........ Exit DD-DOS or script\n"~
+			"TREE ........ Show directory structure\n"~
+			"TIME ........ Get current time\n"~
+			"MEM ......... Show memory information\n"~
+			"VER ......... Show DD-DOS and MS-DOS version"
 		);
 		goto SHL_S;
 	}
@@ -403,7 +402,7 @@ READ_S:
 	case Key.RightArrow:
 		if (i < s) ++i;
 		break;
-	case Key.Delete:
+	case Key.Delete: //TODO: delete key
 
 		break;
 	case Key.Enter:
@@ -431,7 +430,7 @@ READ_S:
 		//      ^
 		if (i < s) { // cursor is not at the end, see examples above
 			//TODO: FIXME
-			char *p = buf + s - 1; // start at the end
+			char *p = buf + s; // start at the end
 			uint l = s - i;
 			while (--l >= 0) { // and "pull" characters to the end
 				*(p + 1) = *p;

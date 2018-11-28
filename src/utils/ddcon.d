@@ -91,7 +91,7 @@ void Clear() {
 		FillConsoleOutputAttribute(hOut, csbi.wAttributes, size, c, &num);
 		SetPos(0, 0);
 	} else version (Posix) {
-		const winsize ws = void;
+		WindowSize ws = void;
 		GetWinSize(&ws);
 		const int size = ws.Height * ws.Width;
 		//TODO: write 'default' attribute character
@@ -106,6 +106,10 @@ void Clear() {
 
 // Note: A COORD uses SHORT (short) and Linux uses unsigned shorts.
 
+/**
+ * Get current window size
+ * Params: ws = Pointer to a WindowSize structure
+ */
 extern (C)
 void GetWinSize(WindowSize *ws) {
 	version (Windows) {

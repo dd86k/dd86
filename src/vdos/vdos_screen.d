@@ -306,104 +306,74 @@ void screen_draw() {
 	}
 }
 
-/// Clear virtual video RAM
+/// Clear virtual video RAM, resets every cells to white/black with null
+/// character
 extern (C)
-void screen_clear(bool host = false) {
+void screen_clear() {
 	import ddcon : Clear;
 
 	const int t = (SYSTEM.screen_row * SYSTEM.screen_col) / 2;
 	uint *v = cast(uint*)VIDEO;
-	for (size_t i; i < t; ++i) v[i] = 0x0720_0720;
-
-	if (host) Clear;
+	for (size_t i; i < t; ++i) v[i] = 0x0700_0700;
 }
 
 /// Print the pretty DD-DOS logo
 extern (C)
 void screen_logo() {
-	/*
-	 * ┌─────────────────────────────────────────────────────┐
-	 * │ ┌──────┐ ┌──────┐        ┌──────┐ ┌──────┐ ┌──────┐ │
-	 * │ │ ┌──┐ └┐│ ┌──┐ └┐ ┌───┐ │ ┌──┐ └┐│ ┌──┐ │┌┘ ────┬┘ │
-	 * │ │ │  │  ││ │  │  │ └───┘ │ │  │  ││ │  │ │└────┐ │  │
-	 * │ │ └──┘ ┌┘│ └──┘ ┌┘       │ └──┘ ┌┘│ └──┘ │┌────┘ │  │
-	 * │ └──────┘ └──────┘        └──────┘ └──────┘└──────┘  │
-	 * └─────────────────────────────────────────────────────┘
-	 */
-	__v_putn( // ┌─────────────────────────────────────────────────────┐
+	// ┌─────────────────────────────────────────────────────┐
+	// │ ┌──────┐ ┌──────┐        ┌──────┐ ┌──────┐ ┌──────┐ │
+	// │ │ ┌──┐ └┐│ ┌──┐ └┐ ┌───┐ │ ┌──┐ └┐│ ┌──┐ │┌┘ ────┬┘ │
+	// │ │ │  │  ││ │  │  │ └───┘ │ │  │  ││ │  │ │└────┐ │  │
+	// │ │ └──┘ ┌┘│ └──┘ ┌┘       │ └──┘ ┌┘│ └──┘ │┌────┘ │  │
+	// │ └──────┘ └──────┘        └──────┘ └──────┘└──────┘  │
+	// └─────────────────────────────────────────────────────┘
+	enum l =
+		// ┌─────────────────────────────────────────────────────┐
 		"\xDA\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
 		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
-		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xBF"
-	);
-	__v_putn( // │ ┌──────┐ ┌──────┐        ┌──────┐ ┌──────┐ ┌──────┐ │
+		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xBF\n"~
+		// │ ┌──────┐ ┌──────┐        ┌──────┐ ┌──────┐ ┌──────┐ │
 		"\xB3 \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF"~
 		"        \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF"~
-		" \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF \xB3"
-	);
-	__v_putn( // │ │ ┌──┐ └┐│ ┌──┐ └┐ ┌───┐ │ ┌──┐ └┐│ ┌──┐ │┌┘ ────┬┘ │
+		" \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF \xB3\n"~
+		// │ │ ┌──┐ └┐│ ┌──┐ └┐ ┌───┐ │ ┌──┐ └┐│ ┌──┐ │┌┘ ────┬┘ │
 		"\xB3 \xB3 \xDA\xC4\xC4\xBF \xC0\xBF\xB3 \xDA\xC4\xC4\xBF \xC0\xBF"~
 		" \xDA\xC4\xC4\xC4\xBF \xB3 \xDA\xC4\xC4\xBF \xC0\xBF\xB3 \xDA\xC4\xC4\xBF "~
-		"\xB3\xDA\xD9 \xC4\xC4\xC4\xC4\xC2\xD9 \xB3"
-	);
-	__v_putn( // │ │ │  │  ││ │  │  │ └───┘ │ │  │  ││ │  │ │└────┐ │  │
+		"\xB3\xDA\xD9 \xC4\xC4\xC4\xC4\xC2\xD9 \xB3\n"~
+		// │ │ │  │  ││ │  │  │ └───┘ │ │  │  ││ │  │ │└────┐ │  │
 		"\xB3 \xB3 \xB3  \xB3  \xB3\xB3 \xB3  \xB3  \xB3 \xC0\xC4\xC4\xC4\xD9 \xB3"~
-		" \xB3  \xB3  \xB3\xB3 \xB3  \xB3 \xB3\xC0\xC4\xC4\xC4\xC4\xBF \xB3  \xB3"
-	);
-	__v_putn( // │ │ └──┘ ┌┘│ └──┘ ┌┘       │ └──┘ ┌┘│ └──┘ │┌────┘ │  │
+		" \xB3  \xB3  \xB3\xB3 \xB3  \xB3 \xB3\xC0\xC4\xC4\xC4\xC4\xBF \xB3  \xB3\n"~
+		// │ │ └──┘ ┌┘│ └──┘ ┌┘       │ └──┘ ┌┘│ └──┘ │┌────┘ │  │
 		"\xB3 \xB3 \xC0\xC4\xC4\xD9 \xDA\xD9\xB3 \xC0\xC4\xC4\xD9 \xDA\xD9       "~
 		"\xB3 \xC0\xC4\xC4\xD9 \xDA\xD9\xB3 \xC0\xC4\xC4\xD9 \xB3"~
-		"\xDA\xC4\xC4\xC4\xC4\xD9 \xB3  \xB3"
-	);
-	__v_putn( // │ └──────┘ └──────┘        └──────┘ └──────┘└──────┘  │
+		"\xDA\xC4\xC4\xC4\xC4\xD9 \xB3  \xB3\n"~
+		// │ └──────┘ └──────┘        └──────┘ └──────┘└──────┘  │
 		"\xB3 \xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9 \xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9    "~
 		"    \xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9 \xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9"~
-		"\xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9  \xB3"
-	);
-	__v_putn( // └─────────────────────────────────────────────────────┘
+		"\xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9  \xB3\n"~
+		// └─────────────────────────────────────────────────────┘
 		"\xC0\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
 		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
-		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xD9"
-	);
+		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xD9";
+	__v_putn(l, l.length);
 }
-
-/**
- * Change cursor position.
- * The top position, {0, 0}, is located at the most top-left.
- * Params:
- *   x = Horizontal value, 0-based
- *   y = Vertical value, 0-based
- *   s = Affect host cursor, default: false
- */
-/*extern (C)
-void __v_cursor(uint x, uint y, bool s = false) {
-
-}*/
-
-/**
- * @todo
- */
-/*extern (C)
-void __v_char_p(uint x, uint y, ubyte c) {
-	VIDEO[(y * SYSTEM.screen_col) + x].ascii = c;
-}*/
 
 /**
  * Output a string, raw in video memory
  * This function affects the system cursor position
- * Equivelent to fputs(s, stdout)
+ * Equivalent to fputs(s, stdout)
  * Params:
  *   s = String
  *   size = String length
  */
 extern (C) public
 void __v_put(immutable(char) *s, uint size = 0) {
+	enum MAX_STR = 2048; /// maximum length to print
 	if (size == 0) {
-		enum MAX_STR = 255;
-		while (s[size] != 0 && size < MAX_STR)
-			++size;
+		while (s[size] != 0 && size < MAX_STR) ++size;
 	}
 	while (size) {
-		__v_putc(*s++, false);
+		__v_putc(*s++);
 		--size;
 	}
 
@@ -432,10 +402,9 @@ void __v_putn(immutable(char) *s = null, uint size = 0) {
  * Equivelent to putchar()
  * Params:
  *   c = Character
- *   s = Update host cursor, default: true
  */
 extern (C) public
-void __v_putc(char c, bool s = true) {
+void __v_putc(char c) {
 	import vdos_structs : __cpos;
 
 	__cpos *cur = &SYSTEM.cursor[SYSTEM.screen_page];
@@ -467,7 +436,6 @@ void __v_putc(char c, bool s = true) {
 		}
 		VIDEO[pos].ascii = c;
 	}
-	//TODO: Affect host cursor if s==true
 }
 
 extern (C) public
@@ -484,14 +452,15 @@ void __v_printf(immutable(char)* f, ...) {
 		__v_put(cast(immutable(char)*)b, c);
 }
 
+/// Scroll screen once, does not redraw screen
 extern (C) public
 void __v_scroll() {
 	uint sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
 	const ubyte a = VIDEO[sc - 1].attribute;
-	videochar* d = cast(videochar*)VIDEO;
-	videochar* s = cast(videochar*)(d + SYSTEM.screen_col);
+	videochar *d = cast(videochar*)VIDEO;
+	videochar *s = cast(videochar*)(d + SYSTEM.screen_col);
 
-	videochar* ss = d + sc;
+	videochar *ss = d + sc;
 	videochar tp = void;
 	tp.ascii = 0;
 	tp.attribute = a;

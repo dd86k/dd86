@@ -504,7 +504,6 @@ ubyte __fu8_i(int n = 0) {
  * Returns: Signed BYTE
  */
 extern (C)
-pragma(inline, true)
 byte __fi8_i(int n = 0) {
 	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fi8_i", PANIC_MEMORY_ACCESS);
 	return cast(byte)MEMORY[vCPU.EIP + 1 + n];
