@@ -13,6 +13,10 @@ applications, like NTVDM and dosemu, for multiple operating systems.
 "I have not failed. I've just found 10,000 ways that won't work."
 - Thomas Edison
 
+Project homes:
+	https://git.dd86k.space/dd86k/dd-dos
+	https://github.com/dd86k/dd-dos
+
 ┌───────────────┐
 │ DOCUMENTATION │
 └───────────────┘
@@ -27,7 +31,3 @@ For operating system support,
 	see docs/SUPPORT.
 For a list of maintainers,
 	see docs/CREDIT.
-
-Project homes:
-	https://git.dd86k.space/dd86k/dd-dos
-	https://github.com/dd86k/dd-dos
