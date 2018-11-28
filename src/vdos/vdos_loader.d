@@ -10,6 +10,7 @@ import vdos_codes, Logger;
 import vcpu, vcpu_utils;
 import vdos, vdos_structs;
 import ddc : NULL_CHAR;
+import vdos_screen;
 
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;
@@ -99,7 +100,7 @@ int vdos_load(char *path) {
 			 * 5. Write the word (sum) back to address
 			 */
 			if (Verbose)
-				printf("[INFO] Relocation(s): %d\n", mzh.e_crlc);
+				__v_printf("[INFO] Relocation(s): %d\n", mzh.e_crlc);
 			fseek(f, mzh.e_lfarlc, SEEK_SET); // 1.
 			const int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
 			mz_rlc* r = cast(mz_rlc*)malloc(rs); /// Relocation table pointer
