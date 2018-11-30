@@ -72,6 +72,6 @@ version (CRuntime_Microsoft) {
 	public import core.stdc.stdarg : va_list, va_start;
 	public import core.stdc.stdio : puts, printf;
 } else { // x86-windows-omf seems to be fine
-	public import core.stdc.stdio;
 	public import core.stdc.stdarg;
+	public import core.stdc.stdio;
 }

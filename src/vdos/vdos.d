@@ -71,8 +71,7 @@ void vdos_init() {
 extern (C)
 void vdos_shell() {
 	char *inbuf = // internal input buffer, also used for CWD buffering
-	//	cast(char*)(MEMORY + 0x900);
-		cast(char*)malloc(4096);
+		cast(char*)(MEMORY + 0x900);
 	char **argv = // argument vector, sizeof(char *)
 		cast(char**)(MEMORY + 0x900 + _BUFS);
 SHL_S:
@@ -435,7 +434,7 @@ READ_S:
 			char *p = buf + s; // start at the end
 			uint l = s - i;
 			while (--l >= 0) { // and "pull" characters to the end
-				*(p + 1) = *p;
+				*p = *(p - 1);
 				--p;
 			}
 		}

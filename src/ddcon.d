@@ -247,9 +247,22 @@ KeyInfo ReadKey() {
 				} // [
 			default: goto _READKEY_DEFAULT;
 			} // ESC
+		case 0x08, 0x7F: // backspace
+			keyCode = Key.Backspace;
+			goto _READKEY_END;
+		case 23: // #
+			keyCode = Key.NoName;
+			keyChar = '#';
+			goto _READKEY_END;
 		default:
 			if (c >= 'a' && c <= 'z') {
-				k.keyCode = cast(Key)(c - 32);
+				keyCode = cast(Key)(c - 32);
+				keyChar = cast(char)c;
+				goto _READKEY_END;
+			}
+			if (c >= ' ' && c <= '_') {
+				keyCode = cast(Key)c;
+				keyChar = cast(char)c;
 				goto _READKEY_END;
 			}
 		}
@@ -339,7 +352,7 @@ enum MouseEventType { // Windows compilant
 }
 */
 /// Key codes mapping.
-enum Key : ushort {
+enum Key : ubyte {
 	Backspace = 8,
 	Tab = 9,
 	Clear = 12,
