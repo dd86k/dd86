@@ -76,9 +76,9 @@ void vdos_shell() {
 		cast(char**)(MEMORY + 0x900 + _BUFS);
 SHL_S:
 	//TODO: Print $PROMPT
-//	if (os_gcwd(inbuf))
-//		__v_printf("\n%s%% ", inbuf);
-//	else // just-in-case
+	if (os_gcwd(inbuf))
+		__v_printf("\n%s%% ", inbuf);
+	else // just-in-case
 		__v_put("\n% "); screen_draw;
 
 	//fgets(inbuf, _BUFS, stdin);
@@ -356,7 +356,6 @@ By default, MEM will show memory usage`
 
 	//TODO: See if command is not an executable (COM/EXE (MZ)/BAT)
 	//      to evaluate before passing to system, like check_exe
-	//system(inbuf);
 	__v_put("Bad command or file name");
 
 //SHL_E:
@@ -408,9 +407,9 @@ READ_S:
 		break;
 	case Key.Enter:
 		buf[s] = '\n';
-		++s;
+		buf[s + 1] = 0;
 		__v_putn;
-		return s;
+		return s + 2;
 	case Key.Home:
 		i = 0;
 		break;

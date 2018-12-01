@@ -145,6 +145,8 @@ NO_ARGS:
 		screen_logo;
 	}
 
+	screen_draw;
+
 	if (cast(int)prog) {
 		vCPU.CS = 0; vCPU.IP = 0x100; // Temporary
 		vcpu_run;

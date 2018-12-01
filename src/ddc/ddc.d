@@ -59,15 +59,16 @@ version (CRuntime_Microsoft) {
 	// Thread-local all the things!
 	private extern shared void function() _fcloseallp;
 	private shared extern extern(C) FILE[_NFILE] _iob;
-	shared stdin  = &_iob[0];
-	shared stdout = &_iob[1];
-	shared stderr = &_iob[2];
-	shared stdaux = &_iob[3];
-	shared stdprn = &_iob[4];
+	extern (C) shared stdin  = &_iob[0];
+	extern (C) shared stdout = &_iob[1];
+	extern (C) shared stderr = &_iob[2];
+	extern (C) shared stdaux = &_iob[3];
+	extern (C) shared stdprn = &_iob[4];
 
-	extern (C) // 10.0.17134.0 stdio.h@L1337
-	int   __stdio_common_vsprintf(char*, size_t, immutable(char)*, va_list);
-	alias __stdio_common_vsprintf vsnprintf;
+	//TODO: Check library strings to fix vsnprintf linkage
+	// does not work in normal ldc builds but does in demo-screen???
+	extern (C)
+	int vsnprintf(char *, size_t, immutable(char) *, va_list);
 
 	public import core.stdc.stdarg : va_list, va_start;
 	public import core.stdc.stdio : puts, printf;

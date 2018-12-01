@@ -431,36 +431,41 @@ void screen_logo() {
 }
 
 /**
- * Output a string, raw in video memory
- * This function affects the system cursor position
- * Equivalent to fputs(s, stdout)
+ * Output a string, raw in video memory.
+ * This function affects the virtual system cursor position.
+ * Equivalent to fputs(s, stdout).
  * Params:
- *   s = String
- *   size = String length
+ *   s = String, null-terminated
+ *   size = String length (optional)
  */
 extern (C) public
 void __v_put(immutable(char) *s, uint size = 0) {
 	enum MAX_STR = 2048; /// maximum length to print
-	if (size == 0) {
-		while (s[size] != 0 && size < MAX_STR) ++size;
-	}
-	while (size) {
-		__v_putc(*s++);
-		--size;
-	}
 
-	//TODO: __v_put optimization
-	//int sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
-	//videochar* v = VIDEO + sc;
+	if (size) goto W_SIZE;
+
+	while (*s != 0 && size < MAX_STR) {
+		__v_putc(*s);
+		++size;
+		++s;
+	}
+	return;
+
+W_SIZE:
+	do {
+		__v_putc(*s);
+		++s;
+	} while (--size);
 }
 
 /**
- * Output a string with a newline, raw in video memory
- * This function affects the system cursor position
+ * Output a string with a newline, raw in video memory. If there is no strings,
+ * this function outputs only a newline.
+ * This function affects the virtual system cursor position.
  * Equivelent to puts(s)
  * Params:
- *   s = String
- *   size = String length
+ *   s = String (optional)
+ *   size = String length (optional)
  */
 extern (C) public
 void __v_putn(immutable(char) *s = null, uint size = 0) {
@@ -529,17 +534,16 @@ void __v_printf(immutable(char) *f, ...) {
 extern (C) public
 void __v_scroll() {
 	uint sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
-	const ubyte a = VIDEO[sc - 1].attribute;
 	videochar *d = cast(videochar*)VIDEO;
-	videochar *s = cast(videochar*)(d + SYSTEM.screen_col);
+	videochar *s = d + sc;
 
-	videochar *ss = d + sc;
 	videochar tp = void;
 	tp.ascii = 0;
-	tp.attribute = a;
+	tp.attribute = VIDEO[sc - 1].attribute;
 	for (size_t i; i < SYSTEM.screen_col; ++i)
-		ss[i].WORD = tp.WORD;
+		s[i].WORD = tp.WORD;
 
+	s = cast(videochar*)(d + SYSTEM.screen_col);
 	while (--sc) {
 		d.WORD = s.WORD;
 		++d; ++s;
