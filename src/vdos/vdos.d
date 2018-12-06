@@ -72,25 +72,50 @@ extern (C)
 void vdos_shell() {
 	char *inbuf = // internal input buffer, also used for CWD buffering
 		cast(char*)(MEMORY + 0x900);
-	char **argv = // argument vector, sizeof(char *)
-		cast(char**)(MEMORY + 0x900 + _BUFS);
 SHL_S:
 	//TODO: Print $PROMPT
 	if (os_gcwd(inbuf))
 		__v_printf("\n%s%% ", inbuf);
 	else // just-in-case
-		__v_put("\n% "); screen_draw;
+		__v_put("\n% ");
+
+	__v_ucpos; // update cursor pos
+	screen_draw;
 
 	//fgets(inbuf, _BUFS, stdin);
-	__v_ucpos; // update cursor pos
 	vdos_readline(inbuf, _BUFS);
 	if (*inbuf == '\n') goto SHL_S; // Nothing to process
 
-	const int argc = sargs(inbuf, argv); /// argument count
+	switch (vdos_command(cast(immutable)inbuf)) {
+	case -2:
+		//TODO: Proper application exit
+		return;
+	case -1:
+		__v_put("Bad command or file name");
+		break;
+	default: goto SHL_S;
+	}
+}
 
+/**
+ * Execute a command with its arguments, useful for scripting
+ * Params: command == Command string with arguments
+ * Returns: Error code (ERRORLEVEL)
+ * Note:
+ *   vdos_command include non-DOS error codes:
+ *   Returns -1 on COMMAND NOT FOUND
+ *   Returns -2 if EXIT has been requested
+ */
+extern (C)
+int vdos_command(immutable(char) *command) {
+	char **argv = // argument vector, sizeof(char *)
+		cast(char**)(MEMORY + 0x900 + _BUFS);
+	const int argc = sargs(command, argv); /// argument count
 	lowercase(*argv);
 
 	//TODO: TREE, DIR (waiting on OS directory crawler)
+	//TODO: search for executable in current directory (here)
+	//TODO: search for executable in (virtual, user set) PATH
 
 	// C
 
@@ -98,11 +123,9 @@ SHL_S:
 		if (argc > 1) {
 			if (strcmp(argv[1], "/?") == 0) {
 				__v_putn(
-`Display or set current working directory
-  CD [FOLDER]
-  CHDIR [FOLDER]
-
-By default, CD will display the current working directory`
+					"Display or set current working directory\n"~
+					"  CD or CHDIR [FOLDER]\n\n"~
+					"By default, CD will display the current working directory"
 				);
 			} else {
 				if (os_pisdir(*(argv + 1))) {
@@ -112,18 +135,19 @@ By default, CD will display the current working directory`
 				}
 			}
 		} else {
-			if (os_gcwd(cast(char*)inbuf))
-				puts(cast(char*)inbuf);
-			else puts("E: Error getting CWD");
+			if (os_gcwd(cast(char*)command))
+				__v_putn(command);
+			else
+				__v_putn("Error getting current directory");
+			return 2;
 		}
-		goto SHL_S;
+		return 0;
 	}
 	if (strcmp(*argv, "cls") == 0) {
+		screen_clear;
 		SYSTEM.cursor[SYSTEM.screen_page].row = 0;
 		SYSTEM.cursor[SYSTEM.screen_page].col = 0;
-		screen_clear;
-		//Clear;
-		goto SHL_S;
+		return 0;
 	}
 
 	// D
@@ -142,17 +166,25 @@ By default, CD will display the current working directory`
 		case 6: __v_put("Sat"); break;
 		default:
 		}
-		__v_printf(" %d-%02d-%02d\n", vCPU.CX, vCPU.DH, vCPU.DL);
-		goto SHL_S;
+		__v_printf(", %d-%02d-%02d\n", vCPU.CX, vCPU.DH, vCPU.DL);
+		return 0;
 	}
 
 	// E
 
-	if (strcmp(*argv, "exit") == 0) {
-		//free(inbuf);
-		//free(argv);
-		return;
+	if (strcmp(*argv, "echo") == 0) {
+		if (argc == 1) {
+			__v_putn("ECHO is on");
+		} else {
+			for (int i = 1; i < argc; ++i) {
+				__v_put(cast(immutable)argv[i]);
+				__v_put(" ");
+			}
+			__v_putn;
+		}
+		return 0;
 	}
+	if (strcmp(*argv, "exit") == 0) return -2;
 
 	// H
 
@@ -169,7 +201,7 @@ By default, CD will display the current working directory`
 			"MEM ......... Show memory information\n"~
 			"VER ......... Show DD-DOS and MS-DOS version"
 		);
-		goto SHL_S;
+		return 0;
 	}
 
 	// M
@@ -202,7 +234,9 @@ By default, CD will display the current working directory`
 				"Total                %6dK   %6dK   %6dK\n",
 				(ct - nzc) / 1024, nzc / 1024, ct / 1024,
 				(tt - nzt) / 1024, nzt / 1024, tt / 1024,
-				(msize - nzt) / 1024, (nzt + nzc) / 1024, msize / 1024);
+				(msize - nzt) / 1024, (nzt + nzc) / 1024, msize / 1024
+			);
+			return 0;
 		} else if (strcmp(argv[1], "/debug") == 0) {
 			__v_putn("Not implemented");
 		} else if (strcmp(argv[1], "/free") == 0) {
@@ -210,20 +244,18 @@ By default, CD will display the current working directory`
 		} else if (strcmp(argv[1], "/?") == 0) {
 MEM_HELP:
 			__v_putn(
-`Display memory statistics
-MEM [OPTIONS]
-
-OPTIONS
-/DEBUG    Not implemented
-/FREE     Not implemented
-/STATS    Scan memory and show statistics
-
-By default, MEM will show memory usage`
+				"Display memory statistics\n"~
+				"MEM [OPTIONS]\n\n"~
+				"OPTIONS\n"~
+				"/DEBUG    Not implemented\n"~
+				"/FREE     Not implemented\n"~
+				"/STATS    Scan memory and show statistics\n\n"~
+				"By default, MEM will show memory usage"
 			);
-			goto SHL_S;
+			return 0;
 		}
 		__v_putn("Not implemented. Only /stats is implemented");
-		goto SHL_S;
+		return 0;
 	}
 
 	// T
@@ -233,7 +265,7 @@ By default, MEM will show memory usage`
 		INT(0x21);
 		__v_printf("It is currently %02d:%02d:%02d.%02d\n",
 			vCPU.CH, vCPU.CL, vCPU.DH, vCPU.DL);
-		goto SHL_S;
+		return 0;
 	}
 
 	// V
@@ -246,7 +278,7 @@ By default, MEM will show memory usage`
 			MajorVersion, MinorVersion,
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION
 		);
-		goto SHL_S;
+		return 0;
 	}
 
 	// ? -- debugging
@@ -262,7 +294,7 @@ By default, MEM will show memory usage`
 ?s          Print stack (Not implemented)
 ?v          Toggle verbose mode`
 		);
-		goto SHL_S;
+		return 0;
 	}
 	if (strcmp(*argv, "?load") == 0) {
 		if (argc > 1) {
@@ -272,11 +304,11 @@ By default, MEM will show memory usage`
 			} else
 				__v_putn("File not found");
 		} else __v_putn("Executable required");
-		goto SHL_S;
+		return 0;
 	}
 	if (strcmp(*argv, "?run") == 0) {
 		vcpu_run;
-		goto SHL_S;
+		return 0;
 	}
 	if (strcmp(*argv, "?v") == 0) {
 		__v_printf("Verbose set to ");
@@ -321,24 +353,24 @@ By default, MEM will show memory usage`
 				__v_putn("INFO");
 			}
 		}
-		goto SHL_S;
+		return 0;
 	}
 	if (strcmp(*argv, "?p") == 0) {
 		opt_sleep = !opt_sleep;
 		__v_printf("CPU SLEEP mode: %s\n", opt_sleep ? "ON" : cast(char*)"OFF");
-		goto SHL_S;
+		return 0;
 	}
 	if (strcmp(*argv, "?r") == 0) {
 		print_regs;
-		goto SHL_S;
+		return 0;
 	}
 	if (strcmp(*argv, "?s") == 0) {
 		print_stack;
-		goto SHL_S;
+		return 0;
 	}
 	if (strcmp(*argv, "?panic") == 0) {
 		panic(PANIC_MANUAL);
-		goto SHL_S;
+		return 0;
 	}
 	if (strcmp(*argv, "?diag") == 0) {
 		__v_printf(
@@ -351,28 +383,29 @@ By default, MEM will show memory usage`
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION,
 			__VERSION__
 		);
-		goto SHL_S;
+		return 0;
 	}
 
-	//TODO: See if command is not an executable (COM/EXE (MZ)/BAT)
-	//      to evaluate before passing to system, like check_exe
-	__v_put("Bad command or file name");
-
-//SHL_E:
-	goto SHL_S;
+	return -1;
 }
 
+/**
+ * Read a line within DOS
+ * Params:
+ *   buf = Buffer
+ *   len = Buffer size (maximum length)
+ * Returns: String length
+ */
 extern (C)
 int vdos_readline(char *buf, int len) {
 	__cpos *c = &SYSTEM.cursor[SYSTEM.screen_page];
-	ushort x = c.col; // To update cursor position later
-	ushort y = c.row; // To update cursor position later
+	const ushort x = c.col; // initial cursor col value to update cursor position
+	const ushort y = c.row; // ditto
+	videochar *v = &VIDEO[(y * SYSTEM.screen_col) + x];	/// video index
 	uint s;	/// string size
 	uint i;	/// selection index
-	videochar *v = &VIDEO[(y * SYSTEM.screen_col) + x];	/// video index
-	KeyInfo k = void;
 READ_S:
-	k = ReadKey;
+	const KeyInfo k = ReadKey;
 	switch (k.keyCode) {
 	case Key.Backspace:
 		if (s) {
@@ -417,12 +450,11 @@ READ_S:
 		i = s;
 		break;
 	default:
-		if ( // anything that doesn't fit a character, shoo
-			(k.keyCode < Key.Spacebar || k.keyCode > Key.D9) &&
-			(k.keyCode < Key.A || k.keyCode > Key.Z)
-			) break;
-
-		if (s + 1 >= len) break; // no space in buffer, abort
+		// no space in buffer, abort
+		if (s + 1 >= len) break;
+		// anything that doesn't fit a character, abort
+		//TODO: Character converter
+		if (k.keyChar < 32 || k.keyChar > 126) break;
 
 		// 012345   s=6, i=6, i == s
 		//       ^

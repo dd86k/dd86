@@ -260,7 +260,7 @@ KeyInfo ReadKey() {
 				keyChar = cast(char)c;
 				goto _READKEY_END;
 			}
-			if (c >= ' ' && c <= '_') {
+			if (c >= 20 && c <= 126) {
 				keyCode = cast(Key)c;
 				keyChar = cast(char)c;
 				goto _READKEY_END;
@@ -272,7 +272,7 @@ _READKEY_DEFAULT:
 
 _READKEY_END:
 		tcsetattr(STDIN_FILENO,TCSANOW, &old_tio);
-	} // version posix
+	} // version Posix
 	return k;
 }
 /*

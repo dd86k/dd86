@@ -10,16 +10,17 @@ import core.stdc.stdlib : malloc;
 import vcpu : MEMORY;
 import vdos : SYSTEM;
 
-enum __EGA_ADDRESS = 0xA_0000;
-enum __MDA_ADDRESS = 0xB_0000;
-enum __VGA_ADDRESS = 0xB_8000;
+private enum __EGA_ADDRESS = 0xA_0000;
+private enum __MDA_ADDRESS = 0xB_0000;
+private enum __VGA_ADDRESS = 0xB_8000;
 enum __V_ADDRESS = __VGA_ADDRESS; /// Default video address
 
-extern (C):
-__gshared:
+enum MAX_STR = 2048; /// maximum string length to print
 
-videochar* VIDEO = void;	/// video buffer
-private uint screensize = void;
+extern (C):
+
+__gshared videochar* VIDEO = void;	/// video buffer
+private __gshared uint screensize = void;
 
 // VGA reference: http://www.brackeen.com/vga/basics.html
 // Unicode reference: https://unicode-table.com
@@ -158,9 +159,9 @@ version (Posix) {
 		// dark gray, ^blue, ^green, ^cyan, ^red, ^magenta, yellow, white
 		0x3830, 0x3231, 0x3031, 0x3431, 0x3930, 0x3331, 0x3131, 0x3531
 	];
-	ubyte *esc = [ // "\033[38;5;00m\033[48;5;00m" -- Guarantees byte-alignment
-		0x1b,0x5b,0x33,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // fg
-		0x1b,0x5b,0x34,0x38,0x3b,0x35,0x3b,0x00,0x00,0x6d, // bg
+	__gshared ubyte *esc = [ // "\033[38;5;00m\033[48;5;00m"
+		0x1b, 0x5b, 0x33, 0x38, 0x3b, 0x35, 0x3b, 0x00, 0x00, 0x6d, // fg
+		0x1b, 0x5b, 0x34, 0x38, 0x3b, 0x35, 0x3b, 0x00, 0x00, 0x6d, // bg
 	];
 	__gshared ushort *s_fg = void;//cast(ushort*)(cast(ubyte*)s + 7);
 	__gshared ushort *s_bg = void;//cast(ushort*)(cast(ubyte*)s + 17);
@@ -220,9 +221,8 @@ void screen_init() {
 			// 3 worst-case utf-8 char
 			// 1 newline
 		);
-		iov = cast(iovec *)malloc(iovec.sizeof * SYSTEM.screen_row);
-		//iov = cast(iovec *)(MEMORY + 0x1000);
-		import core.stdc.stdio;
+		//iov = cast(iovec *)malloc(iovec.sizeof * SYSTEM.screen_row);
+		iov = cast(iovec *)(MEMORY + 0x1000);
 		uint membase = 0x1100;
 		const uint inc = SYSTEM.screen_col * 25;
 		for (size_t i; i < SYSTEM.screen_row; ++i, membase += inc) {
@@ -318,7 +318,6 @@ void screen_draw() {
 				bi = 0;
 			}
 		}+/
-		//write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
 		//write(STDOUT_FILENO, cast(void*)str, bi);
 		// solution 4 (writev with multiple buffers with newlines)
 		import core.stdc.stdio;
@@ -426,8 +425,8 @@ void screen_logo() {
 		// └─────────────────────────────────────────────────────┘
 		"\xC0\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
 		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
-		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xD9";
-	__v_putn(l, l.length);
+		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xD9\n";
+	__v_put_s(l, l.length);
 }
 
 /**
@@ -436,26 +435,30 @@ void screen_logo() {
  * Equivalent to fputs(s, stdout).
  * Params:
  *   s = String, null-terminated
- *   size = String length (optional)
  */
 extern (C) public
-void __v_put(immutable(char) *s, uint size = 0) {
-	enum MAX_STR = 2048; /// maximum length to print
-
-	if (size) goto W_SIZE;
-
+void __v_put(immutable(char) *s) {
+	int size;
 	while (*s != 0 && size < MAX_STR) {
-		__v_putc(*s);
+		__v_putc(*s++);
 		++size;
-		++s;
 	}
-	return;
+}
 
-W_SIZE:
-	do {
-		__v_putc(*s);
-		++s;
-	} while (--size);
+/**
+ * Output a string, raw in video memory.
+ * This function affects the virtual system cursor position.
+ * Equivalent to fputs(s, stdout).
+ * Params:
+ *   s = String, null-terminated
+ *   size = String length
+ */
+extern (C) public
+void __v_put_s(immutable(char) *s, uint size) {
+	while (size && *s != 0) {
+		__v_putc(*s++);
+		--size;
+	}
 }
 
 /**
@@ -465,11 +468,10 @@ W_SIZE:
  * Equivelent to puts(s)
  * Params:
  *   s = String (optional)
- *   size = String length (optional)
  */
 extern (C) public
-void __v_putn(immutable(char) *s = null, uint size = 0) {
-	if (s) __v_put(s, size);
+void __v_putn(immutable(char) *s = null) {
+	if (s) __v_put(s);
 	__v_putc('\n');
 }
 
@@ -526,7 +528,7 @@ void __v_printf(immutable(char) *f, ...) {
 	uint c = vsnprintf(cast(char*)b, 512, f, args);
 
 	if (c > 0)
-		__v_put(cast(immutable(char)*)b, c);
+		__v_put_s(cast(immutable(char)*)b, c);
 }
 
 /// Scroll screen once, does not redraw screen

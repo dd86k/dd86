@@ -30,7 +30,7 @@ int sargs(const char *t, char **argv) {
 		if (t[i] == 0 || t[i] == ' ' || t[i] == '\n') {
 			argv[a] = cast(char*)malloc(i - j + 1);
 			//mloc +=
-			//argv[a] = cast(char*)(MEMORY + 0x1200);
+			//argv[a] = cast(char*)(MEMORY + mloc);
 			strncpy(argv[a], t + j, i - j);
 			argv[a][i - j] = 0;
 			while (t[i + 1] == ' ') ++i;
@@ -41,7 +41,7 @@ int sargs(const char *t, char **argv) {
 			while (t[i] != '\"' && t[i] != 0) ++i;
 			if (t[i] == 0) continue;
 			argv[a] = cast(char*)malloc(i - j + 1);
-			//argv[a] = cast(char*)(MEMORY + 0x1200);
+			//argv[a] = cast(char*)(MEMORY + mloc);
 			strncpy(argv[a], t + j, i - j);
 			argv[a][i - j] = 0;
 			while(t[i + 1] == ' ') ++i;
