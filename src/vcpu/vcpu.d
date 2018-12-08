@@ -6,24 +6,22 @@ module vcpu;
 
 import sleep;
 import Logger : info;
-import vcpu_8086 : exec16;
+import vcpu16 : exec16;
 import vcpu_utils;
 import compile_config : INIT_MEM, TSC_SLEEP;
 import vdos : SYSTEM;
 
 /*enum : ubyte { // Emulated CPU
-	CPU_TYPE_8086,
-	CPU_TYPE_80486
+	CPU_8086,
+	CPU_80486
 }*/
 
 /*enum : ubyte { // CPU Mode
 	CPU_MODE_REAL,
 	CPU_MODE_PROTECTED,
-	CPU_MODE_EXTENDED,
-	// No LONG modes, sorry
+	CPU_MODE_VM8086,
+	CPU_MODE_SMM
 }*/
-
-__gshared ubyte Seg; /// Preferred Segment register, defaults to SEG_NONE
 
 enum : ubyte { // Segment override (for Seg)
 	SEG_NONE,	/// None, default
@@ -64,12 +62,14 @@ enum : ubyte {
 	RM_RM = RM_RM_111,	/// Used for masking the R/M bits (00 000 111)
 }
 
+__gshared ubyte Seg; /// Preferred Segment register, defaults to SEG_NONE
+
 /**
  * Runnning level.
  * Used to determine the "level of execution", such as the "deepness" of a program.
  * When a program terminates, RLEVEL is decreased.
  * If HLT is sent, RLEVEL is set to 0.
- * If RLEVEL reaches 0, the emulator either stops, or returns to the virtual shell.
+ * If RLEVEL reaches 0 (or lower), the emulator either stops, or returns to the virtual shell.
  * tl;dr: Emulates CALLs
  */
 __gshared short RLEVEL = 1;
@@ -137,19 +137,27 @@ extern (C) struct __CPU {
 		ushort SP;
 	}
 	ushort CS, SS, DS, ES, FS, GS;
+	uint CR0, CR2, CR3;
+	uint DR0, DR1, DR2, DR3, DR4, DR5, DR6, DR7;
 
 	// Flags are bytes because single flags are affected a lot more often than
-	// flag-whole operations, like PUSHF.
+	// EFLAGS operations, e.g. PUSHDF.
+	align(2):
 	__gshared ubyte
-	CF, /// Bit  0, Carry Flag
-	PF, /// Bit  2, Parity Flag
-	AF, /// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
-	ZF, /// Bit  6, Zero Flag
-	SF, /// Bit  7, Sign Flag
-	TF, /// Bit  8, Trap Flag
-	IF, /// Bit  9, Interrupt Flag
-	DF, /// Bit 10, Direction Flag
-	OF; /// Bit 11, Overflow Flag
+	CF,	/// Bit  0, Carry Flag
+	PF,	/// Bit  2, Parity Flag
+	AF,	/// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
+	ZF,	/// Bit  6, Zero Flag
+	SF,	/// Bit  7, Sign Flag
+	TF,	/// Bit  8, Trap Flag
+	IF,	/// Bit  9, Interrupt Flag
+	DF,	/// Bit 10, Direction Flag
+	OF,	/// Bit 11, Overflow Flag
+	// i486
+	IOPL,	/// Bit 13:12, I/O Privilege Level
+	NT,	/// Bit 14, Nested task Flag
+	RF,	/// Bit 16, Resume Flag
+	VM;	/// Bit 17, Virtual 8086 Mode
 }
 
 public __gshared __CPU vCPU = void;

@@ -1,16 +1,12 @@
-/*
- * Intel 8086 processor emulator
- */
-
-module vcpu_8086;
+module vcpu16; // 8086
 
 import vcpu, vcpu_utils;
 import vdos_int;
 import Logger;
 
 /**
- * Execute an 8086 opcode
- * Params: op = 8086 opcode
+ * Execute an instruction in REAL mode
+ * Params: op = opcode
  */
 extern (C)
 void exec16(ubyte op) {

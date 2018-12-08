@@ -1,4 +1,4 @@
-import vcpu, vcpu_utils, vcpu_8086, std.stdio, vdos;
+import vcpu, vcpu_utils, vcpu16, std.stdio, vdos;
 import test_utils;
 
 unittest {
