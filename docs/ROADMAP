@@ -1,0 +1,43 @@
+DD-DOS is still currently under heavy development.
+
+Current phase
+>Dev (unusable)
+ Dev (usable)
+ Alpha
+ Beta
+ RC
+ GA
+
+Status (estimations)
+
+- CPU
+8086      [||||||||||||        ] 60%  Most of it works fine
+80486     [                    ] 0%   Just started on it
+
+- VIDEO
+TEXT      [||||||||||          ] 50%  Basics works with CP437
+
+- DOS
+FILE I/O  [                    ] 0%   Planned feature
+EXEC      [||||                ] 20%  Can load COM files; Needs a lot of setup
+SHELL     [||||||||            ] 40%  A good amount of internal commands are present
+MEM EXT   [                    ] 0%   Planned feature
+LOCAL     [                    ] 0%   Planned feature
+BIOS      [||||                ] 20%  A few working BIOS calls
+SERVICES  [||||||              ] 30%  A few working MS-DOS/DOS services
+
+- HARDWARE
+KEYBOARD  [||||||||||          ] 50%  Basics works, missing translation function
+MOUSE     [                    ] 0%   Planned feature
+CONSOLE   [                    ] 0%   Planned feature
+PRINTER   [                    ] 0%   Planned feature
+CD-ROM    [                    ] 0%   Planned feature
+IPX       [                    ] 0%   Planned feature
+MODEM     [                    ] 0%   Planned feature
+
+Application Wishlist
+
+QBASIC: Doesn't run
+Rogue: Doesn't run
+Microsoft Diagnostics (MSD): Doesn't run
+Borland Turbo C: Doesn't run
