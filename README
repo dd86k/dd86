@@ -15,7 +15,7 @@ applications, like NTVDM and dosemu, for multiple operating systems.
 
 Project homes:
 	https://git.dd86k.space/dd86k/dd-dos
-	https://github.com/dd86k/dd-dos
+	https://github.com/dd86k/dd-dos (mirror)
 
 ┌───────────────┐
 │ DOCUMENTATION │
@@ -25,9 +25,11 @@ Manuals
 	User: docs/dd-dos.1
 	Technical: https://dd86k.space/docs/dd-dos-manual.pdf
 
-For disclaimer and licensing information,
-	see docs/LICENSE.
 For operating system support,
 	see docs/SUPPORT.
+For current working status and development notes,
+	see docs/ROADMAP.
 For a list of maintainers,
 	see docs/CREDIT.
+For disclaimer and licensing information,
+	see docs/LICENSE.
