@@ -2,13 +2,11 @@ import vcpu, vcpu_utils, vcpu16, std.stdio, vdos;
 import test_utils;
 
 unittest {
-	section("Interpreter -- REAL MODE");
-
 	vcpu_init;
 	vCPU.CS = 0;
 	vCPU.EIP = get_ip;
 
-	sub("Interpreter Utilities (vcpu_utils.d)");
+	section("Interpreter Utilities (vcpu_utils.d)");
 
 	test("__iu8");
 	__iu8(0xFF, vCPU.EIP);
@@ -37,8 +35,9 @@ unittest {
 	assert(MEMORY[vCPU.EIP + 3] == 0xAA);
 	OK;
 
-	test("__fu8");
 	__iu8(0xAC, vCPU.EIP + 1);
+
+	test("__fu8");
 	assert(__fu8(vCPU.EIP + 1) == 0xAC);
 	OK;
 
@@ -54,8 +53,9 @@ unittest {
 	assert(__fi8_i == cast(byte)0xAC);
 	OK;
 
-	test("__fu16");
 	__iu16(0xAAFF, vCPU.EIP + 1);
+
+	test("__fu16");
 	assert(__fu16(vCPU.EIP + 1) == 0xAAFF);
 	OK;
 
@@ -88,11 +88,11 @@ unittest {
 	OK;
 
 	test("__iwstr");
-	__iwstr("Heck"w);
+	__iwstr("Hi!!"w);
 	assert(MEMORY[vCPU.EIP     .. vCPU.EIP + 1] == "H"w);
-	assert(MEMORY[vCPU.EIP + 2 .. vCPU.EIP + 3] == "e"w);
-	assert(MEMORY[vCPU.EIP + 4 .. vCPU.EIP + 5] == "c"w);
-	assert(MEMORY[vCPU.EIP + 6 .. vCPU.EIP + 7] == "k"w);
+	assert(MEMORY[vCPU.EIP + 2 .. vCPU.EIP + 3] == "i"w);
+	assert(MEMORY[vCPU.EIP + 4 .. vCPU.EIP + 5] == "!"w);
+	assert(MEMORY[vCPU.EIP + 6 .. vCPU.EIP + 7] == "!"w);
 	OK;
 
 	test("__iarr");
@@ -101,7 +101,7 @@ unittest {
 	assert(MEMORY[vCPU.EIP .. vCPU.EIP + 2] == [ 0xAA, 0xBB ]);
 	OK;
 
-	sub("Registers");
+	section("Registers");
 
 	test("AL/AH");
 	vCPU.EAX = 0x0807;
@@ -150,24 +150,25 @@ unittest {
 
 	test("FLAG");
 	FLAG = 0xFFFF;
-	assert(vCPU.SF); assert(vCPU.ZF); assert(vCPU.AF); assert(vCPU.PF);
-	assert(vCPU.CF); assert(vCPU.OF); assert(vCPU.DF);
-	assert(vCPU.IF); assert(vCPU.TF);
+	assert(vCPU.SF); assert(vCPU.ZF); assert(vCPU.AF);
+	assert(vCPU.PF); assert(vCPU.CF); assert(vCPU.OF);
+	assert(vCPU.DF); assert(vCPU.IF); assert(vCPU.TF);
 	assert(FLAGB == 0xD5);
 	assert(FLAG == 0xFD5);
 	FLAG = 0;
-	assert(vCPU.SF == 0); assert(vCPU.ZF == 0); assert(vCPU.AF == 0); assert(vCPU.PF == 0);
-	assert(vCPU.CF == 0); assert(vCPU.OF == 0); assert(vCPU.DF == 0);
-	assert(vCPU.IF == 0); assert(vCPU.TF == 0);
+	assert(vCPU.SF == 0); assert(vCPU.ZF == 0); assert(vCPU.AF == 0);
+	assert(vCPU.PF == 0); assert(vCPU.CF == 0); assert(vCPU.OF == 0);
+	assert(vCPU.DF == 0); assert(vCPU.IF == 0); assert(vCPU.TF == 0);
 	assert(FLAGB == 0);
 	assert(FLAG == 0);
 	OK;
 
-	sub("ModR/M");
+	section("ModR/M");
+
 	__iu16(0x1020, vCPU.EIP + 2); // low:20h
 	vCPU.SI = 0x50; vCPU.DI = 0x50;
 	vCPU.BX = 0x30; vCPU.BP = 0x30;
-	test("ModR/M (MOD=00)");
+	test("16-bit ModR/M (MOD=00)");
 	assert(get_rm16(0b000) == 0x80);
 	assert(get_rm16(0b001) == 0x80);
 	assert(get_rm16(0b010) == 0x80);
@@ -177,7 +178,7 @@ unittest {
 	assert(get_rm16(0b110) == 0x1020);
 	assert(get_rm16(0b111) == 0x30);
 	OK;
-	test("ModR/M (MOD=01)");
+	test("16-bit ModR/M (MOD=01)");
 	assert(get_rm16(0b01_000_000) == 0xA0);
 	assert(get_rm16(0b01_000_001) == 0xA0);
 	assert(get_rm16(0b01_000_010) == 0xA0);
@@ -187,7 +188,7 @@ unittest {
 	assert(get_rm16(0b01_000_110) == 0x50);
 	assert(get_rm16(0b01_000_111) == 0x50);
 	OK;
-	test("ModR/M (MOD=10)");
+	test("16-bit ModR/M (MOD=10)");
 	assert(get_rm16(0b10_000_000) == 0x10A0);
 	assert(get_rm16(0b10_000_001) == 0x10A0);
 	assert(get_rm16(0b10_000_010) == 0x10A0);
@@ -197,7 +198,7 @@ unittest {
 	assert(get_rm16(0b10_000_110) == 0x1050);
 	assert(get_rm16(0b10_000_111) == 0x1050);
 	OK;
-	test("ModR/M (MOD=11)");
+	test("16-bit ModR/M (MOD=11)");
 	vCPU.AX = 0x2040; vCPU.CX = 0x2141;
 	vCPU.DX = 0x2242; vCPU.BX = 0x2343;
 	vCPU.SP = 0x2030; vCPU.BP = 0x2131;
@@ -211,7 +212,7 @@ unittest {
 	assert(get_rm16(0b11_000_110) == 0x22); // DH
 	assert(get_rm16(0b11_000_111) == 0x23); // BH
 	OK;
-	test("ModR/M (MOD=11+W)");
+	test("16-bit ModR/M (MOD=11+W)");
 	assert(get_rm16(0b11_000_000, 1) == 0x2040); // AX
 	assert(get_rm16(0b11_000_001, 1) == 0x2141); // CX
 	assert(get_rm16(0b11_000_010, 1) == 0x2242); // DX
@@ -222,7 +223,13 @@ unittest {
 	assert(get_rm16(0b11_000_111, 1) == 0x2333); // DI
 	OK;
 
-	sub("General instructions");
+	test("32-bit ModR/M (MOD=00)"); TODO;
+	test("32-bit ModR/M (MOD=01)"); TODO;
+	test("32-bit ModR/M (MOD=10)"); TODO;
+	test("32-bit ModR/M (MOD=11)"); TODO;
+	test("32-bit ModR/M (MOD=11+W)"); TODO;
+
+	section("16-bit Instructions (8086)");
 
 	// ADD
 
@@ -1768,4 +1775,8 @@ unittest {
 	test("FFh  GRP4 JMP R/M16 (NEAR)"); TODO;
 	test("FFh  GRP4 JMP MEM16 (FAR)"); TODO;
 	test("FFh  GRP4 PUSH MEM16"); TODO;
+
+	section("32-bit Instructions (i486)");
+
+	test("Protected-mode"); TODO;
 }
