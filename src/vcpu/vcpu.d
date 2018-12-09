@@ -160,7 +160,7 @@ extern (C) struct __CPU {
 	VM;	/// Bit 17, Virtual 8086 Mode
 }
 
-public __gshared __CPU vCPU = void;
+public __gshared __CPU CPU = void;
 
 /// Initiate interpreter
 extern (C)
@@ -175,12 +175,12 @@ extern (C)
 void vcpu_run() {
 	debug import Logger : logexec;
 
-	info("CALL vcpu_run");
+	//info("CALL vcpu_run");
 	//uint tsc; /// tick count for thread sleeping purposes
 	while (RLEVEL > 0) {
-		vCPU.EIP = get_ip; // CS:IP->EIP (important)
-		debug logexec(vCPU.CS, vCPU.IP, MEMORY[vCPU.EIP]);
-		exec16(MEMORY[vCPU.EIP]);
+		CPU.EIP = get_ip; // CS:IP->EIP (important)
+		//debug logexec(CPU.CS, CPU.IP, MEMORY[CPU.EIP]);
+		exec16(MEMORY[CPU.EIP]);
 
 		/*if (opt_sleep) { // TODO: Redo sleeping procedure (#20)
 			++tsc;
@@ -212,16 +212,16 @@ uint get_ad(int s, int o) {
 extern (C)
 pragma(inline, true)
 uint get_ip() {
-	return get_ad(vCPU.CS, vCPU.IP);
+	return get_ad(CPU.CS, CPU.IP);
 }
 
 /// (8086, 80486) RESET instruction function
 extern (C)
 private void RESET() {
-	vCPU.OF = vCPU.DF = vCPU.IF = vCPU.TF = vCPU.SF =
-	vCPU.ZF = vCPU.AF = vCPU.PF = vCPU.CF = 0;
-	vCPU.CS = 0xFFFF;
-	vCPU.EIP = vCPU.DS = vCPU.SS = vCPU.ES = 0;
+	CPU.OF = CPU.DF = CPU.IF = CPU.TF = CPU.SF =
+	CPU.ZF = CPU.AF = CPU.PF = CPU.CF = 0;
+	CPU.CS = 0xFFFF;
+	CPU.EIP = CPU.DS = CPU.SS = CPU.ES = 0;
 	// Empty Queue Bus
 }
 
@@ -229,8 +229,8 @@ private void RESET() {
 extern (C)
 void fullreset() {
 	RESET;
-	vCPU.EAX = vCPU.EBX = vCPU.ECX = vCPU.EDX =
-	vCPU.EBP = vCPU.ESP = vCPU.EDI = vCPU.ESI = 0;
+	CPU.EAX = CPU.EBX = CPU.ECX = CPU.EDX =
+	CPU.EBP = CPU.ESP = CPU.EDI = CPU.ESI = 0;
 }
 
 /**********************************************************
@@ -257,22 +257,22 @@ private enum : ushort {
  */
 @property ubyte FLAGB() {
 	ubyte b;
-	if (vCPU.SF) b |= MASK_SF;
-	if (vCPU.ZF) b |= MASK_ZF;
-	if (vCPU.AF) b |= MASK_AF;
-	if (vCPU.PF) b |= MASK_PF;
-	if (vCPU.CF) b |= MASK_CF;
+	if (CPU.SF) b |= MASK_SF;
+	if (CPU.ZF) b |= MASK_ZF;
+	if (CPU.AF) b |= MASK_AF;
+	if (CPU.PF) b |= MASK_PF;
+	if (CPU.CF) b |= MASK_CF;
 	return b;
 }
 
 /// Set FLAG as BYTE.
 /// Params: flag = FLAG byte
 @property void FLAGB(ubyte flag) {
-	vCPU.SF = flag & MASK_SF;
-	vCPU.ZF = flag & MASK_ZF;
-	vCPU.AF = flag & MASK_AF;
-	vCPU.PF = flag & MASK_PF;
-	vCPU.CF = flag & MASK_CF;
+	CPU.SF = flag & MASK_SF;
+	CPU.ZF = flag & MASK_ZF;
+	CPU.AF = flag & MASK_AF;
+	CPU.PF = flag & MASK_PF;
+	CPU.CF = flag & MASK_CF;
 }
 
 /**
@@ -281,20 +281,20 @@ private enum : ushort {
  */
 @property ushort FLAG() {
 	ushort b = FLAGB;
-	if (vCPU.OF) b |= MASK_OF;
-	if (vCPU.DF) b |= MASK_DF;
-	if (vCPU.IF) b |= MASK_IF;
-	if (vCPU.TF) b |= MASK_TF;
+	if (CPU.OF) b |= MASK_OF;
+	if (CPU.DF) b |= MASK_DF;
+	if (CPU.IF) b |= MASK_IF;
+	if (CPU.TF) b |= MASK_TF;
 	return b;
 }
 
 /// Set FLAG as WORD.
 /// Params: flag = FLAG word
 @property void FLAG(ushort flag) {
-	vCPU.OF = (flag & MASK_OF) != 0;
-	vCPU.DF = (flag & MASK_DF) != 0;
-	vCPU.IF = (flag & MASK_IF) != 0;
-	vCPU.TF = (flag & MASK_TF) != 0;
+	CPU.OF = (flag & MASK_OF) != 0;
+	CPU.DF = (flag & MASK_DF) != 0;
+	CPU.IF = (flag & MASK_IF) != 0;
+	CPU.TF = (flag & MASK_TF) != 0;
 	FLAGB = cast(ubyte)flag;
 }
 
@@ -308,8 +308,8 @@ private enum : ushort {
  */
 extern (C)
 void push16(ushort value) {
-	vCPU.SP = cast(ushort)(vCPU.SP - 2);
-	__iu16(value, get_ad(vCPU.SS, vCPU.SP));
+	CPU.SP = cast(ushort)(CPU.SP - 2);
+	__iu16(value, get_ad(CPU.SS, CPU.SP));
 }
 
 /**
@@ -318,8 +318,8 @@ void push16(ushort value) {
  */
 extern (C)
 ushort pop16() {
-	const uint addr = get_ad(vCPU.SS, vCPU.SP);
-	vCPU.SP = cast(ushort)(vCPU.SP + 2);
+	const uint addr = get_ad(CPU.SS, CPU.SP);
+	CPU.SP = cast(ushort)(CPU.SP + 2);
 	return __fu16(addr);
 }
 
@@ -329,8 +329,8 @@ ushort pop16() {
  */
 extern (C)
 void push32(uint value) {
-	vCPU.SP = cast(ushort)(vCPU.SP - 4);
-	__iu32(value, get_ad(vCPU.SS, vCPU.SP));
+	CPU.SP = cast(ushort)(CPU.SP - 4);
+	__iu32(value, get_ad(CPU.SS, CPU.SP));
 }
 
 /**
@@ -339,7 +339,7 @@ void push32(uint value) {
  */
 extern (C)
 uint pop32() {
-	const uint addr = get_ad(vCPU.SS, vCPU.SP);
-	vCPU.SP = cast(ushort)(vCPU.SP + 4);
+	const uint addr = get_ad(CPU.SS, CPU.SP);
+	CPU.SP = cast(ushort)(CPU.SP + 4);
 	return __fu32(addr);
 }

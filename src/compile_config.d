@@ -70,7 +70,7 @@ version (X86) {
 enum APP_VERSION = "0.0.0"; /// DD-DOS version
 
 /********************************************************************
- * vCPU
+ * CPU
  ********************************************************************/
 
 // It is planned to redo this section, part of Issue #20

@@ -5,12 +5,13 @@
 module vdos_int;
 
 import ddc;
-import vcpu : vCPU, MEMORY, get_ad, RLEVEL;
+import vcpu : CPU, MEMORY, get_ad, RLEVEL;
 import vcpu_utils : __int_enter, __int_exit;
 import vdos : SYSTEM, DOS, BIOS_TICK, MinorVersion, MajorVersion, OEM_ID;
 import vdos_codes;
 import vdos_loader : vdos_load;
 import vdos_structs : __cpos;
+import vdos_screen;
 import ddcon;
 import os_utils;
 import utils : MemString;
@@ -19,13 +20,13 @@ import utils : MemString;
 /// Params: code = Interrupt byte
 extern (C)
 void INT(ubyte code) {
-	debug printf("[dbug] INTERRUPT: %02Xh\n", code);
+	debug __v_printf("[dbug] INTERRUPT: %02Xh\n", code);
 
 	__int_enter;
 
 	switch (code) {
 	case 0x10: // VIDEO
-		switch (vCPU.AH) {
+		switch (CPU.AH) {
 		case 0: // Set video mode
 
 			break;
@@ -33,16 +34,16 @@ void INT(ubyte code) {
 
 			break;
 		case 0x02: // Set cursor position
-			SYSTEM.screen_page = vCPU.BL > 8 ? 0 : vCPU.BH;
+			SYSTEM.screen_page = CPU.BL > 8 ? 0 : CPU.BH;
 			__cpos* pos = &SYSTEM.cursor[SYSTEM.screen_page];
-			pos.row = vCPU.DH; //TODO: Check against system rows/columns current size
-			pos.col = vCPU.DL;
+			pos.row = CPU.DH; //TODO: Check against system rows/columns current size
+			pos.col = CPU.DL;
 			SetPos(pos.row, pos.col);
 			break;
 		case 0x03: // Get cursor position and size
-			vCPU.AX = SYSTEM.screen_page; //TODO: Check if graphical mode
-			//vCPU.DH = cast(ubyte)CursorTop;
-			//vCPU.DL = cast(ubyte)CursorLeft;
+			CPU.AX = SYSTEM.screen_page; //TODO: Check if graphical mode
+			//CPU.DH = cast(ubyte)CursorTop;
+			//CPU.DL = cast(ubyte)CursorLeft;
 			break;
 		case 0x04: // Read light pen position
 
@@ -54,10 +55,10 @@ void INT(ubyte code) {
 		}
 		break;
 	case 0x11: // BIOS - Get equipement list
-		vCPU.AX = SYSTEM.equip_flag;
+		CPU.AX = SYSTEM.equip_flag;
 		break;
 	case 0x12: // BIOS - Get memory size (KB)
-		vCPU.AX = SYSTEM.memsize;
+		CPU.AX = SYSTEM.memsize;
 		break;
 	case 0x13: // DISK operations
 
@@ -66,7 +67,7 @@ void INT(ubyte code) {
 
 		break;
 	case 0x16: // Keyboard
-		switch (vCPU.AH) {
+		switch (CPU.AH) {
 		case 0:
 
 			break;
@@ -77,7 +78,7 @@ void INT(ubyte code) {
 			// Bit | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0
 			// Des | I | C | N | S | A | C | L | R
 			// Insert, Capslock, Numlock, Scrolllock, Alt, Ctrl, Left, Right
-			// vCPU.AL = (flag)
+			// CPU.AL = (flag)
 			break;
 		default:
 		}
@@ -86,7 +87,7 @@ void INT(ubyte code) {
 
 		break;
 	case 0x1A: // TIME
-		switch (vCPU.AH) {
+		switch (CPU.AH) {
 		case 0: // Get system time by number of clock ticks since midnight
 			OSTime t = void;
 			os_time(&t);
@@ -95,8 +96,8 @@ void INT(ubyte code) {
 				(cast(float)t.minute * 60) +
 				cast(float)t.second) * BIOS_TICK
 			);
-			vCPU.CS = c >> 16;
-			vCPU.DX = cast(ushort)c;
+			CPU.CS = c >> 16;
+			CPU.DX = cast(ushort)c;
 			break;
 		case 1: // Set system time by number of clock ticks since midnight
 			break;
@@ -110,41 +111,42 @@ void INT(ubyte code) {
 		--RLEVEL;
 		break;
 	case 0x21: // MS-DOS Services
-		switch (vCPU.AH) {
+		switch (CPU.AH) {
 		case 0: // Terminal program
 			--RLEVEL;
 			break;
 		case 1: // Read character from stdin with echo
-			//vCPU.AL = cast(ubyte)ReadKey.keyCode;
+			//CPU.AL = cast(ubyte)ReadKey.keyCode;
 			break;
 		case 2: // Write character to stdout
-			vCPU.AL = vCPU.DL;
-			putchar(vCPU.AL);
+			CPU.AL = CPU.DL;
+			putchar(CPU.AL);
 			break;
 		case 5: // Write character to printer
 
 			break;
 		case 6: // Direct console input/output
-			if (vCPU.DL == 0xFF) { // input
+			if (CPU.DL == 0xFF) { // input
 
 			} else { // output
-				vCPU.AL = vCPU.DL;
-				putchar(vCPU.AL);
+				CPU.AL = CPU.DL;
+				__v_putc(CPU.AL);
 			}
 			break;
 		case 7: // Read character directly from stdin without echo
-			//vCPU.AL = cast(ubyte)ReadKey.keyCode;
+			//CPU.AL = cast(ubyte)ReadKey.keyCode;
 			break;
 		case 8: // Read character from stdin without echo
 
 			break;
 		case 9: { // Write string to stdout
-			ubyte limit = 255;
-			char* p = cast(char*)(MEMORY + get_ad(vCPU.DS, vCPU.DX));
-			while (*p != '$' && --limit > 0)
-				putchar(*p++);
+			char *p = cast(char *)(MEMORY + get_ad(CPU.DS, CPU.DX));
+			debug __v_printf("S::%Xh\n",get_ad(CPU.DS, CPU.DX));
+			ushort l;
+			while (p[l] != '$' && l < 255) ++l;
+			__v_put_s(cast(immutable)p, l - 1);
 
-			vCPU.AL = 0x24;
+			CPU.AL = 0x24;
 			break;
 		}
 		case 0xA: // Buffered input
@@ -163,7 +165,7 @@ void INT(ubyte code) {
 
 			break;
 		case 0x19: // Get default drive
-			vCPU.AL = 2; // Temporary.
+			CPU.AL = 2; // Temporary.
 			break;
 		case 0x25: // Set interrupt vector
 
@@ -174,34 +176,34 @@ void INT(ubyte code) {
 		case 0x2A: { // Get system date
 			OSDate d = void;
 			os_date(&d); // os_utils
-			vCPU.CX = d.year;
-			vCPU.DH = d.month;
-			vCPU.DL = d.day;
-			vCPU.AL = d.weekday;
+			CPU.CX = d.year;
+			CPU.DH = d.month;
+			CPU.DL = d.day;
+			CPU.AL = d.weekday;
 			break;
 		}
 		case 0x2B: // Set system date
-			vCPU.AL = 0xFF;
+			CPU.AL = 0xFF;
 			break;
 		case 0x2C: { // Get system time
 			OSTime t = void;
 			os_time(&t); // os_utils
-			vCPU.CH = t.hour;
-			vCPU.CL = t.minute;
-			vCPU.DH = t.second;
-			vCPU.DL = t.millisecond;
+			CPU.CH = t.hour;
+			CPU.CL = t.minute;
+			CPU.DH = t.second;
+			CPU.DL = t.millisecond;
 			break;
 		}
 		case 0x2D: // Set system time
-			vCPU.AL = 0xFF;
+			CPU.AL = 0xFF;
 			break;
 		case 0x2E: // Set verify flag
-			vCPU.AL = 1;
+			CPU.AL = 1;
 			break;
 		case 0x30: // Get DOS version
-			vCPU.BH = vCPU.AL == 0 ? OEM_ID.IBM : 0;
-			vCPU.AL = MajorVersion;
-			vCPU.AH = MinorVersion;
+			CPU.BH = CPU.AL == 0 ? OEM_ID.IBM : 0;
+			CPU.AL = MajorVersion;
+			CPU.AH = MinorVersion;
 			break;
 		case 0x35: // Get interrupt vector
 
@@ -252,35 +254,35 @@ void INT(ubyte code) {
 
 			break;
 		case 0x4B: { // Load/execute program
-			switch (vCPU.AL) {
+			switch (CPU.AL) {
 			case 0: // Load and execute the program.
-				char[] p = MemString(get_ad(vCPU.DS, vCPU.DX));
+				char[] p = MemString(get_ad(CPU.DS, CPU.DX));
 				if (os_pexist(cast(char*)p)) {
 					vdos_load(cast(char*)p);
-					vCPU.CF = 0;
+					CPU.CF = 0;
 				} else {
-					vCPU.AX = EDOS_FILE_NOT_FOUND;
-					vCPU.CF = 1;
+					CPU.AX = EDOS_FILE_NOT_FOUND;
+					CPU.CF = 1;
 				}
 				break;
 			case 1: // Load, create the program header but do not begin execution.
 
-				vCPU.CF = 1;
+				CPU.CF = 1;
 				break;
 			case 3: // Load overlay. No header created.
 
-				vCPU.CF = 1;
+				CPU.CF = 1;
 				break;
 			default:
-				vCPU.AX = EDOS_INVALID_FUNCTION;
-				vCPU.CF = 1;
+				CPU.AX = EDOS_INVALID_FUNCTION;
+				CPU.CF = 1;
 				break;
 			}
 			break;
 		}
 		case 0x4C: // Terminate with return code
 			--RLEVEL;
-			DOS.ERRORLEVEL = vCPU.AL;
+			DOS.ERRORLEVEL = CPU.AL;
 			break;
 		case 0x4D: // Get return code (ERRORLEVEL)
 			
@@ -301,7 +303,7 @@ void INT(ubyte code) {
 
 		break;
 	case 0x29: // FAST CONSOLE OUTPUT
-		putchar(vCPU.AL);
+		putchar(CPU.AL);
 		break;
 	default:
 	}

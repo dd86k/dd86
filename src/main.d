@@ -148,7 +148,7 @@ NO_ARGS:
 	screen_draw;
 
 	if (cast(int)prog) {
-		vCPU.CS = 0; vCPU.IP = 0x100; // Temporary
+		CPU.CS = 0; CPU.IP = 0x100; // Temporary
 		vcpu_run;
 	} else vdos_shell;
 

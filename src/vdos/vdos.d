@@ -20,7 +20,7 @@ import compile_config :
 enum BANNER = 
 	`_______ _______        _______  ______  _______`~"\n"~
 	`|  __  \|  __  \  ___  |  __  \/  __  \/ _____/`~"\n"~
-	`| |  \ || |  \ | |___| | |  \ || /  \ |\____ \`~"\n"~
+	`| |  \ || |  \ | |___| | |  \ || /  \ |\____ \`~ "\n"~
 	`| |__/ || |__/ |       | |__/ || \__/ |_____\ \`~"\n"~
 	`|______/|______/       |______/\______/\______/`~"\n"
 	; /// Banner screen, fancy!
@@ -153,10 +153,10 @@ int vdos_command(immutable(char) *command) {
 	// D
 
 	if (strcmp(*argv, "date") == 0) {
-		vCPU.AH = 0x2A;
+		CPU.AH = 0x2A;
 		INT(0x21);
 		__v_put("It is currently ");
-		switch (vCPU.AL) {
+		switch (CPU.AL) {
 		case 0, 7: __v_put("Sun"); break;
 		case 1: __v_put("Mon"); break;
 		case 2: __v_put("Tue"); break;
@@ -166,7 +166,7 @@ int vdos_command(immutable(char) *command) {
 		case 6: __v_put("Sat"); break;
 		default:
 		}
-		__v_printf(", %d-%02d-%02d\n", vCPU.CX, vCPU.DH, vCPU.DL);
+		__v_printf(", %d-%02d-%02d\n", CPU.CX, CPU.DH, CPU.DL);
 		return 0;
 	}
 
@@ -261,10 +261,10 @@ MEM_HELP:
 	// T
 
 	if (strcmp(*argv, "time") == 0) {
-		vCPU.AH = 0x2C;
+		CPU.AH = 0x2C;
 		INT(0x21);
 		__v_printf("It is currently %02d:%02d:%02d.%02d\n",
-			vCPU.CH, vCPU.CL, vCPU.DH, vCPU.DL);
+			CPU.CH, CPU.CL, CPU.DH, CPU.DL);
 		return 0;
 	}
 
@@ -299,7 +299,7 @@ MEM_HELP:
 	if (strcmp(*argv, "?load") == 0) {
 		if (argc > 1) {
 			if (os_pexist(argv[1])) {
-				vCPU.CS = 0; vCPU.IP = 0x100; // Temporary
+				CPU.CS = 0; CPU.IP = 0x100; // Temporary
 				vdos_load(argv[1]);
 			} else
 				__v_putn("File not found");
@@ -495,20 +495,20 @@ void print_regs() {
 		"EIP=%08X  IP=%04X  (get_ip=%08X)\n"~
 		"EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X\n"~
 		"CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X\n",
-		vCPU.EIP, vCPU.IP, get_ip,
-		vCPU.EAX, vCPU.EBX, vCPU.ECX, vCPU.EDX,
-		vCPU.CS, vCPU.DS, vCPU.ES, vCPU.SS, vCPU.SP, vCPU.BP, vCPU.SI, vCPU.DI,
+		CPU.EIP, CPU.IP, get_ip,
+		CPU.EAX, CPU.EBX, CPU.ECX, CPU.EDX,
+		CPU.CS, CPU.DS, CPU.ES, CPU.SS, CPU.SP, CPU.BP, CPU.SI, CPU.DI,
 	);
 	__v_put("FLAG=");
-	if (vCPU.OF) __v_putn("OF ");
-	if (vCPU.DF) __v_putn("DF ");
-	if (vCPU.IF) __v_putn("IF ");
-	if (vCPU.TF) __v_putn("TF ");
-	if (vCPU.SF) __v_putn("SF ");
-	if (vCPU.ZF) __v_putn("ZF ");
-	if (vCPU.AF) __v_putn("AF ");
-	if (vCPU.PF) __v_putn("PF ");
-	if (vCPU.CF) __v_putn("CF ");
+	if (CPU.OF) __v_putn("OF ");
+	if (CPU.DF) __v_putn("DF ");
+	if (CPU.IF) __v_putn("IF ");
+	if (CPU.TF) __v_putn("TF ");
+	if (CPU.SF) __v_putn("SF ");
+	if (CPU.ZF) __v_putn("ZF ");
+	if (CPU.AF) __v_putn("AF ");
+	if (CPU.PF) __v_putn("PF ");
+	if (CPU.CF) __v_putn("CF ");
 	__v_printf("(%4Xh)\n", FLAG);
 }
 
@@ -534,7 +534,7 @@ void panic(ushort code,
 		code, modname, line
 	);
 	int i = RANGE;
-	ubyte *p = MEMORY + vCPU.EIP - TARGET;
+	ubyte *p = MEMORY + CPU.EIP - TARGET;
 	while (--i) {
 		if (i == TARGET)
 			__v_printf(" > %02X<", *p);

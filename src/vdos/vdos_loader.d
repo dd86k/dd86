@@ -6,9 +6,9 @@ module vdos_loader;
 
 import core.stdc.stdio;
 import core.stdc.stdlib : malloc, free;
-import vdos_codes, Logger;
 import vcpu, vcpu_utils;
-import vdos, vdos_structs;
+import vdos, vdos_structs, vdos_codes, vdos_screen;
+import Logger;
 import ddc : NULL_CHAR;
 import vdos_screen;
 
@@ -36,12 +36,12 @@ int vdos_load(char *path) {
 	// leave the cast in case of 64-bit compiles
 	uint fsize = cast(uint)ftell(f); // who the hell would have a >2G exec to run in DOS
 
-	debug printf("[....] File size: %d\n", fsize);
+	debug __v_printf("[....] File size: %d\n", fsize);
 
 	if (fsize == 0) {
 		fclose(f);
 		warn("Executable file is zero length");
-		vCPU.AL = EDOS_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
+		CPU.AL = EDOS_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
 		return EDOS_BAD_FORMAT;
 	}
 
@@ -51,15 +51,15 @@ int vdos_load(char *path) {
 
 	switch (sig) {
 	case MZ_MAGIC: // Party time!
-		info("LOAD MZ");
+		//info("LOAD MZ");
 
 		// ** Header is read for initial register values
 		mz_hdr mzh = void; /// MZ header structure variable
 		fread(&mzh, mzh.sizeof, 1, f);
-		vCPU.CS = 0; vCPU.IP = 0x100; // Temporary!
-		vCPU.CS = cast(ushort)(vCPU.CS + mzh.e_cs); // Relative
-		vCPU.IP = mzh.e_ip;
-		//vCPU.EIP = get_ip;
+		CPU.CS = 0; CPU.IP = 0x100; // Temporary!
+		CPU.CS = cast(ushort)(CPU.CS + mzh.e_cs); // Relative
+		CPU.IP = mzh.e_ip;
+		//CPU.EIP = get_ip;
 
 		// ** Copy code section from exe into memory
 		/*if (mzh.e_minalloc && mzh.e_maxalloc) { // Low memory
@@ -77,14 +77,14 @@ int vdos_load(char *path) {
 			csize -= PAGE - mzh.e_cblp;
 
 		debug {
-			printf("RELOC TABLE: %d -- %d B\n", mzh.e_lfarlc,  mz_rlc.sizeof * mzh.e_crlc);
-			printf("STURCT STRUCT SIZE: %d\n", mzh.sizeof);
-			printf("EXE HEADER SIZE: %d\n", hsize);
-			printf("CODE: %d -- %d B\n", codebase, csize);
-			printf("vCPU.CS: %4Xh -- e_cs: %4Xh\n", vCPU.CS, mzh.e_cs);
-			printf("vCPU.IP: %4Xh -- e_ip: %4Xh\n", vCPU.IP, mzh.e_ip);
-			printf("vCPU.SS: %4Xh -- e_ss: %4Xh\n", vCPU.SS, mzh.e_ss);
-			printf("vCPU.SP: %4Xh -- e_sp: %4Xh\n", vCPU.SP, mzh.e_sp);
+			__v_printf("RELOC TABLE: %d -- %d B\n", mzh.e_lfarlc,  mz_rlc.sizeof * mzh.e_crlc);
+			__v_printf("STURCT STRUCT SIZE: %d\n", mzh.sizeof);
+			__v_printf("EXE HEADER SIZE: %d\n", hsize);
+			__v_printf("CODE: %d -- %d B\n", codebase, csize);
+			__v_printf("CPU.CS: %4Xh -- e_cs: %4Xh\n", CPU.CS, mzh.e_cs);
+			__v_printf("CPU.IP: %4Xh -- e_ip: %4Xh\n", CPU.IP, mzh.e_ip);
+			__v_printf("CPU.SS: %4Xh -- e_ss: %4Xh\n", CPU.SS, mzh.e_ss);
+			__v_printf("CPU.SP: %4Xh -- e_sp: %4Xh\n", CPU.SP, mzh.e_sp);
 		}
 
 		fseek(f, codebase, SEEK_SET); // Seek to start of first code segment
@@ -107,20 +107,20 @@ int vdos_load(char *path) {
 			fread(r, rs, 1, f); // Read whole relocation table
 
 			int i;
-			debug puts(" #    seg: off -> loadseg");
+			debug __v_putn(" #    seg: off -> loadseg");
 			do {
 				const int addr = get_ad(r.segment, r.offset); // 2.
 				const ushort loadseg = __fu16(addr); /// 3. Load segment
-				debug printf("%2d   %04X:%04X -> cs:%04X+vCPU.CS:%04X = %04X\n",
-					i, r.segment, r.offset, mzh.e_cs, vCPU.CS, loadseg
+				debug __v_printf("%2d   %04X:%04X -> cs:%04X+CPU.CS:%04X = %04X\n",
+					i, r.segment, r.offset, mzh.e_cs, CPU.CS, loadseg
 				);
 				__iu16(mzh.e_cs + loadseg, addr); // 4. & 5.
 				++r; ++i;
 			} while (--mzh.e_crlc);
 			free(r);
 		} else {
-			if (Verbose)
-				info("No relocations");
+			//if (Verbose)
+			//	info("No relocations");
 		}
 
 		// ** Setup registers
@@ -129,32 +129,36 @@ int vdos_load(char *path) {
 		// DS:ES   Points to PSP
 		// SS:SP   Stack pointer (from EXE header)
 
-		vCPU.AL = 2; // C: for now
-		vCPU.AH = 0;
-		vCPU.DS = vCPU.CS; vCPU.ES = vCPU.IP;
-		vCPU.SS = cast(ushort)(vCPU.SS + mzh.e_ss); // Relative
-		vCPU.SP = mzh.e_sp;
+		CPU.AL = 2; // C: for now
+		CPU.AH = 0;
+		CPU.DS = CPU.CS; CPU.ES = CPU.IP;
+		CPU.SS = cast(ushort)(CPU.SS + mzh.e_ss); // Relative
+		CPU.SP = mzh.e_sp;
 
 		// ** Make PSP
-		//MakePSP(vCPU.EIP - 0x100, ...);
+		//MakePSP(CPU.EIP - 0x100, ...);
 
 		// ** Jump to CS:IP+0100h, relative to start of program
-		//vCPU.EIP += 0x100; // Unecessary since we loaded code segment directly at CS:IP
+		//CPU.EIP += 0x100; // Unecessary since we loaded code segment directly at CS:IP
 		break; // case MZ
 	default:
 		if (fsize > 0xFF00) { // Size - PSP
 			fclose(f);
 			error("COM file too large (exceeds FF00h)");
-			vCPU.AL = EDOS_BAD_FORMAT; //TODO: Verify code
+			CPU.AL = EDOS_BAD_FORMAT; //TODO: Verify code
 			return EDOS_BAD_FORMAT;
 		}
 		info("LOAD COM");
+
+		CPU.CS = 0; // TEMPORARY
+		CPU.DS = 0;
+		CPU.IP = 0x100;
 
 		fseek(f, 0, SEEK_SET);
 		fread(MEMORY + get_ip, fsize, 1, f);
 
 		MakePSP;
-		vCPU.AL = 0;
+		CPU.AL = 0;
 		break; // default (COM)
 	}
 

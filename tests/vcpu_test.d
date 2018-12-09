@@ -3,42 +3,42 @@ import test_utils;
 
 unittest {
 	vcpu_init;
-	vCPU.CS = 0;
-	vCPU.EIP = get_ip;
+	CPU.CS = 0;
+	CPU.EIP = get_ip;
 
 	section("Interpreter Utilities (vcpu_utils.d)");
 
 	test("__iu8");
-	__iu8(0xFF, vCPU.EIP);
-	assert(MEMORY[vCPU.EIP]     == 0xFF);
-	__iu8(0x12, vCPU.EIP + 2);
-	assert(MEMORY[vCPU.EIP + 2] == 0x12);
+	__iu8(0xFF, CPU.EIP);
+	assert(MEMORY[CPU.EIP]     == 0xFF);
+	__iu8(0x12, CPU.EIP + 2);
+	assert(MEMORY[CPU.EIP + 2] == 0x12);
 	OK;
 
 	test("__iu16");
-	__iu16(0x100, vCPU.EIP);
-	assert(MEMORY[vCPU.EIP]     == 0);
-	assert(MEMORY[vCPU.EIP + 1] == 1);
-	__iu16(0xABCD, vCPU.EIP);
-	assert(MEMORY[vCPU.EIP]     == 0xCD);
-	assert(MEMORY[vCPU.EIP + 1] == 0xAB);
+	__iu16(0x100, CPU.EIP);
+	assert(MEMORY[CPU.EIP]     == 0);
+	assert(MEMORY[CPU.EIP + 1] == 1);
+	__iu16(0xABCD, CPU.EIP);
+	assert(MEMORY[CPU.EIP]     == 0xCD);
+	assert(MEMORY[CPU.EIP + 1] == 0xAB);
 	__iu16(0x5678, 4);
 	assert(MEMORY[4] == 0x78);
 	assert(MEMORY[5] == 0x56);
 	OK;
 
 	test("__iu32");
-	__iu32(0xAABBCCFF, vCPU.EIP);
-	assert(MEMORY[vCPU.EIP    ] == 0xFF);
-	assert(MEMORY[vCPU.EIP + 1] == 0xCC);
-	assert(MEMORY[vCPU.EIP + 2] == 0xBB);
-	assert(MEMORY[vCPU.EIP + 3] == 0xAA);
+	__iu32(0xAABBCCFF, CPU.EIP);
+	assert(MEMORY[CPU.EIP    ] == 0xFF);
+	assert(MEMORY[CPU.EIP + 1] == 0xCC);
+	assert(MEMORY[CPU.EIP + 2] == 0xBB);
+	assert(MEMORY[CPU.EIP + 3] == 0xAA);
 	OK;
 
-	__iu8(0xAC, vCPU.EIP + 1);
+	__iu8(0xAC, CPU.EIP + 1);
 
 	test("__fu8");
-	assert(__fu8(vCPU.EIP + 1) == 0xAC);
+	assert(__fu8(CPU.EIP + 1) == 0xAC);
 	OK;
 
 	test("__fu8_i");
@@ -46,21 +46,21 @@ unittest {
 	OK;
 
 	test("__fi8");
-	assert(__fi8(vCPU.EIP + 1) == cast(byte)0xAC);
+	assert(__fi8(CPU.EIP + 1) == cast(byte)0xAC);
 	OK;
 
 	test("__fi8_i");
 	assert(__fi8_i == cast(byte)0xAC);
 	OK;
 
-	__iu16(0xAAFF, vCPU.EIP + 1);
+	__iu16(0xAAFF, CPU.EIP + 1);
 
 	test("__fu16");
-	assert(__fu16(vCPU.EIP + 1) == 0xAAFF);
+	assert(__fu16(CPU.EIP + 1) == 0xAAFF);
 	OK;
 
 	test("__fi16");
-	assert(__fi16(vCPU.EIP + 1) == cast(short)0xAAFF);
+	assert(__fi16(CPU.EIP + 1) == cast(short)0xAAFF);
 	OK;
 
 	test("__fu16_i");
@@ -72,8 +72,8 @@ unittest {
 	OK;
 
 	test("__fu32");
-	__iu32(0xDCBA_FF00, vCPU.EIP + 1);
-	assert(__fu32(vCPU.EIP + 1) == 0xDCBA_FF00);
+	__iu32(0xDCBA_FF00, CPU.EIP + 1);
+	assert(__fu32(CPU.EIP + 1) == 0xDCBA_FF00);
 	OK;
 
 	/*test("__fu32_i");
@@ -82,92 +82,92 @@ unittest {
 
 	test("__istr");
 	__istr("AB$");
-	assert(MEMORY[vCPU.EIP .. vCPU.EIP + 3] == "AB$");
-	__istr("QWERTY", vCPU.EIP + 10);
-	assert(MEMORY[vCPU.EIP + 10 .. vCPU.EIP + 16] == "QWERTY");
+	assert(MEMORY[CPU.EIP .. CPU.EIP + 3] == "AB$");
+	__istr("QWERTY", CPU.EIP + 10);
+	assert(MEMORY[CPU.EIP + 10 .. CPU.EIP + 16] == "QWERTY");
 	OK;
 
 	test("__iwstr");
 	__iwstr("Hi!!"w);
-	assert(MEMORY[vCPU.EIP     .. vCPU.EIP + 1] == "H"w);
-	assert(MEMORY[vCPU.EIP + 2 .. vCPU.EIP + 3] == "i"w);
-	assert(MEMORY[vCPU.EIP + 4 .. vCPU.EIP + 5] == "!"w);
-	assert(MEMORY[vCPU.EIP + 6 .. vCPU.EIP + 7] == "!"w);
+	assert(MEMORY[CPU.EIP     .. CPU.EIP + 1] == "H"w);
+	assert(MEMORY[CPU.EIP + 2 .. CPU.EIP + 3] == "i"w);
+	assert(MEMORY[CPU.EIP + 4 .. CPU.EIP + 5] == "!"w);
+	assert(MEMORY[CPU.EIP + 6 .. CPU.EIP + 7] == "!"w);
 	OK;
 
 	test("__iarr");
 	ubyte[2] ar = [ 0xAA, 0xBB ];
-	__iarr(cast(ubyte*)ar, 2, vCPU.EIP);
-	assert(MEMORY[vCPU.EIP .. vCPU.EIP + 2] == [ 0xAA, 0xBB ]);
+	__iarr(cast(ubyte*)ar, 2, CPU.EIP);
+	assert(MEMORY[CPU.EIP .. CPU.EIP + 2] == [ 0xAA, 0xBB ]);
 	OK;
 
 	section("Registers");
 
 	test("AL/AH");
-	vCPU.EAX = 0x0807;
-	assert(vCPU.AL == 7);
-	assert(vCPU.AH == 8);
+	CPU.EAX = 0x0807;
+	assert(CPU.AL == 7);
+	assert(CPU.AH == 8);
 	OK;
 
 	test("BL/BH");
-	vCPU.EBX = 0x0605;
-	assert(vCPU.BL == 5);
-	assert(vCPU.BH == 6);
+	CPU.EBX = 0x0605;
+	assert(CPU.BL == 5);
+	assert(CPU.BH == 6);
 	OK;
 
 	test("CL/CH");
-	vCPU.ECX = 0x0403;
-	assert(vCPU.CL == 3);
-	assert(vCPU.CH == 4);
+	CPU.ECX = 0x0403;
+	assert(CPU.CL == 3);
+	assert(CPU.CH == 4);
 	OK;
 
 	test("DL/DH");
-	vCPU.EDX = 0x0201;
-	assert(vCPU.DL == 1);
-	assert(vCPU.DH == 2);
+	CPU.EDX = 0x0201;
+	assert(CPU.DL == 1);
+	assert(CPU.DH == 2);
 	OK;
 
 	test("AX");
-	assert(vCPU.AX == 0x0807);
+	assert(CPU.AX == 0x0807);
 	OK;
 
 	test("BX");
-	assert(vCPU.BX == 0x0605);
+	assert(CPU.BX == 0x0605);
 	OK;
 
 	test("CX");
-	assert(vCPU.CX == 0x0403);
+	assert(CPU.CX == 0x0403);
 	OK;
 
 	test("DX");
-	assert(vCPU.DX == 0x0201);
+	assert(CPU.DX == 0x0201);
 	OK;
 
 	test("IP");
-	vCPU.EIP = 0x0F50;
-	assert(vCPU.IP == 0x0F50);
+	CPU.EIP = 0x0F50;
+	assert(CPU.IP == 0x0F50);
 	OK;
 
 	test("FLAG");
 	FLAG = 0xFFFF;
-	assert(vCPU.SF); assert(vCPU.ZF); assert(vCPU.AF);
-	assert(vCPU.PF); assert(vCPU.CF); assert(vCPU.OF);
-	assert(vCPU.DF); assert(vCPU.IF); assert(vCPU.TF);
+	assert(CPU.SF); assert(CPU.ZF); assert(CPU.AF);
+	assert(CPU.PF); assert(CPU.CF); assert(CPU.OF);
+	assert(CPU.DF); assert(CPU.IF); assert(CPU.TF);
 	assert(FLAGB == 0xD5);
 	assert(FLAG == 0xFD5);
 	FLAG = 0;
-	assert(vCPU.SF == 0); assert(vCPU.ZF == 0); assert(vCPU.AF == 0);
-	assert(vCPU.PF == 0); assert(vCPU.CF == 0); assert(vCPU.OF == 0);
-	assert(vCPU.DF == 0); assert(vCPU.IF == 0); assert(vCPU.TF == 0);
+	assert(CPU.SF == 0); assert(CPU.ZF == 0); assert(CPU.AF == 0);
+	assert(CPU.PF == 0); assert(CPU.CF == 0); assert(CPU.OF == 0);
+	assert(CPU.DF == 0); assert(CPU.IF == 0); assert(CPU.TF == 0);
 	assert(FLAGB == 0);
 	assert(FLAG == 0);
 	OK;
 
 	section("ModR/M");
 
-	__iu16(0x1020, vCPU.EIP + 2); // low:20h
-	vCPU.SI = 0x50; vCPU.DI = 0x50;
-	vCPU.BX = 0x30; vCPU.BP = 0x30;
+	__iu16(0x1020, CPU.EIP + 2); // low:20h
+	CPU.SI = 0x50; CPU.DI = 0x50;
+	CPU.BX = 0x30; CPU.BP = 0x30;
 	test("16-bit ModR/M (MOD=00)");
 	assert(get_rm16(0b000) == 0x80);
 	assert(get_rm16(0b001) == 0x80);
@@ -199,10 +199,10 @@ unittest {
 	assert(get_rm16(0b10_000_111) == 0x1050);
 	OK;
 	test("16-bit ModR/M (MOD=11)");
-	vCPU.AX = 0x2040; vCPU.CX = 0x2141;
-	vCPU.DX = 0x2242; vCPU.BX = 0x2343;
-	vCPU.SP = 0x2030; vCPU.BP = 0x2131;
-	vCPU.SI = 0x2232; vCPU.DI = 0x2333;
+	CPU.AX = 0x2040; CPU.CX = 0x2141;
+	CPU.DX = 0x2242; CPU.BX = 0x2343;
+	CPU.SP = 0x2030; CPU.BP = 0x2131;
+	CPU.SI = 0x2232; CPU.DI = 0x2333;
 	assert(get_rm16(0b11_000_000) == 0x40); // AL
 	assert(get_rm16(0b11_000_001) == 0x41); // CL
 	assert(get_rm16(0b11_000_010) == 0x42); // DL
@@ -234,186 +234,186 @@ unittest {
 	// ADD
 
 	test("00h  ADD R/M8, REG8");
-	vCPU.CL = 0x20; // address
-	vCPU.AL = 12;
-	__iu8(0b11_000_001, vCPU.EIP + 1);
-	__iu8(13, vCPU.CL);
+	CPU.CL = 0x20; // address
+	CPU.AL = 12;
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	__iu8(13, CPU.CL);
 	exec16(0x00);
-	assert(__fu8(vCPU.CL) == 25);
-	vCPU.CL = 13;
-	vCPU.AL = 0x20; // address
-	__iu8(0b11_001_000, vCPU.EIP + 1);
-	__iu8(16, vCPU.AL);
+	assert(__fu8(CPU.CL) == 25);
+	CPU.CL = 13;
+	CPU.AL = 0x20; // address
+	__iu8(0b11_001_000, CPU.EIP + 1);
+	__iu8(16, CPU.AL);
 	exec16(0x00);
-	assert(__fu8(vCPU.AL) == 29);
-	vCPU.CL = 0x20; // address
-	vCPU.DL = 12;
-	__iu8(0b11_010_001, vCPU.EIP + 1);
-	__iu8(23, vCPU.CL);
+	assert(__fu8(CPU.AL) == 29);
+	CPU.CL = 0x20; // address
+	CPU.DL = 12;
+	__iu8(0b11_010_001, CPU.EIP + 1);
+	__iu8(23, CPU.CL);
 	exec16(0x00);
-	assert(__fu8(vCPU.CL) == 35);
-	vCPU.CL = 0x20; // address
-	vCPU.BL = 12;
-	__iu8(0b11_011_001, vCPU.EIP + 1);
-	__iu8(4, vCPU.CL);
+	assert(__fu8(CPU.CL) == 35);
+	CPU.CL = 0x20; // address
+	CPU.BL = 12;
+	__iu8(0b11_011_001, CPU.EIP + 1);
+	__iu8(4, CPU.CL);
 	exec16(0x00);
-	assert(__fu8(vCPU.CL) == 16);
-	vCPU.CL = 0x20; // address
-	vCPU.AH = 12;
-	__iu8(0b11_100_001, vCPU.EIP + 1);
-	__iu8(4, vCPU.CL);
+	assert(__fu8(CPU.CL) == 16);
+	CPU.CL = 0x20; // address
+	CPU.AH = 12;
+	__iu8(0b11_100_001, CPU.EIP + 1);
+	__iu8(4, CPU.CL);
 	exec16(0x00);
-	assert(__fu8(vCPU.CL) == 16);
-	vCPU.CX = 0x04_20; // address:20h
-	__iu8(0b11_101_001, vCPU.EIP + 1);
-	__iu8(52, vCPU.CL);
+	assert(__fu8(CPU.CL) == 16);
+	CPU.CX = 0x04_20; // address:20h
+	__iu8(0b11_101_001, CPU.EIP + 1);
+	__iu8(52, CPU.CL);
 	exec16(0x00);
-	assert(__fu8(vCPU.CL) == 56);
-	vCPU.CL = 0x20; // address
-	vCPU.DH = 12;
-	__iu8(0b11_110_001, vCPU.EIP + 1);
-	__iu8(22, vCPU.CL);
+	assert(__fu8(CPU.CL) == 56);
+	CPU.CL = 0x20; // address
+	CPU.DH = 12;
+	__iu8(0b11_110_001, CPU.EIP + 1);
+	__iu8(22, CPU.CL);
 	exec16(0x00);
-	assert(__fu8(vCPU.CL) == 34);
-	vCPU.CL = 0x20; // address
-	vCPU.BH = 56;
-	__iu8(0b11_111_001, vCPU.EIP + 1);
-	__iu8(4, vCPU.CL);
+	assert(__fu8(CPU.CL) == 34);
+	CPU.CL = 0x20; // address
+	CPU.BH = 56;
+	__iu8(0b11_111_001, CPU.EIP + 1);
+	__iu8(4, CPU.CL);
 	exec16(0x00);
-	assert(__fu8(vCPU.CL) == 60);
+	assert(__fu8(CPU.CL) == 60);
 	OK;
 
 	test("01h  ADD R/M16, REG16");
-	vCPU.CX = 0x200; // address
-	vCPU.AX = 22;
-	__iu8(0b11_000_001, vCPU.EIP + 1);
-	__iu16(23, vCPU.CX);
+	CPU.CX = 0x200; // address
+	CPU.AX = 22;
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	__iu16(23, CPU.CX);
 	exec16(0x01);
-	assert(__fu16(vCPU.CX) == 45);
-	vCPU.CX = 23;
-	vCPU.AX = 0x200; // address
-	__iu8(0b11_001_000, vCPU.EIP + 1);
-	__iu16(23, vCPU.AX);
+	assert(__fu16(CPU.CX) == 45);
+	CPU.CX = 23;
+	CPU.AX = 0x200; // address
+	__iu8(0b11_001_000, CPU.EIP + 1);
+	__iu16(23, CPU.AX);
 	exec16(0x01);
-	assert(__fu16(vCPU.AX) == 46);
-	vCPU.CX = 0x200; // address
-	vCPU.DX = 24;
-	__iu8(0b11_010_001, vCPU.EIP + 1);
-	__iu16(23, vCPU.CX);
+	assert(__fu16(CPU.AX) == 46);
+	CPU.CX = 0x200; // address
+	CPU.DX = 24;
+	__iu8(0b11_010_001, CPU.EIP + 1);
+	__iu16(23, CPU.CX);
 	exec16(0x01);
-	assert(__fu16(vCPU.CX) == 47);
-	vCPU.CX = 0x200; // address
-	vCPU.BX = 25;
-	__iu8(0b11_011_001, vCPU.EIP + 1);
-	__iu16(23, vCPU.CX);
+	assert(__fu16(CPU.CX) == 47);
+	CPU.CX = 0x200; // address
+	CPU.BX = 25;
+	__iu8(0b11_011_001, CPU.EIP + 1);
+	__iu16(23, CPU.CX);
 	exec16(0x01);
-	assert(__fu16(vCPU.CX) == 48);
-	vCPU.CX = 0x200; // address
-	vCPU.SP = 26;
-	__iu8(0b11_100_001, vCPU.EIP + 1);
-	__iu16(23, vCPU.CX);
+	assert(__fu16(CPU.CX) == 48);
+	CPU.CX = 0x200; // address
+	CPU.SP = 26;
+	__iu8(0b11_100_001, CPU.EIP + 1);
+	__iu16(23, CPU.CX);
 	exec16(0x01);
-	assert(__fu16(vCPU.CX) == 49);
-	vCPU.CX = 0x200; // address
-	vCPU.BP = 27;
-	__iu8(0b11_101_001, vCPU.EIP + 1);
-	__iu16(23, vCPU.CX);
+	assert(__fu16(CPU.CX) == 49);
+	CPU.CX = 0x200; // address
+	CPU.BP = 27;
+	__iu8(0b11_101_001, CPU.EIP + 1);
+	__iu16(23, CPU.CX);
 	exec16(0x01);
-	assert(__fu16(vCPU.CX) == 50);
-	vCPU.CX = 0x200; // address
-	vCPU.SI = 28;
-	__iu8(0b11_110_001, vCPU.EIP + 1);
-	__iu16(23, vCPU.CX);
+	assert(__fu16(CPU.CX) == 50);
+	CPU.CX = 0x200; // address
+	CPU.SI = 28;
+	__iu8(0b11_110_001, CPU.EIP + 1);
+	__iu16(23, CPU.CX);
 	exec16(0x01);
-	assert(__fu16(vCPU.CX) == 51);
-	vCPU.CX = 0x200; // address
-	vCPU.DI = 29;
-	__iu8(0b11_111_001, vCPU.EIP + 1);
-	__iu16(23, vCPU.CX);
+	assert(__fu16(CPU.CX) == 51);
+	CPU.CX = 0x200; // address
+	CPU.DI = 29;
+	__iu8(0b11_111_001, CPU.EIP + 1);
+	__iu16(23, CPU.CX);
 	exec16(0x01);
-	assert(__fu16(vCPU.CX) == 52);
+	assert(__fu16(CPU.CX) == 52);
 	OK;
 	
 	test("02h  ADD REG8, R/M8");
-	vCPU.CL = 0x20; // address
-	vCPU.AL = 12;
-	__iu8(0b11_000_001, vCPU.EIP + 1);
-	__iu8(13, vCPU.CL);
+	CPU.CL = 0x20; // address
+	CPU.AL = 12;
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	__iu8(13, CPU.CL);
 	exec16(0x02);
-	assert(vCPU.AL == 25);
-	vCPU.CL = 13;
-	vCPU.AL = 0x20; // address
-	__iu8(0b11_001_000, vCPU.EIP + 1);
-	__iu8(16, vCPU.AL);
+	assert(CPU.AL == 25);
+	CPU.CL = 13;
+	CPU.AL = 0x20; // address
+	__iu8(0b11_001_000, CPU.EIP + 1);
+	__iu8(16, CPU.AL);
 	exec16(0x02);
-	assert(vCPU.CL == 29);
-	vCPU.CL = 0x20; // address
-	vCPU.DL = 12;
-	__iu8(0b11_010_001, vCPU.EIP + 1);
-	__iu8(23, vCPU.CL);
+	assert(CPU.CL == 29);
+	CPU.CL = 0x20; // address
+	CPU.DL = 12;
+	__iu8(0b11_010_001, CPU.EIP + 1);
+	__iu8(23, CPU.CL);
 	exec16(0x02);
-	assert(vCPU.DL == 35);
-	vCPU.CL = 0x20; // address
-	vCPU.BL = 12;
-	__iu8(0b11_011_001, vCPU.EIP + 1);
-	__iu8(4, vCPU.CL);
+	assert(CPU.DL == 35);
+	CPU.CL = 0x20; // address
+	CPU.BL = 12;
+	__iu8(0b11_011_001, CPU.EIP + 1);
+	__iu8(4, CPU.CL);
 	exec16(0x02);
-	assert(vCPU.BL == 16);
-	vCPU.CL = 0x20; // address
-	vCPU.AH = 12;
-	__iu8(0b11_100_001, vCPU.EIP + 1);
-	__iu8(4, vCPU.CL);
+	assert(CPU.BL == 16);
+	CPU.CL = 0x20; // address
+	CPU.AH = 12;
+	__iu8(0b11_100_001, CPU.EIP + 1);
+	__iu8(4, CPU.CL);
 	exec16(0x02);
-	assert(vCPU.AH == 16);
-	vCPU.CX = 0x04_20; // address:20h
-	__iu8(0b11_101_001, vCPU.EIP + 1);
-	__iu8(52, vCPU.CL);
+	assert(CPU.AH == 16);
+	CPU.CX = 0x04_20; // address:20h
+	__iu8(0b11_101_001, CPU.EIP + 1);
+	__iu8(52, CPU.CL);
 	exec16(0x02);
-	assert(vCPU.CH == 56);
-	vCPU.CL = 0x20; // address
-	vCPU.DH = 12;
-	__iu8(0b11_110_001, vCPU.EIP + 1);
-	__iu8(22, vCPU.CL);
+	assert(CPU.CH == 56);
+	CPU.CL = 0x20; // address
+	CPU.DH = 12;
+	__iu8(0b11_110_001, CPU.EIP + 1);
+	__iu8(22, CPU.CL);
 	exec16(0x02);
-	assert(vCPU.DH == 34);
-	vCPU.CL = 0x20; // address
-	vCPU.BH = 56;
-	__iu8(0b11_111_001, vCPU.EIP + 1);
-	__iu8(4, vCPU.CL);
+	assert(CPU.DH == 34);
+	CPU.CL = 0x20; // address
+	CPU.BH = 56;
+	__iu8(0b11_111_001, CPU.EIP + 1);
+	__iu8(4, CPU.CL);
 	exec16(0x02);
-	assert(vCPU.BH == 60);
+	assert(CPU.BH == 60);
 	OK;
 
 	test("03h  ADD REG16, R/M16"); TODO;
 
 	test("04h  ADD AL, IMM8");
-	__iu8(4, vCPU.EIP + 1);
-	vCPU.AL = 12;
+	__iu8(4, CPU.EIP + 1);
+	CPU.AL = 12;
 	exec16(0x04);
-	assert(vCPU.AL == 16);
+	assert(CPU.AL == 16);
 	OK;
 
 	test("05h  ADD AX, IMM16");
-	__iu16(4, vCPU.EIP + 1);
-	vCPU.AX = 1200;
+	__iu16(4, CPU.EIP + 1);
+	CPU.AX = 1200;
 	exec16(0x05);
-	assert(vCPU.AX == 1204);
+	assert(CPU.AX == 1204);
 	OK;
 
 	// PUSH ES
 
 	test("06h  PUSH ES");
-	vCPU.ES = 189;
+	CPU.ES = 189;
 	exec16(0x06);
-	assert(__fu16(get_ad(vCPU.SS, vCPU.SP)) == 189);
+	assert(__fu16(get_ad(CPU.SS, CPU.SP)) == 189);
 	OK;
 
 	// POP ES
 
 	test("07h  POP ES");
-	vCPU.ES = 83;
+	CPU.ES = 83;
 	exec16(0x07);
-	assert(vCPU.ES == 189); // sanity check
+	assert(CPU.ES == 189); // sanity check
 	OK;
 
 	// OR R/M8, REG8
@@ -435,26 +435,26 @@ unittest {
 	// OR AL, IMM8
 
 	test("0Ch  OR AL, IMM8");
-	__iu8(0xF0, vCPU.EIP + 1);
-	vCPU.AL = 0xF;
-	exec16(0x0C); // OR vCPU.AL, 3
-	assert(vCPU.AL == 0xFF);
+	__iu8(0xF0, CPU.EIP + 1);
+	CPU.AL = 0xF;
+	exec16(0x0C); // OR CPU.AL, 3
+	assert(CPU.AL == 0xFF);
 	OK;
 
 	// OR AX, IMM16
 
 	test("0Dh  OR AX, IMM16");
-	__iu16(0xFF00, vCPU.EIP + 1);
-	exec16(0x0D); // OR vCPU.AX, F0h
-	assert(vCPU.AX == 0xFFFF);
+	__iu16(0xFF00, CPU.EIP + 1);
+	exec16(0x0D); // OR CPU.AX, F0h
+	assert(CPU.AX == 0xFFFF);
 	OK;
 
 	// PUSH CS
 
 	test("0Eh  PUSH CS");
-	vCPU.CS = 318;
+	CPU.CS = 318;
 	exec16(0x0E);
-	assert(__fu16(get_ad(vCPU.SS, vCPU.SP)) == 318);
+	assert(__fu16(get_ad(CPU.SS, CPU.SP)) == 318);
 	OK;
 
 	// ADC R/M8, REG8
@@ -484,16 +484,16 @@ unittest {
 	// PUSH SS
 
 	test("16h  PUSH SS");
-	vCPU.SS = 202;
+	CPU.SS = 202;
 	exec16(0x16);
-	assert(__fu16(get_ad(vCPU.SS, vCPU.SP)) == 202);
+	assert(__fu16(get_ad(CPU.SS, CPU.SP)) == 202);
 	OK;
 
 	// POP SS
 
 	test("17h  POP SS");
 	exec16(0x17);
-	assert(vCPU.SS == 202);
+	assert(CPU.SS == 202);
 	OK;
 
 	// SBB R/M8, REG8
@@ -523,17 +523,17 @@ unittest {
 	// PUSH DS
 
 	test("1Eh  PUSH DS");
-	vCPU.DS = 444;
+	CPU.DS = 444;
 	exec16(0x1E);
-	assert(__fu16(get_ad(vCPU.SS, vCPU.SP)) == 444);
+	assert(__fu16(get_ad(CPU.SS, CPU.SP)) == 444);
 	OK;
 
 	// POP DS
 
 	test("1Fh  POP DS");
-	vCPU.DS = 128;
+	CPU.DS = 128;
 	exec16(0x1F);
-	assert(vCPU.DS == 444);
+	assert(CPU.DS == 444);
 	OK;
 
 	// AND R/M8, REG8
@@ -617,183 +617,183 @@ unittest {
 	test("33h  XOR REG16, R/M16"); TODO;
 
 	test("34h  XOR AL, IMM8");
-	__iu8(5, vCPU.EIP + 1);
-	vCPU.AL = 0xF;
-	exec16(0x34); // XOR vCPU.AL, 5
-	assert(vCPU.AL == 0xA);
+	__iu8(5, CPU.EIP + 1);
+	CPU.AL = 0xF;
+	exec16(0x34); // XOR CPU.AL, 5
+	assert(CPU.AL == 0xA);
 	OK;
 
 	test("35h  XOR AX, IMM16");
-	__iu16(0xFF00, vCPU.EIP + 1);
-	vCPU.AX = 0xAAFF;
-	exec16(0x35); // XOR vCPU.AX, FF00h
-	assert(vCPU.AX == 0x55FF);
+	__iu16(0xFF00, CPU.EIP + 1);
+	CPU.AX = 0xAAFF;
+	exec16(0x35); // XOR CPU.AX, FF00h
+	assert(CPU.AX == 0x55FF);
 	OK;
 
 	// INC
 
-	fullreset; vCPU.CS = 0;
+	fullreset; CPU.CS = 0;
 	test("40h  INC AX");
-	exec16(0x40); assert(vCPU.AX == 1);
+	exec16(0x40); assert(CPU.AX == 1);
 	OK;
 	test("41h  INC CX");
-	exec16(0x41); assert(vCPU.CX == 1);
+	exec16(0x41); assert(CPU.CX == 1);
 	OK;
 	test("42h  INC DX");
-	exec16(0x42); assert(vCPU.DX == 1);
+	exec16(0x42); assert(CPU.DX == 1);
 	OK;
 	test("43h  INC BX");
-	exec16(0x43); assert(vCPU.BX == 1);
+	exec16(0x43); assert(CPU.BX == 1);
 	OK;
 	test("44h  INC SP");
-	exec16(0x44); assert(vCPU.SP == 1);
+	exec16(0x44); assert(CPU.SP == 1);
 	OK;
 	test("45h  INC BP");
-	exec16(0x45); assert(vCPU.BP == 1);
+	exec16(0x45); assert(CPU.BP == 1);
 	OK;
 	test("46h  INC SI");
-	exec16(0x46); assert(vCPU.SI == 1);
+	exec16(0x46); assert(CPU.SI == 1);
 	OK;
 	test("47h  INC SI");
-	exec16(0x47); assert(vCPU.DI == 1);
+	exec16(0x47); assert(CPU.DI == 1);
 	OK;
 	
 	// DEC
 
 	test("48h  DEC AX");
 	exec16(0x48);
-	assert(vCPU.AX == 0);
+	assert(CPU.AX == 0);
 	OK;
 	test("49h  DEC CX");
 	exec16(0x49);
-	assert(vCPU.CX == 0);
+	assert(CPU.CX == 0);
 	OK;
 	test("4Ah  DEC DX");
 	exec16(0x4A);
-	assert(vCPU.DX == 0);
+	assert(CPU.DX == 0);
 	OK;
 	test("4Bh  DEC BX");
 	exec16(0x4B);
-	assert(vCPU.BX == 0);
+	assert(CPU.BX == 0);
 	OK;
 	test("4Ch  DEC SP");
 	exec16(0x4C);
-	assert(vCPU.SP == 0);
+	assert(CPU.SP == 0);
 	OK;
 	test("4Dh  DEC BP");
 	exec16(0x4D);
-	assert(vCPU.BP == 0);
+	assert(CPU.BP == 0);
 	OK;
 	test("4Eh  DEC SI");
 	exec16(0x4E);
-	assert(vCPU.SI == 0);
+	assert(CPU.SI == 0);
 	OK;
 	test("4Fh  DEC DI");
 	exec16(0x4F);
-	assert(vCPU.DI == 0);
+	assert(CPU.DI == 0);
 	OK;
 
 	// PUSH
 
-	vCPU.SS = 0x100; vCPU.SP = 0x60;
+	CPU.SS = 0x100; CPU.SP = 0x60;
 
 	test("50h  PUSH AX");
-	vCPU.AX = 0xDAD;
+	CPU.AX = 0xDAD;
 	exec16(0x50);
-	assert(vCPU.AX == __fu16(get_ad(vCPU.SS, vCPU.SP)));
+	assert(CPU.AX == __fu16(get_ad(CPU.SS, CPU.SP)));
 	OK;
 
 	test("51h  PUSH CX");
-	vCPU.CX = 0x4488;
+	CPU.CX = 0x4488;
 	exec16(0x51);
-	assert(vCPU.CX == __fu16(get_ad(vCPU.SS, vCPU.SP)));
+	assert(CPU.CX == __fu16(get_ad(CPU.SS, CPU.SP)));
 	OK;
 
 	test("52h  PUSH DX");
-	vCPU.DX = 0x4321;
+	CPU.DX = 0x4321;
 	exec16(0x52);
-	assert(vCPU.DX == __fu16(get_ad(vCPU.SS, vCPU.SP)));
+	assert(CPU.DX == __fu16(get_ad(CPU.SS, CPU.SP)));
 	OK;
 
 	test("53h  PUSH BX");
-	vCPU.BX = 0x1234;
+	CPU.BX = 0x1234;
 	exec16(0x53);
-	assert(vCPU.BX == __fu16(get_ad(vCPU.SS, vCPU.SP)));
+	assert(CPU.BX == __fu16(get_ad(CPU.SS, CPU.SP)));
 	OK;
 
 	test("54h  PUSH SP");
 	exec16(0x54);
-	assert(vCPU.SP == __fu16(get_ad(vCPU.SS, vCPU.SP)) - 2);
+	assert(CPU.SP == __fu16(get_ad(CPU.SS, CPU.SP)) - 2);
 	OK;
 
 	test("55h  PUSH BP");
-	vCPU.BP = 0xFBAC;
+	CPU.BP = 0xFBAC;
 	exec16(0x55);
-	assert(vCPU.BP == __fu16(get_ad(vCPU.SS, vCPU.SP)));
+	assert(CPU.BP == __fu16(get_ad(CPU.SS, CPU.SP)));
 	OK;
 
 	test("56h  PUSH SI");
-	vCPU.SI = 0xF00F;
+	CPU.SI = 0xF00F;
 	exec16(0x56);
-	assert(vCPU.SI == __fu16(get_ad(vCPU.SS, vCPU.SP)));
+	assert(CPU.SI == __fu16(get_ad(CPU.SS, CPU.SP)));
 	OK;
 
 	test("57h  PUSH DI");
-	vCPU.DI = 0xB0B;
+	CPU.DI = 0xB0B;
 	exec16(0x57);
-	assert(vCPU.DI == __fu16(get_ad(vCPU.SS, vCPU.SP)));
+	assert(CPU.DI == __fu16(get_ad(CPU.SS, CPU.SP)));
 	OK;
 
 	// POP
 
-	vCPU.SS = 0x100; vCPU.SP = 0x20;
+	CPU.SS = 0x100; CPU.SP = 0x20;
 
 	test("58h  POP AX");
 	push16(0xFFAA);
 	exec16(0x58);
-	assert(vCPU.AX == 0xFFAA);
+	assert(CPU.AX == 0xFFAA);
 	OK;
 	
-	vCPU.SP -= 2;
+	CPU.SP -= 2;
 	test("59h  POP CX");
 	exec16(0x59);
-	assert(vCPU.CX == 0xFFAA);
+	assert(CPU.CX == 0xFFAA);
 	OK;
 
-	vCPU.SP -= 2;
+	CPU.SP -= 2;
 	test("5Ah  POP DX");
 	exec16(0x5A);
-	assert(vCPU.DX == 0xFFAA);
+	assert(CPU.DX == 0xFFAA);
 	OK;
 
-	vCPU.SP -= 2;
+	CPU.SP -= 2;
 	test("5Bh  POP BX");
 	exec16(0x5B);
-	assert(vCPU.BX == 0xFFAA);
+	assert(CPU.BX == 0xFFAA);
 	OK;
 
-	vCPU.SP -= 2;
+	CPU.SP -= 2;
 	test("5Ch  POP SP");
 	exec16(0x5C);
-	assert(vCPU.SP == 0xFFAA);
+	assert(CPU.SP == 0xFFAA);
 	OK;
 
-	vCPU.SP = 0x1E;
+	CPU.SP = 0x1E;
 	test("5Dh  POP BX");
 	exec16(0x5D);
-	assert(vCPU.BP == 0xFFAA);
+	assert(CPU.BP == 0xFFAA);
 	OK;
 
-	vCPU.SP -= 2;
+	CPU.SP -= 2;
 	test("5Eh  POP SI");
 	exec16(0x5E);
-	assert(vCPU.SI == 0xFFAA);
+	assert(CPU.SI == 0xFFAA);
 	OK;
 
-	vCPU.SP -= 2;
+	CPU.SP -= 2;
 	test("5Fh  POP DI");
 	exec16(0x5F);
-	assert(vCPU.DI == 0xFFAA);
+	assert(CPU.DI == 0xFFAA);
 	OK;
 
 	// Jumps
@@ -818,129 +818,129 @@ unittest {
 	// Group 1
 
 	test("80h  GRP1 ADD");
-	vCPU.AL = 0x40;
-	__iu8(10, vCPU.AL);
-	__iu8(0b11_000_000, vCPU.EIP+1);
-	__iu8(20, vCPU.EIP+2);
+	CPU.AL = 0x40;
+	__iu8(10, CPU.AL);
+	__iu8(0b11_000_000, CPU.EIP+1);
+	__iu8(20, CPU.EIP+2);
 	exec16(0x80);
-	assert(__fu8(vCPU.AL) == 30);
+	assert(__fu8(CPU.AL) == 30);
 	OK;
 	test("80h  GRP1 OR");
-	vCPU.AL = 0x40;
-	__iu8(0b1100_0011, vCPU.AL);
-	__iu8(0b11_001_000, vCPU.EIP+1);
-	__iu8(0b0011_0000, vCPU.EIP+2);
+	CPU.AL = 0x40;
+	__iu8(0b1100_0011, CPU.AL);
+	__iu8(0b11_001_000, CPU.EIP+1);
+	__iu8(0b0011_0000, CPU.EIP+2);
 	exec16(0x80);
-	assert(__fu8(vCPU.AL) == 0b1111_0011);
+	assert(__fu8(CPU.AL) == 0b1111_0011);
 	OK;
 	test("80h  GRP1 ADC"); TODO;
 	test("80h  GRP1 SBB"); TODO;
 	test("80h  GRP1 AND");
-	vCPU.AL = 0x40;
-	__iu8(0b0011_0011, vCPU.AL);
-	__iu8(0b11_100_000, vCPU.EIP+1);
-	__iu8(0b0011_0000, vCPU.EIP+2);
+	CPU.AL = 0x40;
+	__iu8(0b0011_0011, CPU.AL);
+	__iu8(0b11_100_000, CPU.EIP+1);
+	__iu8(0b0011_0000, CPU.EIP+2);
 	exec16(0x80);
-	assert(__fu8(vCPU.AL) == 0b0011_0000);
+	assert(__fu8(CPU.AL) == 0b0011_0000);
 	OK;
 	test("80h  GRP1 SUB/CMP");
-	vCPU.AL = 0x40;
-	__iu8(45, vCPU.AL);
-	__iu8(0b11_101_000, vCPU.EIP+1);
-	__iu8(20, vCPU.EIP+2);
+	CPU.AL = 0x40;
+	__iu8(45, CPU.AL);
+	__iu8(0b11_101_000, CPU.EIP+1);
+	__iu8(20, CPU.EIP+2);
 	exec16(0x80);
-	assert(__fu8(vCPU.AL) == 25);
+	assert(__fu8(CPU.AL) == 25);
 	OK;
 	test("80h  GRP1 XOR");
-	vCPU.AL = 0x40;
-	__iu8(40, vCPU.AL);
-	__iu8(0b11_110_000, vCPU.EIP+1);
-	__iu8(20, vCPU.EIP+2);
+	CPU.AL = 0x40;
+	__iu8(40, CPU.AL);
+	__iu8(0b11_110_000, CPU.EIP+1);
+	__iu8(20, CPU.EIP+2);
 	exec16(0x80);
-	assert(__fu8(vCPU.AL) == 60);
+	assert(__fu8(CPU.AL) == 60);
 	OK;
 
 	test("81h  GRP1 ADD");
-	vCPU.AX = 0x400;
-	__iu16(40, vCPU.AX);
-	__iu8(0b11_000_000, vCPU.EIP+1);
-	__iu16(222, vCPU.EIP+2);
+	CPU.AX = 0x400;
+	__iu16(40, CPU.AX);
+	__iu8(0b11_000_000, CPU.EIP+1);
+	__iu16(222, CPU.EIP+2);
 	exec16(0x81);
-	assert(__fu16(vCPU.AX) == 262);
+	assert(__fu16(CPU.AX) == 262);
 	OK;
 	test("81h  GRP1 OR");
-	vCPU.AX = 0x400;
-	__iu16(40, vCPU.AX);
-	__iu8(0b11_001_000, vCPU.EIP+1);
-	__iu16(222, vCPU.EIP+2);
+	CPU.AX = 0x400;
+	__iu16(40, CPU.AX);
+	__iu8(0b11_001_000, CPU.EIP+1);
+	__iu16(222, CPU.EIP+2);
 	exec16(0x81);
-	assert(__fu16(vCPU.AX) == 254);
+	assert(__fu16(CPU.AX) == 254);
 	OK;
 	test("81h  GRP1 ADC"); TODO;
 	test("81h  GRP1 SBB"); TODO;
 	test("81h  GRP1 AND");
-	vCPU.AX = 0x400;
-	__iu16(40, vCPU.AX);
-	__iu8(0b11_100_000, vCPU.EIP+1);
-	__iu16(222, vCPU.EIP+2);
+	CPU.AX = 0x400;
+	__iu16(40, CPU.AX);
+	__iu8(0b11_100_000, CPU.EIP+1);
+	__iu16(222, CPU.EIP+2);
 	exec16(0x81);
-	assert(__fu16(vCPU.AX) == 8);
+	assert(__fu16(CPU.AX) == 8);
 	OK;
 	test("81h  GRP1 SUB/CMP");
-	vCPU.AX = 0x400;
-	__iu16(222, vCPU.AX);
-	__iu8(0b11_101_000, vCPU.EIP+1);
-	__iu16(40, vCPU.EIP+2);
+	CPU.AX = 0x400;
+	__iu16(222, CPU.AX);
+	__iu8(0b11_101_000, CPU.EIP+1);
+	__iu16(40, CPU.EIP+2);
 	exec16(0x81);
-	assert(__fu16(vCPU.AX) == 182);
+	assert(__fu16(CPU.AX) == 182);
 	OK;
 	test("81h  GRP1 XOR");
-	vCPU.AX = 0x400;
-	__iu16(222, vCPU.AX);
-	__iu8(0b11_110_000, vCPU.EIP+1);
-	__iu16(40, vCPU.EIP+2);
+	CPU.AX = 0x400;
+	__iu16(222, CPU.AX);
+	__iu8(0b11_110_000, CPU.EIP+1);
+	__iu16(40, CPU.EIP+2);
 	exec16(0x81);
-	assert(__fu16(vCPU.AX) == 246);
+	assert(__fu16(CPU.AX) == 246);
 	OK;
 
 	// Group 2
 
 	test("82h  GRP2 ADD");
-	vCPU.AL = 0x40;
-	__iu8(40, vCPU.AL);
-	__iu8(0b11_000_000, vCPU.EIP+1);
-	__iu8(20, vCPU.EIP+2);
+	CPU.AL = 0x40;
+	__iu8(40, CPU.AL);
+	__iu8(0b11_000_000, CPU.EIP+1);
+	__iu8(20, CPU.EIP+2);
 	exec16(0x82);
-	assert(__fu8(vCPU.AL) == 60);
+	assert(__fu8(CPU.AL) == 60);
 	OK;
 	test("82h  GRP2 ADC"); TODO;
 	test("82h  GRP2 SBB"); TODO;
 	test("82h  GRP2 SUB/CMP");
-	vCPU.AL = 0x40;
-	__iu8(40, vCPU.AL);
-	__iu8(0b11_101_000, vCPU.EIP+1);
-	__iu8(20, vCPU.EIP+2);
+	CPU.AL = 0x40;
+	__iu8(40, CPU.AL);
+	__iu8(0b11_101_000, CPU.EIP+1);
+	__iu8(20, CPU.EIP+2);
 	exec16(0x82);
-	assert(__fu8(vCPU.AL) == 20);
+	assert(__fu8(CPU.AL) == 20);
 	OK;
 
 	test("83h  GRP2 ADD");
-	vCPU.AX = 0x400;
-	__iu16(40, vCPU.AX);
-	__iu8(0b11_000_000, vCPU.EIP+1);
-	__iu16(20, vCPU.EIP+2);
+	CPU.AX = 0x400;
+	__iu16(40, CPU.AX);
+	__iu8(0b11_000_000, CPU.EIP+1);
+	__iu16(20, CPU.EIP+2);
 	exec16(0x83);
-	assert(__fu16(vCPU.AX) == 60);
+	assert(__fu16(CPU.AX) == 60);
 	OK;
 	test("83h  GRP2 ADC"); TODO;
 	test("83h  GRP2 SBB"); TODO;
 	test("83h  GRP2 SUB/CMP");
-	vCPU.AX = 0x400;
-	__iu16(40, vCPU.AX);
-	__iu8(0b11_101_000, vCPU.EIP + 1);
-	__iu16(25, vCPU.EIP + 2);
+	CPU.AX = 0x400;
+	__iu16(40, CPU.AX);
+	__iu8(0b11_101_000, CPU.EIP + 1);
+	__iu16(25, CPU.EIP + 2);
 	exec16(0x83);
-	assert(__fu16(vCPU.AX) == 15);
+	assert(__fu16(CPU.AX) == 15);
 	OK;
 
 	// TEST
@@ -958,184 +958,184 @@ unittest {
 	// MOV REG8, R/M8
 
 	test("88h  MOV R/M8, REG8");
-	vCPU.AL = 34;
-	__iu8(0b11_000_000, vCPU.EIP + 1);
+	CPU.AL = 34;
+	__iu8(0b11_000_000, CPU.EIP + 1);
 	exec16(0x88);
-	assert(__fu8(vCPU.AL) == 34);
-	vCPU.CL = 77;
-	__iu8(0b11_001_000, vCPU.EIP + 1);
+	assert(__fu8(CPU.AL) == 34);
+	CPU.CL = 77;
+	__iu8(0b11_001_000, CPU.EIP + 1);
 	exec16(0x88);
-	assert(__fu8(vCPU.AL) == 77);
-	vCPU.DL = 123;
-	__iu8(0b11_010_000, vCPU.EIP + 1);
+	assert(__fu8(CPU.AL) == 77);
+	CPU.DL = 123;
+	__iu8(0b11_010_000, CPU.EIP + 1);
 	exec16(0x88);
-	assert(__fu8(vCPU.AL) == 123);
-	vCPU.BL = 231;
-	__iu8(0b11_011_000, vCPU.EIP + 1);
+	assert(__fu8(CPU.AL) == 123);
+	CPU.BL = 231;
+	__iu8(0b11_011_000, CPU.EIP + 1);
 	exec16(0x88);
-	assert(__fu8(vCPU.AL) == 231);
-	vCPU.AH = 88;
-	__iu8(0b11_100_000, vCPU.EIP + 1);
+	assert(__fu8(CPU.AL) == 231);
+	CPU.AH = 88;
+	__iu8(0b11_100_000, CPU.EIP + 1);
 	exec16(0x88);
-	assert(__fu8(vCPU.AL) == 88);
-	vCPU.CH = 32;
-	__iu8(0b11_101_000, vCPU.EIP + 1);
+	assert(__fu8(CPU.AL) == 88);
+	CPU.CH = 32;
+	__iu8(0b11_101_000, CPU.EIP + 1);
 	exec16(0x88);
-	assert(__fu8(vCPU.AL) == 32);
-	vCPU.DH = 32;
-	__iu8(0b11_110_000, vCPU.EIP + 1);
+	assert(__fu8(CPU.AL) == 32);
+	CPU.DH = 32;
+	__iu8(0b11_110_000, CPU.EIP + 1);
 	exec16(0x88);
-	assert(__fu8(vCPU.AL) == 32);
-	vCPU.BH = 42;
-	__iu8(0b11_111_000, vCPU.EIP + 1);
+	assert(__fu8(CPU.AL) == 32);
+	CPU.BH = 42;
+	__iu8(0b11_111_000, CPU.EIP + 1);
 	exec16(0x88);
-	assert(__fu8(vCPU.AL) == 42);
+	assert(__fu8(CPU.AL) == 42);
 	OK;
 
 	// MOV R/M16, REG16
 
 	test("89h  MOV R/M16, REG16");
-	vCPU.AX = 344;
-	__iu8(0b11_000_000, vCPU.EIP + 1);
+	CPU.AX = 344;
+	__iu8(0b11_000_000, CPU.EIP + 1);
 	exec16(0x89);
-	assert(__fu16(vCPU.AX) == 344);
-	vCPU.CX = 777;
-	__iu8(0b11_001_000, vCPU.EIP + 1);
+	assert(__fu16(CPU.AX) == 344);
+	CPU.CX = 777;
+	__iu8(0b11_001_000, CPU.EIP + 1);
 	exec16(0x89);
-	assert(__fu16(vCPU.AX) == 777);
-	vCPU.DX = 1234;
-	__iu8(0b11_010_000, vCPU.EIP + 1);
+	assert(__fu16(CPU.AX) == 777);
+	CPU.DX = 1234;
+	__iu8(0b11_010_000, CPU.EIP + 1);
 	exec16(0x89);
-	assert(__fu16(vCPU.AX) == 1234);
-	vCPU.BX = 2311;
-	__iu8(0b11_011_000, vCPU.EIP + 1);
+	assert(__fu16(CPU.AX) == 1234);
+	CPU.BX = 2311;
+	__iu8(0b11_011_000, CPU.EIP + 1);
 	exec16(0x89);
-	assert(__fu16(vCPU.AX) == 2311);
-	vCPU.SP = 8888;
-	__iu8(0b11_100_000, vCPU.EIP + 1);
+	assert(__fu16(CPU.AX) == 2311);
+	CPU.SP = 8888;
+	__iu8(0b11_100_000, CPU.EIP + 1);
 	exec16(0x89);
-	assert(__fu16(vCPU.AX) == 8888);
-	vCPU.BP = 3200;
-	__iu8(0b11_101_000, vCPU.EIP + 1);
+	assert(__fu16(CPU.AX) == 8888);
+	CPU.BP = 3200;
+	__iu8(0b11_101_000, CPU.EIP + 1);
 	exec16(0x89);
-	assert(__fu16(vCPU.AX) == 3200);
-	vCPU.SI = 3244;
-	__iu8(0b11_110_000, vCPU.EIP + 1);
+	assert(__fu16(CPU.AX) == 3200);
+	CPU.SI = 3244;
+	__iu8(0b11_110_000, CPU.EIP + 1);
 	exec16(0x89);
-	assert(__fu16(vCPU.AX) == 3244);
-	vCPU.DI = 4212;
-	__iu8(0b11_111_000, vCPU.EIP + 1);
+	assert(__fu16(CPU.AX) == 3244);
+	CPU.DI = 4212;
+	__iu8(0b11_111_000, CPU.EIP + 1);
 	exec16(0x89);
-	assert(__fu16(vCPU.AX) == 4212);
+	assert(__fu16(CPU.AX) == 4212);
 	OK;
 
 	// MOV R/M16, REG16
 
 	test("8Ah  MOV REG8, R/M8");
-	vCPU.AL = 56;
-	__iu8(vCPU.AL, vCPU.AL);
-	__iu8(0b11_000_000, vCPU.EIP + 1);
+	CPU.AL = 56;
+	__iu8(CPU.AL, CPU.AL);
+	__iu8(0b11_000_000, CPU.EIP + 1);
 	exec16(0x8A);
-	assert(vCPU.AL == 56);
-	vCPU.CL = 152;
-	__iu8(vCPU.CL, vCPU.AL);
-	__iu8(0b11_001_000, vCPU.EIP + 1);
+	assert(CPU.AL == 56);
+	CPU.CL = 152;
+	__iu8(CPU.CL, CPU.AL);
+	__iu8(0b11_001_000, CPU.EIP + 1);
 	exec16(0x8A);
-	assert(vCPU.CL == 152);
-	vCPU.DL = 159;
-	__iu8(vCPU.DL, vCPU.AL);
-	__iu8(0b11_010_000, vCPU.EIP + 1);
+	assert(CPU.CL == 152);
+	CPU.DL = 159;
+	__iu8(CPU.DL, CPU.AL);
+	__iu8(0b11_010_000, CPU.EIP + 1);
 	exec16(0x8A);
-	assert(vCPU.DL == 159);
-	vCPU.BL = 129;
-	__iu8(vCPU.BL, vCPU.AL);
-	__iu8(0b11_011_000, vCPU.EIP + 1);
+	assert(CPU.DL == 159);
+	CPU.BL = 129;
+	__iu8(CPU.BL, CPU.AL);
+	__iu8(0b11_011_000, CPU.EIP + 1);
 	exec16(0x8A);
-	assert(vCPU.BL == 129);
-	vCPU.AH = 176;
-	__iu8(vCPU.AH, vCPU.AL);
-	__iu8(0b11_100_000, vCPU.EIP + 1);
+	assert(CPU.BL == 129);
+	CPU.AH = 176;
+	__iu8(CPU.AH, CPU.AL);
+	__iu8(0b11_100_000, CPU.EIP + 1);
 	exec16(0x8A);
-	assert(vCPU.AH == 176);
-	vCPU.CH = 166;
-	__iu8(vCPU.CH, vCPU.AL);
-	__iu8(0b11_101_000, vCPU.EIP + 1);
+	assert(CPU.AH == 176);
+	CPU.CH = 166;
+	__iu8(CPU.CH, CPU.AL);
+	__iu8(0b11_101_000, CPU.EIP + 1);
 	exec16(0x8A);
-	assert(vCPU.CH == 166);
-	vCPU.DH = 198;
-	__iu8(vCPU.DH, vCPU.AL);
-	__iu8(0b11_110_000, vCPU.EIP + 1);
+	assert(CPU.CH == 166);
+	CPU.DH = 198;
+	__iu8(CPU.DH, CPU.AL);
+	__iu8(0b11_110_000, CPU.EIP + 1);
 	exec16(0x8A);
-	assert(vCPU.DH == 198);
-	vCPU.BH = 111;
-	__iu8(vCPU.BH, vCPU.AL);
-	__iu8(0b11_111_000, vCPU.EIP + 1);
+	assert(CPU.DH == 198);
+	CPU.BH = 111;
+	__iu8(CPU.BH, CPU.AL);
+	__iu8(0b11_111_000, CPU.EIP + 1);
 	exec16(0x8A);
-	assert(vCPU.BH == 111);
+	assert(CPU.BH == 111);
 	OK;
 
 	// MOV REG16, R/M16
 
 	test("8Bh  MOV REG16, R/M16");
-	vCPU.AX = 5600;
-	__iu16(vCPU.AX, vCPU.AX);
-	__iu8(0b11_000_000, vCPU.EIP + 1);
+	CPU.AX = 5600;
+	__iu16(CPU.AX, CPU.AX);
+	__iu8(0b11_000_000, CPU.EIP + 1);
 	exec16(0x8B);
-	assert(vCPU.AX == 5600);
-	vCPU.CX = 1520;
-	__iu16(vCPU.CX, vCPU.AX);
-	__iu8(0b11_001_000, vCPU.EIP + 1);
+	assert(CPU.AX == 5600);
+	CPU.CX = 1520;
+	__iu16(CPU.CX, CPU.AX);
+	__iu8(0b11_001_000, CPU.EIP + 1);
 	exec16(0x8B);
-	assert(vCPU.CX == 1520);
-	vCPU.DX = 1590;
-	__iu16(vCPU.DX, vCPU.AX);
-	__iu8(0b11_010_000, vCPU.EIP + 1);
+	assert(CPU.CX == 1520);
+	CPU.DX = 1590;
+	__iu16(CPU.DX, CPU.AX);
+	__iu8(0b11_010_000, CPU.EIP + 1);
 	exec16(0x8B);
-	assert(vCPU.DX == 1590);
-	vCPU.BX = 1290;
-	__iu16(vCPU.BX, vCPU.AX);
-	__iu8(0b11_011_000, vCPU.EIP + 1);
+	assert(CPU.DX == 1590);
+	CPU.BX = 1290;
+	__iu16(CPU.BX, CPU.AX);
+	__iu8(0b11_011_000, CPU.EIP + 1);
 	exec16(0x8B);
-	assert(vCPU.BX == 1290);
-	vCPU.SP = 1760;
-	__iu16(vCPU.SP, vCPU.AX);
-	__iu8(0b11_100_000, vCPU.EIP + 1);
+	assert(CPU.BX == 1290);
+	CPU.SP = 1760;
+	__iu16(CPU.SP, CPU.AX);
+	__iu8(0b11_100_000, CPU.EIP + 1);
 	exec16(0x8B);
-	assert(vCPU.SP == 1760);
-	vCPU.BP = 1660;
-	__iu16(vCPU.BP, vCPU.AX);
-	__iu8(0b11_101_000, vCPU.EIP + 1);
+	assert(CPU.SP == 1760);
+	CPU.BP = 1660;
+	__iu16(CPU.BP, CPU.AX);
+	__iu8(0b11_101_000, CPU.EIP + 1);
 	exec16(0x8B);
-	assert(vCPU.BP == 1660);
-	vCPU.SI = 1984;
-	__iu16(vCPU.SI, vCPU.AX);
-	__iu8(0b11_110_000, vCPU.EIP + 1);
+	assert(CPU.BP == 1660);
+	CPU.SI = 1984;
+	__iu16(CPU.SI, CPU.AX);
+	__iu8(0b11_110_000, CPU.EIP + 1);
 	exec16(0x8B);
-	assert(vCPU.SI == 1984);
-	vCPU.DI = 1110;
-	__iu16(vCPU.DI, vCPU.AX);
-	__iu8(0b11_111_000, vCPU.EIP + 1);
+	assert(CPU.SI == 1984);
+	CPU.DI = 1110;
+	__iu16(CPU.DI, CPU.AX);
+	__iu8(0b11_111_000, CPU.EIP + 1);
 	exec16(0x8B);
-	assert(vCPU.DI == 1110);
+	assert(CPU.DI == 1110);
 	OK;
 
 	// MOV R/M16, SEGREG
 
 	test("8Ch  MOV R/M16, SEGREG");
-	vCPU.CS = 123; vCPU.DS = 124; vCPU.ES = 125; vCPU.SS = 126;
-	vCPU.AX = 0x4440; // address
-	__iu8(0b11_101_000, vCPU.EIP + 1);
+	CPU.CS = 123; CPU.DS = 124; CPU.ES = 125; CPU.SS = 126;
+	CPU.AX = 0x4440; // address
+	__iu8(0b11_101_000, CPU.EIP + 1);
 	exec16(0x8C);
-	assert(__fu16(vCPU.AX) == vCPU.CS);
-	__iu8(0b11_111_000, vCPU.EIP + 1);
+	assert(__fu16(CPU.AX) == CPU.CS);
+	__iu8(0b11_111_000, CPU.EIP + 1);
 	exec16(0x8C);
-	assert(__fu16(vCPU.AX) == vCPU.DS);
-	__iu8(0b11_100_000, vCPU.EIP + 1);
+	assert(__fu16(CPU.AX) == CPU.DS);
+	__iu8(0b11_100_000, CPU.EIP + 1);
 	exec16(0x8C);
-	assert(__fu16(vCPU.AX) == vCPU.ES);
-	__iu8(0b11_110_000, vCPU.EIP + 1);
+	assert(__fu16(CPU.AX) == CPU.ES);
+	__iu8(0b11_110_000, CPU.EIP + 1);
 	exec16(0x8C);
-	assert(__fu16(vCPU.AX) == vCPU.SS);
+	assert(__fu16(CPU.AX) == CPU.SS);
 	OK;
 
 	// LEA REG16, MEM16
@@ -1145,22 +1145,22 @@ unittest {
 	// MOV SEGREG, R/M16
 
 	test("8Eh  MOV SEGREG, R/M16");
-	__iu8(0b11_101_000, vCPU.EIP + 1);
-	__iu16(8922, vCPU.AX);
+	__iu8(0b11_101_000, CPU.EIP + 1);
+	__iu16(8922, CPU.AX);
 	exec16(0x8E);
-	assert(vCPU.CS == 8922);
-	__iu8(0b11_111_000, vCPU.EIP + 1);
-	__iu16(4932, vCPU.AX);
+	assert(CPU.CS == 8922);
+	__iu8(0b11_111_000, CPU.EIP + 1);
+	__iu16(4932, CPU.AX);
 	exec16(0x8E);
-	assert(vCPU.DS == 4932);
-	__iu8(0b11_100_000, vCPU.EIP + 1);
-	__iu16(7632, vCPU.AX);
+	assert(CPU.DS == 4932);
+	__iu8(0b11_100_000, CPU.EIP + 1);
+	__iu16(7632, CPU.AX);
 	exec16(0x8E);
-	assert(vCPU.ES == 7632);
-	__iu8(0b11_110_000, vCPU.EIP + 1);
-	__iu16(9999, vCPU.AX);
+	assert(CPU.ES == 7632);
+	__iu8(0b11_110_000, CPU.EIP + 1);
+	__iu16(9999, CPU.AX);
 	exec16(0x8E);
-	assert(vCPU.SS == 9999);
+	assert(CPU.SS == 9999);
 	OK;
 
 	// POP R/M16
@@ -1171,88 +1171,88 @@ unittest {
 
 	test("90h  NOP");
 	{ // Nevertheless, let's test the Program Counter
-		const int oldip = vCPU.IP + 1;
+		const int oldip = CPU.IP + 1;
 		exec16(0x90);
-		assert(oldip == vCPU.IP);
+		assert(oldip == CPU.IP);
 	}
 	OK;
 
 	test("91h  XCHG AX, CX");
-	vCPU.AX = 0xFAB;
-	vCPU.CX = 0xAABB;
+	CPU.AX = 0xFAB;
+	CPU.CX = 0xAABB;
 	exec16(0x91);
-	assert(vCPU.AX == 0xAABB);
-	assert(vCPU.CX == 0xFAB);
+	assert(CPU.AX == 0xAABB);
+	assert(CPU.CX == 0xFAB);
 	OK;
 
 	test("92h  XCHG AX, DX");
-	vCPU.AX = 0xFAB;
-	vCPU.DX = 0xAABB;
+	CPU.AX = 0xFAB;
+	CPU.DX = 0xAABB;
 	exec16(0x92);
-	assert(vCPU.AX == 0xAABB);
-	assert(vCPU.DX == 0xFAB);
+	assert(CPU.AX == 0xAABB);
+	assert(CPU.DX == 0xFAB);
 	OK;
 
 	test("93h  XCHG AX, BX");
-	vCPU.AX = 0xFAB;
-	vCPU.BX = 0xAABB;
+	CPU.AX = 0xFAB;
+	CPU.BX = 0xAABB;
 	exec16(0x93);
-	assert(vCPU.AX == 0xAABB);
-	assert(vCPU.BX == 0xFAB);
+	assert(CPU.AX == 0xAABB);
+	assert(CPU.BX == 0xFAB);
 	OK;
 
 	test("94h  XCHG AX, SP");
-	vCPU.AX = 0xFAB;
-	vCPU.SP = 0xAABB;
+	CPU.AX = 0xFAB;
+	CPU.SP = 0xAABB;
 	exec16(0x94);
-	assert(vCPU.AX == 0xAABB);
-	assert(vCPU.SP == 0xFAB);
+	assert(CPU.AX == 0xAABB);
+	assert(CPU.SP == 0xFAB);
 	OK;
 
 	test("95h  XCHG AX, BP");
-	vCPU.AX = 0xFAB;
-	vCPU.BP = 0xAABB;
+	CPU.AX = 0xFAB;
+	CPU.BP = 0xAABB;
 	exec16(0x95);
-	assert(vCPU.AX == 0xAABB);
-	assert(vCPU.BP == 0xFAB);
+	assert(CPU.AX == 0xAABB);
+	assert(CPU.BP == 0xFAB);
 	OK;
 
 	test("96h  XCHG AX, SI");
-	vCPU.AX = 0xFAB;
-	vCPU.SI = 0xAABB;
+	CPU.AX = 0xFAB;
+	CPU.SI = 0xAABB;
 	exec16(0x96);
-	assert(vCPU.AX == 0xAABB);
-	assert(vCPU.SI == 0xFAB);
+	assert(CPU.AX == 0xAABB);
+	assert(CPU.SI == 0xFAB);
 	OK;
 
 	test("97h  XCHG AX, DI");
-	vCPU.AX = 0xFAB;
-	vCPU.DI = 0xAABB;
+	CPU.AX = 0xFAB;
+	CPU.DI = 0xAABB;
 	exec16(0x97);
-	assert(vCPU.AX == 0xAABB);
-	assert(vCPU.DI == 0xFAB);
+	assert(CPU.AX == 0xAABB);
+	assert(CPU.DI == 0xFAB);
 	OK;
 
 	// CBW
 
 	test("98h  CBW");
-	vCPU.AL = 0;
+	CPU.AL = 0;
 	exec16(0x98);
-	assert(vCPU.AH == 0);
-	vCPU.AL = 0xFF;
+	assert(CPU.AH == 0);
+	CPU.AL = 0xFF;
 	exec16(0x98);
-	assert(vCPU.AH == 0xFF);
+	assert(CPU.AH == 0xFF);
 	OK;
 
 	// CWD
 
 	test("99h  CWD");
-	vCPU.AX = 0;
+	CPU.AX = 0;
 	exec16(0x99);
-	assert(vCPU.DX == 0);
-	vCPU.AX = 0xFFFF;
+	assert(CPU.DX == 0);
+	CPU.AX = 0xFFFF;
 	exec16(0x99);
-	assert(vCPU.DX == 0xFFFF);
+	assert(CPU.DX == 0xFFFF);
 	OK;
 
 	// WAIT
@@ -1279,25 +1279,25 @@ unittest {
 
 	test("A0h  MOV AL, MEM8");
 	__iu8(167, 0x8000);
-	__iu16(0x8000, vCPU.EIP + 1);
+	__iu16(0x8000, CPU.EIP + 1);
 	exec16(0xA0);
-	assert(vCPU.AL == 167);
+	assert(CPU.AL == 167);
 	OK;
 
 	// MOV AX, MEM16
 
 	test("A1h  MOV AX, MEM16");
 	__iu16(1670, 0x8000);
-	__iu16(0x8000, vCPU.EIP + 1);
+	__iu16(0x8000, CPU.EIP + 1);
 	exec16(0xA1);
-	assert(vCPU.AX == 1670);
+	assert(CPU.AX == 1670);
 	OK;
 
 	// MOV MEM8, AL
 
 	test("A2h  MOV MEM8, AL");
-	vCPU.AL = 143;
-	__iu16(0x4000, vCPU.EIP + 1);
+	CPU.AL = 143;
+	__iu16(0x4000, CPU.EIP + 1);
 	exec16(0xA2);
 	assert(__fu8(0x4000) == 143);
 	OK;
@@ -1305,242 +1305,242 @@ unittest {
 	// MOV MEM16, AX
 
 	test("A3h  MOV MEM16, AX");
-	vCPU.AX = 1430;
-	__iu16(0x4000, vCPU.EIP + 1);
+	CPU.AX = 1430;
+	__iu16(0x4000, CPU.EIP + 1);
 	exec16(0xA3);
 	assert(__fu16(0x4000) == 1430);
 	OK;
 
 	// CMPS
 
-	vCPU.DF = 0;
+	CPU.DF = 0;
 
 	test("A6h  CMPS");
-	vCPU.CS = vCPU.ES = 0xF00; vCPU.DI = vCPU.EIP = 0x100;
+	CPU.CS = CPU.ES = 0xF00; CPU.DI = CPU.EIP = 0x100;
 	__istr("HELL", get_ip);
-	vCPU.CS = vCPU.DS = 0xF00; vCPU.SI = vCPU.EIP = 0x110;
+	CPU.CS = CPU.DS = 0xF00; CPU.SI = CPU.EIP = 0x110;
 	__istr("HeLL", get_ip);
 	exec16(0xA6);
-	assert(vCPU.ZF);
+	assert(CPU.ZF);
 	exec16(0xA6);
-	assert(!vCPU.ZF);
+	assert(!CPU.ZF);
 	exec16(0xA6);
-	assert(vCPU.ZF);
+	assert(CPU.ZF);
 	exec16(0xA6);
-	assert(vCPU.ZF);
+	assert(CPU.ZF);
 	OK;
 
 	test("A7h  CMPSW");
-	vCPU.CS = vCPU.ES = 0xF00; vCPU.DI = vCPU.EIP = 0x100;
+	CPU.CS = CPU.ES = 0xF00; CPU.DI = CPU.EIP = 0x100;
 	__iwstr("HELL"w, get_ip);
-	vCPU.CS = vCPU.DS = 0xF00; vCPU.SI = vCPU.EIP = 0x110;
+	CPU.CS = CPU.DS = 0xF00; CPU.SI = CPU.EIP = 0x110;
 	__iwstr("HeLL"w, get_ip);
 	exec16(0xA7);
-	assert(vCPU.ZF);
+	assert(CPU.ZF);
 	exec16(0xA7);
-	assert(!vCPU.ZF);
+	assert(!CPU.ZF);
 	exec16(0xA7);
-	assert(vCPU.ZF);
+	assert(CPU.ZF);
 	exec16(0xA7);
-	assert(vCPU.ZF);
+	assert(CPU.ZF);
 	OK;
 
 	// TEST AL, IMM8
 
 	test("A8h  TEST AL, IMM8");
-	vCPU.AL = 0b1100;
-	__iu8(0b1100, vCPU.EIP + 1);
+	CPU.AL = 0b1100;
+	__iu8(0b1100, CPU.EIP + 1);
 	exec16(0xA8);
-	assert(vCPU.PF);
-	assert(vCPU.ZF == 0);
-	assert(vCPU.SF == 0);
-	assert(vCPU.CF == 0);
-	assert(vCPU.OF == 0);
-	vCPU.AL = 0xF0;
-	__iu8(0x0F, vCPU.EIP + 1);
+	assert(CPU.PF);
+	assert(CPU.ZF == 0);
+	assert(CPU.SF == 0);
+	assert(CPU.CF == 0);
+	assert(CPU.OF == 0);
+	CPU.AL = 0xF0;
+	__iu8(0x0F, CPU.EIP + 1);
 	exec16(0xA8);
-	assert(vCPU.PF);
-	assert(vCPU.ZF);
-	assert(vCPU.SF == 0);
-	assert(vCPU.CF == 0);
-	assert(vCPU.OF == 0);
+	assert(CPU.PF);
+	assert(CPU.ZF);
+	assert(CPU.SF == 0);
+	assert(CPU.CF == 0);
+	assert(CPU.OF == 0);
 	OK;
 
 	// TEST AX, IMM16
 
 	test("A9h  TEST AX, IMM16");
-	vCPU.AX = 0xAA00;
-	__iu16(0xAA00, vCPU.EIP + 1);
+	CPU.AX = 0xAA00;
+	__iu16(0xAA00, CPU.EIP + 1);
 	exec16(0xA9);
-	assert(vCPU.PF);
-	assert(vCPU.ZF == 0);
-	assert(vCPU.SF);
-	assert(vCPU.CF == 0);
-	assert(vCPU.OF == 0);
+	assert(CPU.PF);
+	assert(CPU.ZF == 0);
+	assert(CPU.SF);
+	assert(CPU.CF == 0);
+	assert(CPU.OF == 0);
 	OK;
 
 	// STOS
 
 	test("AAh  STOS");
-	vCPU.ES = 0x20; vCPU.DI = 0x20;        
-	vCPU.AL = 'Q';
+	CPU.ES = 0x20; CPU.DI = 0x20;        
+	CPU.AL = 'Q';
 	exec16(0xAA);
-	assert(MEMORY[get_ad(vCPU.ES, vCPU.DI - 1)] == 'Q');
+	assert(MEMORY[get_ad(CPU.ES, CPU.DI - 1)] == 'Q');
 	OK;
 
 	test("ABh  STOSW");
-	vCPU.ES = 0x200; vCPU.DI = 0x200;        
-	vCPU.AX = 0xACDC;
+	CPU.ES = 0x200; CPU.DI = 0x200;        
+	CPU.AX = 0xACDC;
 	exec16(0xAB);
-	assert(__fu16(get_ad(vCPU.ES, vCPU.DI - 2)) == 0xACDC);
+	assert(__fu16(get_ad(CPU.ES, CPU.DI - 2)) == 0xACDC);
 	OK;
 
 	// LODS
 
 	test("ACh  LODS"); // of dosh
-	vCPU.AL = 0;
-	vCPU.DS = 0xA0; vCPU.SI = 0x200;
-	MEMORY[get_ad(vCPU.DS, vCPU.SI)] = 'H';
+	CPU.AL = 0;
+	CPU.DS = 0xA0; CPU.SI = 0x200;
+	MEMORY[get_ad(CPU.DS, CPU.SI)] = 'H';
 	exec16(0xAC);
-	assert(vCPU.AL == 'H');
-	MEMORY[get_ad(vCPU.DS, vCPU.SI)] = 'e';
+	assert(CPU.AL == 'H');
+	MEMORY[get_ad(CPU.DS, CPU.SI)] = 'e';
 	exec16(0xAC);
-	assert(vCPU.AL == 'e');
+	assert(CPU.AL == 'e');
 	OK;
 
 	test("ADh  LODSW");
-	vCPU.AX = 0;
-	vCPU.DS = 0x40; vCPU.SI = 0x80;
-	__iu16(0x48AA, get_ad(vCPU.DS, vCPU.SI));
+	CPU.AX = 0;
+	CPU.DS = 0x40; CPU.SI = 0x80;
+	__iu16(0x48AA, get_ad(CPU.DS, CPU.SI));
 	exec16(0xAD);
-	assert(vCPU.AX == 0x48AA);
-	__iu16(0x65BB, get_ad(vCPU.DS, vCPU.SI));
+	assert(CPU.AX == 0x48AA);
+	__iu16(0x65BB, get_ad(CPU.DS, CPU.SI));
 	exec16(0xAD);
-	assert(vCPU.AX == 0x65BB);
+	assert(CPU.AX == 0x65BB);
 	OK;
 
 	// SCAS
 
 	test("AEh  SCAS");
-	vCPU.ES = vCPU.CS = 0x400; vCPU.DI = 0x20; vCPU.IP = 0x20;
-	vCPU.EIP = get_ip;
+	CPU.ES = CPU.CS = 0x400; CPU.DI = 0x20; CPU.IP = 0x20;
+	CPU.EIP = get_ip;
 	__istr("Hello!");
-	vCPU.AL = 'H';
+	CPU.AL = 'H';
 	exec16(0xAE);
-	assert(vCPU.ZF);
-	vCPU.AL = '1';
+	assert(CPU.ZF);
+	CPU.AL = '1';
 	exec16(0xAE);
-	assert(!vCPU.ZF);
+	assert(!CPU.ZF);
 	OK;
 
 	test("AFh  SCASW");
-	vCPU.CS = 0x800; vCPU.ES = 0x800; vCPU.EIP = 0x30; vCPU.DI = 0x30;
-	__iu16(0xFE22, get_ad(vCPU.ES, vCPU.DI));
-	vCPU.AX = 0xFE22;
+	CPU.CS = 0x800; CPU.ES = 0x800; CPU.EIP = 0x30; CPU.DI = 0x30;
+	__iu16(0xFE22, get_ad(CPU.ES, CPU.DI));
+	CPU.AX = 0xFE22;
 	exec16(0xAF);
-	assert(vCPU.ZF);
+	assert(CPU.ZF);
 	exec16(0xAF);
-	assert(!vCPU.ZF);
+	assert(!CPU.ZF);
 	OK;
 
 	// MOV REG8, IMM8
 
 	test("B0h  MOV AL, IMM8");
-	__iu8(0x1, vCPU.EIP + 1);
+	__iu8(0x1, CPU.EIP + 1);
 	exec16(0xB0); // MOV AL, 1
-	assert(vCPU.AL == 1);
+	assert(CPU.AL == 1);
 	OK;
 
 	test("B1h  MOV CL, IMM8");
-	__iu8(0x2, vCPU.EIP + 1);
+	__iu8(0x2, CPU.EIP + 1);
 	exec16(0xB1); // MOV CL, 2
-	assert(vCPU.CL == 2);
+	assert(CPU.CL == 2);
 	OK;
 
 	test("B2h  MOV DL, IMM8");
-	__iu8(0x3, vCPU.EIP + 1);
+	__iu8(0x3, CPU.EIP + 1);
 	exec16(0xB2); // MOV DL, 3
-	assert(vCPU.DL == 3);
+	assert(CPU.DL == 3);
 	OK;
 
 	test("B3h  MOV BL, IMM8");
-	__iu8(0x4, vCPU.EIP + 1);
+	__iu8(0x4, CPU.EIP + 1);
 	exec16(0xB3); // MOV BL, 4
-	assert(vCPU.BL == 4);
+	assert(CPU.BL == 4);
 	OK;
 
 	test("B4h  MOV AH, IMM8");
-	__iu8(0x5, vCPU.EIP + 1);
+	__iu8(0x5, CPU.EIP + 1);
 	exec16(0xB4); // MOV AH, 5
-	assert(vCPU.AH == 5);
+	assert(CPU.AH == 5);
 	OK;
 
 	test("B5h  MOV CH, IMM8");
-	__iu8(0x6, vCPU.EIP + 1);
+	__iu8(0x6, CPU.EIP + 1);
 	exec16(0xB5); // MOV CH, 6
-	assert(vCPU.CH == 6);
+	assert(CPU.CH == 6);
 	OK;
 
 	test("B6h  MOV DH, IMM8");
-	__iu8(0x7, vCPU.EIP + 1);
+	__iu8(0x7, CPU.EIP + 1);
 	exec16(0xB6); // MOV DH, 7
-	assert(vCPU.DH == 7);
+	assert(CPU.DH == 7);
 	OK;
 
 	test("B7h  MOV BH, IMM8");
-	__iu8(0x8, vCPU.EIP + 1);
+	__iu8(0x8, CPU.EIP + 1);
 	exec16(0xB7); // MOV BH, 8
-	assert(vCPU.BH == 8);
+	assert(CPU.BH == 8);
 	OK;
 
 	// MOV REG16, IMM16
 
 	test("B8h  MOV AX, IMM16");
-	__iu16(0x1112, vCPU.EIP + 1);
+	__iu16(0x1112, CPU.EIP + 1);
 	exec16(0xB8); // MOV AX, 1112h
-	assert(vCPU.AX == 0x1112);
+	assert(CPU.AX == 0x1112);
 	OK;
 
 	test("B9h  MOV CX, IMM16");
-	__iu16(0x1113, vCPU.EIP + 1);
+	__iu16(0x1113, CPU.EIP + 1);
 	exec16(0xB9); // MOV CX, 1113h
-	assert(vCPU.CX == 0x1113);
+	assert(CPU.CX == 0x1113);
 	OK;
 
 	test("BAh  MOV DX, IMM16");
-	__iu16(0x1114, vCPU.EIP + 1);
+	__iu16(0x1114, CPU.EIP + 1);
 	exec16(0xBA); // MOV DX, 1114h
-	assert(vCPU.DX == 0x1114);
+	assert(CPU.DX == 0x1114);
 	OK;
 
 	test("BBh  MOV BX, IMM16");
-	__iu16(0x1115, vCPU.EIP + 1);
+	__iu16(0x1115, CPU.EIP + 1);
 	exec16(0xBB); // MOV BX, 1115h
-	assert(vCPU.BX == 0x1115);
+	assert(CPU.BX == 0x1115);
 	OK;
 
 	test("BCh  MOV SP, IMM16");
-	__iu16(0x1116, vCPU.EIP + 1);
+	__iu16(0x1116, CPU.EIP + 1);
 	exec16(0xBC); // MOV SP, 1116h
-	assert(vCPU.SP == 0x1116);
+	assert(CPU.SP == 0x1116);
 	OK;
 
 	test("BDh  MOV BP, IMM16");
-	__iu16(0x1117, vCPU.EIP + 1);
+	__iu16(0x1117, CPU.EIP + 1);
 	exec16(0xBD); // MOV BP, 1117h
-	assert(vCPU.BP == 0x1117);
+	assert(CPU.BP == 0x1117);
 	OK;
 
 	test("BEh  MOV SI, IMM16");
-	__iu16(0x1118, vCPU.EIP + 1);
+	__iu16(0x1118, CPU.EIP + 1);
 	exec16(0xBE); // MOV SI, 1118h
-	assert(vCPU.SI == 0x1118);
+	assert(CPU.SI == 0x1118);
 	OK;
 
 	test("BFh  MOV DI, IMM16");
-	__iu16(0x1119, vCPU.EIP + 1);
+	__iu16(0x1119, CPU.EIP + 1);
 	exec16(0xBF); // MOV DI, 1119h
-	assert(vCPU.DI == 0x1119);
+	assert(CPU.DI == 0x1119);
 	OK;
 
 	// RET
@@ -1632,12 +1632,12 @@ unittest {
 	// XLAT SOURCE-TABLE
 
 	test("D7h  XLAT SOURCE-TABLE");
-	vCPU.AL = 10;
-	vCPU.DS = 0x400;
-	vCPU.BX = 0x20;
-	__iu8(36, get_ad(vCPU.DS, vCPU.BX) + vCPU.AL);
+	CPU.AL = 10;
+	CPU.DS = 0x400;
+	CPU.BX = 0x20;
+	__iu8(36, get_ad(CPU.DS, CPU.BX) + CPU.AL);
 	exec16(0xD7);
-	assert(vCPU.AL == 36);
+	assert(CPU.AL == 36);
 	OK;
 
 	// LOOP
@@ -1682,64 +1682,64 @@ unittest {
 
 	// CMC
 
-	vCPU.CF = 0;
-	test("F5h  CMC"); exec16(0xF5); assert(vCPU.CF); OK;
+	CPU.CF = 0;
+	test("F5h  CMC"); exec16(0xF5); assert(CPU.CF); OK;
 
 	// Group 3, 8-bit
 
 	test("F6h  GRP3 TEST");
-	vCPU.AL = 130;
-	__iu8(0xAF, vCPU.AL);
-	__iu8(0b11_000_000, vCPU.EIP + 1);
-	__iu8(0xF, vCPU.EIP + 2);
+	CPU.AL = 130;
+	__iu8(0xAF, CPU.AL);
+	__iu8(0b11_000_000, CPU.EIP + 1);
+	__iu8(0xF, CPU.EIP + 2);
 	exec16(0xF6);
-	assert(vCPU.ZF == 0 && vCPU.OF == 0);
+	assert(CPU.ZF == 0 && CPU.OF == 0);
 	OK;
 	test("F6h  GRP3 NOT");
-	__iu8(0b11_010_000, vCPU.EIP + 1);
-	__iu8(0xF, vCPU.AL);
+	__iu8(0b11_010_000, CPU.EIP + 1);
+	__iu8(0xF, CPU.AL);
 	exec16(0xF6);
-	assert(__fu8(vCPU.AL) == 0xF0);
+	assert(__fu8(CPU.AL) == 0xF0);
 	OK;
 	test("F6h  GRP3 NEG");
-	__iu8(0b11_011_000, vCPU.EIP + 1);
-	__iu8(0xF, vCPU.AL);
+	__iu8(0b11_011_000, CPU.EIP + 1);
+	__iu8(0xF, CPU.AL);
 	exec16(0xF6);
-	assert(__fu8(vCPU.AL) == 0xF1);
-	assert(vCPU.ZF == 0);
-	assert(vCPU.OF == 0);
+	assert(__fu8(CPU.AL) == 0xF1);
+	assert(CPU.ZF == 0);
+	assert(CPU.OF == 0);
 	OK;
 	test("F6h  GRP3 MUL");
-	__iu8(0b11_100_000, vCPU.EIP + 1);
-	__iu8(2, vCPU.EIP + 2);
-	__iu8(4, vCPU.AL);
+	__iu8(0b11_100_000, CPU.EIP + 1);
+	__iu8(2, CPU.EIP + 2);
+	__iu8(4, CPU.AL);
 	exec16(0xF6);
-	assert(__fu8(vCPU.AL) == 8);
-	assert(vCPU.ZF == 0);
+	assert(__fu8(CPU.AL) == 8);
+	assert(CPU.ZF == 0);
 	OK;
 	test("F6h  GRP3 IMUL");
-	__iu8(0b11_101_000, vCPU.EIP + 1);
-	__iu8(-2, vCPU.EIP + 2);
-	__iu8(4, vCPU.AL);
+	__iu8(0b11_101_000, CPU.EIP + 1);
+	__iu8(-2, CPU.EIP + 2);
+	__iu8(4, CPU.AL);
 	exec16(0xF6);
-	assert(__fu8(vCPU.AL) == 0xF8); // -8 as BYTE
-	assert(vCPU.ZF == 0);
+	assert(__fu8(CPU.AL) == 0xF8); // -8 as BYTE
+	assert(CPU.ZF == 0);
 	OK;
 	test("F6h  GRP3 DIV");
-	vCPU.AX = 12;
-	__iu8(0b11_110_000, vCPU.EIP + 1);
-	__iu8(8, vCPU.AL);
+	CPU.AX = 12;
+	__iu8(0b11_110_000, CPU.EIP + 1);
+	__iu8(8, CPU.AL);
 	exec16(0xF6);
-	assert(vCPU.AL == 1);
-	assert(vCPU.AH == 4);
+	assert(CPU.AL == 1);
+	assert(CPU.AH == 4);
 	OK;
 	test("F6h  GRP3 IDIV");
-	vCPU.AX = 0xFFF4; // -12
-	__iu8(0b11_111_000, vCPU.EIP + 1);
-	__iu8(8, vCPU.AL);
+	CPU.AX = 0xFFF4; // -12
+	__iu8(0b11_111_000, CPU.EIP + 1);
+	__iu8(8, CPU.AL);
 	exec16(0xF6);
-	assert(vCPU.AL == 0xFF);
-	assert(vCPU.AH == 0xFC);
+	assert(CPU.AL == 0xFF);
+	assert(CPU.AH == 0xFC);
 	OK;
 
 	// Group 3, 16-bit
@@ -1754,12 +1754,12 @@ unittest {
 
 	// Flags
 
-	test("F8h  CLC"); exec16(0xF8); assert(vCPU.CF == 0); OK;
-	test("F9h  STC"); exec16(0xF9); assert(vCPU.CF); OK;
-	test("FAh  CLI"); exec16(0xFA); assert(vCPU.IF == 0); OK;
-	test("FBh  STI"); exec16(0xFB); assert(vCPU.IF); OK;
-	test("FCh  CLD"); exec16(0xFC); assert(vCPU.DF == 0); OK;
-	test("FDh  STD"); exec16(0xFD); assert(vCPU.DF); OK;
+	test("F8h  CLC"); exec16(0xF8); assert(CPU.CF == 0); OK;
+	test("F9h  STC"); exec16(0xF9); assert(CPU.CF); OK;
+	test("FAh  CLI"); exec16(0xFA); assert(CPU.IF == 0); OK;
+	test("FBh  STI"); exec16(0xFB); assert(CPU.IF); OK;
+	test("FCh  CLD"); exec16(0xFC); assert(CPU.DF == 0); OK;
+	test("FDh  STD"); exec16(0xFD); assert(CPU.DF); OK;
 
 	// Group 4, 8-bit
 

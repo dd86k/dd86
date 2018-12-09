@@ -42,21 +42,21 @@ uint get_rm16(ubyte rm, ubyte wide = 0) {
 		default:
 			switch (rm & RM_RM) { // R/M
 			case RM_RM_000: debug _debug("EA:0:0");
-				return vCPU.SI + vCPU.BX;
+				return CPU.SI + CPU.BX;
 			case RM_RM_001: debug _debug("EA:0:1");
-				return vCPU.DI + vCPU.BX;
+				return CPU.DI + CPU.BX;
 			case RM_RM_010: debug _debug("EA:0:2");
-				return vCPU.SI + vCPU.BP;
+				return CPU.SI + CPU.BP;
 			case RM_RM_011: debug _debug("EA:0:3");
-				return vCPU.DI + vCPU.BP;
+				return CPU.DI + CPU.BP;
 			case RM_RM_100: debug _debug("EA:0:4");
-				return vCPU.SI;
+				return CPU.SI;
 			case RM_RM_101: debug _debug("EA:0:5");
-				return vCPU.DI;
+				return CPU.DI;
 			case RM_RM_110: debug _debug("EA:0:6");
 				return __fu16_i(1); // DIRECT ADDRESS, immediate follows
 			case RM_RM_111: debug _debug("EA:0:7");
-				return vCPU.BX;
+				return CPU.BX;
 			default:
 			}
 		}
@@ -65,24 +65,24 @@ uint get_rm16(ubyte rm, ubyte wide = 0) {
 		debug _debug("EA:1:_");
 		switch (rm & RM_RM) {
 		case RM_RM_000: debug _debug("EA:1:0");
-			return vCPU.SI + vCPU.BX + __fi8_i(1);
+			return CPU.SI + CPU.BX + __fi8_i(1);
 		case RM_RM_001: debug _debug("EA:1:1");
-			return vCPU.DI + vCPU.BX + __fi8_i(1);
+			return CPU.DI + CPU.BX + __fi8_i(1);
 		case RM_RM_010: debug _debug("EA:1:2");
-			return vCPU.SI + vCPU.BP + __fi8_i(1);
+			return CPU.SI + CPU.BP + __fi8_i(1);
 		case RM_RM_011: debug _debug("EA:1:3");
-			return vCPU.DI + vCPU.BP + __fi8_i(1);
+			return CPU.DI + CPU.BP + __fi8_i(1);
 		case RM_RM_100: debug _debug("EA:1:4");
-			return vCPU.SI + __fi8_i(1);
+			return CPU.SI + __fi8_i(1);
 		case RM_RM_101: debug _debug("EA:1:5");
-			return vCPU.DI + __fi8_i(1);
+			return CPU.DI + __fi8_i(1);
 		case RM_RM_110: debug _debug("EA:1:6");
-			return vCPU.BP + __fi8_i(1);
+			return CPU.BP + __fi8_i(1);
 		case RM_RM_111: debug _debug("EA:1:7");
-			return vCPU.BX + __fi8_i(1);
+			return CPU.BX + __fi8_i(1);
 		default:
 		}
-		++vCPU.EIP;
+		++CPU.EIP;
 		break; // MOD 01
 	}
 	case RM_MOD_10: // MOD 10, Memory Mode, 16-bit displacement follows
@@ -103,56 +103,56 @@ uint get_rm16(ubyte rm, ubyte wide = 0) {
 			switch (rm & RM_RM) { // R/M
 			case 0:
 				debug _debug("EA:2:0");
-				return vCPU.SI + vCPU.BX + __fi16_i(1);
+				return CPU.SI + CPU.BX + __fi16_i(1);
 			case RM_RM_001:
 				debug _debug("EA:2:1");
-				return vCPU.DI + vCPU.BX + __fi16_i(1);
+				return CPU.DI + CPU.BX + __fi16_i(1);
 			case RM_RM_010:
 				debug _debug("EA:2:2");
-				return vCPU.SI + vCPU.BP + __fi16_i(1);
+				return CPU.SI + CPU.BP + __fi16_i(1);
 			case RM_RM_011:
 				debug _debug("EA:2:3");
-				return vCPU.DI + vCPU.BP + __fi16_i(1);
+				return CPU.DI + CPU.BP + __fi16_i(1);
 			case RM_RM_100:
 				debug _debug("EA:2:4");
-				return vCPU.SI + __fi16_i(1);
+				return CPU.SI + __fi16_i(1);
 			case RM_RM_101:
 				debug _debug("EA:2:5");
-				return vCPU.DI + __fi16_i(1);
+				return CPU.DI + __fi16_i(1);
 			case RM_RM_110:
 				debug _debug("EA:2:6");
-				return vCPU.BP + __fi16_i(1);
+				return CPU.BP + __fi16_i(1);
 			case RM_RM_111:
 				debug _debug("EA:2:7");
-				return vCPU.BX + __fi16_i(1);
+				return CPU.BX + __fi16_i(1);
 			default:
 			}
 		}
-		vCPU.EIP += 2;
+		CPU.EIP += 2;
 		break; // MOD 10
 	case RM_MOD_11: // MOD 11, Register Mode
 		if (wide)
 			switch (rm & RM_RM) {
-			case RM_RM_000: return vCPU.AX;
-			case RM_RM_001: return vCPU.CX;
-			case RM_RM_010: return vCPU.DX;
-			case RM_RM_011: return vCPU.BX;
-			case RM_RM_100: return vCPU.SP;
-			case RM_RM_101: return vCPU.BP;
-			case RM_RM_110: return vCPU.SI;
-			case RM_RM_111: return vCPU.DI;
+			case RM_RM_000: return CPU.AX;
+			case RM_RM_001: return CPU.CX;
+			case RM_RM_010: return CPU.DX;
+			case RM_RM_011: return CPU.BX;
+			case RM_RM_100: return CPU.SP;
+			case RM_RM_101: return CPU.BP;
+			case RM_RM_110: return CPU.SI;
+			case RM_RM_111: return CPU.DI;
 			default:
 			}
 		else
 			switch (rm & RM_RM) {
-			case RM_RM_000: return vCPU.AL;
-			case RM_RM_001: return vCPU.CL;
-			case RM_RM_010: return vCPU.DL;
-			case RM_RM_011: return vCPU.BL;
-			case RM_RM_100: return vCPU.AH;
-			case RM_RM_101: return vCPU.CH;
-			case RM_RM_110: return vCPU.DH;
-			case RM_RM_111: return vCPU.BH;
+			case RM_RM_000: return CPU.AL;
+			case RM_RM_001: return CPU.CL;
+			case RM_RM_010: return CPU.DL;
+			case RM_RM_011: return CPU.BL;
+			case RM_RM_100: return CPU.AH;
+			case RM_RM_101: return CPU.CH;
+			case RM_RM_110: return CPU.DH;
+			case RM_RM_111: return CPU.BH;
 			default:
 			}
 		break; // MOD 11
@@ -240,7 +240,7 @@ void __hflag8_3(int r) {
 	setZF(r);
 	setSF_8(r);
 	setPF_8(r);
-	vCPU.OF = vCPU.CF = 0;
+	CPU.OF = CPU.CF = 0;
 }
 
 /**
@@ -255,7 +255,7 @@ void __hflag16_3(int r) {
 	setZF(r);
 	setSF_16(r);
 	setPF_16(r);
-	vCPU.OF = vCPU.CF = 0;
+	CPU.OF = CPU.CF = 0;
 }
 
 /**
@@ -313,37 +313,37 @@ void __hflag16_5(int r) {
 private extern (C)
 pragma(inline, true) {
 	void setCF_8(int r) {
-		vCPU.CF = (r & 0x100) != 0;
+		CPU.CF = (r & 0x100) != 0;
 	}
 	void setCF_16(int r) {
-		vCPU.CF = (r & 0x10000) != 0;
+		CPU.CF = (r & 0x10000) != 0;
 	}
 	void setPF_8(int r) {
-		vCPU.PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0; // XNOR(TEMP[0:7]);
+		CPU.PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0; // XNOR(TEMP[0:7]);
 	}
 	void setPF_16(int r) {
-		vCPU.PF = ~(cast(ushort)r ^ cast(ushort)r) != 0;
+		CPU.PF = ~(cast(ushort)r ^ cast(ushort)r) != 0;
 	}
 	void setAF_8(int r) {
-		vCPU.AF = (r & 0x10) != 0;
+		CPU.AF = (r & 0x10) != 0;
 	}
 	void setAF_16(int r) {
-		vCPU.AF = (r & 0x100) != 0;
+		CPU.AF = (r & 0x100) != 0;
 	}
 	void setZF(int r) {
-		vCPU.ZF = r == 0;
+		CPU.ZF = r == 0;
 	}
 	void setSF_8(int r) {
-		vCPU.SF = (r & 0x80) != 0;
+		CPU.SF = (r & 0x80) != 0;
 	}
 	void setSF_16(int r) {
-		vCPU.SF = (r & 0x8000) != 0;
+		CPU.SF = (r & 0x8000) != 0;
 	}
 	void setOF_8(int r) {
-		vCPU.OF = r > 0xFF || r < 0;
+		CPU.OF = r > 0xFF || r < 0;
 	}
 	void setOF_16(int r) {
-		vCPU.OF = r > 0xFFFF || r < 0;
+		CPU.OF = r > 0xFFFF || r < 0;
 	}
 }
 
@@ -408,7 +408,7 @@ void __iarr(void *ops, size_t size, size_t addr) {
  *   addr = Memory address, default: CS:IP
  */
 extern (C)
-void __istr(immutable(char) *data, size_t addr = vCPU.EIP) {
+void __istr(immutable(char) *data, size_t addr = CPU.EIP) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __istr", PANIC_MEMORY_ACCESS);
 	strcpy(cast(char*)MEMORY + addr, data);
 }
@@ -420,7 +420,7 @@ void __istr(immutable(char) *data, size_t addr = vCPU.EIP) {
  *   addr = Memory Address (EIP by default)
  */
 extern (C)
-void __iwstr(immutable(wchar)[] data, size_t addr = vCPU.EIP) {
+void __iwstr(immutable(wchar)[] data, size_t addr = CPU.EIP) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iwstr", PANIC_MEMORY_ACCESS);
 	wcscpy(cast(wchar_t*)(MEMORY + addr), cast(wchar_t*)data);
 }
@@ -489,14 +489,14 @@ uint __fu32(uint addr) {
  *****************************************************************************/
 
 /**
- * Fetch an immediate BYTE at vCPU.EIP+1+n
+ * Fetch an immediate BYTE at CPU.EIP+1+n
  * Params: n = Optional offset (+1)
  * Returns: BYTE
  */
 extern (C)
 ubyte __fu8_i(int n = 0) {
 	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fu8_i", PANIC_MEMORY_ACCESS);
-	return MEMORY[vCPU.EIP + 1 + n];
+	return MEMORY[CPU.EIP + 1 + n];
 }
 
 /**
@@ -506,7 +506,7 @@ ubyte __fu8_i(int n = 0) {
 extern (C)
 byte __fi8_i(int n = 0) {
 	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fi8_i", PANIC_MEMORY_ACCESS);
-	return cast(byte)MEMORY[vCPU.EIP + 1 + n];
+	return cast(byte)MEMORY[CPU.EIP + 1 + n];
 }
 
 /**
@@ -517,7 +517,7 @@ byte __fi8_i(int n = 0) {
 extern (C)
 ushort __fu16_i(uint n = 0) {
 	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fu16_i", PANIC_MEMORY_ACCESS);
-	return *cast(ushort*)(MEMORY + vCPU.EIP + 1 + n);
+	return *cast(ushort*)(MEMORY + CPU.EIP + 1 + n);
 }
 
 /**
@@ -528,7 +528,7 @@ ushort __fu16_i(uint n = 0) {
 extern (C)
 short __fi16_i(uint n = 0) {
 	if (C_OVERFLOW(n)) crit("ACCESS VIOLATION IN __fi16_i", PANIC_MEMORY_ACCESS);
-	return *cast(short*)(MEMORY + vCPU.EIP + 1 + n);
+	return *cast(short*)(MEMORY + CPU.EIP + 1 + n);
 }
 
 /*****************************************************************************
@@ -553,17 +553,17 @@ void __int_enter() {
 	IF stack not large enough for a 6-byte return information
 		#SS*/
 	push16(FLAG);
-	vCPU.IF = vCPU.TF = 0;
-	push16(vCPU.CS);
-	push16(vCPU.IP);
+	CPU.IF = CPU.TF = 0;
+	push16(CPU.CS);
+	push16(CPU.IP);
 	//CS ← IDT[inum].selector;
 	//IP ← IDT[inum].offset;
 }
 
 void __int_exit() {
 	// REAL-MODE
-	vCPU.IP = pop16;
-	vCPU.CS = pop16;
-	vCPU.IF = vCPU.TF = 1;
+	CPU.IP = pop16;
+	CPU.CS = pop16;
+	CPU.IF = CPU.TF = 1;
 	FLAG = pop16;
 }

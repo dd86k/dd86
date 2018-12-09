@@ -14,13 +14,13 @@ unittest
 
     test("INT 12h");
     INT(0x12);
-    assert(SYSTEM.memsize == vCPU.AX);
-    writeln("OK  (", vCPU.AX, " KB)");
+    assert(SYSTEM.memsize == CPU.AX);
+    writeln("OK  (", CPU.AX, " KB)");
 
     test("INT 1Ah AH=00h");
-    vCPU.AH = 0;
+    CPU.AH = 0;
     INT(0x1A);
-    writefln("assuming OK (CS=%04X DX=%04X -- %d)", vCPU.CS, vCPU.DX, (vCPU.CS << 16) | vCPU.DX);
+    writefln("assuming OK (CS=%04X DX=%04X -- %d)", CPU.CS, CPU.DX, (CPU.CS << 16) | CPU.DX);
 
     /*
      * Software (Other)
@@ -29,11 +29,11 @@ unittest
     // FAST CONSOLE OUTPUT (DOS)
 
     test("INT 29h");
-    vCPU.AL = 'O';
+    CPU.AL = 'O';
     INT(0x29);
-    vCPU.AL = 'K';
+    CPU.AL = 'K';
     INT(0x29);
-    vCPU.AL = '\n';
+    CPU.AL = '\n';
     INT(0x29);
 
     /*
@@ -43,31 +43,31 @@ unittest
     // FAST CONSOLE OUTPUT (MS-DOS)
 
     test("INT 21h  AX=0200h");
-    vCPU.AH = 2;
-    vCPU.DL = 'O';
+    CPU.AH = 2;
+    CPU.DL = 'O';
     INT(0x21);
-    vCPU.DL = 'K';
+    CPU.DL = 'K';
     INT(0x21);
-    vCPU.DL = '\n';
+    CPU.DL = '\n';
     INT(0x21);
 
     // PRINT STRING
 
     test("INT 21h  AX=0900h");
-    vCPU.DS = vCPU.CS = 0x400;
-    vCPU.DX = 0x20; vCPU.IP = 0x20;
-    vCPU.EIP = get_ip;
+    CPU.DS = CPU.CS = 0x400;
+    CPU.DX = 0x20; CPU.IP = 0x20;
+    CPU.EIP = get_ip;
     __istr("OK\n$");
-    vCPU.AH = 9;
+    CPU.AH = 9;
     INT(0x21);
-    assert(vCPU.AL == 0x24);
+    assert(CPU.AL == 0x24);
 
     // GET DATE
 
     test("INT 21h  AX=2A00h");
-    vCPU.AH = 0x2A;
+    CPU.AH = 0x2A;
     INT(0x21);
-    switch (vCPU.AL) {
+    switch (CPU.AL) {
     case 0, 7: write("Sunday"); break;
     case 1: write("Monday"); break;
     case 2: write("Tuesday"); break;
@@ -77,32 +77,32 @@ unittest
     case 6: write("Saturday"); break;
     default: assert(0);
     }
-    writefln(" %d-%02d-%02d", vCPU.CX, vCPU.DH, vCPU.DL);
+    writefln(" %d-%02d-%02d", CPU.CX, CPU.DH, CPU.DL);
 
     // GET TIME
 
     test("INT 21h  AX=2C00h");
-    vCPU.AH = 0x2C;
+    CPU.AH = 0x2C;
     INT(0x21);
-    writefln("%02d:%02d:%02d.%d", vCPU.CH, vCPU.CL, vCPU.DH, vCPU.DL);
+    writefln("%02d:%02d:%02d.%d", CPU.CH, CPU.CL, CPU.DH, CPU.DL);
 
     // GET VERSION
 
     test("INT 21h  AX=3000h");
-    vCPU.AL = 0;
-    vCPU.AH = 0x30;
+    CPU.AL = 0;
+    CPU.AH = 0x30;
     INT(0x21);
-    assert(vCPU.AH == DOS_MINOR_VERSION);
-    assert(vCPU.AL == DOS_MAJOR_VERSION);
-    assert(vCPU.BH == OEM_ID.IBM);
+    assert(CPU.AH == DOS_MINOR_VERSION);
+    assert(CPU.AL == DOS_MAJOR_VERSION);
+    assert(CPU.BH == OEM_ID.IBM);
     OK;
 
     // CREATE SUBDIRECTORY
 
     /*test("INT 21h->39_00h");
-    vCPU.DS = vCPU.CS; vCPU.DX = vCPU.IP;
+    CPU.DS = CPU.CS; CPU.DX = CPU.IP;
     __istr("TESTDIR\0");
-    vCPU.AH = 0x39;
+    CPU.AH = 0x39;
     INT(0x21);
     assert(exists("TESTDIR"));
     OK;
@@ -110,7 +110,7 @@ unittest
     // REMOVE SUBDIRECTORY
 
     test("INT 21h->3A_00h");
-    vCPU.AH = 0x3A;
+    CPU.AH = 0x3A;
     INT(0x21);
     assert(!exists("TESTDIR"));
     OK;
@@ -119,11 +119,11 @@ unittest
 
     test("INT 21h->3C_00h");
     __istr("TESTFILE\0");
-    vCPU.CL = 0; // No attributes
-    vCPU.AH = 0x3C;
+    CPU.CL = 0; // No attributes
+    CPU.AH = 0x3C;
     INT(0x21);
     assert(exists("TESTFILE"));
-    //vCPU.CL = 32; // Archive
+    //CPU.CL = 32; // Archive
     //INT(0x21); // On TESTFILE again
     OK;
 
@@ -138,8 +138,8 @@ unittest
     // DELETE FILE
 
     test("INT 21h->41_00h");
-    vCPU.CL = 0;
-    vCPU.AH = 0x41;
+    CPU.CL = 0;
+    CPU.AH = 0x41;
     INT(0x21);
     assert(!exists("TESTFILE"));
     OK;*/
@@ -147,8 +147,8 @@ unittest
     // GET FREE DISK SPACE
 
     /*test("INT 21h->36_00h");
-    vCPU.DL = 2; // C:
-    vCPU.AH = 0x36;
+    CPU.DL = 2; // C:
+    CPU.AH = 0x36;
     INT(0x21);
     OK;*/
 
