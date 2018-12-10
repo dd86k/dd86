@@ -1,8 +1,8 @@
 name "dd-dos"
 version "0.0.0"
-description "Small DOS Virtual Machine"
+description "IBM PC Virtual Machine and DOS Emulation Layer"
 authors "dd86k"
-copyright "Copyright © dd86k 2017-2018"
+copyright "Copyright © 2017-2018 dd86k"
 license "MIT"
 homepage "https://git.dd86k.space/dd86k/dd-dos"
 
@@ -12,19 +12,21 @@ homepage "https://git.dd86k.space/dd86k/dd-dos"
 
 buildType "debug-verbose" {
   targetType "executable"
-  buildOptions "debugMode" "debugInfoC"
-  dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v"
+  buildOptions "debugMode"
+  buildOptions "debugInfoC" platform="dmd"
+  buildOptions "debugInfoC" platform="ldc"
+  dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v" platform="dmd"
+  dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v" platform="ldc"
+  dflags "-vgc" "-vtls" "-v" platform="gdc"
 }
 
 buildType "debug" {
   targetType "executable"
-  buildOptions "debugMode" "debugInfoC"
-  dflags "-betterC" "-transition=intpromote"
-}
-
-buildType "debug-gdc" {
-  targetType "executable"
   buildOptions "debugMode"
+  buildOptions "debugInfoC" platform="dmd"
+  buildOptions "debugInfoC" platform="ldc"
+  dflags "-betterC" "-transition=intpromote" platform="dmd"
+  dflags "-betterC" "-transition=intpromote" platform="ldc"
 }
 
 ###################
@@ -34,24 +36,22 @@ buildType "debug-gdc" {
 buildType "release" {
   targetType "executable"
   buildOptions "releaseMode" "optimize"
-  dflags "-betterC" "-transition=intpromote"
-}
-
-buildType "release-gdc" {
-  targetType "executable"
-  buildOptions "releaseMode" "optimize"
+  dflags "-betterC" "-transition=intpromote" platform="dmd"
+  dflags "-betterC" "-transition=intpromote" platform="ldc"
 }
 
 buildType "release-nobounds" {
   targetType "executable"
   buildOptions "releaseMode" "noBoundsCheck" "optimize"
-  dflags "-betterC" "-transition=intpromote"
+  dflags "-betterC" "-transition=intpromote" platform="dmd"
+  dflags "-betterC" "-transition=intpromote" platform="ldc"
 }
 
 buildType "release-inline" {
   targetType "executable"
   buildOptions "releaseMode" "noBoundsCheck" "optimize" "inline"
-  dflags "-betterC" "-transition=intpromote"
+  dflags "-betterC" "-transition=intpromote" platform="dmd"
+  dflags "-betterC" "-transition=intpromote" platform="ldc"
 }
 
 ###################
@@ -62,16 +62,8 @@ buildType "unittest" { # default to dub test
   targetName "tests"
   targetType "executable"
   buildOptions "unittests"
-  dflags "-transition=intpromote"
-
-  sourcePaths "tests/"
-  importPaths "tests/"
-}
-
-buildType "unittest-gdc" {
-  targetName "tests"
-  targetType "executable"
-  buildOptions "unittests"
+  dflags "-transition=intpromote" platform="dmd"
+  dflags "-transition=intpromote" platform="ldc"
 
   sourcePaths "tests/"
   importPaths "tests/"
@@ -85,7 +77,8 @@ buildType "bench" { # utils
   targetName "bench"
   targetType "executable"
   buildOptions "unittests"
-  dflags "-transition=intpromote"
+  dflags "-transition=intpromote" platform="dmd"
+  dflags "-transition=intpromote" platform="ldc"
 
   sourceFiles "tests/test_utils.d" "bench/Benchmark.d"
 }
@@ -94,7 +87,8 @@ buildType "bench-screen" {
   targetName "bench-screen"
   targetType "executable"
   buildOptions "unittests"
-  dflags "-transition=intpromote"
+  dflags "-transition=intpromote" platform="dmd"
+  dflags "-transition=intpromote" platform="ldc"
 
   sourceFiles "bench/screen.d"
 }
@@ -107,7 +101,8 @@ buildType "demo-screen" {
   targetName "demo-screen"
   targetType "executable"
   buildOptions "unittests"
-  dflags "-transition=intpromote"
+  dflags "-transition=intpromote" platform="dmd"
+  dflags "-transition=intpromote" platform="ldc"
 
   sourceFiles "demo/screen/cp437.d"
 }
