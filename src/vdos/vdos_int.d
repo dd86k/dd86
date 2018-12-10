@@ -141,7 +141,6 @@ void INT(ubyte code) {
 			break;
 		case 9: { // Write string to stdout
 			char *p = cast(char *)(MEMORY + get_ad(CPU.DS, CPU.DX));
-			debug __v_printf("S::%Xh\n",get_ad(CPU.DS, CPU.DX));
 			ushort l;
 			while (p[l] != '$' && l < 255) ++l;
 			__v_put_s(cast(immutable)p, l - 1);

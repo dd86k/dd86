@@ -1142,52 +1142,52 @@ void exec16(ubyte op) {
 		exec32(MEMORY[CPU.EIP]);
 		return;
 	case 0x70: // JO            SHORT-LABEL
-		CPU.EIP += CPU.OF ? __fi8_i : 2;
+		CPU.EIP += CPU.OF ? __fi8_i + 2 : 2;
 		return;
 	case 0x71: // JNO           SHORT-LABEL
-		CPU.EIP += CPU.OF ? 2 : __fi8_i;
+		CPU.EIP += CPU.OF ? 2 : __fi8_i + 2;
 		return;
 	case 0x72: // JB/JNAE/JC    SHORT-LABEL
-		CPU.EIP += CPU.CF ? __fi8_i : 2;
+		CPU.EIP += CPU.CF ? __fi8_i + 2 : 2;
 		return;
 	case 0x73: // JNB/JAE/JNC   SHORT-LABEL
-		CPU.EIP += CPU.CF ? 2 : __fi8_i;
+		CPU.EIP += CPU.CF ? 2 : __fi8_i + 2;
 		return;
 	case 0x74: // JE/JZ         SHORT-LABEL
-		CPU.EIP += CPU.ZF ? __fi8_i : 2;
+		CPU.EIP += CPU.ZF ? __fi8_i + 2 : 2;
 		return;
 	case 0x75: // JNE/JNZ       SHORT-LABEL
-		CPU.EIP += CPU.ZF ? 2 : __fi8_i;
+		CPU.EIP += CPU.ZF ? 2 : __fi8_i + 2;
 		return;
 	case 0x76: // JBE/JNA       SHORT-LABEL
-		CPU.EIP += (CPU.CF || CPU.ZF) ? __fi8_i : 2;
+		CPU.EIP += (CPU.CF || CPU.ZF) ? __fi8_i + 2 : 2;
 		return;
 	case 0x77: // JNBE/JA       SHORT-LABEL
-		CPU.EIP += CPU.CF == 0 && CPU.ZF == 0 ? __fi8_i : 2;
+		CPU.EIP += CPU.CF == 0 && CPU.ZF == 0 ? __fi8_i + 2 : 2;
 		return;
 	case 0x78: // JS            SHORT-LABEL
-		CPU.EIP += CPU.SF ? __fi8_i : 2;
+		CPU.EIP += CPU.SF ? __fi8_i + 2 : 2;
 		return;
 	case 0x79: // JNS           SHORT-LABEL
-		CPU.EIP += CPU.SF ? 2 : __fi8_i;
+		CPU.EIP += CPU.SF ? 2 : __fi8_i + 2;
 		return;
 	case 0x7A: // JP/JPE        SHORT-LABEL
-		CPU.EIP += CPU.PF ? __fi8_i : 2;
+		CPU.EIP += CPU.PF ? __fi8_i + 2 : 2;
 		return;
 	case 0x7B: // JNP/JPO       SHORT-LABEL
-		CPU.EIP += CPU.PF ? 2 : __fi8_i;
+		CPU.EIP += CPU.PF ? 2 : __fi8_i + 2;
 		return;
 	case 0x7C: // JL/JNGE       SHORT-LABEL
-		CPU.EIP += CPU.SF != CPU.OF ? __fi8_i : 2;
+		CPU.EIP += CPU.SF != CPU.OF ? __fi8_i + 2 : 2;
 		return;
 	case 0x7D: // JNL/JGE       SHORT-LABEL
-		CPU.EIP += CPU.SF == CPU.OF ? __fi8_i : 2;
+		CPU.EIP += CPU.SF == CPU.OF ? __fi8_i + 2 : 2;
 		return;
 	case 0x7E: // JLE/JNG       SHORT-LABEL
-		CPU.EIP += CPU.SF != CPU.OF || CPU.ZF ? __fi8_i : 2;
+		CPU.EIP += CPU.SF != CPU.OF || CPU.ZF ? __fi8_i + 2 : 2;
 		return;
 	case 0x7F: // JNLE/JG       SHORT-LABEL
-		CPU.EIP += CPU.SF == CPU.OF && CPU.ZF == 0 ? __fi8_i : 2;
+		CPU.EIP += CPU.SF == CPU.OF && CPU.ZF == 0 ? __fi8_i + 2 : 2;
 		return;
 	case 0x80: { // GRP1 R/M8, IMM8
 		const ubyte rm = __fu8_i; // Get ModR/M byte
@@ -2340,10 +2340,10 @@ void exec16(ubyte op) {
 			CPU.IP = cast(ushort)get_ad(__fu16(addr + 2), r);
 			break;
 		case RM_REG_100: // 100 - JMP R/M16 (near) -- Indirect within segment
-			CPU.IP = cast(ushort)r;
+			CPU.IP = cast(ushort)(r + 2);
 			break;
 		case RM_REG_101: // 101 - JMP MEM16 (far) -- Indirect outside segment
-			CPU.IP = cast(ushort)get_ad(__fu16(addr + 2), r);
+			CPU.IP = cast(ushort)get_ad(__fu16(addr), r + 2);
 			break;
 		case RM_REG_110: // 110 - PUSH MEM16
 			push16(__fu16(get_ad(__fu16(addr + 2), r)));

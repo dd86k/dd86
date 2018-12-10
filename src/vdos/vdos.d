@@ -272,9 +272,8 @@ MEM_HELP:
 
 	if (strcmp(*argv, "ver") == 0) {
 		__v_printf(
-			"\nDD-DOS Version " ~
-			APP_VERSION ~
-			"\nMS-DOS Version %d.%d (compiled: %d.%d)\n",
+			"DD-DOS v"~APP_VERSION~
+			"\nReporting MS-DOS v%d.%d (compiled: %d.%d)\n",
 			MajorVersion, MinorVersion,
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION
 		);
@@ -374,11 +373,11 @@ MEM_HELP:
 	}
 	if (strcmp(*argv, "?diag") == 0) {
 		__v_printf(
-			"MS-DOS version: %d.%d (%d.%d)\n" ~
-			"DD-DOS version: " ~ APP_VERSION ~ "\n" ~
-			"Compiler: " ~ __VENDOR__ ~ " v%d\n" ~
-			"C Runtime: " ~ C_RUNTIME ~ " Runtime\n" ~
-			"Build type: " ~ BUILD_TYPE ~ "\n",
+			"DD-DOS version: "~APP_VERSION~"\n"~
+			"MS-DOS version: %d.%d (%d.%d)\n"~
+			"Compiler: "~__VENDOR__~" v%d\n"~
+			"C Runtime: "~C_RUNTIME~" Runtime\n"~
+			"Build type: "~BUILD_TYPE~"\n",
 			MajorVersion, MinorVersion,
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION,
 			__VERSION__

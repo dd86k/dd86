@@ -14,6 +14,7 @@ import vdos_screen;
 
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;
+private enum ZM_MAGIC = 0x4D5A;
 
 private enum {
 	PARAGRAPH = 16, /// Size of a paragraph (16B)
@@ -32,32 +33,34 @@ private enum {
 extern (C)
 int vdos_load(char *path) {
 	FILE *f = fopen(path, "rb"); /// file handle
-	fseek(f, 0, SEEK_END);
-	// leave the cast in case of 64-bit compiles
-	uint fsize = cast(uint)ftell(f); // who the hell would have a >2G exec to run in DOS
 
-	debug __v_printf("[....] File size: %d\n", fsize);
+	fseek(f, 0, SEEK_END); // for ftell
+	int fsize = cast(int)ftell(f); // >2G binary in MSDOS is not possible anyway
+
+	mz_hdr mzh = void; /// MZ header structure variable
+
+	CPU.CS = 0x2000; // TEMPORARY LOADING SEGMENT
+	CPU.DS = 0x2000;
+	CPU.ES = 0x2000;
+	CPU.SS = 0x2000;
 
 	if (fsize == 0) {
 		fclose(f);
-		warn("Executable file is zero length");
+		error("Executable file is zero length");
 		CPU.AL = EDOS_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
 		return EDOS_BAD_FORMAT;
 	}
+	if (fsize <= MZ_HDR_SIZE) goto FILE_COM;
 
-	ushort sig = void; /// Header signature
 	fseek(f, 0, SEEK_SET);
-	fread(&sig, 2, 1, f);
+	fread(&mzh.e_magic, 2, 1, f);
 
-	switch (sig) {
-	case MZ_MAGIC: // Party time!
-		//info("LOAD MZ");
+	switch (mzh.e_magic) {
+	case MZ_MAGIC, ZM_MAGIC: // Party time!
+		info("LOAD MZ");
 
 		// ** Header is read for initial register values
-		mz_hdr mzh = void; /// MZ header structure variable
-		fread(&mzh, mzh.sizeof, 1, f);
-		CPU.CS = 0; CPU.IP = 0x100; // Temporary!
-		CPU.CS = cast(ushort)(CPU.CS + mzh.e_cs); // Relative
+		fread(&mzh, mzh.sizeof, 1, f); // read rest
 		CPU.IP = mzh.e_ip;
 		//CPU.EIP = get_ip;
 
@@ -103,9 +106,12 @@ int vdos_load(char *path) {
 				__v_printf("[INFO] Relocation(s): %d\n", mzh.e_crlc);
 			fseek(f, mzh.e_lfarlc, SEEK_SET); // 1.
 			const int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
+			//TODO: Use MEMORY instead of a malloc
 			mz_rlc* r = cast(mz_rlc*)malloc(rs); /// Relocation table pointer
 			fread(r, rs, 1, f); // Read whole relocation table
 
+			// temporary value
+			ushort rel = 0x2000; // usually the loading segment
 			int i;
 			debug __v_putn(" #    seg: off -> loadseg");
 			do {
@@ -148,10 +154,9 @@ int vdos_load(char *path) {
 			CPU.AL = EDOS_BAD_FORMAT; //TODO: Verify code
 			return EDOS_BAD_FORMAT;
 		}
+FILE_COM:
 		info("LOAD COM");
 
-		CPU.CS = 0; // TEMPORARY
-		CPU.DS = 0;
 		CPU.IP = 0x100;
 
 		fseek(f, 0, SEEK_SET);
