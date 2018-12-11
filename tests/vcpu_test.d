@@ -104,25 +104,25 @@ unittest {
 	section("Registers");
 
 	test("AL/AH");
-	CPU.EAX = 0x0807;
+	CPU.EAX = 0x40_0807;
 	assert(CPU.AL == 7);
 	assert(CPU.AH == 8);
 	OK;
 
 	test("BL/BH");
-	CPU.EBX = 0x0605;
+	CPU.EBX = 0x41_0605;
 	assert(CPU.BL == 5);
 	assert(CPU.BH == 6);
 	OK;
 
 	test("CL/CH");
-	CPU.ECX = 0x0403;
+	CPU.ECX = 0x42_0403;
 	assert(CPU.CL == 3);
 	assert(CPU.CH == 4);
 	OK;
 
 	test("DL/DH");
-	CPU.EDX = 0x0201;
+	CPU.EDX = 0x43_0201;
 	assert(CPU.DL == 1);
 	assert(CPU.DH == 2);
 	OK;
@@ -143,9 +143,30 @@ unittest {
 	assert(CPU.DX == 0x0201);
 	OK;
 
+	test("SI");
+	CPU.ESI = 0x44_9001;
+	assert(CPU.SI == 0x9001);
+	OK;
+
+	test("DI");
+	CPU.EDI = 0x44_9002;
+	assert(CPU.DI == 0x9002);
+	OK;
+
+	test("BP");
+	CPU.EBP = 0x44_9003;
+	assert(CPU.BP == 0x9003);
+	OK;
+
+	test("SP");
+	CPU.ESP = 0x44_9004;
+	assert(CPU.SP == 0x9004);
+	OK;
+
 	test("IP");
-	CPU.EIP = 0x0F50;
+	CPU.EIP = 0x40_0F50;
 	assert(CPU.IP == 0x0F50);
+	CPU.EIP = 0x100;
 	OK;
 
 	test("FLAG");
@@ -159,8 +180,7 @@ unittest {
 	assert(CPU.SF == 0); assert(CPU.ZF == 0); assert(CPU.AF == 0);
 	assert(CPU.PF == 0); assert(CPU.CF == 0); assert(CPU.OF == 0);
 	assert(CPU.DF == 0); assert(CPU.IF == 0); assert(CPU.TF == 0);
-	assert(FLAGB == 0);
-	assert(FLAG == 0);
+	assert(FLAGB == 0); assert(FLAG == 0);
 	OK;
 
 	section("ModR/M");
@@ -384,7 +404,16 @@ unittest {
 	assert(CPU.BH == 60);
 	OK;
 
-	test("03h  ADD REG16, R/M16"); TODO;
+	test("03h  ADD REG16, R/M16");
+	CPU.CX = 400; // address
+	CPU.AX = 40;
+	__iu16(280, CPU.CX);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x03);
+	assert(CPU.AX == 320);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	test("04h  ADD AL, IMM8");
 	__iu8(4, CPU.EIP + 1);
@@ -418,7 +447,16 @@ unittest {
 
 	// OR R/M8, REG8
 
-	test("08h  OR R/M8, REG8"); TODO;
+	test("08h  OR R/M8, REG8");
+	CPU.CL = 160; // address
+	CPU.AL = 0b0101;
+	__iu16(0b1010, CPU.CL);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x08);
+	assert(__fu8(CPU.CL) == 0xF);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// OR R/M16, REG16
 
