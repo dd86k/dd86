@@ -18,25 +18,24 @@ import compile_config : APP_VERSION, PLATFORM, BUILD_TYPE;
 
 extern (C):
 
+enum DESC = "IBM PC Virtual Machine and DOS Emulation Layer";
+
 private void _version() {
 	printf(
 		BANNER~
-		"IBM PC Virtual Machine and DOS Emulation Layer\n"~
+		DESC~"\n"~
 		"Copyright (c) 2017-2018 dd86k\n\n"~
 		"dd-dos-"~PLATFORM~" v"~APP_VERSION~"-"~BUILD_TYPE~" ("~__TIMESTAMP__~")\n"~
 		"Homepage: <https://git.dd86k.space/dd86k/dd-dos>\n"~
 		"License: MIT <https://opensource.org/licenses/MIT>\n"~
-		"Compiler: "~__VENDOR__~" v%d\n\n"~
-		// Credit roles start at 40 characters
-		"Credits\n"~
-		"dd86k ................................. Original author\n",
+		"Compiler: "~__VENDOR__~" v%d\n",
 		__VERSION__
 	);
 }
 
 private void help() {
-	fputs(
-		"IBM PC Virtual Machine and DOS Emulation Layer\n"~
+	puts(
+		DESC~"\n"~
 		"USAGE\n"~
 		"	dd-dos [-vPN] [FILE [FILEARGS]]\n"~
 		"	dd-dos {-V|--version|-h|--help}\n\n"~
@@ -45,8 +44,7 @@ private void help() {
 		"	-N	Remove starting messages and banner\n"~
 		"	-v	Increase verbosity level\n"~
 		"	-V, --version  Print version screen, then exit\n"~
-		"	-h, --help     Print help screen, then exit\n",
-		stdout
+		"	-h, --help     Print help screen, then exit",
 	);
 }
 
@@ -83,7 +81,7 @@ private int main(int argc, char **argv) {
 				switch (*a) {
 				case 'P': --opt_sleep; break;
 				case 'N': --arg_banner; break;
-				case 'v': ++Verbose; break;
+				case 'v': ++LOGLEVEL; break;
 				case '-': --args; break;
 				case 'h': help; return 0;
 				case 'V': _version; return 0;
@@ -104,7 +102,8 @@ NO_ARGS:
 
 	if (cast(int)prog) {
 		if (os_pexist(prog) == 0) {
-			fputs("E: File not found\n", stderr);
+			//fputs("E: File not found\n", stderr);
+			puts("E: File not found");
 			return EDOS_FILE_NOT_FOUND;
 		}
 	}
@@ -116,22 +115,27 @@ NO_ARGS:
 
 	if (cast(int)prog) {
 		if (vdos_load(prog)) {
-			fputs("E: Could not load executable image\n", stderr);
+			//fputs("E: Could not load executable image\n", stderr);
+			puts("E: Could not load executable image");
 			return PANIC_FILE_NOT_LOADED;
 		}
+	}
+
+	if (LOGLEVEL > LOG_DEBUG) {
+		printf("E: Unknown log level: %d\n", LOGLEVEL);
+		return EDOS_INVALID_FUNCTION;
 	}
 
 	con_init;	// ddcon
 	vdos_init;	// vdos, screen
 
-	switch (Verbose) {
-	case LOG_SILENCE, LOG_CRIT, LOG_ERROR: break;
+	switch (LOGLEVEL) {
+	case LOG_CRIT: __v_putn("I: LOG_CRIT"); break;
+	case LOG_ERROR: __v_putn("I: LOG_ERROR"); break;
 	case LOG_WARN: __v_putn("I: LOG_WARN"); break;
 	case LOG_INFO: __v_putn("I: LOG_INFO"); break;
 	case LOG_DEBUG: __v_putn("I: LOG_DEBUG"); break;
 	default:
-		printf("E: Unknown log level: %d\n", Verbose);
-		return EDOS_INVALID_FUNCTION;
 	}
 
 	if (opt_sleep == 0)
@@ -141,14 +145,13 @@ NO_ARGS:
 
 	// Should be loading settings here
 
-	if (arg_banner) {
+	if (arg_banner)
 		screen_logo;
-	}
 
 	screen_draw;
 
 	if (cast(int)prog) {
-		CPU.CS = 0; CPU.IP = 0x100; // Temporary
+		vdos_load(prog);
 		vcpu_run;
 	} else vdos_shell;
 

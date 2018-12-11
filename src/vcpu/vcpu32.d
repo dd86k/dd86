@@ -1,4 +1,4 @@
-module vcpu32; // 80286
+module vcpu32; // 80486+
 
 import vcpu16;
 
@@ -44,7 +44,6 @@ void exec32(ubyte op) {
 	VERR
 	VERW
 */
-	case 0:
 	default:
 		exec16(op); // temporary?
 	}

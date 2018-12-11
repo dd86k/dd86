@@ -15,9 +15,9 @@ enum {
 
 /// Verbosity level
 debug
-public __gshared ubyte Verbose = LOG_DEBUG;
+public __gshared ubyte LOGLEVEL = LOG_DEBUG;
 else
-public __gshared ubyte Verbose = LOG_SILENCE;
+public __gshared ubyte LOGLEVEL = LOG_SILENCE;
 
 //TODO: Figure out template to avoid re-typing debug everytime
 debug void _debug(immutable(char) *msg) {
@@ -30,28 +30,28 @@ debug void logexec(ushort seg, ushort ip, ubyte op) {
 /// Log an informational message
 /// Params: msg = Message
 void info(immutable(char) *msg) {
-	if (Verbose < LOG_INFO) return;
+	if (LOGLEVEL < LOG_INFO) return;
 	__v_printf("[INFO] %s\n", msg);
 }
 
 /// Log a warning message
 /// Params: msg = Message
 void warn(immutable(char) *msg) {
-	if (Verbose < LOG_WARN) return;
+	if (LOGLEVEL < LOG_WARN) return;
 	__v_printf("[WARN] %s\n", msg);
 }
 
 /// Log an error
 /// Params: msg = Message
 void error(immutable(char) *msg) {
-	if (Verbose < LOG_ERROR) return;
+	if (LOGLEVEL < LOG_ERROR) return;
 	__v_printf("[ERR ] %s\n", msg);
 }
 
 void crit(immutable(char) *msg, ushort code = PANIC_UNKNOWN) {
 	import core.stdc.stdlib : exit;
 	import vdos : panic;
-	//if (Verbose >= LOG_CRIT)
+	//if (LOGLEVEL >= LOG_CRIT)
 	__v_printf("[!!!!] %s\n", msg);
 	panic(code);
 	exit(code);

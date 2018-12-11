@@ -302,7 +302,7 @@ void INT(ubyte code) {
 
 		break;
 	case 0x29: // FAST CONSOLE OUTPUT
-		putchar(CPU.AL);
+		__v_putc(CPU.AL);
 		break;
 	default:
 	}

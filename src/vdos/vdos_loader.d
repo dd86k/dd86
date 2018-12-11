@@ -102,7 +102,7 @@ int vdos_load(char *path) {
 			 * 4. Add the image's CS field to the word
 			 * 5. Write the word (sum) back to address
 			 */
-			if (Verbose)
+			if (LOGLEVEL)
 				__v_printf("[INFO] Relocation(s): %d\n", mzh.e_crlc);
 			fseek(f, mzh.e_lfarlc, SEEK_SET); // 1.
 			const int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
@@ -125,7 +125,7 @@ int vdos_load(char *path) {
 			} while (--mzh.e_crlc);
 			free(r);
 		} else {
-			//if (Verbose)
+			//if (LOGLEVEL)
 			//	info("No relocations");
 		}
 

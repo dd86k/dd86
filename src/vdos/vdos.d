@@ -5,7 +5,7 @@
 module vdos;
 
 import ddc;
-import core.stdc.string : strcmp;
+import core.stdc.string : strcmp, strlen, memcpy;
 import core.stdc.stdlib : malloc, free, system;
 import vcpu, vcpu_utils;
 import vdos_codes, vdos_int;
@@ -87,12 +87,12 @@ SHL_S:
 	if (*inbuf == '\n') goto SHL_S; // Nothing to process
 
 	switch (vdos_command(cast(immutable)inbuf)) {
-	case -2:
-		//TODO: Proper application exit
-		return;
-	case -1:
+	case -1, -2:
 		__v_put("Bad command or file name");
 		break;
+	case -3:
+		//TODO: Proper application exit
+		return;
 	default: goto SHL_S;
 	}
 }
@@ -103,8 +103,9 @@ SHL_S:
  * Returns: Error code (ERRORLEVEL)
  * Note:
  *   vdos_command include non-DOS error codes:
- *   Returns -1 on COMMAND NOT FOUND
- *   Returns -2 if EXIT has been requested
+ *   Returns -1 on command not found
+ *   Returns -2 on error (e.g. trying to call a directory)
+ *   Returns -3 if EXIT has been requested
  */
 extern (C)
 int vdos_command(immutable(char) *command) {
@@ -112,10 +113,33 @@ int vdos_command(immutable(char) *command) {
 		cast(char**)(MEMORY + 0x900 + _BUFS);
 	const int argc = sargs(command, argv); /// argument count
 	lowercase(*argv);
+	//TODO: lowercase extensions
+	//enum uint D_EXE = 0x6578652E; /// ".exe", LSB
+	//enum uint D_COM = 0x6D6F632E; /// ".com", LSB
 
 	//TODO: TREE, DIR (waiting on OS directory crawler)
 	//TODO: search for executable in current directory (here)
 	//TODO: search for executable in (virtual, user set) PATH
+
+	//int argl = cast(int)strlen(*argv);
+
+	/+if (os_pexist(*argv)) {
+		if (os_pisdir(*argv)) return -2;
+		switch (cast(uint)*argv[argl-4]) {
+		case D_COM, D_EXE:
+			__v_putn("HIT");
+			//vdos_load(*argv);
+			//vcpu_run;
+			break;
+		default: return -1;
+		}
+	} else { // try .exe, .com
+		//char [256]appname = void;
+		//memcpy(cast(char*)appname, *argv, argl); // dont copy null
+
+	}+/
+
+	// ** INTERNAL COMMANDS **
 
 	// C
 
@@ -184,7 +208,7 @@ int vdos_command(immutable(char) *command) {
 		}
 		return 0;
 	}
-	if (strcmp(*argv, "exit") == 0) return -2;
+	if (strcmp(*argv, "exit") == 0) return -3;
 
 	// H
 
@@ -273,7 +297,7 @@ MEM_HELP:
 	if (strcmp(*argv, "ver") == 0) {
 		__v_printf(
 			"DD-DOS v"~APP_VERSION~
-			"\nReporting MS-DOS v%d.%d (compiled: %d.%d)\n",
+			", reporting MS-DOS v%d.%d (compiled: %d.%d)\n",
 			MajorVersion, MinorVersion,
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION
 		);
@@ -310,45 +334,45 @@ MEM_HELP:
 		return 0;
 	}
 	if (strcmp(*argv, "?v") == 0) {
-		__v_printf("Verbose set to ");
+		__v_printf("LOGLEVEL set to ");
 		if (argc >= 2) {
 			switch (argv[1][0]) {
 			case '0', 's':
-				Verbose = LOG_DEBUG;
+				LOGLEVEL = LOG_DEBUG;
 				__v_putn("DEBUG");
 				break;
 			case '1', 'c':
-				Verbose = LOG_CRIT;
+				LOGLEVEL = LOG_CRIT;
 				__v_putn("CRTICAL");
 				break;
 			case '2', 'e':
-				Verbose = LOG_ERROR;
+				LOGLEVEL = LOG_ERROR;
 				__v_putn("ERRORS");
 				break;
 			case '3', 'w':
-				Verbose = LOG_WARN;
+				LOGLEVEL = LOG_WARN;
 				__v_putn("WARNINGS");
 				break;
 			case '4', 'i':
-				Verbose = LOG_INFO;
+				LOGLEVEL = LOG_INFO;
 				__v_putn("INFORMAL");
 				break;
 			case '5', 'd':
-				Verbose = LOG_DEBUG;
+				LOGLEVEL = LOG_DEBUG;
 				__v_putn("DEBUG");
 				break;
 			default:
 				__v_putn("Invalid log level");
 			} // switch
-		} else if (Verbose) {
-			Verbose = LOG_SILENCE;
+		} else if (LOGLEVEL) {
+			LOGLEVEL = LOG_SILENCE;
 			__v_putn("SILENCE");
 		} else {
 			debug {
-				Verbose = LOG_DEBUG;
+				LOGLEVEL = LOG_DEBUG;
 				__v_putn("DEBUG");
 			} else {
-				Verbose = LOG_INFO;
+				LOGLEVEL = LOG_INFO;
 				__v_putn("INFO");
 			}
 		}
