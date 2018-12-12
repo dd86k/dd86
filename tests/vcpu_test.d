@@ -450,7 +450,7 @@ unittest {
 	test("08h  OR R/M8, REG8");
 	CPU.CL = 160; // address
 	CPU.AL = 0b0101;
-	__iu16(0b1010, CPU.CL);
+	__iu8(0b1010, CPU.CL);
 	__iu8(0b11_000_001, CPU.EIP + 1);
 	exec16(0x08);
 	assert(__fu8(CPU.CL) == 0xF);
@@ -460,15 +460,42 @@ unittest {
 
 	// OR R/M16, REG16
 
-	test("09h  OR R/M16, REG16"); TODO;
+	test("09h  OR R/M16, REG16");
+	CPU.CX = 0x4000; // address
+	CPU.AX = 0xFF;
+	__iu16(0xFF00, CPU.CX);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x09);
+	assert(__fu16(CPU.CX) == 0xFFFF);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// OR REG8, R/M8
 
-	test("0Ah  OR REG8, R/M8"); TODO;
+	test("0Ah  OR REG8, R/M8");
+	CPU.CL = 0x40; // address
+	CPU.AL = 0xF;
+	__iu8(0xF0, CPU.CL);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x0A);
+	assert(CPU.AL == 0xFF);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// OR REG16, R/M16
 
-	test("0Bh  OR REG16, R/M16"); TODO;
+	test("0Bh  OR REG16, R/M16");
+	CPU.CX = 0x4000; // address
+	CPU.AX = 0xFF;
+	__iu16(0xFF00, CPU.CX);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x0B);
+	assert(CPU.AX == 0xFFFF);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// OR AL, IMM8
 
@@ -576,27 +603,77 @@ unittest {
 
 	// AND R/M8, REG8
 
-	test("20h  AND R/M8, REG8"); TODO;
+	test("20h  AND R/M8, REG8");
+	CPU.CL = 160; // address
+	CPU.AL = 0xF;
+	__iu8(0b11, CPU.CL);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x20);
+	assert(__fu8(CPU.CL) == 0b11);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// AND R/M16, REG16
 
-	test("21h  AND R/M16, REG16"); TODO;
+	test("21h  AND R/M16, REG16");
+	CPU.CX = 0x4000; // address
+	CPU.AX = 0xFF;
+	__iu16(0xFFFF, CPU.CX);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x21);
+	assert(__fu16(CPU.CX) == 0xFF);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// AND REG8, R/M8
 
-	test("22h  AND REG8, R/M8"); TODO;
+	test("22h  AND REG8, R/M8");
+	CPU.CL = 0x40; // address
+	CPU.AL = 0xFF;
+	__iu8(0xF, CPU.CL);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x22);
+	assert(CPU.AL == 0xF);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// AND REG16, R/M16
 
-	test("23h  AND REG16, R/M16"); TODO;
+	test("23h  AND REG16, R/M16");
+	CPU.CX = 0x4000; // address
+	CPU.AX = 0xFFFF;
+	__iu16(0xFF, CPU.CX);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x23);
+	assert(CPU.AX == 0xFF);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// AND AL, IMM8
 
-	test("24h  AND AL, IMM8"); TODO;
+	test("24h  AND AL, IMM8");
+	CPU.AL = 0xFF;
+	__iu8(0xF, CPU.EIP + 1);
+	exec16(0x24);
+	assert(CPU.AL == 0xF);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// AND AX, IMM16
 
-	test("25h  AND AX, IMM16"); TODO;
+	test("25h  AND AX, IMM16");
+	CPU.AX = 0xFFFF;
+	__iu16(0xFF, CPU.EIP + 1);
+	exec16(0x25);
+	assert(CPU.AX == 0xFF);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// ES:
 
@@ -606,8 +683,30 @@ unittest {
 	OK;
 
 	// DAA
+	// Examples taken from the Intel's reference manual.
 
-	test("27h  DAA"); TODO;
+	test("27h  DAA");
+	CPU.AF = 0;
+	CPU.CF = 0;
+	CPU.AL = 0xAE;
+	exec16(0x27);
+	assert(CPU.AL == 0x14);
+	assert(CPU.AF);
+	//assert(CPU.PF);
+	assert(CPU.CF);
+	assert(CPU.SF == 0);
+	assert(CPU.ZF == 0);
+	CPU.AF = 0;
+	CPU.CF = 0;
+	CPU.AL = 0x2E;
+	exec16(0x27);
+	assert(CPU.AL == 0x34);
+	assert(CPU.AF);
+	//assert(CPU.PF == 0);
+	//assert(CPU.CF);
+	assert(CPU.SF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// SUB R/M8, REG8
 

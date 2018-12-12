@@ -526,20 +526,35 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0x27: { // DAA
-		const ubyte oldAL = CPU.AL;
-		const ubyte oldCF = CPU.CF;
-		CPU.CF = 0;
+		// This instruction is difficult to emulate properly. Both
+		// Bosch and DOSBox fail the examples cited in the Intel
+		// reference manual. Even following Intel's manual, their
+		// examples fails, so this code is adapted from DOSBox.
+		int r = CPU.AL;
 
-		if (((oldAL & 0xF) > 9) || CPU.AF) {
-			CPU.AL = cast(ubyte)(CPU.AL + 6);
-			CPU.CF = oldCF || (CPU.AL & 0x80);
+		if (((CPU.AL & 0xF) > 9) || CPU.AF) {
+			if ((CPU.AL > 0x99) || CPU.CF) {
+				r += 0x60;
+				CPU.CF = 1;
+			} else {
+				CPU.CF = 0;
+			}
+			r += 6;
 			CPU.AF = 1;
-		} else CPU.AF = 0;
+		} else {
+			if ((CPU.AL > 0x99) || CPU.CF) {
+				r += 0x60;
+				CPU.CF = 1;
+			} else {
+				CPU.CF = 0;
+			}
+			CPU.AF = 0;
+		}
 
-		if ((oldAL > 0x99) || oldCF) {
-			CPU.AL = cast(ubyte)(CPU.AL + 0x60);
-			CPU.CF = 1;
-		} else CPU.CF = 0;
+		CPU.ZF = r == 0;
+		CPU.PF = r & 0x10;
+		CPU.SF = r & 0x80;
+		CPU.AL = cast(ubyte)r;
 
 		++CPU.EIP;
 		return;
