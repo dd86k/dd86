@@ -692,7 +692,7 @@ unittest {
 	exec16(0x27);
 	assert(CPU.AL == 0x14);
 	assert(CPU.AF);
-	//assert(CPU.PF);
+	assert(CPU.PF);
 	assert(CPU.CF);
 	assert(CPU.SF == 0);
 	assert(CPU.ZF == 0);
@@ -710,27 +710,75 @@ unittest {
 
 	// SUB R/M8, REG8
 
-	test("28h  SUB R/M8, REG8"); TODO;
+	test("28h  SUB R/M8, REG8");
+	CPU.CL = 160; // address
+	CPU.AL = 40;
+	__iu8(70, CPU.CL);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x28);
+	assert(__fu8(CPU.CL) == 30);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// SUB R/M16, REG16
 
-	test("29h  SUB R/M16, REG16"); TODO;
+	test("29h  SUB R/M16, REG16");
+	CPU.CX = 0x5000; // address
+	CPU.AX = 1000;
+	__iu16(24000, CPU.CX);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x29);
+	assert(__fu16(CPU.CX) == 23000);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// SUB REG8, R/M8
 
-	test("2Ah  SUB REG8, R/M8"); TODO;
+	test("2Ah  SUB REG8, R/M8");
+	CPU.CL = 0x40; // address
+	CPU.AL = 200;
+	__iu8(50, CPU.CL);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x2A);
+	assert(CPU.AL == 150);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// SUB REG16, R/M16
 
-	test("2Bh  SUB REG16, R/M16"); TODO;
+	test("2Bh  SUB REG16, R/M16");
+	CPU.CX = 0x4000; // address
+	CPU.AX = 65000;
+	__iu16(64000, CPU.CX);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x2B);
+	assert(CPU.AX == 1000);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	// SUB AL, IMM8
 
-	test("2Ch  SUB AL, IMM8"); TODO;
+	test("2Ch  SUB AL, IMM8");
+	__iu8(21, CPU.EIP + 1);
+	CPU.AL = 21;
+	exec16(0x2C);
+	assert(CPU.AL == 0);
+	assert(CPU.ZF);
+	OK;
 
 	// SUB AX, IMM16
 
-	test("2Dh  SUB AX, IMM16"); TODO;
+	test("2Dh  SUB AX, IMM16");
+	CPU.AX = 2500;
+	__iu16(2500, CPU.EIP + 1);
+	exec16(0x2D);
+	assert(CPU.AX == 0);
+	assert(CPU.ZF);
+	OK;
 
 	// CS:
 
@@ -745,13 +793,49 @@ unittest {
 
 	// XOR
 
-	test("30h  XOR R/M8, REG8"); TODO;
+	test("30h  XOR R/M8, REG8");
+	CPU.CL = 200; // address
+	CPU.AL = 25;
+	__iu8(50, CPU.CL);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x30);
+	assert(__fu8(CPU.CL) == 43);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
-	test("31h  XOR R/M16, REG16"); TODO;
+	test("31h  XOR R/M16, REG16");
+	CPU.CX = 0x5000; // address
+	CPU.AX = 2500;
+	__iu16(5000, CPU.CX);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x31);
+	assert(__fu16(CPU.CX) == 6732);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
-	test("32h  XOR REG8, R/M8"); TODO;
+	test("32h  XOR REG8, R/M8");
+	CPU.CL = 0x40; // address
+	CPU.AL = 100;
+	__iu8(50, CPU.CL);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x32);
+	assert(CPU.AL == 86);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
-	test("33h  XOR REG16, R/M16"); TODO;
+	test("33h  XOR REG16, R/M16");
+	CPU.CX = 0x4000; // address
+	CPU.AX = 8086;
+	__iu16(3770, CPU.CX);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x33);
+	assert(CPU.AX == 4396);
+	assert(CPU.OF == 0);
+	assert(CPU.ZF == 0);
+	OK;
 
 	test("34h  XOR AL, IMM8");
 	__iu8(5, CPU.EIP + 1);
@@ -933,24 +1017,215 @@ unittest {
 	assert(CPU.DI == 0xFFAA);
 	OK;
 
-	// Jumps
+	// Conditional Jumps
 
-	test("70h  JO"); TODO;
-	test("71h  JNO"); TODO;
-	test("72h  JB/JNAE/JC"); TODO;
-	test("73h  JNB/JAE/JNC"); TODO;
-	test("74h  JE/JZ"); TODO;
-	test("75h  JNE/JNZ"); TODO;
-	test("76h  JBE/JNA"); TODO;
-	test("77h  JNBE/JA"); TODO;
-	test("78h  JS"); TODO;
-	test("79h  JNS"); TODO;
-	test("7Ah  JP/JPE"); TODO;
-	test("7Bh  JNP/JPO"); TODO;
-	test("7Ch  JL/JNGE"); TODO;
-	test("7Dh  JNL/JGE"); TODO;
-	test("7Eh  JLE/JNG"); TODO;
-	test("7Fh  JNLE/JG"); TODO;
+	test("70h  JO");
+	CPU.IP = 0x100;
+	CPU.OF = 0;
+	exec16(0x70);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.OF = 1;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x70);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("71h  JNO");
+	CPU.IP = 0x100;
+	CPU.OF = 0;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x71);
+	assert(CPU.IP == 0xEE);
+	CPU.IP = 0x100;
+	CPU.OF = 1;
+	exec16(0x71);
+	assert(CPU.IP == 0x102);
+	OK;
+
+	test("72h  JB/JNAE/JC");
+	CPU.IP = 0x100;
+	CPU.CF = 0;
+	exec16(0x72);
+	assert(CPU.IP == 0x102);
+	__iu8(-20, CPU.EIP + 1);
+	CPU.IP = 0x100;
+	CPU.CF = 1;
+	exec16(0x72);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("73h  JNB/JAE/JNC");
+	CPU.IP = 0x100;
+	CPU.CF = 1;
+	exec16(0x73);
+	assert(CPU.IP == 0x102);
+	__iu8(-20, CPU.EIP + 1);
+	CPU.IP = 0x100;
+	CPU.CF = 0;
+	exec16(0x73);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("74h  JE/JZ");
+	CPU.IP = 0x100;
+	CPU.ZF = 0;
+	exec16(0x74);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.ZF = 1;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x74);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("75h  JNE/JNZ");
+	CPU.IP = 0x100;
+	CPU.ZF = 1;
+	exec16(0x75);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.ZF = 0;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x75);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("76h  JBE/JNA");
+	CPU.IP = 0x100;
+	CPU.CF = 0;
+	CPU.ZF = 0;
+	exec16(0x76);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.ZF = 0;
+	CPU.CF = 1;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x76);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("77h  JNBE/JA");
+	CPU.IP = 0x100;
+	CPU.CF = 0;
+	CPU.ZF = 1;
+	exec16(0x77);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.ZF = 0;
+	CPU.CF = 0;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x77);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("78h  JS");
+	CPU.IP = 0x100;
+	CPU.SF = 0;
+	exec16(0x78);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.SF = 1;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x78);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("79h  JNS");
+	CPU.IP = 0x100;
+	CPU.SF = 1;
+	exec16(0x79);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.SF = 0;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x79);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("7Ah  JP/JPE");
+	CPU.IP = 0x100;
+	CPU.PF = 0;
+	exec16(0x7A);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.PF = 1;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x7A);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("7Bh  JNP/JPO");
+	CPU.IP = 0x100;
+	CPU.PF = 1;
+	exec16(0x7B);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.PF = 0;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x7B);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("7Ch  JL/JNGE");
+	CPU.IP = 0x100;
+	CPU.SF = 1;
+	CPU.OF = 1;
+	exec16(0x7C);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.SF = 0;
+	CPU.OF = 1;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x7C);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("7Dh  JNL/JGE");
+	CPU.IP = 0x100;
+	CPU.SF = 0;
+	CPU.OF = 1;
+	exec16(0x7D);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.SF = 1;
+	CPU.OF = 1;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x7D);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("7Eh  JLE/JNG");
+	CPU.IP = 0x100;
+	CPU.SF = 1;
+	CPU.OF = 1;
+	CPU.ZF = 0;
+	exec16(0x7E);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.SF = 0;
+	CPU.OF = 0;
+	CPU.ZF = 1;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x7E);
+	assert(CPU.IP == 0xEE);
+	OK;
+
+	test("7Fh  JNLE/JG");
+	CPU.IP = 0x100;
+	CPU.SF = 0;
+	CPU.OF = 1;
+	CPU.ZF = 0;
+	exec16(0x7F);
+	assert(CPU.IP == 0x102);
+	CPU.IP = 0x100;
+	CPU.SF = 0;
+	CPU.OF = 0;
+	CPU.ZF = 0;
+	__iu8(-20, CPU.EIP + 1);
+	exec16(0x7F);
+	assert(CPU.IP == 0xEE);
+	OK;
 
 	// Group 1
 
@@ -1082,15 +1357,45 @@ unittest {
 
 	// TEST
 
-	test("84h  TEST R/M8, REG8"); TODO;
+	test("84h  TEST R/M8, REG8");
+	CPU.CL = 240;
+	__iu8(0xF, CPU.CL);
+	CPU.AL = 0xFF;
+	assert(CPU.ZF == 0);
+	assert(CPU.SF == 0);
+	assert(CPU.PF);
+	OK;
 
-	test("85h  TEST R/M16, REG16"); TODO;
+	test("85h  TEST R/M16, REG16");
+	CPU.CX = 24000;
+	__iu16(0xFF, CPU.CL);
+	CPU.AX = 0xFFFF;
+	assert(CPU.ZF == 0);
+	assert(CPU.SF == 0);
+	assert(CPU.PF);
+	OK;
 
 	// XCHG
 
-	test("86h  XCHG REG8, R/M8"); TODO;
+	test("86h  XCHG REG8, R/M8");
+	CPU.CL = 230;
+	CPU.AL = 25;
+	__iu8(50, CPU.CL);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x86);
+	assert(__fu8(CPU.CL) == 25);
+	assert(CPU.AL == 50);
+	OK;
 
-	test("87h  XCHG REG16, R/M16"); TODO;
+	test("87h  XCHG REG16, R/M16");
+	CPU.CX = 2300;
+	CPU.AX = 1337;
+	__iu16(666, CPU.CX);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x87);
+	assert(__fu16(CPU.CX) == 1337);
+	assert(CPU.AX == 666);
+	OK;
 
 	// MOV REG8, R/M8
 
@@ -1277,7 +1582,12 @@ unittest {
 
 	// LEA REG16, MEM16
 
-	test("8Dh  LEA REG16, MEM16"); TODO;
+	test("8Dh  LEA REG16, MEM16");
+	CPU.SI = 0xAAAA;
+	__iu8(0b11_000_110, CPU.EIP + 1);
+	exec16(0x8D);
+	assert(CPU.AX == CPU.SI);
+	OK;
 
 	// MOV SEGREG, R/M16
 
@@ -1302,15 +1612,21 @@ unittest {
 
 	// POP R/M16
 
-	test("8Fh  POP R/M16"); TODO;
+	test("8Fh  POP R/M16");
+	CPU.CX = 0x4000;
+	push16(1234);
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	exec16(0x8F);
+	assert(__fu16(CPU.CX) == 1234);
+	OK;
 
 	// XCHG
 
 	test("90h  NOP");
 	{ // Nevertheless, let's test the Program Counter
-		const int oldip = CPU.IP + 1;
+		CPU.AX = cast(ushort)(CPU.IP + 1); // expected IP
 		exec16(0x90);
-		assert(oldip == CPU.IP);
+		assert(CPU.AX == CPU.IP);
 	}
 	OK;
 
@@ -1398,11 +1714,17 @@ unittest {
 
 	// PUSHF
 
-	test("9Ch  PUSHF"); TODO;
+	test("9Ch  PUSHF");
+	exec16(0x9C);
+	assert(__fu16(get_ad(CPU.SS, CPU.SP)) == FLAG);
+	OK;
 
 	// POPF
 
-	test("9Dh  POPF"); TODO;
+	test("9Dh  POPF");
+	exec16(0x9D);
+	assert(pop16 == FLAG);
+	OK;
 
 	// SAHF
 

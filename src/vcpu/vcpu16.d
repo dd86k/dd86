@@ -551,9 +551,10 @@ void exec16(ubyte op) {
 			CPU.AF = 0;
 		}
 
+
 		CPU.ZF = r == 0;
-		CPU.PF = r & 0x10;
 		CPU.SF = r & 0x80;
+		setPF_8(r);
 		CPU.AL = cast(ubyte)r;
 
 		++CPU.EIP;
@@ -1156,52 +1157,52 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		exec32(MEMORY[CPU.EIP]);
 		return;
-	case 0x70: // JO            SHORT-LABEL
+	case 0x70: // JO          SHORT-LABEL
 		CPU.EIP += CPU.OF ? __fi8_i + 2 : 2;
 		return;
-	case 0x71: // JNO           SHORT-LABEL
+	case 0x71: // JNO         SHORT-LABEL
 		CPU.EIP += CPU.OF ? 2 : __fi8_i + 2;
 		return;
-	case 0x72: // JB/JNAE/JC    SHORT-LABEL
+	case 0x72: // JB/JNAE/JC  SHORT-LABEL
 		CPU.EIP += CPU.CF ? __fi8_i + 2 : 2;
 		return;
-	case 0x73: // JNB/JAE/JNC   SHORT-LABEL
+	case 0x73: // JNB/JAE/JNC SHORT-LABEL
 		CPU.EIP += CPU.CF ? 2 : __fi8_i + 2;
 		return;
-	case 0x74: // JE/JZ         SHORT-LABEL
+	case 0x74: // JE/JZ       SHORT-LABEL
 		CPU.EIP += CPU.ZF ? __fi8_i + 2 : 2;
 		return;
-	case 0x75: // JNE/JNZ       SHORT-LABEL
+	case 0x75: // JNE/JNZ     SHORT-LABEL
 		CPU.EIP += CPU.ZF ? 2 : __fi8_i + 2;
 		return;
-	case 0x76: // JBE/JNA       SHORT-LABEL
+	case 0x76: // JBE/JNA     SHORT-LABEL
 		CPU.EIP += (CPU.CF || CPU.ZF) ? __fi8_i + 2 : 2;
 		return;
-	case 0x77: // JNBE/JA       SHORT-LABEL
+	case 0x77: // JNBE/JA     SHORT-LABEL
 		CPU.EIP += CPU.CF == 0 && CPU.ZF == 0 ? __fi8_i + 2 : 2;
 		return;
-	case 0x78: // JS            SHORT-LABEL
+	case 0x78: // JS          SHORT-LABEL
 		CPU.EIP += CPU.SF ? __fi8_i + 2 : 2;
 		return;
-	case 0x79: // JNS           SHORT-LABEL
+	case 0x79: // JNS         SHORT-LABEL
 		CPU.EIP += CPU.SF ? 2 : __fi8_i + 2;
 		return;
-	case 0x7A: // JP/JPE        SHORT-LABEL
+	case 0x7A: // JP/JPE      SHORT-LABEL
 		CPU.EIP += CPU.PF ? __fi8_i + 2 : 2;
 		return;
-	case 0x7B: // JNP/JPO       SHORT-LABEL
+	case 0x7B: // JNP/JPO     SHORT-LABEL
 		CPU.EIP += CPU.PF ? 2 : __fi8_i + 2;
 		return;
-	case 0x7C: // JL/JNGE       SHORT-LABEL
+	case 0x7C: // JL/JNGE     SHORT-LABEL
 		CPU.EIP += CPU.SF != CPU.OF ? __fi8_i + 2 : 2;
 		return;
-	case 0x7D: // JNL/JGE       SHORT-LABEL
+	case 0x7D: // JNL/JGE     SHORT-LABEL
 		CPU.EIP += CPU.SF == CPU.OF ? __fi8_i + 2 : 2;
 		return;
-	case 0x7E: // JLE/JNG       SHORT-LABEL
+	case 0x7E: // JLE/JNG     SHORT-LABEL
 		CPU.EIP += CPU.SF != CPU.OF || CPU.ZF ? __fi8_i + 2 : 2;
 		return;
-	case 0x7F: // JNLE/JG       SHORT-LABEL
+	case 0x7F: // JNLE/JG     SHORT-LABEL
 		CPU.EIP += CPU.SF == CPU.OF && CPU.ZF == 0 ? __fi8_i + 2 : 2;
 		return;
 	case 0x80: { // GRP1 R/M8, IMM8
@@ -1423,10 +1424,11 @@ void exec16(ubyte op) {
 	case 0x86: { // XCHG REG8, R/M8
 		const ubyte rm = __fu8_i;
 		const int addr = get_rm16(rm);
+		const ubyte s = __fu8(addr);
 		// temp <- REG
 		// REG  <- MEM
 		// MEM  <- temp
-		ubyte r = void; const ubyte s = __fu8(addr);
+		ubyte r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r = CPU.AL; CPU.AL = s;
@@ -1582,7 +1584,7 @@ void exec16(ubyte op) {
 	}
 	case 0x8D: { // LEA REG16, MEM16
 		const ubyte rm = __fu8_i;
-		const ushort addr = cast(ushort)get_rm16(rm);
+		const ushort addr = cast(ushort)get_rm16(rm, 1);
 		switch (rm & RM_REG) {
 		case RM_REG_000: CPU.AX = addr; break;
 		case RM_REG_001: CPU.CX = addr; break;
@@ -1615,11 +1617,11 @@ void exec16(ubyte op) {
 	}
 	case 0x8F: { // POP R/M16
 		const ubyte rm = __fu8_i;
-		if (rm & RM_REG) { // REG MUST be 000
+		if (rm & RM_REG) { // REG must be 000
 			info("Invalid ModR/M for POP R/M16");
 			goto EXEC16_ILLEGAL;
 		}
-		push16(__fu16(get_rm16(rm, 1)));
+		__iu16(pop16, get_rm16(rm, 1));
 		CPU.EIP += 2;
 		return;
 	}

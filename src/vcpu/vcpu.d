@@ -192,6 +192,8 @@ void vcpu_run() {
 	}
 }
 
+//TODO: step(ubyte) instead of incrementing EIP manually
+
 /**
  * Get memory address out of a segment and a register value.
  * Params:
@@ -308,7 +310,7 @@ private enum : ushort {
  */
 extern (C)
 void push16(ushort value) {
-	CPU.SP = cast(ushort)(CPU.SP - 2);
+	CPU.SP -= 2;
 	__iu16(value, get_ad(CPU.SS, CPU.SP));
 }
 
@@ -319,7 +321,7 @@ void push16(ushort value) {
 extern (C)
 ushort pop16() {
 	const uint addr = get_ad(CPU.SS, CPU.SP);
-	CPU.SP = cast(ushort)(CPU.SP + 2);
+	CPU.SP += 2;
 	return __fu16(addr);
 }
 
@@ -329,7 +331,7 @@ ushort pop16() {
  */
 extern (C)
 void push32(uint value) {
-	CPU.SP = cast(ushort)(CPU.SP - 4);
+	CPU.SP -= 4;
 	__iu32(value, get_ad(CPU.SS, CPU.SP));
 }
 
@@ -340,6 +342,6 @@ void push32(uint value) {
 extern (C)
 uint pop32() {
 	const uint addr = get_ad(CPU.SS, CPU.SP);
-	CPU.SP = cast(ushort)(CPU.SP + 4);
+	CPU.SP += 2;
 	return __fu32(addr);
 }

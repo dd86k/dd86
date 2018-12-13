@@ -16,7 +16,7 @@ unittest {
 	assert(SYSTEM.memsize == CPU.AX);
 	writeln("OK  (", CPU.AX, " KB)");
 
-	test("INT 1Ah AH=00h");
+	test("INT 1Ah  AH=00h");
 	CPU.AH = 0;
 	INT(0x1A);
 	writefln("assuming OK (CS=%04X DX=%04X -- %d)", CPU.CS, CPU.DX, (CPU.CS << 16) | CPU.DX);

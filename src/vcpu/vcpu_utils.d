@@ -24,6 +24,7 @@ import vdos : SYSTEM;
 extern (C)
 uint get_rm16(ubyte rm, ubyte wide = 0) {
 	//TODO: Reset Seg to SEG_NONE
+	//TODO: Use general purpose variable to hold segreg value
 	switch (rm & RM_MOD) { // MOD
 	case RM_MOD_00: // MOD 00, Memory Mode, no displacement
 		switch (Seg) {
@@ -41,45 +42,28 @@ uint get_rm16(ubyte rm, ubyte wide = 0) {
 			break;
 		default:
 			switch (rm & RM_RM) { // R/M
-			case RM_RM_000: debug _debug("EA:0:0");
-				return CPU.SI + CPU.BX;
-			case RM_RM_001: debug _debug("EA:0:1");
-				return CPU.DI + CPU.BX;
-			case RM_RM_010: debug _debug("EA:0:2");
-				return CPU.SI + CPU.BP;
-			case RM_RM_011: debug _debug("EA:0:3");
-				return CPU.DI + CPU.BP;
-			case RM_RM_100: debug _debug("EA:0:4");
-				return CPU.SI;
-			case RM_RM_101: debug _debug("EA:0:5");
-				return CPU.DI;
-			case RM_RM_110: debug _debug("EA:0:6");
-				return __fu16_i(1); // DIRECT ADDRESS, immediate follows
-			case RM_RM_111: debug _debug("EA:0:7");
-				return CPU.BX;
+			case RM_RM_000: return CPU.SI + CPU.BX;
+			case RM_RM_001: return CPU.DI + CPU.BX;
+			case RM_RM_010: return CPU.SI + CPU.BP;
+			case RM_RM_011: return CPU.DI + CPU.BP;
+			case RM_RM_100: return CPU.SI;
+			case RM_RM_101: return CPU.DI;
+			case RM_RM_110: return __fu16_i(1);
+			case RM_RM_111: return CPU.BX;
 			default:
 			}
 		}
 		break; // MOD 00
 	case RM_MOD_01: { // MOD 01, Memory Mode, 8-bit displacement follows
-		debug _debug("EA:1:_");
 		switch (rm & RM_RM) {
-		case RM_RM_000: debug _debug("EA:1:0");
-			return CPU.SI + CPU.BX + __fi8_i(1);
-		case RM_RM_001: debug _debug("EA:1:1");
-			return CPU.DI + CPU.BX + __fi8_i(1);
-		case RM_RM_010: debug _debug("EA:1:2");
-			return CPU.SI + CPU.BP + __fi8_i(1);
-		case RM_RM_011: debug _debug("EA:1:3");
-			return CPU.DI + CPU.BP + __fi8_i(1);
-		case RM_RM_100: debug _debug("EA:1:4");
-			return CPU.SI + __fi8_i(1);
-		case RM_RM_101: debug _debug("EA:1:5");
-			return CPU.DI + __fi8_i(1);
-		case RM_RM_110: debug _debug("EA:1:6");
-			return CPU.BP + __fi8_i(1);
-		case RM_RM_111: debug _debug("EA:1:7");
-			return CPU.BX + __fi8_i(1);
+		case RM_RM_000: return CPU.SI + CPU.BX + __fi8_i(1);
+		case RM_RM_001: return CPU.DI + CPU.BX + __fi8_i(1);
+		case RM_RM_010: return CPU.SI + CPU.BP + __fi8_i(1);
+		case RM_RM_011: return CPU.DI + CPU.BP + __fi8_i(1);
+		case RM_RM_100: return CPU.SI + __fi8_i(1);
+		case RM_RM_101: return CPU.DI + __fi8_i(1);
+		case RM_RM_110: return CPU.BP + __fi8_i(1);
+		case RM_RM_111: return CPU.BX + __fi8_i(1);
 		default:
 		}
 		++CPU.EIP;
@@ -101,30 +85,14 @@ uint get_rm16(ubyte rm, ubyte wide = 0) {
 			break;
 		default:
 			switch (rm & RM_RM) { // R/M
-			case 0:
-				debug _debug("EA:2:0");
-				return CPU.SI + CPU.BX + __fi16_i(1);
-			case RM_RM_001:
-				debug _debug("EA:2:1");
-				return CPU.DI + CPU.BX + __fi16_i(1);
-			case RM_RM_010:
-				debug _debug("EA:2:2");
-				return CPU.SI + CPU.BP + __fi16_i(1);
-			case RM_RM_011:
-				debug _debug("EA:2:3");
-				return CPU.DI + CPU.BP + __fi16_i(1);
-			case RM_RM_100:
-				debug _debug("EA:2:4");
-				return CPU.SI + __fi16_i(1);
-			case RM_RM_101:
-				debug _debug("EA:2:5");
-				return CPU.DI + __fi16_i(1);
-			case RM_RM_110:
-				debug _debug("EA:2:6");
-				return CPU.BP + __fi16_i(1);
-			case RM_RM_111:
-				debug _debug("EA:2:7");
-				return CPU.BX + __fi16_i(1);
+			case RM_RM_000: return CPU.SI + CPU.BX + __fi16_i(1);
+			case RM_RM_001: return CPU.DI + CPU.BX + __fi16_i(1);
+			case RM_RM_010: return CPU.SI + CPU.BP + __fi16_i(1);
+			case RM_RM_011: return CPU.DI + CPU.BP + __fi16_i(1);
+			case RM_RM_100: return CPU.SI + __fi16_i(1);
+			case RM_RM_101: return CPU.DI + __fi16_i(1);
+			case RM_RM_110: return CPU.BP + __fi16_i(1);
+			case RM_RM_111: return CPU.BX + __fi16_i(1);
 			default:
 			}
 		}
@@ -310,7 +278,7 @@ void __hflag16_5(int r) {
 
 // Conditional flag handlers
 
-private extern (C)
+extern (C)
 pragma(inline, true) {
 	void setCF_8(int r) {
 		CPU.CF = (r & 0x100) != 0;
@@ -367,13 +335,13 @@ void __iu8(int op, int addr) {
 /**
  * Insert a WORD in MEMORY
  * Params:
- *   op = WORD value (will be casted)
+ *   data = WORD value (will be casted)
  *   addr = Memory address
  */
 extern (C)
 void __iu16(int data, int addr) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iu16", PANIC_MEMORY_ACCESS);
-	*cast(ushort*)(cast(void*)MEMORY + addr) = cast(ushort)data;
+	*cast(ushort*)(MEMORY + addr) = cast(ushort)data;
 }
 
 /**
@@ -385,7 +353,7 @@ void __iu16(int data, int addr) {
 extern (C)
 void __iu32(uint op, int addr) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iu32", PANIC_MEMORY_ACCESS);
-	*cast(uint*)(cast(void*)MEMORY + addr) = op;
+	*cast(uint*)(MEMORY + addr) = op;
 }
 
 /**
@@ -398,7 +366,7 @@ void __iu32(uint op, int addr) {
 extern (C)
 void __iarr(void *ops, size_t size, size_t addr) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __iarr", PANIC_MEMORY_ACCESS);
-	memcpy(cast(void*)MEMORY + addr, ops, size);
+	memcpy(MEMORY + addr, ops, size);
 }
 
 /**
@@ -410,7 +378,7 @@ void __iarr(void *ops, size_t size, size_t addr) {
 extern (C)
 void __istr(immutable(char) *data, size_t addr = CPU.EIP) {
 	if (C_OVERFLOW(addr)) crit("ACCESS VIOLATION IN __istr", PANIC_MEMORY_ACCESS);
-	strcpy(cast(char*)MEMORY + addr, data);
+	strcpy(cast(char*)(MEMORY + addr), data);
 }
 
 /**
@@ -501,6 +469,7 @@ ubyte __fu8_i(int n = 0) {
 
 /**
  * Fetch a signed byte (byte).
+ * Params: n = Optional offset from EIP+1
  * Returns: Signed BYTE
  */
 extern (C)
@@ -535,8 +504,13 @@ short __fi16_i(uint n = 0) {
  * Util helpers
  *****************************************************************************/
 
+/**
+ * Check for overflow from MEMORY.
+ * Params: addr = virtual memory address
+ * Returns: True if overflowed
+ */
 pragma(inline, true)
-extern (C)
+extern (C) private
 bool C_OVERFLOW(size_t addr) {
 	return addr < 0 || addr > MEMORYSIZE;
 }
