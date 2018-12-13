@@ -1602,12 +1602,12 @@ void exec16(ubyte op) {
 	case 0x8E: { // MOV SEGREG, R/M16
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 		const byte rm = __fu8_i;
-		const int addr = get_rm16(rm, 1);
+		const ushort addr = __fu16(get_rm16(rm, 1));
 		switch (rm & RM_REG) { // if REG[3] is clear, trip to default
-		case RM_REG_100: CPU.ES = __fu16(addr); break;
-		case RM_REG_101: CPU.CS = __fu16(addr); break;
-		case RM_REG_110: CPU.SS = __fu16(addr); break;
-		case RM_REG_111: CPU.DS = __fu16(addr); break;
+		case RM_REG_100: CPU.ES = addr; break;
+		case RM_REG_101: CPU.CS = addr; break;
+		case RM_REG_110: CPU.SS = addr; break;
+		case RM_REG_111: CPU.DS = addr; break;
 		default: // when bit 6 is clear (REG[3])
 			info("Invalid ModR/M for SEGREG<-RM");
 			goto EXEC16_ILLEGAL;
@@ -1869,7 +1869,7 @@ void exec16(ubyte op) {
 		return;
 	case 0xC2: // RET IMM16 (NEAR)
 		CPU.IP = pop16;
-		CPU.SP += __fu16_i;
+		CPU.SP += __fi16_i;
 		return;
 	case 0xC3: // RET (NEAR)
 		CPU.IP = pop16;
@@ -1878,10 +1878,7 @@ void exec16(ubyte op) {
 		// Load into REG and ES/DS
 		const ubyte rm = __fu8_i;
 		const ushort r = __fu16(get_rm16(rm, 1));
-		if (op == 0xC4)
-			CPU.ES = r;
-		else
-			CPU.DS = r;
+		Seg = op == 0xC4 ? SEG_ES : SEG_DS; // "Segment selector"
 		switch (rm & RM_REG) {
 		case RM_REG_000: CPU.AX = r; break;
 		case RM_REG_001: CPU.CX = r; break;
@@ -1914,11 +1911,13 @@ void exec16(ubyte op) {
 		__iu16(__fu16_i(1), get_rm16(rm, 1));
 		return;
 	}
-	case 0xCA: // RET IMM16 (FAR)
+	case 0xCA: { // RET IMM16 (FAR)
+		const uint addr = CPU.EIP + 1;
 		CPU.IP = pop16;
 		CPU.CS = pop16;
-		CPU.SP += __fu16_i;
+		CPU.SP += __fi16(addr);
 		return;
+	}
 	case 0xCB: // RET (FAR)
 		CPU.IP = pop16;
 		CPU.CS = pop16;
@@ -1945,6 +1944,7 @@ void exec16(ubyte op) {
 		const ubyte rm = __fu8_i;
 		const int addr = get_rm16(rm);
 		int r = __fu8(addr);
+		//TODO: handle flags accordingly
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - ROL
 			r <<= 1;
@@ -1976,7 +1976,6 @@ void exec16(ubyte op) {
 			info("Invalid ModR/M for GRP2 R/M8, 1");
 			goto EXEC16_ILLEGAL;
 		}
-		//TODO: handle flags accordingly
 		__iu8(r, addr);
 		CPU.EIP += 2;
 		return;

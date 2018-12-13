@@ -83,7 +83,7 @@ void lowercase(char *c) {
 pragma(inline, true)
 extern (C)
 ushort bswap16(ushort n) {
-	return (n >> 8) | (n & 0xFF) << 8;
+	return cast(ushort)(n >> 8 | n << 8);
 }
 
 /**

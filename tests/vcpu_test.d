@@ -1722,17 +1722,26 @@ unittest {
 	// POPF
 
 	test("9Dh  POPF");
-	exec16(0x9D);
-	assert(pop16 == FLAG);
+	CPU.BX = FLAG;
+	exec16(0x9D); // Popped!
+	assert(CPU.BX == FLAG);
 	OK;
 
 	// SAHF
 
-	test("9Eh  SAHF"); TODO;
+	test("9Eh  SAHF");
+	CPU.AH = 1;
+	exec16(0x9E);
+	assert(FLAGB == 1);
+	OK;
 
 	// LAHF
 
-	test("9Fh  LAHF"); TODO;
+	test("9Fh  LAHF");
+	FLAGB = 7; // 111
+	exec16(0x9F);
+	assert(FLAGB == 5); // 101
+	OK;
 
 	// MOV AL, MEM8
 
@@ -2004,29 +2013,93 @@ unittest {
 
 	// RET
 
-	test("C2h  RET IMM16 (NEAR)"); TODO;
+	test("C2h  RET IMM16 (NEAR)");
+	CPU.IP = 0x200;
+	push16(CPU.IP);
+	CPU.IP = 0x340;
+	exec16(0xC2);
+	assert(CPU.IP == 0x200);
+	//TODO: Check SP
+	OK;
 
-	test("C3h  RET (NEAR)"); TODO;
+	test("C3h  RET (NEAR)");
+	CPU.IP = 0x200;
+	push16(CPU.IP);
+	CPU.IP = 0x340;
+	exec16(0xC3);
+	assert(CPU.IP == 0x200);
+	OK;
 
 	// LES
 
-	test("C4h  LES REG16, MEM16"); TODO;
+	test("C4h  LES REG16, MEM16");
+	CPU.CX = 0x3000;
+	__iu16(0x5000, CPU.CX);
+	__iu8(0b11_111_001, CPU.EIP + 1);
+	exec16(0xC4);
+	assert(CPU.DI == 0x5000);
+	assert(Seg == SEG_ES);
+	OK;
 
 	// LDS
 
-	test("C5h  LDS REG16, MEM16"); TODO;
+	test("C5h  LDS REG16, MEM16");
+	CPU.CX = 0x4000;
+	__iu16(0x6000, CPU.CX);
+	__iu8(0b11_111_001, CPU.EIP + 1);
+	exec16(0xC5);
+	assert(CPU.DI == 0x6000);
+	assert(Seg == SEG_DS);
+	OK;
 
 	// MOV
 
-	test("C6h  MOV MEM8, IMM8"); TODO;
+	test("C6h  MOV MEM8, IMM8");
+	CPU.CL = 240;
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	__iu8(24, CPU.EIP + 2);
+	exec16(0xC6);
+	assert(__fu8(CPU.CL) == 24);
+	OK;
 
-	test("C7h  MOV MEM16, IMM16"); TODO;
+	test("C7h  MOV MEM16, IMM16");
+	CPU.CX = 24000;
+	__iu8(0b11_000_001, CPU.EIP + 1);
+	__iu16(2400, CPU.EIP + 2);
+	exec16(0xC7);
+	assert(__fu16(CPU.CX) == 2400);
+	OK;
 
 	// RET
 
-	test("CAh  RET IMM16 (FAR)"); TODO;
+	test("CAh  RET IMM16 (FAR)");
+	CPU.SP = 0x1000;
+	CPU.IP = 0x100;
+	CPU.CS = 0x800;
+	push16(CPU.CS);
+	push16(CPU.IP);
+	CPU.IP = 0x200;
+	CPU.CS = 0x400;
+	CPU.EIP = get_ip;
+	CPU.BX = CPU.SP; // old SP
+	__iu16(0x100, CPU.EIP + 1);
+	exec16(0xCA);
+	assert(CPU.IP == 0x100);
+	assert(CPU.CS == 0x800);
+	assert(CPU.SP == 0x1100);
+	OK;
 
-	test("CBh  RET (FAR)"); TODO;
+	test("CBh  RET (FAR)");
+	CPU.IP = 0x200;
+	CPU.CS = 0x900;
+	push16(CPU.CS);
+	push16(CPU.IP);
+	CPU.IP = 0x300;
+	CPU.CS = 0x500;
+	exec16(0xCB);
+	assert(CPU.IP == 0x200);
+	assert(CPU.CS == 0x900);
+	OK;
 
 	// INT
 
