@@ -2350,11 +2350,13 @@ void exec16(ubyte op) {
 			push16(CPU.IP);
 			CPU.IP = cast(ushort)r;
 			break;
-		case RM_REG_011: // 011 - CALL MEM16 (far) -- Indirect outside segment
+		case RM_REG_011: { // 011 - CALL MEM16 (far) -- Indirect outside segment
+			ushort nip = cast(ushort)get_ad(__fu16(addr + 2), r);
 			push16(CPU.CS);
 			push16(CPU.IP);
-			CPU.IP = cast(ushort)get_ad(__fu16(addr + 2), r);
+			CPU.IP = nip;
 			break;
+		}
 		case RM_REG_100: // 100 - JMP R/M16 (near) -- Indirect within segment
 			CPU.IP = cast(ushort)(r + 2);
 			break;
