@@ -70,7 +70,7 @@ void vdos_init() {
  */
 extern (C)
 void vdos_shell() {
-	char *inbuf = // internal input buffer, also used for CWD buffering
+	char *inbuf = // internal input buffer
 		cast(char*)(MEMORY + 0x900);
 SHL_S:
 	//TODO: Print $PROMPT
@@ -82,14 +82,13 @@ SHL_S:
 	__v_ucpos; // update cursor pos
 	screen_draw;
 
-	//fgets(inbuf, _BUFS, stdin);
 	vdos_readline(inbuf, _BUFS);
 	if (*inbuf == '\n') goto SHL_S; // Nothing to process
 
 	switch (vdos_command(cast(immutable)inbuf)) {
 	case -1, -2:
-		__v_put("Bad command or file name");
-		break;
+		__v_putn("Bad command or file name");
+		goto SHL_S;
 	case -3:
 		//TODO: Proper application exit
 		return;
@@ -400,7 +399,7 @@ MEM_HELP:
 			"DD-DOS version: "~APP_VERSION~"\n"~
 			"MS-DOS version: %d.%d (%d.%d)\n"~
 			"Compiler: "~__VENDOR__~" v%d\n"~
-			"C Runtime: "~C_RUNTIME~" Runtime\n"~
+			"C Runtime: "~C_RUNTIME~"\n"~
 			"Build type: "~BUILD_TYPE~"\n",
 			MajorVersion, MinorVersion,
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION,
