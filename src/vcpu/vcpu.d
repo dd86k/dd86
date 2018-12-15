@@ -310,7 +310,7 @@ private enum : ushort {
  */
 extern (C)
 void push16(ushort value) {
-	CPU.SP -= 2;
+	CPU.SP -= 2; // decrement after push is 286+
 	__iu16(value, get_ad(CPU.SS, CPU.SP));
 }
 
