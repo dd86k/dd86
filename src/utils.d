@@ -103,7 +103,7 @@ uint bswap32(uint n) {
 version (0)
 /**
  * Byte swap a 8-byte number.
- * Params: num = 8-byte number to swap.
+ * Params: n = 8-byte number to swap.
  * Returns: Byte swapped number.
  */
 pragma(inline, true)

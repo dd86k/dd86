@@ -1,3 +1,6 @@
+# Reminder: Defining a predefined buildType is overwriting it, erasing predefined
+# buildOptions
+
 name "dd-dos"
 version "0.0.0"
 description "IBM PC Virtual Machine and DOS Emulation Layer"
@@ -55,7 +58,7 @@ buildType "release-inline" {
 }
 
 ###################
-# Tests
+# Tests, Documentation, and Coverage
 ###################
 
 buildType "unittest" { # default to dub test
@@ -69,8 +72,31 @@ buildType "unittest" { # default to dub test
   importPaths "tests/"
 }
 
+buildType "docs" {
+  buildOptions "syntaxOnly"
+  # -Dd -> ddoc directory
+  dflags "-transition=intpromote" "-betterC" "-Ddddoc" "-c" platform="dmd"
+  dflags "-transition=intpromote" "-betterC" "-Ddddoc" "-c" platform="ldc"
+  dflags "-Ddddoc" "-c" platform="gdc"
+}
+
+buildType "cov" { # Unsupported, requires druntime
+  buildOptions "coverage" "debugInfo"
+  dflags "-transition=intpromote" "-betterC" platform="dmd"
+  dflags "-transition=intpromote" "-betterC" platform="ldc"
+}
+
+buildType "unittest-cov" {
+  buildOptions "unittests" "coverage" "debugMode" "debugInfo"
+  dflags "-transition=intpromote" platform="dmd"
+  dflags "-transition=intpromote" platform="ldc"
+
+  sourcePaths "tests/"
+  importPaths "tests/"
+}
+
 ###################
-# Benches
+# Benchmarks
 ###################
 
 buildType "bench" { # utils

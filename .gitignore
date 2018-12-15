@@ -7,9 +7,10 @@ dd-dos-test-library
 dub.selections.json
 # dub_platform_probe*.s files
 dub*.s
+*.lst
 
 # DD-DOS generated
-
+ddoc
 
 # Personal stuff
 t
