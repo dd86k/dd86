@@ -23,7 +23,7 @@ enum BANNER =
 	`| |  \ || |  \ | |___| | |  \ || /  \ |\____ \`~ "\n"~
 	`| |__/ || |__/ |       | |__/ || \__/ |_____\ \`~"\n"~
 	`|______/|______/       |______/\______/\______/`~"\n"
-	; /// Banner screen, fancy!
+	; /// ASCII banner screen, fancy!
 
 /// OEM IDs
 enum OEM_ID { // Used for INT 21h AH=30 so far.
@@ -66,12 +66,13 @@ void vdos_init() {
 }
 
 /**
- * Enter virtual shell (vDOS), assuming all modules have been initiated
+ * Enter virtual shell (vDOS), assuming all modules have been initiated.
+ * Uses memory location 1200h for input buffer
  */
 extern (C)
 void vdos_shell() {
 	char *inbuf = // internal input buffer
-		cast(char*)(MEMORY + 0x900);
+		cast(char*)(MEMORY + 0x1200);
 SHL_S:
 	//TODO: Print $PROMPT
 	if (os_gcwd(inbuf))
@@ -97,9 +98,10 @@ SHL_S:
 }
 
 /**
- * Execute a command with its arguments, useful for scripting
+ * Execute a command with its arguments, useful for scripting.
+ * Uses memory location 1200h + _BUFS + 1 for argument list. (argv)
  * Params: command == Command string with arguments
- * Returns: Error code (ERRORLEVEL)
+ * Returns: Error code (ERRORLEVEL), see Note
  * Note:
  *   vdos_command include non-DOS error codes:
  *   Returns -1 on command not found
@@ -109,7 +111,7 @@ SHL_S:
 extern (C)
 int vdos_command(immutable(char) *command) {
 	char **argv = // argument vector, sizeof(char *)
-		cast(char**)(MEMORY + 0x900 + _BUFS);
+		cast(char**)(MEMORY + 0x1200 + _BUFS + 1);
 	const int argc = sargs(command, argv); /// argument count
 	lowercase(*argv);
 	//TODO: lowercase extensions
@@ -180,16 +182,16 @@ int vdos_command(immutable(char) *command) {
 		INT(0x21);
 		__v_put("It is currently ");
 		switch (CPU.AL) {
-		case 0, 7: __v_put("Sun"); break;
-		case 1: __v_put("Mon"); break;
-		case 2: __v_put("Tue"); break;
-		case 3: __v_put("Wed"); break;
-		case 4: __v_put("Thu"); break;
-		case 5: __v_put("Fri"); break;
-		case 6: __v_put("Sat"); break;
+		case 0, 7: __v_put("Sunday"); break;
+		case 1: __v_put("Monday"); break;
+		case 2: __v_put("Tuesday"); break;
+		case 3: __v_put("Wednesday"); break;
+		case 4: __v_put("Thursday"); break;
+		case 5: __v_put("Friday"); break;
+		case 6: __v_put("Saturday"); break;
 		default:
 		}
-		__v_printf(", %d-%02d-%02d\n", CPU.CX, CPU.DH, CPU.DL);
+		__v_printf(" %d-%02d-%02d\n", CPU.CX, CPU.DH, CPU.DL);
 		return 0;
 	}
 
@@ -249,7 +251,7 @@ int vdos_command(immutable(char) *command) {
 				}
 			}
 			__v_printf(
-				"Memory Type             Zero +    Data =   Total\n" ~
+				"Memory Type             Zero +   NZero =   Total\n" ~
 				"-------------------  -------   -------   -------\n" ~
 				"Conventional         %6dK   %6dK   %6dK\n" ~
 				"Extended             %6dK   %6dK   %6dK\n" ~
