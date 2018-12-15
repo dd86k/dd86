@@ -138,7 +138,7 @@ uint get_rm16(ubyte rm, ubyte wide = 0) {
 
 /**
  * Handle result for GROUP1 (UNSIGNED BYTE)
- * OF, SF, ZF, AF, CF, and PF affected
+ * Affected: OF, SF, ZF, AF, CF, PF
  * Params: r = Operation result
  */
 extern (C)
@@ -153,7 +153,7 @@ void __hflag8_1(int r) {
 
 /**
  * Handle result for GROUP1 (UNSIGNED WORD)
- * OF, SF, ZF, AF, CF, and PF affected
+ * Affected: OF, SF, ZF, AF, CF, PF
  * Params: r = Operation result
  */
 extern (C)
@@ -168,8 +168,8 @@ void __hflag16_1(int r) {
 
 /**
  * Handle result for GROUP2 (UNSIGNED BYTE)
- * OF, SF, ZF, AF, and PF affected
- * CF undefined
+ * Affected: OF, SF, ZF, AF, PF
+ * Undefined: CF undefined
  * Params: r = Operation result
  */
 extern (C)
@@ -183,8 +183,8 @@ void __hflag8_2(int r) {
 
 /**
  * Handle result for GROUP2 (UNSIGNED WORD)
- * OF, SF, ZF, AF, and PF affected
- * CF undefined
+ * Affected: OF, SF, ZF, AF, PF
+ * Undefined: CF
  * Params: r = Operation result
  */
 extern (C)
@@ -198,9 +198,9 @@ void __hflag16_2(int r) {
 
 /**
  * Handle result for TEST (BYTE)
- * SF, ZF, and PF affected
- * OF, CF cleared
- * AF undefined
+ * Affected: SF, ZF, PF
+ * Cleared: OF, CF
+ * Undefined: AF
  * Params: r = Input number
  */
 extern (C)
@@ -213,9 +213,9 @@ void __hflag8_3(int r) {
 
 /**
  * Handle result for TEST (WORD)
- * SF, ZF, and PF affected
- * OF, CF cleared
- * AF undefined
+ * Affected: SF, ZF, PF
+ * Cleared: OF, CF
+ * Undefined: AF
  * Params: r = Input number
  */
 extern (C)
@@ -228,8 +228,8 @@ void __hflag16_3(int r) {
 
 /**
  * Handle result for MUL (BYTE)
- * OF, CF affected
- * SF, ZF, AF, PF undefined
+ * Affected: OF, CF
+ * Undefined: SF, ZF, AF, PF
  * Params: r = Input number
  */
 extern (C)
@@ -240,8 +240,8 @@ void __hflag8_4(int r) {
 
 /**
  * Handle result for MUL (WORD)
- * OF, CF affected
- * SF, ZF, AF, PF undefined
+ * Affected: OF, CF
+ * Undefined: SF, ZF, AF, PF
  * Params: r = Input number
  */
 extern (C)
@@ -252,8 +252,8 @@ void __hflag16_4(int r) {
 
 /**
  * Handle result for BYTE
- * SF, ZF, and PF affected
- * OF, CF, and AF undefined
+ * Affected: SF, ZF, PF
+ * Undefined: OF, CF, AF
  * Params: r = Input number
  */
 extern (C)
@@ -265,8 +265,8 @@ void __hflag8_5(int r) {
 
 /**
  * Handle result for WORD
- * SF, ZF, and PF affected
- * OF, CF, and AF undefined
+ * Affected: SF, ZF, PF
+ * Undefined: OF, CF, AF
  * Params: r = Input number
  */
 extern (C)
@@ -519,8 +519,7 @@ bool C_OVERFLOW(size_t addr) {
  * Interrupt helpers
  *****************************************************************************/
 
-void __int_enter() {
-	// REAL-MODE
+void __int_enter() { // REAL-MODE
 	//const inum = code << 2;
 	/*IF (inum + 3 > IDT limit)
 		#GP
@@ -534,8 +533,7 @@ void __int_enter() {
 	//IP ← IDT[inum].offset;
 }
 
-void __int_exit() {
-	// REAL-MODE
+void __int_exit() { // REAL-MODE
 	CPU.IP = pop16;
 	CPU.CS = pop16;
 	CPU.IF = CPU.TF = 1;
