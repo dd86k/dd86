@@ -15,6 +15,7 @@ module ddc;
 enum NULL_CHAR = cast(char*)0; /// Null character pointer
 
 public extern (C) {
+	int printf(immutable(char)*, ...);
 	void putchar(int);
 	char* fgets(char*, int, shared FILE*);
 	int fputs(immutable(char)*, shared FILE*);
@@ -56,17 +57,25 @@ version (CRuntime_Microsoft) {
 		_IOAPPEND = 0x200,	// non-standard
 	}
 
-	// Thread-local all the things!
 	private extern shared void function() _fcloseallp;
-	private shared extern extern(C) FILE[_NFILE] _iob;
-	shared stdin  = &_iob[0];
-	shared stdout = &_iob[1];
-	shared stderr = &_iob[2];
-	shared stdaux = &_iob[3];
-	shared stdprn = &_iob[4];
+	version (DigitalMars) {
+		private shared extern extern(C) FILE[_NFILE] _iob;
+		shared stdin  = &_iob[0];
+		shared stdout = &_iob[1];
+		shared stderr = &_iob[2];
+		shared stdaux = &_iob[3];
+		shared stdprn = &_iob[4];
+	}
+	version (LDC) {
+		private __gshared extern extern(C) FILE[_NFILE] _iob;
+		enum stdin  = &_iob[0];
+		enum stdout = &_iob[1];
+		enum stderr = &_iob[2];
+		enum stdaux = &_iob[3];
+		enum stdprn = &_iob[4];
+	}
 
 	//TODO: Check library strings to fix vsnprintf linkage
-	// does not work in normal ldc builds but does in demo-screen???
 	version (DigitalMars) extern (C)
 	int vsnprintf(char *, size_t, immutable(char) *, va_list);
 
@@ -75,7 +84,7 @@ version (CRuntime_Microsoft) {
 	version (LDC) alias __stdio_common_vsprintf vsnprintf;
 
 	public import core.stdc.stdarg : va_list, va_start;
-	public import core.stdc.stdio : puts, printf;
+	public import core.stdc.stdio : puts;
 } else { // x86-windows-omf and linux seems to be fine
 	public import core.stdc.stdarg;
 	public import core.stdc.stdio;

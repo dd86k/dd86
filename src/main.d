@@ -2,9 +2,8 @@
  * main.d: CLI entry point
  */
 
-import core.stdc.stdio : printf, puts;
 import core.stdc.string : strcmp;
-import ddc : fputs, stderr, stdout;
+import ddc : puts, printf, fputs, stderr, stdout;
 import vcpu;
 import vdos : BANNER, vdos_shell, vdos_init;
 import vdos_codes;
