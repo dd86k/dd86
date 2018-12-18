@@ -9,7 +9,6 @@ import Logger : info;
 import vcpu16 : exec16;
 import vcpu_utils;
 import compile_config : INIT_MEM, TSC_SLEEP;
-import vdos : SYSTEM;
 
 /*enum : ubyte { // Emulated CPU
 	CPU_8086,
@@ -86,6 +85,7 @@ __gshared ubyte *MEMORY = void; /// Main memory bank
 pragma(inline, true)
 extern (C) public @property
 int MEMORYSIZE() {
+	import vdos : SYSTEM;
 	return SYSTEM.memsize << 10;
 }
 
@@ -93,9 +93,9 @@ int MEMORYSIZE() {
  * Code might be ugly, but:
  * - No more pointers to initialize and explicitly use
  * - Avoids calling pretty function (@property), uses MOV directly (x86)
- * - Alls major fields are initialized to 0 (.init) (.zero __CPU.sizeof)
+ * - Alls major fields are initialized to 0 (.init) (.zero CPU_t.sizeof)
  */
-extern (C) struct __CPU {
+extern (C) struct CPU_t {
 	union {
 		uint EIP;
 		ushort IP;
@@ -160,7 +160,8 @@ extern (C) struct __CPU {
 	VM;	/// Bit 17, Virtual 8086 Mode
 }
 
-public __gshared __CPU CPU = void;
+/// Main Central Processing Unit
+public __gshared CPU_t CPU = void;
 
 /// Initiate interpreter
 extern (C)
@@ -258,7 +259,7 @@ private enum : ushort {
  * Returns: FLAG as byte
  */
 @property ubyte FLAGB() {
-	ubyte b;
+	ubyte b = 2; // bit 1 always set
 	if (CPU.SF) b |= MASK_SF;
 	if (CPU.ZF) b |= MASK_ZF;
 	if (CPU.AF) b |= MASK_AF;

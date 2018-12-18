@@ -1,7 +1,5 @@
 module Logger;
 
-import core.stdc.stdio : printf;
-
 import vdos_screen, vdos_codes;
 
 enum {

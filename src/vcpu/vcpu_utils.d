@@ -4,13 +4,11 @@
 
 module vcpu_utils;
 
-import core.stdc.stdio : printf, puts;
 import core.stdc.string : memcpy, strcpy;
 import core.stdc.wchar_ : wchar_t, wcscpy;
 import vcpu;
 import Logger;
 import vdos_codes : PANIC_MEMORY_ACCESS;
-import vdos : SYSTEM;
 
 /**
  * Get effective address from a R/M byte.

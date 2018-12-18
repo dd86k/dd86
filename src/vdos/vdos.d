@@ -6,7 +6,6 @@ module vdos;
 
 import ddc;
 import core.stdc.string : strcmp, strlen, memcpy;
-import core.stdc.stdlib : malloc, free, system;
 import vcpu, vcpu_utils;
 import vdos_codes, vdos_int;
 import vdos_loader : vdos_load;
@@ -125,7 +124,7 @@ int vdos_command(immutable(char) *command) {
 
 	int argl = cast(int)strlen(*argv);
 
-	//TODO: Check uppercase if FS is case-sensitive
+	//TODO: Do case-insensitive globbing instead (Posix)
 	if (os_pexist(*argv)) {
 		if (os_pisdir(*argv)) return -2;
 		uint ext = *cast(uint*)&argv[0][argl-4];

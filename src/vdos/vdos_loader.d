@@ -4,7 +4,7 @@
 
 module vdos_loader;
 
-import core.stdc.stdio;
+import core.stdc.stdio; // mainly for FILE
 import core.stdc.stdlib : malloc, free;
 import vcpu, vcpu_utils;
 import vdos, vdos_structs, vdos_codes, vdos_screen;
