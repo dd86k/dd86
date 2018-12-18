@@ -114,31 +114,49 @@ int vdos_command(immutable(char) *command) {
 		cast(char**)(MEMORY + 0x1200 + _BUFS + 1);
 	const int argc = sargs(command, argv); /// argument count
 	lowercase(*argv);
-	//TODO: lowercase extensions
-	//enum uint D_EXE = 0x6578652E; /// ".exe", LSB
-	//enum uint D_COM = 0x6D6F632E; /// ".com", LSB
+
+	enum uint L_EXE = 0x6578652E; /// ".exe", LSB
+	enum uint L_COM = 0x6D6F632E; /// ".com", LSB
+	//enum uint U_EXE = 0x4558452E; /// ".EXE", LSB
+	//enum uint U_COM = 0x4D4F432E; /// ".COM", LSB
 
 	//TODO: TREE, DIR (waiting on OS directory crawler)
-	//TODO: search for executable in current directory (here)
 	//TODO: search for executable in (virtual, user set) PATH
 
-	//int argl = cast(int)strlen(*argv);
+	int argl = cast(int)strlen(*argv);
 
-	/+if (os_pexist(*argv)) {
+	//TODO: Check uppercase if FS is case-sensitive
+	if (os_pexist(*argv)) {
 		if (os_pisdir(*argv)) return -2;
-		switch (cast(uint)*argv[argl-4]) {
-		case D_COM, D_EXE:
-			__v_putn("HIT");
-			//vdos_load(*argv);
-			//vcpu_run;
-			break;
+		uint ext = *cast(uint*)&argv[0][argl-4];
+		// While it is possible to compare strings (even with slices),
+		// this works the fastests. This will be changed when needed.
+		switch (ext) {
+		case L_COM, L_EXE: // already lowercased
+			vdos_load(*argv);
+			vcpu_run;
+			return 0;
 		default: return -1;
 		}
-	} else { // try .exe, .com
-		//char [256]appname = void;
-		//memcpy(cast(char*)appname, *argv, argl); // dont copy null
-
-	}+/
+	} else {
+		//TODO: Clean this up, move +ext checking to function
+		char [512]appname = void;
+		memcpy(cast(char*)appname, *argv, argl); // dont copy null
+		uint* appext = cast(uint*)(cast(char*)appname + argl);
+		*appext = L_COM;
+		*(appext + 1) = 0;
+		if (os_pexist(cast(char*)appname)) {
+			vdos_load(cast(char*)appname);
+			vcpu_run;
+			return 0;
+		}
+		*appext = L_EXE;
+		if (os_pexist(cast(char*)appname)) {
+			vdos_load(cast(char*)appname);
+			vcpu_run;
+			return 0;
+		}
+	}
 
 	// ** INTERNAL COMMANDS **
 

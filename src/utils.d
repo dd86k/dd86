@@ -11,11 +11,11 @@ import core.stdc.string : strncpy, strlen;
 /**
  * CLI argument splitter, supports argument quoting.
  * This function inserts null-terminators.
- * Uses memory base 1400h for arguments.
+ * Uses memory base 1400h for arguments and increments per argument lengths.
  * Params:
  *   t = User input
  *   argv = argument vector buffer
- * Returns: argument vector string array
+ * Returns: argument count
  * Notes: Original function by Nuke928. Modified by dd86k.
  */
 extern (C)
