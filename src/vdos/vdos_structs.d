@@ -94,7 +94,7 @@ struct dos_struct { align(1):
 }
 
 /// Cursor position structure
-struct __cpos { align(1):
+struct curpos { align(1):
 	ubyte col;	/// Left 0-based horizontal cursor position
 	ubyte row;	/// Upper 0-based vertical cursor position
 }
@@ -140,7 +140,7 @@ struct system_struct { align(1):
 	ushort screen_col;
 	ushort video_rbuf_size;	/// Size of current video regenerate buffer in bytes
 	ushort video_rbuf_off;	/// Offset of current video page in video regenerate buffer
-	__cpos [8]cursor;	/// Cursor positions per page
+	curpos [8]cursor;	/// Cursor positions per page
 	ubyte video_scan_line_bottom;
 	ubyte video_scan_line_top;
 	ubyte screen_page;	/// current active page

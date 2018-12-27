@@ -83,9 +83,9 @@ version (CRuntime_Microsoft) {
 	int __stdio_common_vsprintf(char *, size_t, immutable(char) *, va_list);
 	version (LDC) alias __stdio_common_vsprintf vsnprintf;
 
-	public import core.stdc.stdarg : va_list, va_start;
 	public import core.stdc.stdio : puts;
+	public import core.stdc.stdarg : va_list, va_start;
 } else { // x86-windows-omf and linux seems to be fine
-	public import core.stdc.stdarg;
 	public import core.stdc.stdio;
+	public import core.stdc.stdarg;
 }

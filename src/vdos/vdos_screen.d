@@ -20,7 +20,6 @@ enum MAX_STR = 2048; /// maximum string length to print
 extern (C):
 
 __gshared videochar* VIDEO = void;	/// video buffer
-private __gshared uint screensize = void;
 
 // VGA reference: http://www.brackeen.com/vga/basics.html
 // Unicode reference: https://unicode-table.com
@@ -35,8 +34,8 @@ version (Windows) {
 	private __gshared COORD ibufsize = void;
 	private __gshared SMALL_RECT ibufout = void;
 	private __gshared COORD bufcoord;	// inits to 0,0
-	version (none) // disable until W variant is needed...
-	__gshared ushort [256]vctable = [
+	// disabled until W variant is needed...
+	/*__gshared ushort [256]vctable = [
 		/// cp437-utf16-le default character translation table
 		0x0020, 0x3A26, 0x3B26, 0x6526, 0x6626, 0x6326, 0x6026, 0x2220,
 		0xD825, 0xCB25, 0xD925, 0x4226, 0x4026, 0x6A26, 0x6B26, 0x3C26,
@@ -85,14 +84,13 @@ version (Windows) {
 		// F_ -- 240
 		0x6122, 0xB100, 0x6522, 0x6422, 0x2023, 0x2123, 0xF700, 0x4822,
 		0xB000, 0x1922, 0xB700, 0x1A22, 0x7F20, 0xB200, 0xA025, 0x2000
-	];
+	];*/
 }
 version (Posix) {
 	// Should cover Linux, FreeBSD, NetBSD, OpenBSD, DragonflyBSD, Haiku,
 	// OpenIndiana/Solaris, macOS
 	// Haiku has write(1) in fcntl.h
 	import core.sys.posix.unistd;
-	import core.sys.posix.sys.uio : writev, iovec;
 	// This table suits most use cases.
 	// It could of been a three-byte table, which yes could of saved us 256
 	// bytes of memory, but due to alignment (fetch performance) reasons, it's
@@ -159,14 +157,13 @@ version (Posix) {
 		// dark gray, ^blue, ^green, ^cyan, ^red, ^magenta, yellow, white
 		0x3830, 0x3231, 0x3031, 0x3431, 0x3930, 0x3331, 0x3131, 0x3531
 	];
-	__gshared ubyte *esc = [ // "\033[38;5;00m\033[48;5;00m"
-		0x1b, 0x5b, 0x33, 0x38, 0x3b, 0x35, 0x3b, 0x00, 0x00, 0x6d, // fg
-		0x1b, 0x5b, 0x34, 0x38, 0x3b, 0x35, 0x3b, 0x00, 0x00, 0x6d, // bg
-	];
-	__gshared ushort *s_fg = void;//cast(ushort*)(cast(ubyte*)s + 7);
-	__gshared ushort *s_bg = void;//cast(ushort*)(cast(ubyte*)s + 17);
-	__gshared char *str = void;//cast(char*)malloc(
-	__gshared iovec *iov = void;
+	__gshared ubyte *fg_s = /// fg string -- "\033[38;5;00m"
+		[ 0x1b, 0x5b, 0x33, 0x38, 0x3b, 0x35, 0x3b, 0x00, 0x00, 0x6d ];
+	__gshared ubyte *bg_s = /// bg string -- "\033[48;5;00m"
+		[ 0x1b, 0x5b, 0x34, 0x38, 0x3b, 0x35, 0x3b, 0x00, 0x00, 0x6d ];
+	__gshared ushort *s_fg = void;
+	__gshared ushort *s_bg = void;
+	__gshared char *str = void;
 }
 
 /// Video adapter character (EGC, CGA, VGA)
@@ -188,6 +185,7 @@ static assert(videochar.sizeof == 2);
 
 /**
  * Initiates screen, including intermediate buffer.
+ * Usually called by vdos.
  */
 extern (C)
 void screen_init() {
@@ -211,30 +209,21 @@ void screen_init() {
 		ibufout.Right = 79;
 	}
 	version (Posix) {
-		s_fg = cast(ushort*)(esc + 7);
-		s_bg = cast(ushort*)(esc + 17);
-		str = cast(char*)malloc(
-			SYSTEM.screen_col * 24
-			// 24 for:
-			// 10 char fg
-			// 10 char bg
-			// 3 worst-case utf-8 char
-			// 1 newline
-		);
-		//iov = cast(iovec *)malloc(iovec.sizeof * SYSTEM.screen_row);
-		iov = cast(iovec *)(MEMORY + 0x1000);
-		uint membase = 0x1100;
-		const uint inc = SYSTEM.screen_col * 25;
-		for (size_t i; i < SYSTEM.screen_row; ++i, membase += inc) {
-			iov[i].iov_base = MEMORY + membase;
-		}
+		s_fg = cast(ushort*)(fg_s + 7);
+		s_bg = cast(ushort*)(bg_s + 7);
+		// 24 extra bytes for:
+		// 10 char fg
+		// 10 char bg
+		// 3 utf-8 char (worst-case)
+		// 1 newline
+		str = cast(char*)malloc(80 * 25 * 24);
 	}
 }
 
 /**
  * Draw a frame from the video adapter memory region.
- * (Windows) Uses WriteConsoleOutputW
- * (Posix) Uses write(2) to STDOUT_FILENO
+ * (Windows) Uses WriteConsoleOutputA
+ * (Posix) Uses write(2) to STDOUT_FILENO (under testing)
  */
 extern (C)
 void screen_draw() {
@@ -249,131 +238,67 @@ void screen_draw() {
 		//WriteConsoleOutputW(hOut, ibuf, ibufsize, bufcoord, &ibufout);
 	}
 	version (Posix) {
-		import core.stdc.string : memcpy;
+		// Result format: one draw / 60 draws
+		// NOTE: Hiding the cursor show no improvements in tests
+		// solution 1: one write(2) per character and attribute (discarded)
+		//             3-20 ms / 550-680 ms
+		// solution 2: prepare buffer, one write(2) (discarded)
+		//             0.250-2 ms / 130-160 ms
+		// solution 3: write(2) per line (discarded)
+		//             0.230-2 ms / 150-160 ms
+		// solution 4: writev(2) with multiple "buffers" (discarded)
+		//             2-7 ms / 177-189 ms
+		// solution 5a: write(2) per line with semi-smart color diff
+		//              0.166-1 ms / ~33 ms
+		// solution 5b: one write(2) with semi-smart color diff
+		//              0.28-1 ms / 15-36 ms
+
 		const uint w = SYSTEM.screen_col; /// width
 		const uint h = SYSTEM.screen_row; /// height
 
-		const uint sc = w * h; /// screen size
-		uint c = void; /// character to print
-		ubyte *cp = cast(ubyte*)&c + 2; // third byte
-
-		// one draw / 60 draws (hot-run results only)
-		// solution 1: one write(2) per character and attribute (scrapped)
-		//             3-20 ms / 550-680 ms
-		// solution 2: prepare buffer, one write(2)
-		//   +newline: 0.250-2 ms / 130-160 ms
-		// solution 3: write(2) per line
-		//   +newline: 0.230-2 ms / 150-160 ms
-		// solution 4: writev(2) with multiple buffers
-		//   +newline: 2-7 ms / 177-189 ms
-
-		// solution 2 (one buffer with newlines)
-		uint bi; /// buffer index
 		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
-		/+for (size_t i, _x; i < sc; ++i) {
-			// Copy 20 bytes into buffer
-			// Equivelent to memcpy(str + bi, cast(void*)esc, 20);
-			/*version (D_SIMD) {
-				// According to core.simd, the instruction enumeration
-				// comments incites that that nothing is being written
-				// to memory, so we can't really use this
-				//import core.simd : ubyte16;
-				alias __vector(ubyte[16]) ubyte16;
-
-				*cast(ubyte16*)(str + bi) = *cast(ubyte16*)s;
-				*cast(uint*)(str + bi + 16) = *cast(uint*)(s + 16);
-			} else */version (D_LP64) { // -m64
-				*cast(ulong*)(str + bi) = *cast(ulong*)esc;
-				*cast(ulong*)(str + bi + 8) = *cast(ulong*)(esc + 8);
-				*cast(uint*)(str + bi + 16) = *cast(uint*)(esc + 16);
-			} else { // -m32
-				*cast(uint*)(str + bi) = *cast(uint*)esc;
-				*cast(uint*)(str + bi + 4) = *cast(uint*)(esc + 4);
-				*cast(uint*)(str + bi + 8) = *cast(uint*)(esc + 8);
-				*cast(uint*)(str + bi + 12) = *cast(uint*)(esc + 12);
-				*cast(uint*)(str + bi + 16) = *cast(uint*)(esc + 16);
+		// Solution 5b
+		ubyte lfg = 0xFF; /// last foreground color
+		ubyte lbg = 0xFF; /// last background color
+		for (size_t i, x, bi, sc = w * h; sc; ++i, --sc) {
+			const ubyte a = VIDEO[i].attribute;
+			ubyte cfg = a & 15;
+			ubyte cbg = a >> 4;
+			if (cfg != lfg) {
+				*s_fg = vatable[cfg];
+				*cast(ulong*)(str + bi) = *cast(ulong*)fg_s;
+				*cast(ushort*)(str + bi + 8) = *cast(ushort*)(fg_s + 8);
+				lfg = cfg;
+				bi += 10;
 			}
-			bi += 20;
-			*s_fg = vatable[VIDEO[i].attribute & 0xF];
-			*s_bg = vatable[(VIDEO[i].attribute >> 4) & 7];
-			c = vctable[VIDEO[i].ascii];
+			if (cbg != lbg) {
+				*s_bg = vatable[cbg];
+				*cast(ulong*)(str + bi) = *cast(ulong*)bg_s;
+				*cast(ushort*)(str + bi + 8) = *cast(ushort*)(bg_s + 8);
+				lbg = cbg;
+				bi += 10;
+			}
+			const uint c = vctable[VIDEO[i].ascii];
 			if (c < 128) { // +1
 				str[bi] = cast(ubyte)c;
 				++bi;
 			} else if (c > 0xFFFF) { // +3
-				*cast(ushort*)(str + bi) = cast(ushort)c;
-				*(str + bi + 2) = *cp;
+				//*cast(ushort*)(str + bi) = cast(ushort)c;
+				//*(str + bi + 2) = *cp;
+				*cast(uint*)(str + bi) = c;
 				bi += 3;
 			} else { // +2
 				*cast(ushort*)(str + bi) = cast(ushort)c;
 				bi += 2;
 			}
-			++_x;
-			if (_x == w && i < h) {
-				//*(str + bi) = '\n';
-				_x = 0;
-				// ++bi;
-				write(STDOUT_FILENO, cast(void*)(str, bi);
-				printf("\033[%d;0H", );
-				bi = 0;
-			}
-		}+/
-		//write(STDOUT_FILENO, cast(void*)str, bi);
-		// solution 4 (writev with multiple buffers with newlines)
-		import core.stdc.stdio;
-		int hi;
-		char *cbase = cast(char *)iov[hi].iov_base;
-		for (size_t i, _x; i < sc; ++i) {
-			// Copy 20 bytes into buffer
-			// Equivelent to memcpy(str + bi, cast(void*)esc, 20);
-			/*version (D_SIMD) {
-				// According to core.simd, the instruction enumeration
-				// comments incites that that nothing is being written
-				// to memory, so we can't really use this
-				//import core.simd : ubyte16;
-				alias __vector(ubyte[16]) ubyte16;
-
-				*cast(ubyte16*)(str + bi) = *cast(ubyte16*)s;
-				*cast(uint*)(str + bi + 16) = *cast(uint*)(s + 16);
-			} else */
-			version (D_LP64) { // -m64
-				*cast(ulong*)(cbase + bi) = *cast(ulong*)esc;
-				*cast(ulong*)(cbase + bi + 8) = *cast(ulong*)(esc + 8);
-				*cast(uint*)(cbase + bi + 16) = *cast(uint*)(esc + 16);
-			} else { // -m32
-				*cast(uint*)(cbase + bi) = *cast(uint*)esc;
-				*cast(uint*)(cbase + bi + 4) = *cast(uint*)(esc + 4);
-				*cast(uint*)(cbase + bi + 8) = *cast(uint*)(esc + 8);
-				*cast(uint*)(cbase + bi + 12) = *cast(uint*)(esc + 12);
-				*cast(uint*)(cbase + bi + 16) = *cast(uint*)(esc + 16);
-			}
-			*s_fg = vatable[VIDEO[i].attribute & 0xF];
-			*s_bg = vatable[(VIDEO[i].attribute >> 4) & 7];
-			bi += 20;
-			c = vctable[VIDEO[i].ascii];
-			if (c < 128) { // +1
-				cbase[bi] = cast(ubyte)c;
+			++x;
+			if (x == w) {
+				*(str + bi) = '\n';
 				++bi;
-			} else if (c > 0xFFFF) { // +3
-				*cast(ushort*)(cbase + bi) = cast(ushort)c;
-				*(cbase + bi + 2) = *cp;
-				bi += 3;
-			} else { // +2
-				*cast(ushort*)(cbase + bi) = cast(ushort)c;
-				bi += 2;
-			}
-			++_x;
-			if (_x >= w) {
-				*(cbase + bi) = '\n';
-				++bi;
-				iov[hi].iov_len = bi;
-				++hi;
-				cbase = cast(char *)iov[hi].iov_base;
-				_x = 0;
-				bi = 0;
+				x = 0;
 			}
 		}
-		writev(STDOUT_FILENO, iov, h);
+		write(STDOUT_FILENO, cast(char*)str, bi);
 	}
 }
 
@@ -381,8 +306,6 @@ void screen_draw() {
 /// character
 extern (C)
 void screen_clear() {
-	import ddcon : Clear;
-
 	const int t = (SYSTEM.screen_row * SYSTEM.screen_col) / 2;
 	uint *v = cast(uint*)VIDEO;
 	for (size_t i; i < t; ++i) v[i] = 0x0700_0700;
@@ -426,7 +349,7 @@ void screen_logo() {
 		"\xC0\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
 		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
 		"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xD9\n";
-	__v_put_s(l, l.length);
+	v_put_s(l, l.length);
 }
 
 /**
@@ -437,10 +360,10 @@ void screen_logo() {
  *   s = String, null-terminated
  */
 extern (C) public
-void __v_put(immutable(char) *s) {
+void v_put(immutable(char) *s) {
 	int size;
-	while (*s != 0 && size < MAX_STR) {
-		__v_putc(*s++);
+	while (s[size] != 0 && size < MAX_STR) {
+		v_putc(s[size]);
 		++size;
 	}
 }
@@ -454,9 +377,9 @@ void __v_put(immutable(char) *s) {
  *   size = String length
  */
 extern (C) public
-void __v_put_s(immutable(char) *s, uint size) {
+void v_put_s(immutable(char) *s, uint size) {
 	while (size && *s != 0) {
-		__v_putc(*s++);
+		v_putc(*s++);
 		--size;
 	}
 }
@@ -470,9 +393,9 @@ void __v_put_s(immutable(char) *s, uint size) {
  *   s = String (optional)
  */
 extern (C) public
-void __v_putn(immutable(char) *s = null) {
-	if (s) __v_put(s);
-	__v_putc('\n');
+void v_putn(immutable(char) *s = null) {
+	if (s) v_put(s);
+	v_putc('\n');
 }
 
 /**
@@ -483,10 +406,10 @@ void __v_putn(immutable(char) *s = null) {
  *   c = Character
  */
 extern (C) public
-void __v_putc(char c) {
-	import vdos_structs : __cpos;
+void v_putc(char c) {
+	import vdos_structs : curpos;
 
-	__cpos *cur = &SYSTEM.cursor[SYSTEM.screen_page];
+	curpos *cur = &SYSTEM.cursor[SYSTEM.screen_page];
 	uint pos = void; /// character position on screen
 
 	switch (c) {
@@ -496,7 +419,7 @@ void __v_putc(char c) {
 		cur.col = 0;
 		if (cur.row >= SYSTEM.screen_row) {
 			--cur.row;
-			__v_scroll;
+			v_scroll;
 		}
 		return;
 	case '\t': //TODO: \t handling, +8 cols?
@@ -511,14 +434,14 @@ void __v_putc(char c) {
 		}
 		if (cur.row >= SYSTEM.screen_row) {
 			--cur.row;
-			__v_scroll;
+			v_scroll;
 		}
 		VIDEO[pos].ascii = c;
 	}
 }
 
 extern (C) public
-void __v_printf(immutable(char) *f, ...) {
+void v_printf(immutable(char) *f, ...) {
 	import ddc : vsnprintf, va_list, va_start, puts;
 
 	va_list args = void;
@@ -528,16 +451,16 @@ void __v_printf(immutable(char) *f, ...) {
 	uint c = vsnprintf(cast(char*)b, 512, f, args);
 
 	if (c > 0)
-		__v_put_s(cast(immutable(char)*)b, c);
+		v_put_s(cast(immutable(char)*)b, c);
 }
 
 /// Scroll screen once, does not redraw screen
 /// Note: This function goes one line overboard video memory
 extern (C) public
-void __v_scroll() {
+void v_scroll() {
 	uint sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
-	videochar *d = cast(videochar*)VIDEO;
-	videochar *s = d + sc;
+	videochar *d = cast(videochar*)VIDEO; /// destination
+	videochar *s = d + sc; /// source
 
 	videochar tp = void;
 	tp.ascii = 0;
@@ -546,17 +469,16 @@ void __v_scroll() {
 		s[i].WORD = tp.WORD;
 
 	s = cast(videochar*)(d + SYSTEM.screen_col);
-	while (--sc) {
-		d.WORD = s.WORD;
-		++d; ++s;
+	for (size_t di, si; --sc; ++di, ++si) {
+		d[di].WORD = s[si].WORD;
 	}
 }
 
 /// Update cursor positions on host machine using current screen page
 extern (C) public
-void __v_ucpos() {
-	import vdos_structs : __cpos;
+void v_updatecur() {
+	import vdos_structs : curpos;
 	import ddcon : SetPos;
-	const __cpos w = SYSTEM.cursor[SYSTEM.screen_page];
+	const curpos w = SYSTEM.cursor[SYSTEM.screen_page];
 	SetPos(w.col, w.row);
 }

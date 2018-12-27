@@ -22,9 +22,9 @@ unittest {
 	VIDEO[79].ascii = 'l';
 	VIDEO[80].ascii = 'l';
 	VIDEO[81].ascii = 'o';
-	VIDEO[82].ascii = '~';
+	VIDEO[82].ascii = '!';
 
-	//TODO: Finish colourful 'thing'
+	// top
 	VIDEO[160].ascii = 0xda;
 	VIDEO[160].attribute = 0x2E;
 	VIDEO[161].ascii = 0xc4;
@@ -32,22 +32,39 @@ unittest {
 	VIDEO[162].ascii = 0xc4;
 	VIDEO[162].attribute = 0x2E;
 	VIDEO[163].ascii = 0xbf;
-	VIDEO[163].attribute = 0x1A;
-	VIDEO[241].ascii = 219;
-	VIDEO[241].attribute = 0x1A;
-	VIDEO[242].ascii = 151;
-	VIDEO[242].attribute = 0x1A;
+	VIDEO[163].attribute = 0x2E;
+	// middle
+	VIDEO[240].ascii = 179;
+	VIDEO[240].attribute = 0x2E;
+	VIDEO[241].ascii = '<';
+	VIDEO[241].attribute = 0x4E;
+	VIDEO[242].ascii = '>';
+	VIDEO[242].attribute = 0x4E;
+	VIDEO[243].ascii = 179;
+	VIDEO[243].attribute = 0x2E;
+	// bottom
+	VIDEO[320].ascii = 192;
+	VIDEO[320].attribute = 0x2E;
+	VIDEO[321].ascii = 0xc4;
+	VIDEO[321].attribute = 0x2E;
+	VIDEO[322].ascii = 0xc4;
+	VIDEO[322].attribute = 0x2E;
+	VIDEO[323].ascii = 217;
+	VIDEO[323].attribute = 0x2E;
+
+	VIDEO[(80 * 25) - 1].ascii = '+';
+	VIDEO[(80 * 24)].ascii = '+';
 
 	SYSTEM.cursor[0].col = 0;
 	SYSTEM.cursor[0].row = 5;
 
-	__v_put("__v_put\n");
-	__v_putn("__v_putn");
-	__v_printf("__v_printf: %d\n", 32);
+	v_put("AC");
+	v_putn("ID");
+	v_printf("TES%c\n", 'T');
 
 	screen_logo; // print logo
 
-	__v_putn("END");
+	v_putn("** END **");
 
 	screen_draw; // draw on screen
 

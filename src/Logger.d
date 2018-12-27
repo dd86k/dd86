@@ -19,38 +19,38 @@ public __gshared ubyte LOGLEVEL = LOG_SILENCE;
 
 //TODO: Figure out template to avoid re-typing debug everytime
 debug void _debug(immutable(char) *msg) {
-	__v_printf("[DBUG] %s\n", msg);
+	v_printf("[DBUG] %s\n", msg);
 }
 debug void logexec(ushort seg, ushort ip, ubyte op) {
-	__v_printf("[ VM ] %04X:%04X  %02Xh\n", seg, ip, op);
+	v_printf("[ VM ] %04X:%04X  %02Xh\n", seg, ip, op);
 }
 
 /// Log an informational message
 /// Params: msg = Message
-void info(immutable(char) *msg) {
+void log_info(immutable(char) *msg) {
 	if (LOGLEVEL < LOG_INFO) return;
-	__v_printf("[INFO] %s\n", msg);
+	v_printf("[INFO] %s\n", msg);
 }
 
 /// Log a warning message
 /// Params: msg = Message
-void warn(immutable(char) *msg) {
+void log_warm(immutable(char) *msg) {
 	if (LOGLEVEL < LOG_WARN) return;
-	__v_printf("[WARN] %s\n", msg);
+	v_printf("[WARN] %s\n", msg);
 }
 
 /// Log an error
 /// Params: msg = Message
-void error(immutable(char) *msg) {
+void log_error(immutable(char) *msg) {
 	if (LOGLEVEL < LOG_ERROR) return;
-	__v_printf("[ERR ] %s\n", msg);
+	v_printf("[ERR ] %s\n", msg);
 }
 
-void crit(immutable(char) *msg, ushort code = PANIC_UNKNOWN) {
+void log_crit(immutable(char) *msg, ushort code = PANIC_UNKNOWN) {
 	import core.stdc.stdlib : exit;
 	import vdos : panic;
 	//if (LOGLEVEL >= LOG_CRIT)
-	__v_printf("[!!!!] %s\n", msg);
+	v_printf("[!!!!] %s\n", msg);
 	panic(code);
 	exit(code);
 }

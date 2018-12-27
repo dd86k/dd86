@@ -10,7 +10,7 @@ import vcpu_utils : __int_enter, __int_exit;
 import vdos : SYSTEM, DOS, BIOS_TICK, MinorVersion, MajorVersion, OEM_ID;
 import vdos_codes;
 import vdos_loader : vdos_load;
-import vdos_structs : __cpos;
+import vdos_structs : curpos;
 import vdos_screen;
 import ddcon;
 import os_utils;
@@ -20,7 +20,7 @@ import utils : MemString;
 /// Params: code = Interrupt byte
 extern (C)
 void INT(ubyte code) {
-	debug __v_printf("[dbug] INTERRUPT: %02Xh\n", code);
+	debug v_printf("[dbug] INTERRUPT: %02Xh\n", code);
 
 	__int_enter;
 
@@ -35,7 +35,7 @@ void INT(ubyte code) {
 			break;
 		case 0x02: // Set cursor position
 			SYSTEM.screen_page = CPU.BL > 8 ? 0 : CPU.BH;
-			__cpos* pos = &SYSTEM.cursor[SYSTEM.screen_page];
+			curpos* pos = &SYSTEM.cursor[SYSTEM.screen_page];
 			pos.row = CPU.DH; //TODO: Check against system rows/columns current size
 			pos.col = CPU.DL;
 			SetPos(pos.row, pos.col);
@@ -130,7 +130,7 @@ void INT(ubyte code) {
 
 			} else { // output
 				CPU.AL = CPU.DL;
-				__v_putc(CPU.AL);
+				v_putc(CPU.AL);
 			}
 			break;
 		case 7: // Read character directly from stdin without echo
@@ -143,7 +143,7 @@ void INT(ubyte code) {
 			char *p = cast(char *)(MEMORY + get_ad(CPU.DS, CPU.DX));
 			ushort l;
 			while (p[l] != '$' && l < 255) ++l;
-			__v_put_s(cast(immutable)p, l - 1);
+			v_put_s(cast(immutable)p, l - 1);
 
 			CPU.AL = 0x24;
 			break;
@@ -302,7 +302,7 @@ void INT(ubyte code) {
 
 		break;
 	case 0x29: // FAST CONSOLE OUTPUT
-		__v_putc(CPU.AL);
+		v_putc(CPU.AL);
 		break;
 	default:
 	}

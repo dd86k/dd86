@@ -129,18 +129,18 @@ NO_ARGS:
 	vdos_init;	// vdos, screen
 
 	switch (LOGLEVEL) {
-	case LOG_CRIT: __v_putn("I: LOG_CRIT"); break;
-	case LOG_ERROR: __v_putn("I: LOG_ERROR"); break;
-	case LOG_WARN: __v_putn("I: LOG_WARN"); break;
-	case LOG_INFO: __v_putn("I: LOG_INFO"); break;
-	case LOG_DEBUG: __v_putn("I: LOG_DEBUG"); break;
+	case LOG_CRIT: log_info("I: LOG_CRIT"); break;
+	case LOG_ERROR: log_info("I: LOG_ERROR"); break;
+	case LOG_WARN: log_info("I: LOG_WARN"); break;
+	case LOG_INFO: log_info("I: LOG_INFO"); break;
+	case LOG_DEBUG: log_info("I: LOG_DEBUG"); break;
 	default:
 	}
 
 	if (opt_sleep == 0)
-		__v_putn("I: MAX_PERF");
+		v_putn("I: MAX_PERF");
 
-	__v_putn("DD-DOS is starting...");
+	v_putn("DD-DOS is starting...");
 
 	// Should be loading settings here
 

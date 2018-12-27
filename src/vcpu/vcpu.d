@@ -5,7 +5,7 @@
 module vcpu;
 
 import sleep;
-import Logger : info;
+import Logger : log_info;
 import vcpu16 : exec16;
 import vcpu_utils;
 import compile_config : INIT_MEM, TSC_SLEEP;
@@ -167,7 +167,7 @@ public __gshared CPU_t CPU = void;
 extern (C)
 void vcpu_init() {
 	import core.stdc.stdlib : malloc;
-	//RESET;
+	RESET;
 	MEMORY = cast(ubyte*)malloc(INIT_MEM);
 }
 
@@ -176,7 +176,7 @@ extern (C)
 void vcpu_run() {
 	debug import Logger : logexec;
 
-	//info("CALL vcpu_run");
+	//log_info("CALL vcpu_run");
 	//uint tsc; /// tick count for thread sleeping purposes
 	while (RLEVEL > 0) {
 		CPU.EIP = get_ip; // CS:IP->EIP (important)

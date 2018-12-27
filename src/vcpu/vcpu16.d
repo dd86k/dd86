@@ -1517,7 +1517,7 @@ void exec16(ubyte op) {
 			__hflag16_3(r);
 			break;
 		default:
-			info("Invalid ModR/M from GRP1_8");
+			log_info("Invalid ModR/M from GRP1_8");
 			goto EXEC16_ILLEGAL;
 		}
 		CPU.EIP += 3;
@@ -1571,7 +1571,7 @@ void exec16(ubyte op) {
 			__hflag16_3(r);
 			break;
 		default:
-			info("Invalid ModR/M from GRP1_16");
+			log_info("Invalid ModR/M from GRP1_16");
 			goto EXEC16_ILLEGAL;
 		}
 		CPU.EIP += 4;
@@ -1605,7 +1605,7 @@ void exec16(ubyte op) {
 			r -= im;
 			break;
 		default:
-			info("Invalid ModR/M for GRP2_8");
+			log_info("Invalid ModR/M for GRP2_8");
 			goto EXEC16_ILLEGAL;
 		}
 		__hflag8_1(r);
@@ -1640,7 +1640,7 @@ void exec16(ubyte op) {
 			r -= im;
 			break;
 		default:
-			info("Invalid ModR/M for GRP2_16");
+			log_info("Invalid ModR/M for GRP2_16");
 			goto EXEC16_ILLEGAL;
 		}
 		__hflag16_1(r);
@@ -1842,7 +1842,7 @@ void exec16(ubyte op) {
 		case RM_REG_110: __iu16(CPU.SS, addr); break;
 		case RM_REG_111: __iu16(CPU.DS, addr); break;
 		default: // when bit 6 is clear (REG[3])
-			info("Invalid ModR/M for SEGREG->RM");
+			log_info("Invalid ModR/M for SEGREG->RM");
 			goto EXEC16_ILLEGAL;
 		}
 		CPU.EIP += 2;
@@ -1875,7 +1875,7 @@ void exec16(ubyte op) {
 		case RM_REG_110: CPU.SS = addr; break;
 		case RM_REG_111: CPU.DS = addr; break;
 		default: // when bit 6 is clear (REG[3])
-			info("Invalid ModR/M for SEGREG<-RM");
+			log_info("Invalid ModR/M for SEGREG<-RM");
 			goto EXEC16_ILLEGAL;
 		}
 		CPU.EIP += 2;
@@ -1884,7 +1884,7 @@ void exec16(ubyte op) {
 	case 0x8F: { // POP R/M16
 		const ubyte rm = __fu8_i;
 		if (rm & RM_REG) { // REG must be 000
-			info("Invalid ModR/M for POP R/M16");
+			log_info("Invalid ModR/M for POP R/M16");
 			goto EXEC16_ILLEGAL;
 		}
 		__iu16(pop16, get_rm16(rm, 1));
@@ -2167,7 +2167,7 @@ void exec16(ubyte op) {
 	case 0xC6: { // MOV MEM8, IMM8
 		const ubyte rm = __fu8_i;
 		if (rm & RM_REG) { // No register operation allowed
-			info("Invalid ModR/M for MOV MEM8");
+			log_info("Invalid ModR/M for MOV MEM8");
 			goto EXEC16_ILLEGAL;
 		}
 		__iu8(__fu8_i(1), get_rm16(rm));
@@ -2176,7 +2176,7 @@ void exec16(ubyte op) {
 	case 0xC7: { // MOV MEM16, IMM16
 		const ubyte rm = __fu8_i;
 		if (rm & RM_REG) { // No register operation allowed
-			info("Invalid ModR/M for MOV MEM16");
+			log_info("Invalid ModR/M for MOV MEM16");
 			goto EXEC16_ILLEGAL;
 		}
 		__iu16(__fu16_i(1), get_rm16(rm, 1));
@@ -2244,7 +2244,7 @@ void exec16(ubyte op) {
 			r >>= 1;
 			break;
 		default: // 110
-			info("Invalid ModR/M for GRP2 R/M8, 1");
+			log_info("Invalid ModR/M for GRP2 R/M8, 1");
 			goto EXEC16_ILLEGAL;
 		}
 		__iu8(r, addr);
@@ -2283,7 +2283,7 @@ void exec16(ubyte op) {
 			r >>= 1;
 			break;
 		default: // 110
-			info("Invalid ModR/M for GRP2 R/M16, 1");
+			log_info("Invalid ModR/M for GRP2 R/M16, 1");
 			goto EXEC16_ILLEGAL;
 		}
 		//TODO: handle flags accordingly
@@ -2318,7 +2318,7 @@ void exec16(ubyte op) {
 
 			break;
 		default:
-			info("Invalid ModR/M for GRP2 R/M8, CL");
+			log_info("Invalid ModR/M for GRP2 R/M8, CL");
 			goto EXEC16_ILLEGAL;
 		}*/
 		CPU.EIP += 2;
@@ -2350,7 +2350,7 @@ void exec16(ubyte op) {
 
 			break;
 		default:
-			info("Invalid ModR/M for GRP2 R/M16, CL");
+			log_info("Invalid ModR/M for GRP2 R/M16, CL");
 			goto EXEC16_ILLEGAL;
 		}*/
 		CPU.EIP += 2;
@@ -2506,7 +2506,7 @@ void exec16(ubyte op) {
 			CPU.AL = cast(ubyte)r;
 			break;
 		default:
-			info("Invalid ModR/M on GRP3_8");
+			log_info("Invalid ModR/M on GRP3_8");
 			goto EXEC16_ILLEGAL;
 		}
 		CPU.EIP += 3;
@@ -2550,7 +2550,7 @@ void exec16(ubyte op) {
 			__iu16(r, addr);
 			break;
 		default:
-			info("Invalid ModR/M on GRP3_8");
+			log_info("Invalid ModR/M on GRP3_8");
 			goto EXEC16_ILLEGAL;
 		}
 		CPU.EIP += 4;
@@ -2592,7 +2592,7 @@ void exec16(ubyte op) {
 			--r;
 			break;
 		default:
-			info("Invalid ModR/M on GRP4_8");
+			log_info("Invalid ModR/M on GRP4_8");
 			goto EXEC16_ILLEGAL;
 		}
 		__iu16(r, addr);
@@ -2639,14 +2639,14 @@ void exec16(ubyte op) {
 			CPU.EIP += 2;
 			break;
 		default:
-			info("Invalid ModR/M on GRP5_16");
+			log_info("Invalid ModR/M on GRP5_16");
 			goto EXEC16_ILLEGAL;
 		}
 		return;
 	}
 	default: // Illegal instruction
 EXEC16_ILLEGAL:
-		info("INVALID OPERATION CODE");
+		log_info("INVALID OPERATION CODE");
 		//TODO: Raise vector on illegal op
 		return;
 	}

@@ -46,7 +46,7 @@ int vdos_load(char *path) {
 
 	if (fsize == 0) {
 		fclose(f);
-		error("Executable file is zero length");
+		log_error("Executable file is zero length");
 		CPU.AL = EDOS_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
 		return EDOS_BAD_FORMAT;
 	}
@@ -57,7 +57,7 @@ int vdos_load(char *path) {
 
 	switch (mzh.e_magic) {
 	case MZ_MAGIC, ZM_MAGIC: // Party time!
-		info("LOAD MZ");
+		log_info("LOAD MZ");
 
 		// ** Header is read for initial register values
 		fread(&mzh, mzh.sizeof, 1, f); // read rest
@@ -66,9 +66,9 @@ int vdos_load(char *path) {
 
 		// ** Copy code section from exe into memory
 		/*if (mzh.e_minalloc && mzh.e_maxalloc) { // Low memory
-			info("LOAD LOW MEM");
+			log_info("LOAD LOW MEM");
 		} else { // High memory
-			info("LOAD HIGH MEM");
+			log_info("LOAD HIGH MEM");
 		}*/
 
 		// Shouldn't it be there _multiple_ code segments in some cases?
@@ -80,14 +80,14 @@ int vdos_load(char *path) {
 			csize -= PAGE - mzh.e_cblp;
 
 		debug {
-			__v_printf("RELOC TABLE: %d -- %d B\n", mzh.e_lfarlc,  mz_rlc.sizeof * mzh.e_crlc);
-			__v_printf("STURCT STRUCT SIZE: %d\n", mzh.sizeof);
-			__v_printf("EXE HEADER SIZE: %d\n", hsize);
-			__v_printf("CODE: %d -- %d B\n", codebase, csize);
-			__v_printf("CPU.CS: %4Xh -- e_cs: %4Xh\n", CPU.CS, mzh.e_cs);
-			__v_printf("CPU.IP: %4Xh -- e_ip: %4Xh\n", CPU.IP, mzh.e_ip);
-			__v_printf("CPU.SS: %4Xh -- e_ss: %4Xh\n", CPU.SS, mzh.e_ss);
-			__v_printf("CPU.SP: %4Xh -- e_sp: %4Xh\n", CPU.SP, mzh.e_sp);
+			v_printf("RELOC TABLE: %d -- %d B\n", mzh.e_lfarlc,  mz_rlc.sizeof * mzh.e_crlc);
+			v_printf("STURCT STRUCT SIZE: %d\n", mzh.sizeof);
+			v_printf("EXE HEADER SIZE: %d\n", hsize);
+			v_printf("CODE: %d -- %d B\n", codebase, csize);
+			v_printf("CPU.CS: %4Xh -- e_cs: %4Xh\n", CPU.CS, mzh.e_cs);
+			v_printf("CPU.IP: %4Xh -- e_ip: %4Xh\n", CPU.IP, mzh.e_ip);
+			v_printf("CPU.SS: %4Xh -- e_ss: %4Xh\n", CPU.SS, mzh.e_ss);
+			v_printf("CPU.SP: %4Xh -- e_sp: %4Xh\n", CPU.SP, mzh.e_sp);
 		}
 
 		fseek(f, codebase, SEEK_SET); // Seek to start of first code segment
@@ -103,7 +103,7 @@ int vdos_load(char *path) {
 			 * 5. Write the word (sum) back to address
 			 */
 			if (LOGLEVEL)
-				__v_printf("[INFO] Relocation(s): %d\n", mzh.e_crlc);
+				v_printf("[INFO] Relocation(s): %d\n", mzh.e_crlc);
 			fseek(f, mzh.e_lfarlc, SEEK_SET); // 1.
 			const int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
 			//TODO: Use MEMORY instead of a malloc
@@ -113,11 +113,11 @@ int vdos_load(char *path) {
 			// temporary value
 			ushort rel = 0x2000; // usually the loading segment
 			int i;
-			debug __v_putn(" #    seg: off -> loadseg");
+			debug v_putn(" #    seg: off -> loadseg");
 			do {
 				const int addr = get_ad(r.segment, r.offset); // 2.
 				const ushort loadseg = __fu16(addr); /// 3. Load segment
-				debug __v_printf("%2d   %04X:%04X -> cs:%04X+CPU.CS:%04X = %04X\n",
+				debug v_printf("%2d   %04X:%04X -> cs:%04X+CPU.CS:%04X = %04X\n",
 					i, r.segment, r.offset, mzh.e_cs, CPU.CS, loadseg
 				);
 				__iu16(mzh.e_cs + loadseg, addr); // 4. & 5.
@@ -126,7 +126,7 @@ int vdos_load(char *path) {
 			free(r);
 		} else {
 			//if (LOGLEVEL)
-			//	info("No relocations");
+			//	log_info("No relocations");
 		}
 
 		// ** Setup registers
@@ -150,12 +150,12 @@ int vdos_load(char *path) {
 	default:
 		if (fsize > 0xFF00) { // Size - PSP
 			fclose(f);
-			error("COM file too large (exceeds FF00h)");
+			log_error("COM file too large (exceeds FF00h)");
 			CPU.AL = EDOS_BAD_FORMAT; //TODO: Verify code
 			return EDOS_BAD_FORMAT;
 		}
 FILE_COM:
-		info("LOAD COM");
+		log_info("LOAD COM");
 
 		CPU.IP = 0x100;
 
