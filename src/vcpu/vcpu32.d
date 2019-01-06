@@ -3,48 +3,20 @@ module vcpu32; // 80486+
 import vcpu16;
 
 /**
- * Execute an instruction in PROTECTED mode
+ * Execute an instruction in 32-bit PROTECTED mode
  * Params: op = opcode
  */
 extern (C)
 void exec32(ubyte op) {
 	switch (op) {
-/* TODO:
-	APRL
-	BOUND
-	IMUL R16, R16, IMM
-	IMUL R16, M16, IMM
-	INS
-	LAR R16, R16
-	LAR R16, M16
-	LEAVE
-	LGDT
-	LIDT
-	LLDT
-	LMSW
-	LSL R16, R16
-	LSL R16, M16
-	LTR
-	OUTS
-	POPA
-	PUSH IMM
-	PUSHA
-	RCL REG, IMM
-	RCL MEM, IMM
-	RCR REG, IMM
-	RCR MEM, IMM
-	ROL REG, IMM
-	ROL MEM, IMM
-	SAL/SHL/SAR/SHR REG, IMM
-	SAL/SHL/SAR/SHR MEM, IMM
-	SGDT
-	SIDT
-	SLDT
-	STR
-	VERR
-	VERW
-*/
-	default:
-		exec16(op); // temporary?
+	case 0x00: // ADD
+
+		break;
+	case 0x66: // OPCODE PREFIX
+		++CPU.EIP;
+		exec16(MEMORY[CPU.EIP]);
+		break;
+	default: //TODO: illegal op exec32
+
 	}
 }

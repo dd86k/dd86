@@ -255,6 +255,7 @@ void screen_draw() {
 
 		const uint w = SYSTEM.screen_col; /// width
 		const uint h = SYSTEM.screen_row; /// height
+		char *s = str;
 
 		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
 		// Solution 5b
@@ -266,39 +267,39 @@ void screen_draw() {
 			ubyte cbg = a >> 4;
 			if (cfg != lfg) {
 				*s_fg = vatable[cfg];
-				*cast(ulong*)(str + bi) = *cast(ulong*)fg_s;
-				*cast(ushort*)(str + bi + 8) = *cast(ushort*)(fg_s + 8);
+				*cast(ulong*)(s + bi) = *cast(ulong*)fg_s;
+				*cast(ushort*)(s + bi + 8) = *cast(ushort*)(fg_s + 8);
 				lfg = cfg;
 				bi += 10;
 			}
 			if (cbg != lbg) {
 				*s_bg = vatable[cbg];
-				*cast(ulong*)(str + bi) = *cast(ulong*)bg_s;
-				*cast(ushort*)(str + bi + 8) = *cast(ushort*)(bg_s + 8);
+				*cast(ulong*)(s + bi) = *cast(ulong*)bg_s;
+				*cast(ushort*)(s + bi + 8) = *cast(ushort*)(bg_s + 8);
 				lbg = cbg;
 				bi += 10;
 			}
 			const uint c = vctable[VIDEO[i].ascii];
 			if (c < 128) { // +1
-				str[bi] = cast(ubyte)c;
+				s[bi] = cast(ubyte)c;
 				++bi;
 			} else if (c > 0xFFFF) { // +3
-				//*cast(ushort*)(str + bi) = cast(ushort)c;
-				//*(str + bi + 2) = *cp;
-				*cast(uint*)(str + bi) = c;
+				//*cast(ushort*)(s + bi) = cast(ushort)c;
+				//*(s + bi + 2) = *cp;
+				*cast(uint*)(s + bi) = c;
 				bi += 3;
 			} else { // +2
-				*cast(ushort*)(str + bi) = cast(ushort)c;
+				*cast(ushort*)(s + bi) = cast(ushort)c;
 				bi += 2;
 			}
 			++x;
 			if (x == w) {
-				*(str + bi) = '\n';
+				*(s + bi) = '\n';
 				++bi;
 				x = 0;
 			}
 		}
-		write(STDOUT_FILENO, cast(char*)str, bi);
+		write(STDOUT_FILENO, cast(char*)s, bi);
 	}
 }
 
@@ -361,10 +362,10 @@ void screen_logo() {
  */
 extern (C) public
 void v_put(immutable(char) *s) {
-	int size;
-	while (s[size] != 0 && size < MAX_STR) {
-		v_putc(s[size]);
-		++size;
+	int i;
+	while (s[i] != 0 && i < MAX_STR) {
+		v_putc(s[i]);
+		++i;
 	}
 }
 
@@ -378,8 +379,9 @@ void v_put(immutable(char) *s) {
  */
 extern (C) public
 void v_put_s(immutable(char) *s, uint size) {
-	while (size && *s != 0) {
-		v_putc(*s++);
+	while (size >= 0 && *s != 0) {
+		v_putc(*s);
+		++s;
 		--size;
 	}
 }

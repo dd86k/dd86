@@ -10,10 +10,14 @@ import vcpu;
 import Logger;
 import vdos_codes : PANIC_MEMORY_ACCESS;
 
+//TODO: Consider moving most of these functions under the CPU struct
+//      With better names, too
+
 /**
  * Get effective address from a R/M byte.
  * Takes account of the preferred segment register.
  * MOD and RM fields are used, and Seg is reset (SEG_NONE).
+ * The instruction pointer is adjusted.
  * Params:
  *   rm = R/M BYTE
  *   wide = wide bit set in opcode
@@ -21,35 +25,21 @@ import vdos_codes : PANIC_MEMORY_ACCESS;
  */
 extern (C)
 uint get_rm16(ubyte rm, ubyte wide = 0) {
+	//uint r = void;
 	//TODO: Reset Seg to SEG_NONE
 	//TODO: Use general purpose variable to hold segreg value
 	switch (rm & RM_MOD) { // MOD
 	case RM_MOD_00: // MOD 00, Memory Mode, no displacement
-		switch (Seg) {
-		case SEG_CS:
-			debug _debug("MOD_00, get_ea::SEG_CS");
-			break;
-		case SEG_DS:
-			debug _debug("MOD_00, get_ea::SEG_DS");
-			break;
-		case SEG_ES:
-			debug _debug("MOD_00, get_ea::SEG_ES");
-			break;
-		case SEG_SS:
-			debug _debug("MOD_00, get_ea::SEG_SS");
-			break;
+		switch (rm & RM_RM) { // R/M
+		case RM_RM_000: return CPU.SI + CPU.BX;
+		case RM_RM_001: return CPU.DI + CPU.BX;
+		case RM_RM_010: return CPU.SI + CPU.BP;
+		case RM_RM_011: return CPU.DI + CPU.BP;
+		case RM_RM_100: return CPU.SI;
+		case RM_RM_101: return CPU.DI;
+		case RM_RM_110: return __fu16_i(1);
+		case RM_RM_111: return CPU.BX;
 		default:
-			switch (rm & RM_RM) { // R/M
-			case RM_RM_000: return CPU.SI + CPU.BX;
-			case RM_RM_001: return CPU.DI + CPU.BX;
-			case RM_RM_010: return CPU.SI + CPU.BP;
-			case RM_RM_011: return CPU.DI + CPU.BP;
-			case RM_RM_100: return CPU.SI;
-			case RM_RM_101: return CPU.DI;
-			case RM_RM_110: return __fu16_i(1);
-			case RM_RM_111: return CPU.BX;
-			default:
-			}
 		}
 		break; // MOD 00
 	case RM_MOD_01: { // MOD 01, Memory Mode, 8-bit displacement follows
@@ -68,31 +58,16 @@ uint get_rm16(ubyte rm, ubyte wide = 0) {
 		break; // MOD 01
 	}
 	case RM_MOD_10: // MOD 10, Memory Mode, 16-bit displacement follows
-		switch (Seg) {
-		case SEG_CS:
-			debug _debug("MOD_10, get_ea::SEG_CS");
-			break;
-		case SEG_DS:
-			debug _debug("MOD_10, get_ea::SEG_DS");
-			break;
-		case SEG_ES:
-			debug _debug("MOD_10, get_ea::SEG_ES");
-			break;
-		case SEG_SS:
-			debug _debug("MOD_10, get_ea::SEG_SS");
-			break;
+		switch (rm & RM_RM) { // R/M
+		case RM_RM_000: return CPU.SI + CPU.BX + __fi16_i(1);
+		case RM_RM_001: return CPU.DI + CPU.BX + __fi16_i(1);
+		case RM_RM_010: return CPU.SI + CPU.BP + __fi16_i(1);
+		case RM_RM_011: return CPU.DI + CPU.BP + __fi16_i(1);
+		case RM_RM_100: return CPU.SI + __fi16_i(1);
+		case RM_RM_101: return CPU.DI + __fi16_i(1);
+		case RM_RM_110: return CPU.BP + __fi16_i(1);
+		case RM_RM_111: return CPU.BX + __fi16_i(1);
 		default:
-			switch (rm & RM_RM) { // R/M
-			case RM_RM_000: return CPU.SI + CPU.BX + __fi16_i(1);
-			case RM_RM_001: return CPU.DI + CPU.BX + __fi16_i(1);
-			case RM_RM_010: return CPU.SI + CPU.BP + __fi16_i(1);
-			case RM_RM_011: return CPU.DI + CPU.BP + __fi16_i(1);
-			case RM_RM_100: return CPU.SI + __fi16_i(1);
-			case RM_RM_101: return CPU.DI + __fi16_i(1);
-			case RM_RM_110: return CPU.BP + __fi16_i(1);
-			case RM_RM_111: return CPU.BX + __fi16_i(1);
-			default:
-			}
 		}
 		CPU.EIP += 2;
 		break; // MOD 10
@@ -128,11 +103,95 @@ uint get_rm16(ubyte rm, ubyte wide = 0) {
 	return 0;
 }
 
-//TODO: Write get_rm32
+/**
+ * Calculates the effective address from the given ModR/M byte and is used
+ * under 32-bit modes. This function updates EIP.
+ * Params:
+ *   rm = ModR/M byte
+ *   wide = WIDE bit
+ * Returns: Calculated address
+ */
+extern (C)
+uint get_rm32(ubyte rm, ubyte wide = 0) {
+	//TODO: segment overload support
+	uint r = void;
+	switch (rm & RM_MOD) { // MOD
+	case RM_MOD_00: // MOD 00, Memory Mode, no displacement
+		switch (rm & RM_RM) {
+		case RM_RM_000: r = CPU.EAX; break;
+		case RM_RM_001: r = CPU.ECX; break;
+		case RM_RM_010: r = CPU.EDX; break;
+		case RM_RM_011: r = CPU.EBX; break;
+		case RM_RM_100: /*TODO: SIB mode*/ break;
+		case RM_RM_101: r = __fi32_i(1); break;
+		case RM_RM_110: r = CPU.ESI; break;
+		case RM_RM_111: r = CPU.EDI; break;
+		default:
+		}
+		break; // MOD 00
+	case RM_MOD_01: { // MOD 01, Memory Mode, 8-bit displacement follows
+		switch (rm & RM_RM) {
+		case RM_RM_000: r = CPU.EAX + __fi8_i(1); break;
+		case RM_RM_001: r = CPU.ECX + __fi8_i(1); break;
+		case RM_RM_010: r = CPU.EDX + __fi8_i(1); break;
+		case RM_RM_011: r = CPU.EBX + __fi8_i(1); break;
+		case RM_RM_100: /*TODO: SIB mode + D8*/ break;
+		case RM_RM_101: r = CPU.EBP + __fi8_i(1); break;
+		case RM_RM_110: r = CPU.ESI + __fi8_i(1); break;
+		case RM_RM_111: r = CPU.EDI + __fi8_i(1); break;
+		default:
+		}
+		++CPU.EIP;
+		break; // MOD 01
+	}
+	case RM_MOD_10: // MOD 10, Memory Mode, 32-bit displacement follows
+		switch (rm & RM_RM) { // R/M
+		case RM_RM_000: r = CPU.EAX + __fi32_i(1); break;
+		case RM_RM_001: r = CPU.ECX + __fi32_i(1); break;
+		case RM_RM_010: r = CPU.EDX + __fi32_i(1); break;
+		case RM_RM_011: r = CPU.EBX + __fi32_i(1); break;
+		case RM_RM_100: /*TODO: SIB mode + D32*/ break;
+		case RM_RM_101: r = CPU.EBP + __fi32_i(1); break;
+		case RM_RM_110: r = CPU.ESI + __fi32_i(1); break;
+		case RM_RM_111: r = CPU.EDI + __fi32_i(1); break;
+		default:
+		}
+		CPU.EIP += 2;
+		break; // MOD 10
+	case RM_MOD_11: // MOD 11, Register Mode
+		ubyte m = rm & RM_RM;
+		if (wide) switch (m) {
+		case RM_RM_000: return CPU.EAX;
+		case RM_RM_001: return CPU.ECX;
+		case RM_RM_010: return CPU.EDX;
+		case RM_RM_011: return CPU.EBX;
+		case RM_RM_100: return CPU.ESP;
+		case RM_RM_101: return CPU.EBP;
+		case RM_RM_110: return CPU.ESI;
+		case RM_RM_111: return CPU.EDI;
+		default:
+		} else switch (m) {
+		//TODO: Check CPU.OPSIZE AX/CX/etc.
+		case RM_RM_000: return CPU.AL;
+		case RM_RM_001: return CPU.CL;
+		case RM_RM_010: return CPU.DL;
+		case RM_RM_011: return CPU.BL;
+		case RM_RM_100: return CPU.AH;
+		case RM_RM_101: return CPU.CH;
+		case RM_RM_110: return CPU.DH;
+		case RM_RM_111: return CPU.BH;
+		default:
+		}
+		break; // MOD 11
+	default:
+	}
 
-/*****************************************************************************
- * Flag utils
- *****************************************************************************/
+	return r;
+}
+
+//
+// CPU Flag handling utilities
+//
 
 /**
  * Handle result for GROUP1 (UNSIGNED BYTE)
@@ -274,7 +333,9 @@ void __hflag16_5(int r) {
 	setPF_16(r);
 }
 
+//
 // Conditional flag handlers
+//
 
 extern (C)
 pragma(inline, true) {
@@ -313,9 +374,9 @@ pragma(inline, true) {
 	}
 }
 
-/*****************************************************************************
- * Insert
- *****************************************************************************/
+//
+// Insert into memory functions
+//
 
 /**
  * Insert a BYTE in MEMORY
@@ -391,9 +452,9 @@ void __iwstr(immutable(wchar)[] data, size_t addr = CPU.EIP) {
 	wcscpy(cast(wchar_t*)(MEMORY + addr), cast(wchar_t*)data);
 }
 
-/*****************************************************************************
- * Fetch
- *****************************************************************************/
+//
+// Fetch from memory function
+//
 
 /**
  * Fetch an unsigned byte (ubyte).
@@ -450,9 +511,11 @@ uint __fu32(uint addr) {
 	return *cast(uint*)(MEMORY + addr);
 }
 
-/*****************************************************************************
- * Fetch immediates
- *****************************************************************************/
+//
+// Fetch immediates from memory functions
+//
+
+//TODO: Proper calculated bounds checking
 
 /**
  * Fetch an immediate BYTE at CPU.EIP+1+n
@@ -461,7 +524,6 @@ uint __fu32(uint addr) {
  */
 extern (C)
 ubyte __fu8_i(int n = 0) {
-	if (C_OVERFLOW(n)) log_crit("ACCESS VIOLATION IN __fu8_i", PANIC_MEMORY_ACCESS);
 	return MEMORY[CPU.EIP + 1 + n];
 }
 
@@ -472,7 +534,6 @@ ubyte __fu8_i(int n = 0) {
  */
 extern (C)
 byte __fi8_i(int n = 0) {
-	if (C_OVERFLOW(n)) log_crit("ACCESS VIOLATION IN __fi8_i", PANIC_MEMORY_ACCESS);
 	return cast(byte)MEMORY[CPU.EIP + 1 + n];
 }
 
@@ -482,8 +543,7 @@ byte __fi8_i(int n = 0) {
  * Returns: WORD
  */
 extern (C)
-ushort __fu16_i(uint n = 0) {
-	if (C_OVERFLOW(n)) log_crit("ACCESS VIOLATION IN __fu16_i", PANIC_MEMORY_ACCESS);
+ushort __fu16_i(int n = 0) {
 	return *cast(ushort*)(MEMORY + CPU.EIP + 1 + n);
 }
 
@@ -493,14 +553,23 @@ ushort __fu16_i(uint n = 0) {
  * Returns: signed WORD
  */
 extern (C)
-short __fi16_i(uint n = 0) {
-	if (C_OVERFLOW(n)) log_crit("ACCESS VIOLATION IN __fi16_i", PANIC_MEMORY_ACCESS);
+short __fi16_i(int n = 0) {
 	return *cast(short*)(MEMORY + CPU.EIP + 1 + n);
 }
 
-/*****************************************************************************
- * Util helpers
- *****************************************************************************/
+/**
+ * Fetch an immediate signed WORD at EIP+1+n
+ * Params: n = Optional offset (+1)
+ * Returns: signed WORD
+ */
+extern (C)
+int __fi32_i(int n = 0) {
+	return *cast(int*)(MEMORY + CPU.EIP + 1 + n);
+}
+
+//
+// Utilities utilities
+//
 
 /**
  * Check for overflow from MEMORY.
@@ -513,10 +582,11 @@ bool C_OVERFLOW(size_t addr) {
 	return addr < 0 || addr > MEMORYSIZE;
 }
 
-/*****************************************************************************
- * Interrupt helpers
- *****************************************************************************/
+//
+// Interrupt helpers
+//
 
+extern (C)
 void __int_enter() { // REAL-MODE
 	//const inum = code << 2;
 	/*IF (inum + 3 > IDT limit)
@@ -531,6 +601,7 @@ void __int_enter() { // REAL-MODE
 	//IP ← IDT[inum].offset;
 }
 
+extern (C)
 void __int_exit() { // REAL-MODE
 	CPU.IP = pop16;
 	CPU.CS = pop16;
