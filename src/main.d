@@ -17,14 +17,14 @@ import appconfig : APP_VERSION, PLATFORM, BUILD_TYPE, C_RUNTIME;
 
 extern (C):
 
-enum DESCRIPTION = "IBM PC Virtual Machine and DOS Emulation Layer";
-enum COPYRIGHT = "Copyright (c) 2017-2019 dd86k";
+enum DESCRIPTION = "IBM PC Virtual Machine and DOS Emulation Layer\n";
+enum COPYRIGHT = "Copyright (c) 2017-2019 dd86k\n\n";
 
 private void _version() {
 	printf(
 		BANNER~
-		DESCRIPTION~"\n"~
-		COPYRIGHT~"\n\n"~
+		DESCRIPTION~
+		COPYRIGHT~
 		"dd-dos-"~PLATFORM~" v"~APP_VERSION~"-"~BUILD_TYPE~" ("~__TIMESTAMP__~")\n"~
 		"Homepage: <https://git.dd86k.space/dd86k/dd-dos>\n"~
 		"License: MIT <https://opensource.org/licenses/MIT>\n"~
@@ -36,7 +36,7 @@ private void _version() {
 
 private void help() {
 	puts(
-		DESCRIPTION~"\n"~
+		DESCRIPTION~
 		"USAGE\n"~
 		"	dd-dos [-vPN] [FILE [FILEARGS]]\n"~
 		"	dd-dos {-V|--version|-h|--help}\n\n"~
@@ -46,6 +46,27 @@ private void help() {
 		"	-v	Increase verbosity level\n"~
 		"	-V, --version  Print version screen, then exit\n"~
 		"	-h, --help     Print help screen, then exit",
+	);
+}
+
+private void license() {
+	puts(
+		COPYRIGHT~
+		"Permission is hereby granted, free of charge, to any person obtaining a copy of\n"~
+		"this software and associated documentation files (the \"Software\"), to deal in\n"~
+		"the Software without restriction, including without limitation the rights to\n"~
+		"use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\n"~
+		"of the Software, and to permit persons to whom the Software is furnished to do\n"~
+		"so, subject to the following conditions:\n\n"~
+		"The above copyright notice and this permission notice shall be included in all\n"~
+		"copies or substantial portions of the Software.\n\n"~
+		"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"~
+		"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"~
+		"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"~
+		"AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"~
+		"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"~
+		"OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"~
+		"SOFTWARE."
 	);
 }
 
@@ -73,6 +94,10 @@ private int main(int argc, char **argv) {
 				_version;
 				return 0;
 			}
+			if (strcmp(a, "license") == 0) {
+				license;
+				return 0;
+			}
 
 			printf("Unknown parameter: --%s\n", a);
 			return EDOS_INVALID_FUNCTION;
@@ -80,10 +105,10 @@ private int main(int argc, char **argv) {
 			char* a = *argv;
 			while (*++a) {
 				switch (*a) {
-				case 'P': --opt_sleep; break;
-				case 'N': --arg_info; break;
+				case 'P': opt_sleep = !opt_sleep; break;
+				case 'N': arg_info = !arg_info; break;
 				case 'v': ++LOGLEVEL; break;
-				case '-': --args; break;
+				case '-': args = !args; break;
 				case 'h': help; return 0;
 				case 'V': _version; return 0;
 				default:
@@ -112,7 +137,7 @@ NO_ARGS:
 		printf("E: Unknown log level: %d\n", LOGLEVEL);
 		return EDOS_INVALID_FUNCTION;
 	}
-	
+
 	//TODO: Read settings here
 
 	//
