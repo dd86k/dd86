@@ -1,7 +1,6 @@
-/*
- * vdos.loader.d: Executable file loader. Should somewhat be like EXEC.
+/**
+ * loader: Executable file loader. Should somewhat be like EXEC.
  */
-
 module vdos.loader;
 
 import core.stdc.stdio :
@@ -14,7 +13,7 @@ import vdos.structs : mz_hdr, MZ_HDR_SIZE, mz_rlc, PSP;
 import vdos.codes;
 import logger;
 import ddc : NULL_CHAR;
-import vdos.screen : v_printf, v_putn;
+import vdos.video : v_printf, v_putn;
 
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;

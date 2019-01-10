@@ -1,14 +1,13 @@
-/*
- * dd-dos.d: virtual OS, shell, and interrupt handler (layer part)
+/**
+ * os: Virtual DOS
  */
-
 module vdos.os;
 
 import ddc;
 import vcpu.core : MEMORY, CPU, get_ip, FLAG;
 import vdos.codes, vdos.interrupts;
 import vdos.structs : system_struct, dos_struct, curpos;
-import vdos.screen;
+import vdos.video;
 import logger;
 import appconfig : __MM_SYS_DOS, INIT_MEM;
 

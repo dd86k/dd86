@@ -1,6 +1,7 @@
-/*
- * main.d: CLI entry point
+/**
+ * main: Main entry point, CLI arguments, initiate sub-systems
  */
+module main;
 
 import core.stdc.string : strcmp;
 import ddc : puts, printf, fputs, stderr, stdout;
@@ -9,18 +10,22 @@ import vdos.os : BANNER, SYSTEM, vdos_init;
 import vdos.shell : vdos_shell;
 import vdos.codes;
 import vdos.loader : vdos_load;
-import vdos.screen;
+import vdos.video;
 import logger;
 import os.term : con_init, Clear, SetPos;
 import os.io : os_pexist;
 import appconfig : APP_VERSION, PLATFORM, BUILD_TYPE, C_RUNTIME;
 
+private:
 extern (C):
 
+/// Description string, used in version and help screens
 enum DESCRIPTION = "IBM PC Virtual Machine and DOS Emulation Layer\n";
+/// Copyright string, used in version and license screens
 enum COPYRIGHT = "Copyright (c) 2017-2019 dd86k\n\n";
 
-private void _version() {
+/// Print version screen to stdout
+void _version() {
 	printf(
 		BANNER~
 		DESCRIPTION~
@@ -34,7 +39,8 @@ private void _version() {
 	);
 }
 
-private void help() {
+/// Print help screen to stdout
+void help() {
 	puts(
 		DESCRIPTION~
 		"USAGE\n"~
@@ -49,7 +55,8 @@ private void help() {
 	);
 }
 
-private void license() {
+/// Print license screen to stdout
+void license() {
 	puts(
 		COPYRIGHT~
 		"Permission is hereby granted, free of charge, to any person obtaining a copy of\n"~
@@ -70,7 +77,7 @@ private void license() {
 	);
 }
 
-private int main(int argc, char **argv) {
+int main(int argc, char **argv) {
 	ubyte args = 1;
 	ubyte arg_info = 1;
 	char *prog; /// FILE, COM or EXE to start

@@ -29,6 +29,6 @@
 | vdos.interrupts | Interrupt handling (between vcpu and os) |
 | vdos.loader | COM and EXE file loader |
 | vdos.os | Virtual DOS operating system |
-| vdos.screen | Virtual video adapter, prints directly on screen |
+| vdos.video | Virtual video adapter, prints directly on screen |
 | vdos.shell | Virtual shell, includes internal commands |
 | vdos.structs | System and DOS structures |

@@ -1,7 +1,6 @@
-/*
- * vdos.structs : Structures defined within DOS
+/**
+ * structs: Structures defined within DOS
  */
-
 module vdos.structs;
 
 // Enumerations

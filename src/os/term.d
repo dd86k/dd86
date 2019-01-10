@@ -1,7 +1,6 @@
-/*
- * os.term : In-house console/terminal library
+/**
+ * term: In-house console/terminal library
  */
-
 module os.term;
 
 import ddc : putchar, getchar, fputs, stdout;

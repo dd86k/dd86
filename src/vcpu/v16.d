@@ -1,3 +1,6 @@
+/**
+ * v16: Real-mode and v8086 instructions
+ */
 module vcpu.v16; // 8086
 
 import vcpu.core, vcpu.v32, vcpu.mm, vcpu.utils;

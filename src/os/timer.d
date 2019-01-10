@@ -1,5 +1,4 @@
-/*
- * os.timer : Precise OS timer
+/**
+ * timer: Precise OS timer
  */
-
 module os.timer;

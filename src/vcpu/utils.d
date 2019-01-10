@@ -1,9 +1,8 @@
-/*
- * vcpu.utils : Processor utilities
+/**
+ * utils: Processor utilities
  *
  * Flag handling, bswap utils, and interrupt utils
  */
-
 module vcpu.utils;
 
 import vcpu.core, vcpu.mm;

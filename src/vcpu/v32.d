@@ -1,3 +1,6 @@
+/**
+ * v32: Protected-mode instructions
+ */
 module vcpu.v32; // 80486+
 
 import vcpu.core;

@@ -1,15 +1,13 @@
-/*
- * ddc.d : For people who want to C.
+/**
+ * ddc: C compability external functions.
  *
  * It's a set of C runtime external bindings and enumerations and aliases to
  * aid development in betterC modes.
  *
  * Why? Because some functions are externed as (D) in core.stdc, which does not
- * mangle well with the linker (i.e. D name mangling for C symbols).
- *
- * This also avoids using the druntime and D stdlib functions and aliases.
+ * mangle well with the linker, since the linker will mangle those names as D,
+ * therefore getting `_D3ddc7putchar` instead of `_putchar`.
  */
-
 module ddc;
 
 enum NULL_CHAR = cast(char*)0; /// Null character pointer

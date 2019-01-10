@@ -1,7 +1,6 @@
-/*
+/**
  * mm: Processor memory manager
  */
-
 module vcpu.mm;
 
 import core.stdc.string : memcpy, strcpy, strlen;

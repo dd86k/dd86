@@ -1,13 +1,12 @@
-/*
- * os.io : Basic OS I/O utilities
+/**
+ * io: Basic OS I/O utilities
  *
  * Includes OS utilities, such as changing/getting the current working
  * directory, setting/getting file attributes, directory walkers, etc.
  */
+module os.io;
 
 //TODO: File/directory walker
-
-module os.io;
 
 struct OSTime {
 	ubyte hour, minute, second, millisecond;

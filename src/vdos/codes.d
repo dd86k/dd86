@@ -1,7 +1,6 @@
-/*
- * codes.d: Error codes
+/**
+ * codes: Error codes
  */
-
 module vdos.codes;
 
 /*
@@ -12,7 +11,9 @@ module vdos.codes;
  *   FreeDOS
  */
 enum : ubyte {
+	/// Successful
 	EDOS_NONE		= 0,
+	/// Invalid function (ms-dos service)
 	EDOS_INVALID_FUNCTION		= 1,
 	EDOS_FILE_NOT_FOUND		= 2,
 	EDOS_PATH_NOT_FOUND		= 3,

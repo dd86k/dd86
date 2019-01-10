@@ -1,9 +1,8 @@
-/*
+/**
  * appconfig: DD-DOS compilation configuration settings and messages
  *
  * Pragmas of type msg are only allowed here.
  */
-
 module appconfig;
 
 import os.sleep : SLEEP_TIME;

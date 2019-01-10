@@ -1,7 +1,6 @@
-/*
- * os.sleep : Sleep functions
+/**
+ * sleep: Sleep functions
  */
-
 module os.sleep;
 
 version (Posix) {

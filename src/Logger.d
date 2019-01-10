@@ -1,6 +1,9 @@
+/**
+ * logger: Logger suite, which may enable file logging as well
+ */
 module logger;
 
-import vdos.screen, vdos.codes;
+import vdos.video, vdos.codes;
 
 enum {
 	LOG_SILENCE	= 0,	/// Complete silence

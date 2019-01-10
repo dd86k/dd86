@@ -1,10 +1,13 @@
+/**
+ * shell: Virtual shell
+ */
 module vdos.shell;
 
 import ddc;
 import core.stdc.string : strcmp, strlen, memcpy, strncpy;
 import vcpu.core : MEMORY, vcpu_run, CPU, MEMORYSIZE, opt_sleep;
 import vdos.loader : vdos_load;
-import vdos.screen;
+import vdos.video;
 import vdos.os;
 import vdos.interrupts : INT;
 import vdos.codes : PANIC_MANUAL;

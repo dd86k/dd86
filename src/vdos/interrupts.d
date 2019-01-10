@@ -1,7 +1,8 @@
-/*
- * Interrupt handler (Hardware, BIOS, DOS, vDOS)
+/**
+ * interrupts: Interrupt handler (Hardware, BIOS, DOS, vDOS)
+ *
+ * This module lays in-between the virtual processor and the OS functions
  */
- 
 module vdos.interrupts;
 
 import ddc;
@@ -11,7 +12,7 @@ import vdos.os : SYSTEM, DOS, BIOS_TICK, MinorVersion, MajorVersion, OEM_ID;
 import vdos.codes;
 import vdos.loader : vdos_load;
 import vdos.structs : curpos;
-import vdos.screen : v_printf, v_put_s, v_putc;
+import vdos.video : v_printf, v_put_s, v_putc;
 import os.io : OSTime, os_time, OSDate, os_date, os_pexist;
 import vcpu.mm : MemString;
 

@@ -1,7 +1,6 @@
-/*
+/**
  * core: Core of x86 machine code interpreter
  */
-
 module vcpu.core;
 
 import logger : log_info;
