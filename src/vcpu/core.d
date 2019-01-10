@@ -17,7 +17,7 @@ enum : ubyte { // CPU Mode
 	CPU_MODE_REAL,
 	CPU_MODE_PROTECTED,
 	CPU_MODE_VM8086,
-	CPU_MODE_SMM
+	//CPU_MODE_SMM
 }
 
 enum : ubyte { // Segment override (for Seg)
@@ -59,19 +59,7 @@ enum : ubyte {
 	RM_RM = RM_RM_111,	/// Used for masking the R/M bits (00 000 111)
 }
 
-/**
- * Runnning level.
- * Used to determine the "level of execution", such as the "deepness" of a program.
- * When a program terminates, RLEVEL is decreased.
- * If HLT is sent, RLEVEL is set to 0.
- * If RLEVEL reaches 0 (or lower), the emulator either stops, or returns to the virtual shell.
- * tl;dr: Emulates CALLs
- */
-__gshared short RLEVEL = 1;
-__gshared ubyte opt_sleep = 1; /// Is sleeping available to use? If so, use it
-__gshared ubyte *MEMORY = void; /// Memory bank
-__gshared int MEMORYSIZE = INIT_MEM; /// Memory size
-
+/// CPU Object
 extern (C)
 struct CPU_t {
 	union {
@@ -146,34 +134,74 @@ struct CPU_t {
 /// Main Central Processing Unit
 public __gshared CPU_t CPU = void;
 
+/**
+ * Runnning level.
+ * Used to determine the "level of execution", such as the "deepness" of a program.
+ * When a program terminates, RLEVEL is decreased.
+ * If HLT is sent, RLEVEL is set to 0.
+ * If RLEVEL reaches 0 (or lower), the emulator either stops, or returns to the virtual shell.
+ * tl;dr: Emulates CALLs
+ */
+__gshared short RLEVEL = 1;
+__gshared ubyte opt_sleep = 1; /// Is sleeping available to use? If so, use it
+__gshared ubyte *MEMORY = void; /// Memory bank
+__gshared int MEMORYSIZE = INIT_MEM; /// Memory size
+
+/// CPU Mode function table
+extern (C) __gshared void function(ubyte)[4] MODE_MAP;
+/// Real-mode instructions function table
+extern (C) __gshared void function()[256] REAL_MAP;
+/// Protected-mode instructions function table
+extern (C) __gshared void function()[256] PROT_MAP;
+
 /// Initiate interpreter
 extern (C)
 void vcpu_init() {
 	import core.stdc.stdlib : malloc;
 	RESET;
 	MEMORY = cast(ubyte*)malloc(INIT_MEM);
+	MODE_MAP[0] = &mode_real;
+	MODE_MAP[1] = &mode_invalid;
+	MODE_MAP[2] = &mode_invalid;
+	MODE_MAP[3] = &mode_invalid;
+	
+	//TODO: Variate on CPU types
 }
 
-/// Start the emulator at CS:IP (usually 0000h:0100h)
+/// Start the emulator at CS:IP (default: FFFF:0000h)
 extern (C)
 void vcpu_run() {
 	debug import logger : logexec;
 
-	//log_info("CALL vcpu_run");
-	//uint tsc; /// tick count for thread sleeping purposes
+	int sleep = opt_sleep;
 	while (RLEVEL > 0) {
 		CPU.EIP = get_ip;
-		exec16(MEMORY[CPU.EIP]);
+		//TODO: Check CPU.EIP against segments and memory size
 
-		/*if (opt_sleep) { // TODO: Redo sleeping procedure (#20)
-			++tsc;
-			if (tsc == TSC_SLEEP) {
-				SLEEP;
-				tsc = 0;
-			}
-		}*/
+		ubyte op = MEMORY[CPU.EIP];
+		MODE_MAP[CPU.Mode](op);
 	}
 }
+
+extern (C)
+void mode_real(ubyte op) {
+	exec16(op);
+	//REAL_MAP[op]();
+}
+
+extern (C)
+void mode_prot(ubyte op) {
+	
+}
+
+extern (C)
+void mode_invalid(ubyte op) {
+	//TODO: Panic on invalid cpu mode
+}
+
+//
+// CPU utilities
+//
 
 //TODO: step(ubyte) instead of incrementing EIP manually?
 //      otherwise it's manual checking before executing ops
@@ -188,7 +216,7 @@ void vcpu_run() {
 extern (C)
 pragma(inline, true)
 uint get_ad(int s, int o) {
-	return (s << 4) + o;
+	return (s << 4) | o;
 }
 
 /**
@@ -215,11 +243,12 @@ private void RESET() {
 }
 
 /// Resets the entire vcpu. Does not refer to the RESET instruction!
+/// This sets all registers to 0. Segment is set to SET_NONE, and Mode is set
+/// to CPU_MODE_REAL. Useful in unittesting.
 extern (C)
 void fullreset() {
-	RESET;
-	CPU.EAX = CPU.EBX = CPU.ECX = CPU.EDX =
-	CPU.EBP = CPU.ESP = CPU.EDI = CPU.ESI = 0;
+	import core.stdc.string : memset;
+	memset(&CPU, 0, CPU_t.sizeof);
 }
 
 //
