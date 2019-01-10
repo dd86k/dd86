@@ -51,7 +51,8 @@ void help() {
 		"	-N	Remove starting messages and banner\n"~
 		"	-v	Increase verbosity level\n"~
 		"	-V, --version  Print version screen, then exit\n"~
-		"	-h, --help     Print help screen, then exit",
+		"	-h, --help     Print help screen, then exit\n"~
+		"	--license      Print license screen, then exit"
 	);
 }
 
