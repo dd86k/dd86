@@ -1,134 +1,132 @@
-# Reminder: Defining a predefined buildType is overwriting it, erasing predefined
-# buildOptions
-
 name "dd-dos"
 version "0.0.0"
 description "IBM PC Virtual Machine and DOS Emulation Layer"
 authors "dd86k"
-copyright "Copyright © 2017-2018 dd86k"
+copyright "Copyright © 2017-2019 dd86k"
 license "MIT"
 homepage "https://git.dd86k.space/dd86k/dd-dos"
 
-###################
+#
 # Debug builds
-###################
+#
 
 buildType "debug-verbose" {
-  targetType "executable"
-  buildOptions "debugMode"
-  buildOptions "debugInfoC" platform="dmd"
-  buildOptions "debugInfoC" platform="ldc"
-  dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v" platform="dmd"
-  dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v" platform="ldc"
-  dflags "-vgc" "-vtls" "-v" platform="gdc"
+	targetType "executable"
+	buildOptions "debugMode"
+	buildOptions "debugInfoC" platform="dmd"
+	buildOptions "debugInfoC" platform="ldc"
+	dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v" platform="dmd"
+	dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v" platform="ldc"
+	dflags "-vgc" "-vtls" "-v" platform="gdc"
 }
 
 buildType "debug" {
-  targetType "executable"
-  buildOptions "debugMode"
-  buildOptions "debugInfoC" platform="dmd"
-  buildOptions "debugInfoC" platform="ldc"
-  dflags "-betterC" "-transition=intpromote" platform="dmd"
-  dflags "-betterC" "-transition=intpromote" platform="ldc"
+	targetType "executable"
+	buildOptions "debugMode"
+	buildOptions "debugInfoC" platform="dmd"
+	buildOptions "debugInfoC" platform="ldc"
+	dflags "-betterC" "-transition=intpromote" platform="dmd"
+	dflags "-betterC" "-transition=intpromote" platform="ldc"
 }
 
-###################
+#
 # Release builds
-###################
+#
 
 buildType "release" {
-  targetType "executable"
-  buildOptions "releaseMode" "optimize"
-  dflags "-betterC" "-transition=intpromote" platform="dmd"
-  dflags "-betterC" "-transition=intpromote" platform="ldc"
+	targetType "executable"
+	buildOptions "releaseMode" "optimize"
+	dflags "-betterC" "-transition=intpromote" platform="dmd"
+	dflags "-betterC" "-transition=intpromote" platform="ldc"
 }
 
 buildType "release-nobounds" {
-  targetType "executable"
-  buildOptions "releaseMode" "noBoundsCheck" "optimize"
-  dflags "-betterC" "-transition=intpromote" platform="dmd"
-  dflags "-betterC" "-transition=intpromote" platform="ldc"
+	targetType "executable"
+	buildOptions "releaseMode" "noBoundsCheck" "optimize"
+	dflags "-betterC" "-transition=intpromote" platform="dmd"
+	dflags "-betterC" "-transition=intpromote" platform="ldc"
 }
 
 buildType "release-inline" {
-  targetType "executable"
-  buildOptions "releaseMode" "noBoundsCheck" "optimize" "inline"
-  dflags "-betterC" "-transition=intpromote" platform="dmd"
-  dflags "-betterC" "-transition=intpromote" platform="ldc"
+	targetType "executable"
+	buildOptions "releaseMode" "noBoundsCheck" "optimize" "inline"
+	dflags "-betterC" "-transition=intpromote" platform="dmd"
+	dflags "-betterC" "-transition=intpromote" platform="ldc"
 }
 
-###################
+#
 # Tests, Documentation, and Coverage
-###################
+#
 
 buildType "unittest" { # default to dub test
-  targetName "tests"
-  targetType "executable"
-  buildOptions "unittests"
-  dflags "-transition=intpromote" platform="dmd"
-  dflags "-transition=intpromote" platform="ldc"
+	targetName "tests"
+	targetType "executable"
+	buildOptions "unittests"
+	dflags "-transition=intpromote" platform="dmd"
+	dflags "-transition=intpromote" platform="ldc"
 
-  sourcePaths "tests/"
-  importPaths "tests/"
+	sourcePaths "tests/units/"
+	importPaths "tests/units/"
+	sourceFiles "tests/test_utils.d"
 }
 
 buildType "docs" {
-  buildOptions "syntaxOnly"
-  # -Dd -> ddoc directory
-  dflags "-transition=intpromote" "-betterC" "-Ddddoc" "-c" platform="dmd"
-  dflags "-transition=intpromote" "-betterC" "-Ddddoc" "-c" platform="ldc"
-  dflags "-Ddddoc" "-c" platform="gdc"
+	buildOptions "syntaxOnly"
+	# -Dd -> ddoc directory
+	dflags "-transition=intpromote" "-betterC" "-Ddddoc" "-c" platform="dmd"
+	dflags "-transition=intpromote" "-betterC" "-Ddddoc" "-c" platform="ldc"
+	dflags "-Ddddoc" "-c" platform="gdc"
 }
 
 buildType "cov" { # Unsupported, requires druntime
-  buildOptions "coverage" "debugInfo"
-  dflags "-transition=intpromote" "-betterC" platform="dmd"
-  dflags "-transition=intpromote" "-betterC" platform="ldc"
+	buildOptions "coverage" "debugInfo"
+	dflags "-transition=intpromote" "-betterC" platform="dmd"
+	dflags "-transition=intpromote" "-betterC" platform="ldc"
 }
 
 buildType "unittest-cov" {
-  buildOptions "unittests" "coverage" "debugMode" "debugInfo"
-  dflags "-transition=intpromote" platform="dmd"
-  dflags "-transition=intpromote" platform="ldc"
+	buildOptions "unittests" "coverage" "debugMode" "debugInfo"
+	dflags "-transition=intpromote" platform="dmd"
+	dflags "-transition=intpromote" platform="ldc"
 
-  sourcePaths "tests/"
-  importPaths "tests/"
+	sourcePaths "tests/"
+	importPaths "tests/"
 }
 
-###################
+#
 # Benchmarks
-###################
+#
 
 buildType "bench" { # utils
-  targetName "bench"
-  targetType "executable"
-  buildOptions "unittests"
-  dflags "-transition=intpromote" platform="dmd"
-  dflags "-transition=intpromote" platform="ldc"
+	targetName "bench"
+	targetType "executable"
+	buildOptions "unittests"
+	dflags "-transition=intpromote" platform="dmd"
+	dflags "-transition=intpromote" platform="ldc"
 
-  sourceFiles "tests/test_utils.d" "bench/Benchmark.d"
+	sourceFiles "tests/test_utils.d" "tests/bench/benchmark.d"
 }
 
 buildType "bench-screen" {
-  targetName "bench-screen"
-  targetType "executable"
-  buildOptions "unittests"
-  dflags "-transition=intpromote" platform="dmd"
-  dflags "-transition=intpromote" platform="ldc"
+	targetName "bench-screen"
+	targetType "executable"
+	buildOptions "unittests"
+	dflags "-transition=intpromote" platform="dmd"
+	dflags "-transition=intpromote" platform="ldc"
 
-  sourceFiles "bench/screen.d"
+	sourceFiles "tests/bench/screen.d"
 }
 
-###################
+#
 # Demos
-###################
+#
 
 buildType "demo-screen" {
-  targetName "demo-screen"
-  targetType "executable"
-  buildOptions "unittests"
-  dflags "-transition=intpromote" platform="dmd"
-  dflags "-transition=intpromote" platform="ldc"
+	targetName "demo-screen"
+	targetType "executable"
+	buildOptions "unittests"
+	dflags "-transition=intpromote" platform="dmd"
+	dflags "-transition=intpromote" platform="ldc"
 
-  sourceFiles "demo/screen/cp437.d"
+	sourceFiles "tests/demo/screen.d"
 }

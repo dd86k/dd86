@@ -1,6 +1,7 @@
-import vcpu, vcpu.utils, std.stdio, vdos, std.file : exists;
-import vdos.interrupts : INT;
 import test_utils;
+import std.stdio;
+import vcpu.core : CPU;
+import vdos.os, vdos.interrupts;
 
 unittest {
 	section("DD-DOS (MS-DOS, IBM PC)");

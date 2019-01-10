@@ -1,5 +1,7 @@
-import vcpu, vdos, vdos.video, os.term;
-import core.stdc.string : memset;
+import os.term;
+import vcpu.core;
+import vdos.os;
+import vdos.video;
 
 unittest {
 	con_init;

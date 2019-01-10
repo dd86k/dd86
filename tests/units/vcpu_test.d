@@ -1,5 +1,5 @@
-import vcpu, vcpu.utils, vcpu.v16, std.stdio, vdos;
 import test_utils;
+import vcpu.core, vcpu.v16, vcpu.mm, vcpu.utils;
 
 unittest {
 	vcpu_init;
@@ -174,13 +174,13 @@ unittest {
 	assert(CPU.SF); assert(CPU.ZF); assert(CPU.AF);
 	assert(CPU.PF); assert(CPU.CF); assert(CPU.OF);
 	assert(CPU.DF); assert(CPU.IF); assert(CPU.TF);
-	assert(FLAGB == 0xD5);
-	assert(FLAG == 0xFD5);
+	assert(FLAGB == 0xD7);
+	assert(FLAG == 0xFD7);
 	FLAG = 0;
 	assert(CPU.SF == 0); assert(CPU.ZF == 0); assert(CPU.AF == 0);
 	assert(CPU.PF == 0); assert(CPU.CF == 0); assert(CPU.OF == 0);
 	assert(CPU.DF == 0); assert(CPU.IF == 0); assert(CPU.TF == 0);
-	assert(FLAGB == 0); assert(FLAG == 0);
+	assert(FLAGB == 2); assert(FLAG == 2);
 	OK;
 
 	section("ModR/M");
@@ -679,7 +679,7 @@ unittest {
 
 	test("26h  ES:");
 	exec16(0x26);
-	assert(Seg == SEG_ES);
+	assert(CPU.Segment == SEG_ES);
 	OK;
 
 	// DAA
@@ -784,7 +784,7 @@ unittest {
 
 	test("2Eh  CS:");
 	exec16(0x2E);
-	assert(Seg == SEG_CS);
+	assert(CPU.Segment == SEG_CS);
 	OK;
 
 	// DAS
@@ -1732,7 +1732,7 @@ unittest {
 	test("9Eh  SAHF");
 	CPU.AH = 1;
 	exec16(0x9E);
-	assert(FLAGB == 1);
+	assert(FLAGB == 3);
 	OK;
 
 	// LAHF
@@ -1740,7 +1740,7 @@ unittest {
 	test("9Fh  LAHF");
 	FLAGB = 7; // 111
 	exec16(0x9F);
-	assert(FLAGB == 5); // 101
+	assert(FLAGB == 7); // 101
 	OK;
 
 	// MOV AL, MEM8
@@ -2038,7 +2038,7 @@ unittest {
 	__iu8(0b11_111_001, CPU.EIP + 1);
 	exec16(0xC4);
 	assert(CPU.DI == 0x5000);
-	assert(Seg == SEG_ES);
+	assert(CPU.Segment == SEG_ES);
 	OK;
 
 	// LDS
@@ -2049,7 +2049,7 @@ unittest {
 	__iu8(0b11_111_001, CPU.EIP + 1);
 	exec16(0xC5);
 	assert(CPU.DI == 0x6000);
-	assert(Seg == SEG_DS);
+	assert(CPU.Segment == SEG_DS);
 	OK;
 
 	// MOV
