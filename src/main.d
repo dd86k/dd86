@@ -4,37 +4,39 @@
 
 import core.stdc.string : strcmp;
 import ddc : puts, printf, fputs, stderr, stdout;
-import vcpu;
-import vdos : BANNER, vdos_shell, vdos_init;
-import vdos_codes;
-import vdos_loader : vdos_load;
-import vdos_screen;
-import Logger;
-import ddcon : con_init, Clear;
-import os_utils : os_pexist;
-import sleep : sleep_init;
-import compile_config : APP_VERSION, PLATFORM, BUILD_TYPE;
+import vcpu.core : vcpu_init, vcpu_run, opt_sleep;
+import vdos.os : BANNER, SYSTEM, vdos_init;
+import vdos.shell : vdos_shell;
+import vdos.codes;
+import vdos.loader : vdos_load;
+import vdos.screen;
+import logger;
+import os.term : con_init, Clear, SetPos;
+import os.io : os_pexist;
+import appconfig : APP_VERSION, PLATFORM, BUILD_TYPE, C_RUNTIME;
 
 extern (C):
 
-enum DESC = "IBM PC Virtual Machine and DOS Emulation Layer";
+enum DESCRIPTION = "IBM PC Virtual Machine and DOS Emulation Layer";
+enum COPYRIGHT = "Copyright (c) 2017-2019 dd86k";
 
 private void _version() {
 	printf(
 		BANNER~
-		DESC~"\n"~
-		"Copyright (c) 2017-2018 dd86k\n\n"~
+		DESCRIPTION~"\n"~
+		COPYRIGHT~"\n\n"~
 		"dd-dos-"~PLATFORM~" v"~APP_VERSION~"-"~BUILD_TYPE~" ("~__TIMESTAMP__~")\n"~
 		"Homepage: <https://git.dd86k.space/dd86k/dd-dos>\n"~
 		"License: MIT <https://opensource.org/licenses/MIT>\n"~
-		"Compiler: "~__VENDOR__~" v%d\n",
+		"Compiler: "~__VENDOR__~" v%d\n"~
+		"Runtime: "~C_RUNTIME~" v%d\n",
 		__VERSION__
 	);
 }
 
 private void help() {
 	puts(
-		DESC~"\n"~
+		DESCRIPTION~"\n"~
 		"USAGE\n"~
 		"	dd-dos [-vPN] [FILE [FILEARGS]]\n"~
 		"	dd-dos {-V|--version|-h|--help}\n\n"~
@@ -49,7 +51,7 @@ private void help() {
 
 private int main(int argc, char **argv) {
 	ubyte args = 1;
-	ubyte arg_banner = 1;
+	ubyte arg_info = 1;
 	char *prog; /// FILE, COM or EXE to start
 //	char *args; /// FILEARGS, MUST not be over 127 characters
 //	size_t arg_i; /// Argument length incrementor
@@ -79,7 +81,7 @@ private int main(int argc, char **argv) {
 			while (*++a) {
 				switch (*a) {
 				case 'P': --opt_sleep; break;
-				case 'N': --arg_banner; break;
+				case 'N': --arg_info; break;
 				case 'v': ++LOGLEVEL; break;
 				case '-': --args; break;
 				case 'h': help; return 0;
@@ -101,22 +103,8 @@ NO_ARGS:
 
 	if (cast(int)prog) {
 		if (os_pexist(prog) == 0) {
-			//fputs("E: File not found\n", stderr);
 			puts("E: File not found");
 			return EDOS_FILE_NOT_FOUND;
-		}
-	}
-
-	// Welcome. Welcome to DD-DOS
-
-	//sleep_init;	// sleep timers
-	vcpu_init;	// vcpu
-
-	if (cast(int)prog) {
-		if (vdos_load(prog)) {
-			//fputs("E: Could not load executable image\n", stderr);
-			puts("E: Could not load executable image");
-			return PANIC_FILE_NOT_LOADED;
 		}
 	}
 
@@ -124,35 +112,48 @@ NO_ARGS:
 		printf("E: Unknown log level: %d\n", LOGLEVEL);
 		return EDOS_INVALID_FUNCTION;
 	}
+	
+	//TODO: Read settings here
 
-	con_init;	// ddcon
+	//
+	// Welcome to DD-DOS
+	//
+
+	//sleep_init;	// sleep timers
+	vcpu_init;	// vcpu
+	con_init;	// os.term
 	vdos_init;	// vdos, screen
 
-	switch (LOGLEVEL) {
-	case LOG_CRIT: log_info("I: LOG_CRIT"); break;
-	case LOG_ERROR: log_info("I: LOG_ERROR"); break;
-	case LOG_WARN: log_info("I: LOG_WARN"); break;
-	case LOG_INFO: log_info("I: LOG_INFO"); break;
-	case LOG_DEBUG: log_info("I: LOG_DEBUG"); break;
-	default:
+	if (arg_info) {
+		v_printf(
+			"Starting DD-DOS...\n\n"~
+			"DD-DOS Ver "~APP_VERSION~" "~__DATE__~"\n"~
+			"Processor: Intel 8086\n"~
+			"Memory: %dK OK\n\n",
+			SYSTEM.memsize);
+
+		switch (LOGLEVEL) {
+		case LOG_CRIT:  log_info("LOG_CRIT"); break;
+		case LOG_ERROR: log_info("LOG_ERROR"); break;
+		case LOG_WARN:  log_info("LOG_WARN"); break;
+		case LOG_INFO:  log_info("LOG_INFO"); break;
+		case LOG_DEBUG: log_info("LOG_DEBUG"); break;
+		default:
+		}
+
+		if (opt_sleep == 0)
+			v_putn("MAX_PERF");
 	}
-
-	if (opt_sleep == 0)
-		v_putn("I: MAX_PERF");
-
-	v_putn("DD-DOS is starting...");
-
-	// Should be loading settings here
-
-	if (arg_banner)
-		screen_logo;
 
 	screen_draw;
 
 	if (cast(int)prog) {
 		vdos_load(prog);
 		vcpu_run;
+		screen_draw; // ensures last frame is drawn
 	} else vdos_shell;
+
+	SetPos(0, 25);
 
 	return 0;
 }

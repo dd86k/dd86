@@ -1,68 +1,19 @@
-/*
- * dd-dos.d: virtual OS, shell, and interrupt handler (layer part)
- */
-
-module vdos;
+module vdos.shell;
 
 import ddc;
-import core.stdc.string : strcmp, strlen, memcpy;
-import vcpu, vcpu_utils;
-import vdos_codes, vdos_int;
-import vdos_loader : vdos_load;
-import vdos_structs : system_struct, dos_struct, curpos;
-import vdos_screen;
-import utils, os_utils;
-import ddcon, Logger;
-import compile_config :
-	__MM_SYS_DOS, C_RUNTIME, APP_VERSION, BUILD_TYPE, INIT_MEM;
-
-enum BANNER = 
-	`_______ _______        _______  ______  _______`~"\n"~
-	`|  __  \|  __  \  ___  |  __  \/  __  \/ _____/`~"\n"~
-	`| |  \ || |  \ | |___| | |  \ || /  \ |\____ \`~ "\n"~
-	`| |__/ || |__/ |       | |__/ || \__/ |_____\ \`~"\n"~
-	`|______/|______/       |______/\______/\______/`~"\n"
-	; /// ASCII banner screen, fancy!
-
-/// OEM IDs
-enum OEM_ID { // Used for INT 21h AH=30 so far.
-	IBM, Compaq, MSPackagedProduct, ATnT, ZDS
-}
-
-enum
-	DOS_MAJOR_VERSION = 5, /// Default major DOS version
-	DOS_MINOR_VERSION = 0; /// Default minor DOS version
-
-enum float BIOS_TICK = 1 / 18.2f;
+import core.stdc.string : strcmp, strlen, memcpy, strncpy;
+import vcpu.core : MEMORY, vcpu_run, CPU, MEMORYSIZE, opt_sleep;
+import vdos.loader : vdos_load;
+import vdos.screen;
+import vdos.os;
+import vdos.interrupts : INT;
+import vdos.codes : PANIC_MANUAL;
+import os.io;
+import logger;
+import appconfig : C_RUNTIME, APP_VERSION, BUILD_TYPE;
 
 // Internal input buffer length.
 private enum _BUFS = 127;
-
-extern (C):
-
-__gshared ubyte
-	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
-	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
-
-// Live structures in MEMORY
-
-__gshared dos_struct *DOS = void;
-__gshared system_struct *SYSTEM = void;
-
-extern (C)
-void vdos_init() {
-	// Setting a memory pointer as ubyte* (as vdos_settings*) is not
-	// supported in CTFE, so done in run-time instead
-	SYSTEM = cast(system_struct*)MEMORY;
-	SYSTEM.memsize = INIT_MEM >> 10; // DIV 1024
-	SYSTEM.video_mode = 3;
-	SYSTEM.screen_row = 25;
-	SYSTEM.screen_col = 80;
-
-	DOS = cast(dos_struct*)(MEMORY + __MM_SYS_DOS);
-
-	screen_init;
-}
 
 /**
  * Enter virtual shell (vDOS), assuming all modules have been initiated.
@@ -326,8 +277,7 @@ MEM_HELP:
 
 	if (strcmp(*argv, "??") == 0) {
 		v_putn(
-`?diag       Print diagnostic information screen
-?load FILE  Load an executable FILE into memory
+`?load FILE  Load an executable FILE into memory
 ?p          Toggle performance mode
 ?panic      Manually panic
 ?r          Print interpreter registers info
@@ -413,19 +363,6 @@ MEM_HELP:
 		panic(PANIC_MANUAL);
 		return 0;
 	}
-	if (strcmp(*argv, "?diag") == 0) {
-		v_printf(
-			"DD-DOS version: "~APP_VERSION~"\n"~
-			"MS-DOS version: %d.%d (%d.%d)\n"~
-			"Compiler: "~__VENDOR__~" v%d\n"~
-			"C Runtime: "~C_RUNTIME~"\n"~
-			"Build type: "~BUILD_TYPE~"\n",
-			MajorVersion, MinorVersion,
-			DOS_MAJOR_VERSION, DOS_MINOR_VERSION,
-			__VERSION__
-		);
-		return 0;
-	}
 
 	return -1;
 }
@@ -439,6 +376,9 @@ MEM_HELP:
  */
 extern (C)
 int vdos_readline(char *buf, int len) {
+	import vdos.structs : curpos;
+	import os.term : Key, KeyInfo, ReadKey;
+
 	curpos *c = &SYSTEM.cursor[SYSTEM.screen_page];
 	const ushort x = c.col; // initial cursor col value to update cursor position
 	const ushort y = c.row; // ditto
@@ -530,64 +470,59 @@ READ_S:
 	goto READ_S;
 }
 
-extern (C)
-void print_regs() {
-	v_printf(
-		"EIP=%08X  IP=%04X  (get_ip=%08X)\n"~
-		"EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X\n"~
-		"CS=%04X  DS=%04X  ES=%04X  SS=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X\n",
-		CPU.EIP, CPU.IP, get_ip,
-		CPU.EAX, CPU.EBX, CPU.ECX, CPU.EDX,
-		CPU.CS, CPU.DS, CPU.ES, CPU.SS, CPU.SP, CPU.BP, CPU.SI, CPU.DI,
-	);
-	v_put("FLAG=");
-	if (CPU.OF) v_putn("OF ");
-	if (CPU.DF) v_putn("DF ");
-	if (CPU.IF) v_putn("IF ");
-	if (CPU.TF) v_putn("TF ");
-	if (CPU.SF) v_putn("SF ");
-	if (CPU.ZF) v_putn("ZF ");
-	if (CPU.AF) v_putn("AF ");
-	if (CPU.PF) v_putn("PF ");
-	if (CPU.CF) v_putn("CF ");
-	v_printf("(%4Xh)\n", FLAG);
-}
 
+/**
+ * CLI argument splitter, supports argument quoting.
+ * This function inserts null-terminators.
+ * Uses memory base 1400h for arguments and increments per argument lengths.
+ * Params:
+ *   t = User input
+ *   argv = argument vector buffer
+ * Returns: argument count
+ * Notes: Original function by Nuke928. Modified by dd86k.
+ */
 extern (C)
-void print_stack() {
-	v_putn("print_stack::Not implemented");
-}
+int sargs(const char *t, char **argv) {
+	int j, a;
+	char* mloc = cast(char*)MEMORY + 0x1400;
 
-extern (C)
-void panic(ushort code,
-	immutable(char) *modname = cast(immutable(char)*)__MODULE__,
-	int line = __LINE__) {
-	import core.stdc.stdlib : exit;
-	//TODO: Setup SEH that points here
+	const size_t sl = strlen(t);
 
-	enum RANGE = 26, TARGET = (RANGE / 2) - 1;
-	v_printf(
-		"\n\n\n\n"~
-		"A fatal exception occured, which DD-DOS couldn't recover.\n\n"~
-		"STOP: %4Xh (%s@L%d)\nEXEC:\n",
-		//TODO: if SEH is setup, remove modname and line
-		// Otherwise it'll be even more debugging
-		code, modname, line
-	);
-	int i = RANGE;
-	ubyte *p = MEMORY + CPU.EIP - TARGET;
-	while (--i) {
-		if (i == TARGET)
-			v_printf(" > %02X<", *p);
-		else
-			v_printf(" %02X", *p);
-		++p;
+	for (int i = 0; i <= sl; ++i) {
+		if (t[i] == 0 || t[i] == ' ' || t[i] == '\n') {
+			argv[a] = mloc;
+			mloc += i - j + 1;
+			strncpy(argv[a], t + j, i - j);
+			argv[a][i - j] = 0;
+			while (t[i + 1] == ' ') ++i;
+			j = i + 1;
+			++a;
+		} else if (t[i] == '\"') {
+			j = ++i;
+			while (t[i] != '\"' && t[i] != 0) ++i;
+			if (t[i] == 0) continue;
+			argv[a] = mloc;
+			mloc += i - j + 1;
+			strncpy(argv[a], t + j, i - j);
+			argv[a][i - j] = 0;
+			while(t[i + 1] == ' ') ++i;
+			j = ++i;
+			++a;
+		}
 	}
-	v_put("\n--\n");
-	print_regs;
-	/*printf("--\n"); Temporary commented until print_stack is implemented
-	print_stack;*/
 
-	screen_draw;
-	exit(code); //TODO: Consider another strategy
+	return --a;
+}
+
+/**
+ * Lowercase an ASCIZ string. Must be null-terminated.
+ * Params: c = String pointer
+ */
+extern (C)
+void lowercase(char *c) {
+	while (*c) {
+		if (*c >= 'A' && *c <= 'Z')
+			*c = cast(char)(*c + 32);
+		++c;
+	}
 }

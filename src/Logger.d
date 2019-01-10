@@ -1,6 +1,6 @@
-module Logger;
+module logger;
 
-import vdos_screen, vdos_codes;
+import vdos.screen, vdos.codes;
 
 enum {
 	LOG_SILENCE	= 0,	/// Complete silence
@@ -48,7 +48,7 @@ void log_error(immutable(char) *msg) {
 
 void log_crit(immutable(char) *msg, ushort code = PANIC_UNKNOWN) {
 	import core.stdc.stdlib : exit;
-	import vdos : panic;
+	import vdos.os : panic;
 	//if (LOGLEVEL >= LOG_CRIT)
 	v_printf("[!!!!] %s\n", msg);
 	panic(code);

@@ -1,6 +1,6 @@
 module bench_;
 
-import vcpu, std.stdio, vdos, ddcon, vdos_screen;
+import vcpu, std.stdio, vdos, os.term, vdos.screen;
 import std.datetime.stopwatch : StopWatch;
 import core.time, std.conv;
 

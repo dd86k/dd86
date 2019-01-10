@@ -1,12 +1,16 @@
 /*
- * DD-DOS compilation configuration settings
+ * appconfig: DD-DOS compilation configuration settings and messages
+ *
+ * Pragmas of type msg are only allowed here.
  */
 
-module compile_config;
+module appconfig;
 
-import sleep : SLEEP_TIME;
-import vdos : DOS_MAJOR_VERSION, DOS_MINOR_VERSION;
-import vdos_structs;
+import os.sleep : SLEEP_TIME;
+import vdos.os : BANNER, DOS_MAJOR_VERSION, DOS_MINOR_VERSION;
+import vdos.structs;
+
+pragma(msg, BANNER);
 
 debug {
 	pragma(msg, "[DEBUG]\tON");
@@ -55,12 +59,12 @@ version (X86) {
 	version (LittleEndian) enum PLATFORM = "aarch32le";
 	version (BigEndian) enum PLATFORM = "aarch32be";
 	static assert(0,
-		"ARM32 is not supported");
+		"ARM is currently not supported");
 } else version (AArch64) {
 	version (LittleEndian) enum PLATFORM = "aarch64le";
 	version (BigEndian) enum PLATFORM = "aarch64be";
 	static assert(0,
-		"ARM64 is not supported");
+		"AArch64 is currently not supported");
 } else {
 	static assert(0,
 		"This platform is not supported");
@@ -69,9 +73,9 @@ version (X86) {
 
 enum APP_VERSION = "0.0.0"; /// DD-DOS version
 
-/********************************************************************
- * CPU
- ********************************************************************/
+//
+// CPU
+//
 
 // It is planned to redo this section, part of Issue #20
 
@@ -87,11 +91,11 @@ enum uint TSC_SLEEP = cast(uint)(
 //pragma(msg, "[CONFIG]\tIntel i486 = ", i486_FREQ, " MHz");
 //pragma(msg, "[CONFIG]\tvcpu sleeps every ", TSC_SLEEP, " instructions");
 
-/********************************************************************
- * Memory
- ********************************************************************/
+//
+// Memory
+//
 
-/// Initial and maximum amount of memory if not specified in settings.
+/// Default initial amount of memory
 enum INIT_MEM = 0x10_0000;
 // 0x4_0000    256K MS-DOS minimum
 // 0xA_0000    640K

@@ -1,16 +1,20 @@
 /*
- * vdos_loader.d: Executable file loader. Should somewhat be like EXEC.
+ * vdos.loader.d: Executable file loader. Should somewhat be like EXEC.
  */
 
-module vdos_loader;
+module vdos.loader;
 
-import core.stdc.stdio; // mainly for FILE
+import core.stdc.stdio :
+	FILE, fopen, fseek, ftell, fclose, fread, SEEK_END, SEEK_SET;
 import core.stdc.stdlib : malloc, free;
-import vcpu, vcpu_utils;
-import vdos, vdos_structs, vdos_codes, vdos_screen;
-import Logger;
+import vcpu.core;
+import vcpu.mm : __fu16, __iu16;
+import vdos.os : MinorVersion, MajorVersion;
+import vdos.structs : mz_hdr, MZ_HDR_SIZE, mz_rlc, PSP;
+import vdos.codes;
+import logger;
 import ddc : NULL_CHAR;
-import vdos_screen;
+import vdos.screen : v_printf, v_putn;
 
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;
@@ -36,6 +40,7 @@ int vdos_load(char *path) {
 
 	fseek(f, 0, SEEK_END); // for ftell
 	int fsize = cast(int)ftell(f); // >2G binary in MSDOS is not possible anyway
+	fseek(f, 0, SEEK_SET);
 
 	mz_hdr mzh = void; /// MZ header structure variable
 
@@ -52,7 +57,6 @@ int vdos_load(char *path) {
 	}
 	if (fsize <= MZ_HDR_SIZE) goto FILE_COM;
 
-	fseek(f, 0, SEEK_SET);
 	fread(&mzh.e_magic, 2, 1, f);
 
 	switch (mzh.e_magic) {

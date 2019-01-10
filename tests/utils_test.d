@@ -1,4 +1,4 @@
-import utils, vcpu_utils;
+import utils, vcpu.utils;
 import test_utils;
 
 unittest {

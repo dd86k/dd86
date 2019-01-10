@@ -2,7 +2,7 @@
  * codes.d: Error codes
  */
 
-module vdos_codes;
+module vdos.codes;
 
 /*
  * DOS error codes

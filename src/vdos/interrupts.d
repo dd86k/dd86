@@ -2,19 +2,18 @@
  * Interrupt handler (Hardware, BIOS, DOS, vDOS)
  */
  
-module vdos_int;
+module vdos.interrupts;
 
 import ddc;
-import vcpu : CPU, MEMORY, get_ad, RLEVEL;
-import vcpu_utils : __int_enter, __int_exit;
-import vdos : SYSTEM, DOS, BIOS_TICK, MinorVersion, MajorVersion, OEM_ID;
-import vdos_codes;
-import vdos_loader : vdos_load;
-import vdos_structs : curpos;
-import vdos_screen;
-import ddcon;
-import os_utils;
-import utils : MemString;
+import vcpu.core : CPU, MEMORY, get_ad, RLEVEL;
+import vcpu.utils : __int_enter, __int_exit;
+import vdos.os : SYSTEM, DOS, BIOS_TICK, MinorVersion, MajorVersion, OEM_ID;
+import vdos.codes;
+import vdos.loader : vdos_load;
+import vdos.structs : curpos;
+import vdos.screen : v_printf, v_put_s, v_putc;
+import os.io : OSTime, os_time, OSDate, os_date, os_pexist;
+import vcpu.mm : MemString;
 
 /// Raise interrupt.
 /// Params: code = Interrupt byte
@@ -38,7 +37,6 @@ void INT(ubyte code) {
 			curpos* pos = &SYSTEM.cursor[SYSTEM.screen_page];
 			pos.row = CPU.DH; //TODO: Check against system rows/columns current size
 			pos.col = CPU.DL;
-			SetPos(pos.row, pos.col);
 			break;
 		case 0x03: // Get cursor position and size
 			CPU.AX = SYSTEM.screen_page; //TODO: Check if graphical mode
@@ -174,7 +172,7 @@ void INT(ubyte code) {
 			break;
 		case 0x2A: { // Get system date
 			OSDate d = void;
-			os_date(&d); // os_utils
+			os_date(&d); // os.io
 			CPU.CX = d.year;
 			CPU.DH = d.month;
 			CPU.DL = d.day;
@@ -186,7 +184,7 @@ void INT(ubyte code) {
 			break;
 		case 0x2C: { // Get system time
 			OSTime t = void;
-			os_time(&t); // os_utils
+			os_time(&t); // os.io
 			CPU.CH = t.hour;
 			CPU.CL = t.minute;
 			CPU.DH = t.second;

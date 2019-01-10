@@ -1,5 +1,5 @@
 /*
- * os_utils.d : Basic OS utilities
+ * os.io : Basic OS I/O utilities
  *
  * Includes OS utilities, such as changing/getting the current working
  * directory, setting/getting file attributes, directory walkers, etc.
@@ -7,9 +7,7 @@
 
 //TODO: File/directory walker
 
-module os_utils;
-
-import ddc;
+module os.io;
 
 struct OSTime {
 	ubyte hour, minute, second, millisecond;
@@ -28,7 +26,7 @@ extern (C)
 int os_time(OSTime *ost) {
 	version (Windows) {
 		import core.sys.windows.windows : SYSTEMTIME, GetLocalTime;
-		SYSTEMTIME s;
+		SYSTEMTIME s = void;
 		GetLocalTime(&s);
 
 		ost.hour = cast(ubyte)s.wHour;
@@ -41,7 +39,8 @@ int os_time(OSTime *ost) {
 		//TODO: Consider moving from gettimeofday(2) to clock_gettime(2)
 		//      https://linux.die.net/man/2/gettimeofday
 		//      gettimeofday is deprecated since POSIX.2008
-		tm *s; timeval tv;
+		tm *s;
+		timeval tv = void;
 		gettimeofday(&tv, null);
 		s = localtime(&tv.tv_sec);
 
@@ -64,7 +63,7 @@ extern (C)
 int os_date(OSDate *osd) {
 	version (Windows) {
 		import core.sys.windows.winbase : SYSTEMTIME, GetLocalTime;
-		SYSTEMTIME s;
+		SYSTEMTIME s = void;
 		GetLocalTime(&s);
 
 		osd.year = s.wYear;
@@ -73,7 +72,8 @@ int os_date(OSDate *osd) {
 		osd.weekday = cast(ubyte)s.wDayOfWeek;
 	} else version (Posix) {
 		import core.sys.posix.time : time_t, time, localtime, tm;
-		time_t r; time(&r);
+		time_t r = void;
+		time(&r);
 		const tm *s = localtime(&r);
 
 		osd.year = cast(ushort)(1900 + s.tm_year);

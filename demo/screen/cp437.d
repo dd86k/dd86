@@ -1,4 +1,4 @@
-import vcpu, vdos, vdos_screen, ddcon;
+import vcpu, vdos, vdos.screen, os.term;
 import core.stdc.string : memset;
 
 unittest {

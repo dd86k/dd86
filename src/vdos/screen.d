@@ -1,14 +1,14 @@
 /*
- * vdos_screen: Virtual video adapter.
+ * vdos.screen: Virtual video adapter.
  *
  * Used to translate CP437 characters and character attributes to stdout.
  */
 
-module vdos_screen;
+module vdos.screen;
 
 import core.stdc.stdlib : malloc;
-import vcpu : MEMORY;
-import vdos : SYSTEM;
+import vcpu.core : MEMORY;
+import vdos.os : SYSTEM;
 
 private enum __EGA_ADDRESS = 0xA_0000;
 private enum __MDA_ADDRESS = 0xB_0000;
@@ -28,7 +28,7 @@ version (Windows) {
 	import core.sys.windows.wincon :
 		WriteConsoleOutputW, WriteConsoleOutputA,
 		COORD, SMALL_RECT, CHAR_INFO, SetConsoleOutputCP;
-	import ddcon : hOut;
+	import os.term : hOut;
 
 	private __gshared CHAR_INFO *ibuf = void;	/// Intermediate buffer
 	private __gshared COORD ibufsize = void;
@@ -409,7 +409,7 @@ void v_putn(immutable(char) *s = null) {
  */
 extern (C) public
 void v_putc(char c) {
-	import vdos_structs : curpos;
+	import vdos.structs : curpos;
 
 	curpos *cur = &SYSTEM.cursor[SYSTEM.screen_page];
 	uint pos = void; /// character position on screen
@@ -479,8 +479,8 @@ void v_scroll() {
 /// Update cursor positions on host machine using current screen page
 extern (C) public
 void v_updatecur() {
-	import vdos_structs : curpos;
-	import ddcon : SetPos;
+	import vdos.structs : curpos;
+	import os.term : SetPos;
 	const curpos w = SYSTEM.cursor[SYSTEM.screen_page];
 	SetPos(w.col, w.row);
 }

@@ -1,26 +1,25 @@
 /*
- * vcpu.d: core of x86 machine code interpreter.
+ * core: Core of x86 machine code interpreter
  */
 
-module vcpu;
+module vcpu.core;
 
-import sleep;
-import Logger : log_info;
-import vcpu16 : exec16;
-import vcpu_utils;
-import compile_config : INIT_MEM, TSC_SLEEP;
+import logger : log_info;
+import vcpu.v16 : exec16;
+import vcpu.mm;
+import appconfig : INIT_MEM, TSC_SLEEP;
 
 /*enum : ubyte { // Emulated CPU
 	CPU_8086,
 	CPU_80486
 }*/
 
-/*enum : ubyte { // CPU Mode
+enum : ubyte { // CPU Mode
 	CPU_MODE_REAL,
 	CPU_MODE_PROTECTED,
 	CPU_MODE_VM8086,
 	CPU_MODE_SMM
-}*/
+}
 
 enum : ubyte { // Segment override (for Seg)
 	SEG_NONE,	/// None, default
@@ -34,14 +33,14 @@ enum : ubyte { // Segment override (for Seg)
 }
 
 enum : ubyte {
-	RM_MOD_00 = 0,	/// MOD 00, Memory Mode, no displacement
-	RM_MOD_01 = 64,	/// MOD 01, Memory Mode, 8-bit displacement
+	RM_MOD_00 =   0,	/// MOD 00, Memory Mode, no displacement
+	RM_MOD_01 =  64,	/// MOD 01, Memory Mode, 8-bit displacement
 	RM_MOD_10 = 128,	/// MOD 10, Memory Mode, 16-bit displacement
 	RM_MOD_11 = 192,	/// MOD 11, Register Mode
 	RM_MOD = RM_MOD_11,	/// Used for masking the MOD bits (11 000 000)
 
-	RM_REG_000 = 0,	/// AL/AX
-	RM_REG_001 = 8,	/// CL/CX
+	RM_REG_000 =  0,	/// AL/AX
+	RM_REG_001 =  8,	/// CL/CX
 	RM_REG_010 = 16,	/// DL/DX
 	RM_REG_011 = 24,	/// BL/BX
 	RM_REG_100 = 32,	/// AH/SP
@@ -61,8 +60,6 @@ enum : ubyte {
 	RM_RM = RM_RM_111,	/// Used for masking the R/M bits (00 000 111)
 }
 
-__gshared ubyte Seg; /// Preferred Segment register, defaults to SEG_NONE
-
 /**
  * Runnning level.
  * Used to determine the "level of execution", such as the "deepness" of a program.
@@ -73,29 +70,11 @@ __gshared ubyte Seg; /// Preferred Segment register, defaults to SEG_NONE
  */
 __gshared short RLEVEL = 1;
 __gshared ubyte opt_sleep = 1; /// Is sleeping available to use? If so, use it
+__gshared ubyte *MEMORY = void; /// Memory bank
+__gshared int MEMORYSIZE = INIT_MEM; /// Memory size
 
-__gshared ubyte *MEMORY = void; /// Main memory bank
-
-/**
- * Get the system's memory size in bytes.
- * This function retrieves from SYSTEM.memsize (BIOS+413h), which is in
- * kilobytes.
- * Returns: Memory size in bytes
- */
-pragma(inline, true)
-extern (C) public @property
-int MEMORYSIZE() {
-	import vdos : SYSTEM;
-	return SYSTEM.memsize << 10;
-}
-
-/*
- * Code might be ugly, but:
- * - No more pointers to initialize and explicitly use
- * - Avoids calling pretty function (@property), uses MOV directly (x86)
- * - Alls major fields are initialized to 0 (.init) (.zero CPU_t.sizeof)
- */
-extern (C) struct CPU_t {
+extern (C)
+struct CPU_t {
 	union {
 		uint EIP;
 		ushort IP;
@@ -137,8 +116,13 @@ extern (C) struct CPU_t {
 		ushort SP;
 	}
 	ushort CS, SS, DS, ES, FS, GS;
-	uint CR0, CR2, CR3;
+	uint CR0, CR1, CR2, CR3;
 	uint DR0, DR1, DR2, DR3, DR4, DR5, DR6, DR7;
+
+	/// Preferred Segment register, defaults to SEG_NONE
+	ubyte Segment;
+	/// Current mode, defaults to CPU_MODE_REAL
+	ubyte Mode;
 
 	// Flags are bytes because single flags are affected a lot more often than
 	// EFLAGS operations, e.g. PUSHDF.
@@ -174,13 +158,12 @@ void vcpu_init() {
 /// Start the emulator at CS:IP (usually 0000h:0100h)
 extern (C)
 void vcpu_run() {
-	debug import Logger : logexec;
+	debug import logger : logexec;
 
 	//log_info("CALL vcpu_run");
 	//uint tsc; /// tick count for thread sleeping purposes
 	while (RLEVEL > 0) {
-		CPU.EIP = get_ip; // CS:IP->EIP (important)
-		//debug logexec(CPU.CS, CPU.IP, MEMORY[CPU.EIP]);
+		CPU.EIP = get_ip;
 		exec16(MEMORY[CPU.EIP]);
 
 		/*if (opt_sleep) { // TODO: Redo sleeping procedure (#20)
@@ -193,7 +176,8 @@ void vcpu_run() {
 	}
 }
 
-//TODO: step(ubyte) instead of incrementing EIP manually
+//TODO: step(ubyte) instead of incrementing EIP manually?
+//      otherwise it's manual checking before executing ops
 
 /**
  * Get memory address out of a segment and a register value.
@@ -221,6 +205,9 @@ uint get_ip() {
 /// (8086, 80486) RESET instruction function
 extern (C)
 private void RESET() {
+	CPU.Mode = CPU_MODE_REAL;
+	CPU.Segment = SEG_NONE;
+
 	CPU.OF = CPU.DF = CPU.IF = CPU.TF = CPU.SF =
 	CPU.ZF = CPU.AF = CPU.PF = CPU.CF = 0;
 	CPU.CS = 0xFFFF;
@@ -236,9 +223,9 @@ void fullreset() {
 	CPU.EBP = CPU.ESP = CPU.EDI = CPU.ESI = 0;
 }
 
-/**********************************************************
- * FLAGS
- **********************************************************/
+//
+// Flag handling
+//
 
 /// Flag mask
 private enum : ushort {
@@ -301,9 +288,25 @@ private enum : ushort {
 	FLAGB = cast(ubyte)flag;
 }
 
-/**********************************************************
- * STACK
- **********************************************************/
+/**
+ * Get EFLAG as DWORD.
+ * Returns: EFLAG (DWORD)
+ */
+@property uint EFLAG() {
+	ushort b = FLAG;
+	//TODO: EFLAG
+	return b;
+}
+
+/// Set EFLAG as DWORD.
+/// Params: flag = EFLAG dword
+@property void EFLAG(uint flag) {
+	//TODO: EFLAG
+}
+
+//
+// Stack handling
+//
 
 /**
  * Push a WORD value into stack.

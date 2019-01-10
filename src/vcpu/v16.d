@@ -1,8 +1,8 @@
-module vcpu16; // 8086
+module vcpu.v16; // 8086
 
-import vcpu, vcpu32, vcpu_utils;
-import vdos_int;
-import Logger;
+import vcpu.core, vcpu.v32, vcpu.mm, vcpu.utils;
+import vdos.interrupts;
+import logger;
 
 //TODO: Call table (#2)
 
@@ -787,7 +787,7 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x26: // ES: (Segment override prefix)
-		Seg = SEG_ES;
+		CPU.Segment = SEG_ES;
 		++CPU.EIP;
 		return;
 	case 0x27: { // DAA
@@ -966,7 +966,7 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x2E: // CS:
-		Seg = SEG_CS;
+		CPU.Segment = SEG_CS;
 		++CPU.EIP;
 		return;
 	case 0x2F: { // DAS
@@ -1129,7 +1129,7 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x36: // SS:
-		Seg = SEG_SS;
+		CPU.Segment = SEG_SS;
 		++CPU.EIP;
 		return;
 	case 0x37: // AAA
@@ -1227,7 +1227,7 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x3E: // DS:
-		Seg = SEG_DS;
+		CPU.Segment = SEG_DS;
 		++CPU.EIP;
 		return;
 	case 0x3F: // AAS
@@ -2149,7 +2149,7 @@ void exec16(ubyte op) {
 		// Load into REG and ES/DS
 		const ubyte rm = __fu8_i;
 		const ushort r = __fu16(get_rm16(rm, 1));
-		Seg = op == 0xC4 ? SEG_ES : SEG_DS; // "Segment selector"
+		CPU.Segment = op == 0xC4 ? SEG_ES : SEG_DS; // "Segment selector"
 		switch (rm & RM_REG) {
 		case RM_REG_000: CPU.AX = r; break;
 		case RM_REG_001: CPU.CX = r; break;

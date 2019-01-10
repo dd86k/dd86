@@ -1,8 +1,8 @@
 /*
- * vdos_structs : Structures defined within DOS
+ * vdos.structs : Structures defined within DOS
  */
 
-module vdos_structs;
+module vdos.structs;
 
 // Enumerations
 

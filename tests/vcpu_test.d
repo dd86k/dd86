@@ -1,4 +1,4 @@
-import vcpu, vcpu_utils, vcpu16, std.stdio, vdos;
+import vcpu, vcpu.utils, vcpu.v16, std.stdio, vdos;
 import test_utils;
 
 unittest {
@@ -6,7 +6,7 @@ unittest {
 	CPU.CS = 0;
 	CPU.EIP = get_ip;
 
-	section("Interpreter Utilities (vcpu_utils.d)");
+	section("Interpreter Utilities (vcpu.utils.d)");
 
 	test("__iu8");
 	__iu8(0xFF, CPU.EIP);

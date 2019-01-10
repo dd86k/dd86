@@ -1,8 +1,8 @@
 /*
- * ddcon.d : In-house console library
+ * os.term : In-house console/terminal library
  */
 
-module ddcon;
+module os.term;
 
 import ddc : putchar, getchar, fputs, stdout;
 
@@ -33,7 +33,7 @@ version (Posix) {
  * Initiation
  *******************************************************************/
 
-/// Initiate ddcon
+/// Initiate os.term
 extern (C)
 void con_init() {
 	version (Windows) {

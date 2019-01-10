@@ -1,6 +1,7 @@
-module vcpu32; // 80486+
+module vcpu.v32; // 80486+
 
-import vcpu16;
+import vcpu.core;
+import vcpu.v16 : exec16;
 
 /**
  * Execute an instruction in 32-bit PROTECTED mode
@@ -10,7 +11,7 @@ extern (C)
 void exec32(ubyte op) {
 	switch (op) {
 	case 0x00: // ADD
-
+		
 		break;
 	case 0x66: // OPCODE PREFIX
 		++CPU.EIP;

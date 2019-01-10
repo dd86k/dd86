@@ -1,8 +1,8 @@
 /*
- * sleep.d : Sleep functions
+ * os.sleep : Sleep functions
  */
 
-module sleep;
+module os.sleep;
 
 version (Posix) {
 	private import core.sys.posix.time : nanosleep, timespec;

@@ -7,7 +7,7 @@
 └─────────────────────────────────────────────────────┘
 DD-DOS - IBM PC Virtual Machine and DOS Emulation Layer
 
-This project aims to be a simple and complete IBM PC emulation layer for DOS
+This project aims to be a complete IBM PC emulation layer for DOS
 applications, like NTVDM and dosemu, for multiple operating systems.
 
 "I have not failed. I've just found 10,000 ways that won't work."
