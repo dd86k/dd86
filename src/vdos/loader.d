@@ -7,7 +7,7 @@ import core.stdc.stdio :
 	FILE, fopen, fseek, ftell, fclose, fread, SEEK_END, SEEK_SET;
 import core.stdc.stdlib : malloc, free;
 import vcpu.core;
-import vcpu.mm : __fu16, __iu16;
+import vcpu.mm : mmfu16, mmiu16;
 import vdos.os : MinorVersion, MajorVersion;
 import vdos.structs : mz_hdr, MZ_HDR_SIZE, mz_rlc, PSP;
 import vdos.codes;
@@ -119,11 +119,11 @@ int vdos_load(char *path) {
 			debug v_putn(" #    seg: off -> loadseg");
 			do {
 				const int addr = get_ad(r.segment, r.offset); // 2.
-				const ushort loadseg = __fu16(addr); /// 3. Load segment
+				const ushort loadseg = mmfu16(addr); /// 3. Load segment
 				debug v_printf("%2d   %04X:%04X -> cs:%04X+CPU.CS:%04X = %04X\n",
 					i, r.segment, r.offset, mzh.e_cs, CPU.CS, loadseg
 				);
-				__iu16(mzh.e_cs + loadseg, addr); // 4. & 5.
+				mmiu16(mzh.e_cs + loadseg, addr); // 4. & 5.
 				++r; ++i;
 			} while (--mzh.e_crlc);
 			free(r);

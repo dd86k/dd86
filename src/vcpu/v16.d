@@ -22,9 +22,9 @@ void exec16(ubyte op) {
 	// platform with DMD, GDC, and LDC. Remember, this is D, not C.
 	switch (op) {
 	case 0x00: { // ADD R/M8, REG8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r += CPU.AL; break;
 		case RM_REG_001: r += CPU.CL; break;
@@ -37,14 +37,14 @@ void exec16(ubyte op) {
 		default:
 		}
 		__hflag8_1(r);
-		__iu8(r, addr);
+		mmiu8(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x01: { // ADD R/M16, REG16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r += CPU.AX; break;
 		case RM_REG_001: r += CPU.CX; break;
@@ -57,14 +57,14 @@ void exec16(ubyte op) {
 		default:
 		}
 		__hflag16_1(r);
-		__iu16(r, addr);
+		mmiu16(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x02: { // ADD REG8, R/M8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r = CPU.AL + r;
@@ -105,9 +105,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x03: { // ADD REG16, R/M16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r = CPU.AX + r;
@@ -148,14 +148,14 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x04: { // ADD AL, IMM8
-		const int r = CPU.AL + __fu8_i;
+		const int r = CPU.AL + mmfu8_i;
 		__hflag8_1(r);
 		CPU.AL = cast(ubyte)r;
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x05: { // ADD CPU.AX, IMM16
-		const int r = CPU.AX + __fu16_i;
+		const int r = CPU.AX + mmfu16_i;
 		__hflag16_1(r);
 		CPU.AX = cast(ushort)r;
 		CPU.EIP += 2;
@@ -170,9 +170,9 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0x08: { // OR R/M8, REG8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r |= CPU.AL; break;
 		case RM_REG_001: r |= CPU.CL; break;
@@ -185,14 +185,14 @@ void exec16(ubyte op) {
 		default:
 		}
 		__hflag8_3(r);
-		__iu8(r, addr);
+		mmiu8(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x09: { // OR R/M16, REG16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r |= CPU.AX; break;
 		case RM_REG_001: r |= CPU.CX; break;
@@ -205,14 +205,14 @@ void exec16(ubyte op) {
 		default:
 		}
 		__hflag16_3(r);
-		__iu16(r, addr);
+		mmiu16(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x0A: { // OR REG8, R/M8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r |= CPU.AL;
@@ -253,9 +253,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x0B: { // OR REG16, R/M16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r |= CPU.AX;
@@ -296,14 +296,14 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x0C: { // OR AL, IMM8
-		const int r = CPU.AL | __fu8_i;
+		const int r = CPU.AL | mmfu8_i;
 		__hflag8_3(r);
 		CPU.AL = cast(ubyte)r;
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x0D: { // OR AX, IMM16
-		const int r = CPU.AX | __fu16_i;
+		const int r = CPU.AX | mmfu16_i;
 		__hflag16_3(r);
 		CPU.AX = cast(ushort)r;
 		CPU.EIP += 3;
@@ -314,9 +314,9 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0x10: { // ADC R/M8, REG8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r += CPU.AL; break;
 		case RM_REG_001: r += CPU.CL; break;
@@ -330,14 +330,14 @@ void exec16(ubyte op) {
 		}
 		if (CPU.CF) ++r;
 		__hflag8_3(r);
-		__iu8(r, addr);
+		mmiu8(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x11: { // ADC R/M16, REG16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r += CPU.AX; break;
 		case RM_REG_001: r += CPU.CX; break;
@@ -351,14 +351,14 @@ void exec16(ubyte op) {
 		}
 		if (CPU.CF) ++r;
 		__hflag16_3(r);
-		__iu16(r, addr);
+		mmiu16(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x12: { // ADC REG8, R/M8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r += CPU.AL;
@@ -407,9 +407,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x13: { // ADC REG16, R/M16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r += CPU.AX;
@@ -458,7 +458,7 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x14: { // ADC AL, IMM8
-		int r = CPU.AL + __fu8_i;
+		int r = CPU.AL + mmfu8_i;
 		__hflag8_1(r);
 		if (CPU.CF) ++r;
 		CPU.AL = cast(ubyte)r;
@@ -466,7 +466,7 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x15: { // ADC AX, IMM16
-		int r = CPU.AX + __fu16_i;
+		int r = CPU.AX + mmfu16_i;
 		__hflag16_1(r);
 		if (CPU.CF) ++r;
 		CPU.AX = cast(ushort)r;
@@ -482,9 +482,9 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0x18: { // SBB R/M8, REG8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r -= CPU.AL; break;
 		case RM_REG_001: r -= CPU.CL; break;
@@ -498,14 +498,14 @@ void exec16(ubyte op) {
 		}
 		if (CPU.CF) --r;
 		__hflag8_3(r);
-		__iu8(r, addr);
+		mmiu8(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x19: { // SBB R/M16, REG16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r -= CPU.AX; break;
 		case RM_REG_001: r -= CPU.CX; break;
@@ -519,14 +519,14 @@ void exec16(ubyte op) {
 		}
 		if (CPU.CF) --r;
 		__hflag16_3(r);
-		__iu16(r, addr);
+		mmiu16(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x1A: { // SBB REG8, R/M8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r -= CPU.AL;
@@ -575,9 +575,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x1B: { // SBB REG16, R/M16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r -= CPU.AX;
@@ -626,7 +626,7 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x1C: { // SBB AL, IMM8
-		int r = CPU.AL - __fu8_i;
+		int r = CPU.AL - mmfu8_i;
 		if (CPU.CF) --r;
 		__hflag8_3(r);
 		CPU.AL = cast(ubyte)r;
@@ -634,7 +634,7 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x1D: { // SBB AX, IMM16
-		int r = CPU.AX - __fu16_i;
+		int r = CPU.AX - mmfu16_i;
 		if (CPU.CF) --r;
 		__hflag16_3(r);
 		CPU.AX = cast(ushort)r;
@@ -650,9 +650,9 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0x20: { // AND R/M8, REG8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r &= CPU.AH; break;
 		case RM_REG_001: r &= CPU.CH; break;
@@ -665,14 +665,14 @@ void exec16(ubyte op) {
 		default:
 		}
 		__hflag8_3(r);
-		__iu8(r, addr);
+		mmiu8(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x21: { // AND R/M16, REG16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r &= CPU.AX; break;
 		case RM_REG_001: r &= CPU.CX; break;
@@ -685,14 +685,14 @@ void exec16(ubyte op) {
 		default:
 		}
 		__hflag16_3(r);
-		__iu16(r, addr);
+		mmiu16(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x22: { // AND REG8, R/M8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r = CPU.AL & r;
@@ -733,9 +733,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x23: { // AND REG16, R/M16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r = CPU.AX & r;
@@ -776,14 +776,14 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x24: { // AND AL, IMM8
-		const int r = CPU.AL & __fu8_i;
+		const int r = CPU.AL & mmfu8_i;
 		__hflag8_3(r);
 		CPU.AL = cast(ubyte)r;
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x25: { // AND AX, IMM16
-		const int r = CPU.AX & __fu16_i;
+		const int r = CPU.AX & mmfu16_i;
 		__hflag16_3(r);
 		CPU.AX = cast(ushort)r;
 		CPU.EIP += 3;
@@ -829,9 +829,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x28: { // SUB R/M8, REG8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r -= CPU.AL; break;
 		case RM_REG_001: r -= CPU.CL; break;
@@ -844,14 +844,14 @@ void exec16(ubyte op) {
 		default:
 		}
 		__hflag8_1(r);
-		__iu8(r, addr);
+		mmiu8(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x29: { // SUB R/M16, REG16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r -= CPU.AX; break;
 		case RM_REG_001: r -= CPU.CX; break;
@@ -864,14 +864,14 @@ void exec16(ubyte op) {
 		default:
 		}
 		__hflag16_1(r);
-		__iu16(r, addr);
+		mmiu16(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x2A: { // SUB REG8, R/M8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r = CPU.AL - r;
@@ -912,9 +912,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x2B: { // SUB REG16, R/M16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r = CPU.AX - r;
@@ -955,14 +955,14 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x2C: { // SUB AL, IMM8
-		const int r = CPU.AL - __fu8_i;
+		const int r = CPU.AL - mmfu8_i;
 		__hflag8_1(r);
 		CPU.AL = cast(ubyte)r;
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x2D: { // SUB AX, IMM16
-		const int r = CPU.AX - __fu16_i;
+		const int r = CPU.AX - mmfu16_i;
 		__hflag16_1(r);
 		CPU.AX = cast(ushort)r;
 		CPU.EIP += 3;
@@ -992,9 +992,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x30: { // XOR R/M8, REG8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r ^= CPU.AL; break;
 		case RM_REG_001: r ^= CPU.CL; break;
@@ -1007,14 +1007,14 @@ void exec16(ubyte op) {
 		default:
 		}
 		__hflag8_3(r);
-		__iu8(r, addr);
+		mmiu8(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x31: { // XOR R/M16, REG16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r ^= CPU.AX; break;
 		case RM_REG_001: r ^= CPU.CX; break;
@@ -1027,14 +1027,14 @@ void exec16(ubyte op) {
 		default:
 		}
 		__hflag16_3(r);
-		__iu16(r, addr);
+		mmiu16(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x32: { // XOR REG8, R/M8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r = CPU.AL ^ r;
@@ -1075,9 +1075,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x33: { // XOR REG16, R/M16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r = CPU.AX ^ r;
@@ -1118,14 +1118,14 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x34: { // XOR AL, IMM8
-		const int r = CPU.AL ^ __fu8_i;
+		const int r = CPU.AL ^ mmfu8_i;
 		__hflag8_3(r);
 		CPU.AL = cast(ubyte)r;
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x35: { // XOR AX, IMM16
-		const int r = CPU.AX ^ __fu16_i;
+		const int r = CPU.AX ^ mmfu16_i;
 		__hflag16_3(r);
 		CPU.AX = cast(ushort)r;
 		CPU.EIP += 3;
@@ -1144,9 +1144,9 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0x38: { // CMP R/M8, REG8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r -= CPU.AL; break;
 		case RM_REG_001: r -= CPU.CL; break;
@@ -1163,9 +1163,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x39: { // CMP R/M16, REG16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r -= CPU.AX; break;
 		case RM_REG_001: r -= CPU.CX; break;
@@ -1182,9 +1182,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x3A: { // CMP REG8, R/M8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r = CPU.AL - r; break;
 		case RM_REG_001: r = CPU.CL - r; break;
@@ -1201,9 +1201,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x3B: { // CMP REG16, R/M16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: r = CPU.AX - r; break;
 		case RM_REG_001: r = CPU.CX - r; break;
@@ -1220,12 +1220,12 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x3C: { // CMP AL, IMM8
-		__hflag8_1(CPU.AL - __fu8_i);
+		__hflag8_1(CPU.AL - mmfu8_i);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x3D: { // CMP AX, IMM16
-		__hflag16_1(CPU.AX - __fu16_i);
+		__hflag16_1(CPU.AX - mmfu16_i);
 		CPU.EIP += 3;
 		return;
 	}
@@ -1425,95 +1425,95 @@ void exec16(ubyte op) {
 		exec32(MEMORY[CPU.EIP]);
 		return;
 	case 0x70: // JO          SHORT-LABEL
-		CPU.EIP += CPU.OF ? __fi8_i + 2 : 2;
+		CPU.EIP += CPU.OF ? mmfi8_i + 2 : 2;
 		return;
 	case 0x71: // JNO         SHORT-LABEL
-		CPU.EIP += CPU.OF ? 2 : __fi8_i + 2;
+		CPU.EIP += CPU.OF ? 2 : mmfi8_i + 2;
 		return;
 	case 0x72: // JB/JNAE/JC  SHORT-LABEL
-		CPU.EIP += CPU.CF ? __fi8_i + 2 : 2;
+		CPU.EIP += CPU.CF ? mmfi8_i + 2 : 2;
 		return;
 	case 0x73: // JNB/JAE/JNC SHORT-LABEL
-		CPU.EIP += CPU.CF ? 2 : __fi8_i + 2;
+		CPU.EIP += CPU.CF ? 2 : mmfi8_i + 2;
 		return;
 	case 0x74: // JE/JZ       SHORT-LABEL
-		CPU.EIP += CPU.ZF ? __fi8_i + 2 : 2;
+		CPU.EIP += CPU.ZF ? mmfi8_i + 2 : 2;
 		return;
 	case 0x75: // JNE/JNZ     SHORT-LABEL
-		CPU.EIP += CPU.ZF ? 2 : __fi8_i + 2;
+		CPU.EIP += CPU.ZF ? 2 : mmfi8_i + 2;
 		return;
 	case 0x76: // JBE/JNA     SHORT-LABEL
-		CPU.EIP += (CPU.CF || CPU.ZF) ? __fi8_i + 2 : 2;
+		CPU.EIP += (CPU.CF || CPU.ZF) ? mmfi8_i + 2 : 2;
 		return;
 	case 0x77: // JNBE/JA     SHORT-LABEL
-		CPU.EIP += CPU.CF == 0 && CPU.ZF == 0 ? __fi8_i + 2 : 2;
+		CPU.EIP += CPU.CF == 0 && CPU.ZF == 0 ? mmfi8_i + 2 : 2;
 		return;
 	case 0x78: // JS          SHORT-LABEL
-		CPU.EIP += CPU.SF ? __fi8_i + 2 : 2;
+		CPU.EIP += CPU.SF ? mmfi8_i + 2 : 2;
 		return;
 	case 0x79: // JNS         SHORT-LABEL
-		CPU.EIP += CPU.SF ? 2 : __fi8_i + 2;
+		CPU.EIP += CPU.SF ? 2 : mmfi8_i + 2;
 		return;
 	case 0x7A: // JP/JPE      SHORT-LABEL
-		CPU.EIP += CPU.PF ? __fi8_i + 2 : 2;
+		CPU.EIP += CPU.PF ? mmfi8_i + 2 : 2;
 		return;
 	case 0x7B: // JNP/JPO     SHORT-LABEL
-		CPU.EIP += CPU.PF ? 2 : __fi8_i + 2;
+		CPU.EIP += CPU.PF ? 2 : mmfi8_i + 2;
 		return;
 	case 0x7C: // JL/JNGE     SHORT-LABEL
-		CPU.EIP += CPU.SF != CPU.OF ? __fi8_i + 2 : 2;
+		CPU.EIP += CPU.SF != CPU.OF ? mmfi8_i + 2 : 2;
 		return;
 	case 0x7D: // JNL/JGE     SHORT-LABEL
-		CPU.EIP += CPU.SF == CPU.OF ? __fi8_i + 2 : 2;
+		CPU.EIP += CPU.SF == CPU.OF ? mmfi8_i + 2 : 2;
 		return;
 	case 0x7E: // JLE/JNG     SHORT-LABEL
-		CPU.EIP += CPU.SF != CPU.OF || CPU.ZF ? __fi8_i + 2 : 2;
+		CPU.EIP += CPU.SF != CPU.OF || CPU.ZF ? mmfi8_i + 2 : 2;
 		return;
 	case 0x7F: // JNLE/JG     SHORT-LABEL
-		CPU.EIP += CPU.SF == CPU.OF && CPU.ZF == 0 ? __fi8_i + 2 : 2;
+		CPU.EIP += CPU.SF == CPU.OF && CPU.ZF == 0 ? mmfi8_i + 2 : 2;
 		return;
 	case 0x80: { // GRP1 R/M8, IMM8
-		const ubyte rm = __fu8_i; // Get ModR/M byte
-		const ushort im = __fu8_i(1);
-		const int addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i; // Get ModR/M byte
+		const ushort im = mmfu8_i(1);
+		const int addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) { // REG
 		case RM_REG_000: // 000 - ADD
 			r += im;
 			__hflag16_1(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_001: // 001 - OR
 			r |= im;
 			__hflag16_3(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_010: // 010 - ADC
 			r += im;
 			if (CPU.CF) ++r;
 			__hflag16_1(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_011: // 011 - SBB
 			r -= im;
 			if (CPU.CF) --r;
 			__hflag16_1(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_100: // 100 - AND
 			r &= im;
 			__hflag16_1(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_101: // 101 - SUB
 			r -= im;
 			__hflag16_1(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_110: // 110 - XOR
 			r ^= im;
 			__hflag16_3(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_111: // 111 - CMP
 			r -= im;
@@ -1527,47 +1527,47 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x81: { // GRP1 R/M16, IMM16
-		const ubyte rm = __fu8_i; // Get ModR/M byte
-		const ushort im = __fu16_i(1);
-		const int addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i; // Get ModR/M byte
+		const ushort im = mmfu16_i(1);
+		const int addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) { // REG
 		case RM_REG_000: // 000 - ADD
 			r += im;
 			__hflag16_1(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_001: // 001 - OR
 			r |= im;
 			__hflag16_3(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_010: // 010 - ADC
 			r += im;
 			if (CPU.CF) ++r;
 			__hflag16_1(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_011: // 011 - SBB
 			r -= im;
 			if (CPU.CF) --r;
 			__hflag16_1(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_100: // 100 - AND
 			r &= im;
 			__hflag16_1(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_101: // 101 - SUB
 			r -= im;
 			__hflag16_1(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_110: // 110 - XOR
 			r ^= im;
 			__hflag16_3(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_111: // 111 - CMP
 			r -= im;
@@ -1581,28 +1581,28 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x82: { // GRP2 R/M8, IMM8
-		const ubyte rm = __fu8_i; // Get ModR/M byte
-		const ushort im = __fu8_i(1);
-		const int addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i; // Get ModR/M byte
+		const ushort im = mmfu8_i(1);
+		const int addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) { // ModRM REG
 		case RM_REG_000: // 000 - ADD
 			r += im;
-			__iu8(r, addr);
+			mmiu8(r, addr);
 			break;
 		case RM_REG_010: // 010 - ADC
 			r += im;
 			if (CPU.CF) ++r;
-			__iu8(r, addr);
+			mmiu8(r, addr);
 			break;
 		case RM_REG_011: // 011 - SBB
 			r -= im;
 			if (CPU.CF) --r;
-			__iu8(r, addr);
+			mmiu8(r, addr);
 			break;
 		case RM_REG_101: // 101 - SUB
 			r -= im;
-			__iu8(r, addr);
+			mmiu8(r, addr);
 			break;
 		case RM_REG_111: // 111 - CMP
 			r -= im;
@@ -1616,28 +1616,28 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x83: { // GRP2 R/M16, IMM8
-		const ubyte rm = __fu8_i; // Get ModR/M byte
-		const ushort im = __fu8_i(1);
-		const int addr = get_rm16(rm, 1);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i; // Get ModR/M byte
+		const ushort im = mmfu8_i(1);
+		const int addr = mmrm16(rm, 1);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) { // ModRM REG
 		case RM_REG_000: // 000 - ADD
 			r += im;
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_010: // 010 - ADC
 			r += im;
 			if (CPU.CF) ++r;
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_011: // 011 - SBB
 			r -= im;
 			if (CPU.CF) --r;
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_101: // 101 - SUB
 			r -= im;
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_111: // 111 - CMP
 			r -= im;
@@ -1651,8 +1651,8 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x84: { // TEST R/M8, REG8
-		const ubyte rm = __fu8_i;
-		const int n = __fu8(get_rm16(rm));
+		const ubyte rm = mmfu8_i;
+		const int n = mmfu8(mmrm16(rm));
 		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: r = CPU.AL & n; break;
@@ -1670,8 +1670,8 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x85: { // TEST R/M16, REG16
-		const ubyte rm = __fu8_i;
-		const int n = __fu16(get_rm16(rm, 1));
+		const ubyte rm = mmfu8_i;
+		const int n = mmfu16(mmrm16(rm, 1));
 		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: r = CPU.AX & n; break;
@@ -1689,9 +1689,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x86: { // XCHG REG8, R/M8
-		const ubyte rm = __fu8_i;
-		const int addr = get_rm16(rm);
-		const ubyte s = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const int addr = mmrm16(rm);
+		const ubyte s = mmfu8(addr);
 		// temp <- REG
 		// REG  <- MEM
 		// MEM  <- temp
@@ -1723,17 +1723,17 @@ void exec16(ubyte op) {
 			break;
 		default:
 		}
-		__iu8(r, addr);
+		mmiu8(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x87: { // XCHG REG16, R/M16
-		const ubyte rm = __fu8_i;
-		const int addr = get_rm16(rm, 1);
+		const ubyte rm = mmfu8_i;
+		const int addr = mmrm16(rm, 1);
 		// temp <- REG
 		// REG  <- MEM
 		// MEM  <- temp
-		ushort r = void; const ushort s = __fu16(addr);
+		ushort r = void; const ushort s = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000:
 			r = CPU.AX; CPU.AX = s;
@@ -1761,48 +1761,48 @@ void exec16(ubyte op) {
 			break;
 		default:
 		}
-		__iu16(r, addr);
+		mmiu16(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x88: { // MOV R/M8, REG8
-		const ubyte rm = __fu8_i;
-		int addr = get_rm16(rm);
+		const ubyte rm = mmfu8_i;
+		int addr = mmrm16(rm);
 		switch (rm & RM_REG) {
-		case RM_REG_000: __iu8(CPU.AL, addr); break;
-		case RM_REG_001: __iu8(CPU.CL, addr); break;
-		case RM_REG_010: __iu8(CPU.DL, addr); break;
-		case RM_REG_011: __iu8(CPU.BL, addr); break;
-		case RM_REG_100: __iu8(CPU.AH, addr); break;
-		case RM_REG_101: __iu8(CPU.CH, addr); break;
-		case RM_REG_110: __iu8(CPU.DH, addr); break;
-		case RM_REG_111: __iu8(CPU.BH, addr); break;
+		case RM_REG_000: mmiu8(CPU.AL, addr); break;
+		case RM_REG_001: mmiu8(CPU.CL, addr); break;
+		case RM_REG_010: mmiu8(CPU.DL, addr); break;
+		case RM_REG_011: mmiu8(CPU.BL, addr); break;
+		case RM_REG_100: mmiu8(CPU.AH, addr); break;
+		case RM_REG_101: mmiu8(CPU.CH, addr); break;
+		case RM_REG_110: mmiu8(CPU.DH, addr); break;
+		case RM_REG_111: mmiu8(CPU.BH, addr); break;
 		default:
 		}
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x89: { // MOV R/M16, REG16
-		const ubyte rm = __fu8_i;
-		int addr = get_rm16(rm, 1);
+		const ubyte rm = mmfu8_i;
+		int addr = mmrm16(rm, 1);
 		switch (rm & RM_REG) {
-		case RM_REG_000: __iu16(CPU.AX, addr); break;
-		case RM_REG_001: __iu16(CPU.CX, addr); break;
-		case RM_REG_010: __iu16(CPU.DX, addr); break;
-		case RM_REG_011: __iu16(CPU.BX, addr); break;
-		case RM_REG_100: __iu16(CPU.SP, addr); break;
-		case RM_REG_101: __iu16(CPU.BP, addr); break;
-		case RM_REG_110: __iu16(CPU.SI, addr); break;
-		case RM_REG_111: __iu16(CPU.DI, addr); break;
+		case RM_REG_000: mmiu16(CPU.AX, addr); break;
+		case RM_REG_001: mmiu16(CPU.CX, addr); break;
+		case RM_REG_010: mmiu16(CPU.DX, addr); break;
+		case RM_REG_011: mmiu16(CPU.BX, addr); break;
+		case RM_REG_100: mmiu16(CPU.SP, addr); break;
+		case RM_REG_101: mmiu16(CPU.BP, addr); break;
+		case RM_REG_110: mmiu16(CPU.SI, addr); break;
+		case RM_REG_111: mmiu16(CPU.DI, addr); break;
 		default:
 		}
 		CPU.EIP += 2;
 		return;
 	}
 	case 0x8A: { // MOV REG8, R/M8
-		const ubyte rm = __fu8_i;
-		const int addr = get_rm16(rm);
-		const ubyte r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const int addr = mmrm16(rm);
+		const ubyte r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: CPU.AL = r; break;
 		case RM_REG_001: CPU.CL = r; break;
@@ -1818,9 +1818,9 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x8B: { // MOV REG16, R/M16
-		const ubyte rm = __fu8_i;
-		const int addr = get_rm16(rm, 1);
-		const ushort r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const int addr = mmrm16(rm, 1);
+		const ushort r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: CPU.AX = r; break;
 		case RM_REG_001: CPU.CX = r; break;
@@ -1837,13 +1837,13 @@ void exec16(ubyte op) {
 	}
 	case 0x8C: { // MOV R/M16, SEGREG
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
-		const byte rm = __fu8_i;
-		const int addr = get_rm16(rm, 1);
+		const byte rm = mmfu8_i;
+		const int addr = mmrm16(rm, 1);
 		switch (rm & RM_REG) { // if REG[3] is clear, trip to default
-		case RM_REG_100: __iu16(CPU.ES, addr); break;
-		case RM_REG_101: __iu16(CPU.CS, addr); break;
-		case RM_REG_110: __iu16(CPU.SS, addr); break;
-		case RM_REG_111: __iu16(CPU.DS, addr); break;
+		case RM_REG_100: mmiu16(CPU.ES, addr); break;
+		case RM_REG_101: mmiu16(CPU.CS, addr); break;
+		case RM_REG_110: mmiu16(CPU.SS, addr); break;
+		case RM_REG_111: mmiu16(CPU.DS, addr); break;
 		default: // when bit 6 is clear (REG[3])
 			log_info("Invalid ModR/M for SEGREG->RM");
 			goto EXEC16_ILLEGAL;
@@ -1852,8 +1852,8 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x8D: { // LEA REG16, MEM16
-		const ubyte rm = __fu8_i;
-		const ushort addr = cast(ushort)get_rm16(rm, 1);
+		const ubyte rm = mmfu8_i;
+		const ushort addr = cast(ushort)mmrm16(rm, 1);
 		switch (rm & RM_REG) {
 		case RM_REG_000: CPU.AX = addr; break;
 		case RM_REG_001: CPU.CX = addr; break;
@@ -1870,8 +1870,8 @@ void exec16(ubyte op) {
 	}
 	case 0x8E: { // MOV SEGREG, R/M16
 		// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
-		const byte rm = __fu8_i;
-		const ushort addr = __fu16(get_rm16(rm, 1));
+		const byte rm = mmfu8_i;
+		const ushort addr = mmfu16(mmrm16(rm, 1));
 		switch (rm & RM_REG) { // if REG[3] is clear, trip to default
 		case RM_REG_100: CPU.ES = addr; break;
 		case RM_REG_101: CPU.CS = addr; break;
@@ -1885,12 +1885,12 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0x8F: { // POP R/M16
-		const ubyte rm = __fu8_i;
+		const ubyte rm = mmfu8_i;
 		if (rm & RM_REG) { // REG must be 000
 			log_info("Invalid ModR/M for POP R/M16");
 			goto EXEC16_ILLEGAL;
 		}
-		__iu16(pop16, get_rm16(rm, 1));
+		mmiu16(pop16, mmrm16(rm, 1));
 		CPU.EIP += 2;
 		return;
 	}
@@ -1955,8 +1955,8 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0x9A: { // CALL FAR_PROC
-		const ushort cs = __fu16_i;
-		const ushort ip = __fu16_i(2);
+		const ushort cs = mmfu16_i;
+		const ushort ip = mmfu16_i(2);
 		push16(CPU.CS);
 		push16(CPU.IP);
 		CPU.CS = cs;
@@ -1986,19 +1986,19 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0xA0: // MOV AL, MEM8
-		CPU.AL = __fu8(__fu16_i);
+		CPU.AL = mmfu8(mmfu16_i);
 		CPU.EIP += 2;
 		return;
 	case 0xA1: // MOV AX, MEM16
-		CPU.AX = __fu16(__fu16_i);
+		CPU.AX = mmfu16(mmfu16_i);
 		CPU.EIP += 3;
 		return;
 	case 0xA2: // MOV MEM8, AL
-		__iu8(CPU.AL, __fu16_i);
+		mmiu8(CPU.AL, mmfu16_i);
 		CPU.EIP += 2;
 		return;
 	case 0xA3: // MOV MEM16, AX
-		__iu16(CPU.AX, __fu16_i);
+		mmiu16(CPU.AX, mmfu16_i);
 		CPU.EIP += 3;
 		return;
 	case 0xA4: // MOVS DEST-STR8, SRC-STR8
@@ -2009,7 +2009,7 @@ void exec16(ubyte op) {
 		return;
 	case 0xA6: // CMPS DEST-STR8, SRC-STR8
 		__hflag8_1(
-			__fu8(get_ad(CPU.DS, CPU.SI)) - __fu8(get_ad(CPU.ES, CPU.DI))
+			mmfu8(get_ad(CPU.DS, CPU.SI)) - mmfu8(get_ad(CPU.ES, CPU.DI))
 		);
 		if (CPU.DF) {
 			--CPU.DI;
@@ -2021,7 +2021,7 @@ void exec16(ubyte op) {
 		return;
 	case 0xA7: // CMPSW DEST-STR16, SRC-STR16
 		__hflag16_1(
-			__fu16(get_ad(CPU.DS, CPU.SI)) - __fu16(get_ad(CPU.ES, CPU.DI))
+			mmfu16(get_ad(CPU.DS, CPU.SI)) - mmfu16(get_ad(CPU.ES, CPU.DI))
 		);
 		if (CPU.DF) {
 			CPU.DI -= 2;
@@ -2032,115 +2032,115 @@ void exec16(ubyte op) {
 		}
 		return;
 	case 0xA8: // TEST AL, IMM8
-		__hflag8_3(CPU.AL & __fu8_i);
+		__hflag8_3(CPU.AL & mmfu8_i);
 		CPU.EIP += 2;
 		return;
 	case 0xA9: // TEST AX, IMM16
-		__hflag16_3(CPU.AX & __fu16_i);
+		__hflag16_3(CPU.AX & mmfu16_i);
 		CPU.EIP += 3;
 		return;
 	case 0xAA: // STOS DEST-STR8
-		__iu8(CPU.AL, get_ad(CPU.ES, CPU.DI));
+		mmiu8(CPU.AL, get_ad(CPU.ES, CPU.DI));
 		//CPU.DI = DF ? CPU.DI - 1 : CPU.DI + 1;
 		if (CPU.DF) --CPU.DI; else ++CPU.DI;
 		++CPU.EIP;
 		return;
 	case 0xAB: // STOS DEST-STR16
-		__iu16(CPU.AX, get_ad(CPU.ES, CPU.DI));
+		mmiu16(CPU.AX, get_ad(CPU.ES, CPU.DI));
 		//CPU.DI = DF ? CPU.DI - 2 : CPU.DI + 2;
 		if (CPU.DF) CPU.DI -= 2; else CPU.DI += 2;
 		++CPU.EIP;
 		return;
 	case 0xAC: // LODS SRC-STR8
-		CPU.AL = __fu8(get_ad(CPU.DS, CPU.SI));
+		CPU.AL = mmfu8(get_ad(CPU.DS, CPU.SI));
 		//CPU.SI = DF ? CPU.SI - 1 : CPU.SI + 1;
 		if (CPU.DF) --CPU.SI; else ++CPU.SI;
 		++CPU.EIP;
 		return;
 	case 0xAD: // LODS SRC-STR16
-		CPU.AX = __fu16(get_ad(CPU.DS, CPU.SI));
+		CPU.AX = mmfu16(get_ad(CPU.DS, CPU.SI));
 		//CPU.SI = DF ? CPU.SI - 2 : CPU.SI + 2;
 		if (CPU.DF) CPU.SI -= 2; else CPU.SI += 2;
 		++CPU.EIP;
 		return;
 	case 0xAE: // SCAS DEST-STR8
-		__hflag8_1(CPU.AL - __fu8(get_ad(CPU.ES, CPU.DI)));
+		__hflag8_1(CPU.AL - mmfu8(get_ad(CPU.ES, CPU.DI)));
 		//CPU.DI = DF ? CPU.DI - 1 : CPU.DI + 1;
 		if (CPU.DF) --CPU.DI; else ++CPU.DI;
 		++CPU.EIP;
 		return;
 	case 0xAF: // SCAS DEST-STR16
-		__hflag16_1(CPU.AX - __fu16(get_ad(CPU.ES, CPU.DI)));
+		__hflag16_1(CPU.AX - mmfu16(get_ad(CPU.ES, CPU.DI)));
 		//CPU.DI = DF ? CPU.DI - 2 : CPU.DI + 2;
 		if (CPU.DF) CPU.DI -= 2; else CPU.DI += 2;
 		++CPU.EIP;
 		return;
 	case 0xB0: // MOV AL, IMM8
-		CPU.AL = __fu8_i;
+		CPU.AL = mmfu8_i;
 		CPU.EIP += 2;
 		return;
 	case 0xB1: // MOV CL, IMM8
-		CPU.CL = __fu8_i;
+		CPU.CL = mmfu8_i;
 		CPU.EIP += 2;
 		return;
 	case 0xB2: // MOV DL, IMM8
-		CPU.DL = __fu8_i;
+		CPU.DL = mmfu8_i;
 		CPU.EIP += 2;
 		return;
 	case 0xB3: // MOV BL, IMM8
-		CPU.BL = __fu8_i;
+		CPU.BL = mmfu8_i;
 		CPU.EIP += 2;
 		return;
 	case 0xB4: // MOV AH, IMM8
-		CPU.AH = __fu8_i;
+		CPU.AH = mmfu8_i;
 		CPU.EIP += 2;
 		return;
 	case 0xB5: // MOV CH, IMM8
-		CPU.CH = __fu8_i;
+		CPU.CH = mmfu8_i;
 		CPU.EIP += 2;
 		return;
 	case 0xB6: // MOV DH, IMM8  
-		CPU.DH = __fu8_i;
+		CPU.DH = mmfu8_i;
 		CPU.EIP += 2;
 		return;
 	case 0xB7: // MOV BH, IMM8
-		CPU.BH = __fu8_i;
+		CPU.BH = mmfu8_i;
 		CPU.EIP += 2;
 		return;
 	case 0xB8: // MOV AX, IMM16
-		CPU.AX = __fu16_i;
+		CPU.AX = mmfu16_i;
 		CPU.EIP += 3;
 		return;
 	case 0xB9: // MOV CX, IMM16
-		CPU.CX = __fu16_i;
+		CPU.CX = mmfu16_i;
 		CPU.EIP += 3;
 		return;
 	case 0xBA: // MOV DX, IMM16
-		CPU.DX = __fu16_i;
+		CPU.DX = mmfu16_i;
 		CPU.EIP += 3;
 		return;
 	case 0xBB: // MOV BX, IMM16
-		CPU.BX = __fu16_i;
+		CPU.BX = mmfu16_i;
 		CPU.EIP += 3;
 		return;
 	case 0xBC: // MOV SP, IMM16
-		CPU.SP = __fu16_i;
+		CPU.SP = mmfu16_i;
 		CPU.EIP += 3;
 		return;
 	case 0xBD: // MOV BP, IMM16
-		CPU.BP = __fu16_i;
+		CPU.BP = mmfu16_i;
 		CPU.EIP += 3;
 		return;
 	case 0xBE: // MOV SI, IMM16
-		CPU.SI = __fu16_i;
+		CPU.SI = mmfu16_i;
 		CPU.EIP += 3;
 		return;
 	case 0xBF: // MOV DI, IMM16
-		CPU.DI = __fu16_i;
+		CPU.DI = mmfu16_i;
 		CPU.EIP += 3;
 		return;
 	case 0xC2: { // RET IMM16 (NEAR)
-		const ushort sp = __fi16_i;
+		const ushort sp = mmfi16_i;
 		CPU.IP = pop16;
 		CPU.SP += sp;
 		return;
@@ -2150,8 +2150,8 @@ void exec16(ubyte op) {
 		return;
 	case 0xC4, 0xC5: { // LES/LDS REG16, MEM16
 		// Load into REG and ES/DS
-		const ubyte rm = __fu8_i;
-		const ushort r = __fu16(get_rm16(rm, 1));
+		const ubyte rm = mmfu8_i;
+		const ushort r = mmfu16(mmrm16(rm, 1));
 		CPU.Segment = op == 0xC4 ? SEG_ES : SEG_DS; // "Segment selector"
 		switch (rm & RM_REG) {
 		case RM_REG_000: CPU.AX = r; break;
@@ -2168,28 +2168,28 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0xC6: { // MOV MEM8, IMM8
-		const ubyte rm = __fu8_i;
+		const ubyte rm = mmfu8_i;
 		if (rm & RM_REG) { // No register operation allowed
 			log_info("Invalid ModR/M for MOV MEM8");
 			goto EXEC16_ILLEGAL;
 		}
-		__iu8(__fu8_i(1), get_rm16(rm));
+		mmiu8(mmfu8_i(1), mmrm16(rm));
 		return;
 	}
 	case 0xC7: { // MOV MEM16, IMM16
-		const ubyte rm = __fu8_i;
+		const ubyte rm = mmfu8_i;
 		if (rm & RM_REG) { // No register operation allowed
 			log_info("Invalid ModR/M for MOV MEM16");
 			goto EXEC16_ILLEGAL;
 		}
-		__iu16(__fu16_i(1), get_rm16(rm, 1));
+		mmiu16(mmfu16_i(1), mmrm16(rm, 1));
 		return;
 	}
 	case 0xCA: { // RET IMM16 (FAR)
 		const uint addr = CPU.EIP + 1;
 		CPU.IP = pop16;
 		CPU.CS = pop16;
-		CPU.SP += __fi16(addr);
+		CPU.SP += mmfi16(addr);
 		return;
 	}
 	case 0xCB: // RET (FAR)
@@ -2201,7 +2201,7 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0xCD: // INT IMM8
-		INT(__fu8_i);
+		INT(mmfu8_i);
 		CPU.EIP += 2;
 		return;
 	case 0xCE: // INTO
@@ -2215,9 +2215,9 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0xD0: { // GRP2 R/M8, 1
-		const ubyte rm = __fu8_i;
-		const int addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const int addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		//TODO: handle flags accordingly
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - ROL
@@ -2250,14 +2250,14 @@ void exec16(ubyte op) {
 			log_info("Invalid ModR/M for GRP2 R/M8, 1");
 			goto EXEC16_ILLEGAL;
 		}
-		__iu8(r, addr);
+		mmiu8(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0xD1: { // GRP2 R/M16, 1
-		const ubyte rm = __fu8_i;
-		const int addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const int addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - ROL
 			r <<= 1;
@@ -2290,14 +2290,14 @@ void exec16(ubyte op) {
 			goto EXEC16_ILLEGAL;
 		}
 		//TODO: handle flags accordingly
-		__iu16(r, addr);
+		mmiu16(r, addr);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0xD2: // GRP2 R/M8, CL
 	// The 8086 does not mask the rotation count.
-		/*const ubyte rm = __fu8_i;
-		const int addr = get_rm16(rm);
+		/*const ubyte rm = mmfu8_i;
+		const int addr = mmrm16(rm);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - ROL
 
@@ -2328,8 +2328,8 @@ void exec16(ubyte op) {
 		return;
 	case 0xD3: // GRP2 R/M16, CL
 	// The 8086 does not mask the rotation count.
-		/*const ubyte rm = __fu8_i;
-		const int addr = get_rm16(rm, 1);
+		/*const ubyte rm = mmfu8_i;
+		const int addr = mmrm16(rm, 1);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - ROL
 
@@ -2373,7 +2373,7 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0xD7: // XLAT SOURCE-TABLE
-		CPU.AL = __fu8(get_ad(CPU.DS, CPU.BX) + cast(byte)CPU.AL);
+		CPU.AL = mmfu8(get_ad(CPU.DS, CPU.BX) + cast(byte)CPU.AL);
 		return;
 	/*
 	 * ESC OPCODE, SOURCE
@@ -2385,21 +2385,21 @@ void exec16(ubyte op) {
 	case 0xDF: break;*/
 	case 0xE0: // LOOPNE/LOOPNZ SHORT-LABEL
 		--CPU.CX;
-		if (CPU.CX && CPU.ZF == 0) CPU.EIP += __fi8_i;
+		if (CPU.CX && CPU.ZF == 0) CPU.EIP += mmfi8_i;
 		else CPU.EIP += 2;
 		return;
 	case 0xE1: // LOOPE/LOOPZ   SHORT-LABEL
 		--CPU.CX;
-		if (CPU.CX && CPU.ZF) CPU.EIP += __fi8_i;
+		if (CPU.CX && CPU.ZF) CPU.EIP += mmfi8_i;
 		else CPU.EIP += 2;
 		return;
 	case 0xE2: // LOOP  SHORT-LABEL
 		--CPU.CX;
-		if (CPU.CX) CPU.EIP += __fi8_i;
+		if (CPU.CX) CPU.EIP += mmfi8_i;
 		else CPU.EIP += 2;
 		return;
 	case 0xE3: // JCXZ  SHORT-LABEL
-		if (CPU.CX == 0) CPU.EIP += __fi8_i;
+		if (CPU.CX == 0) CPU.EIP += mmfi8_i;
 		else CPU.EIP += 2;
 		return;
 	case 0xE4: // IN AL, IMM8
@@ -2416,19 +2416,19 @@ void exec16(ubyte op) {
 		return;
 	case 0xE8: // CALL NEAR-PROC
 		push16(CPU.IP);
-		CPU.EIP += __fi16_i; // Direct within segment
+		CPU.EIP += mmfi16_i; // Direct within segment
 		return;
 	case 0xE9: // JMP NEAR-LABEL
-		CPU.EIP += __fi16_i + 3; // ±32 KB
+		CPU.EIP += mmfi16_i + 3; // ±32 KB
 		return;
 	case 0xEA: // JMP FAR-LABEL
 		// Any segment, any fragment, 5 byte instruction.
 		// EAh (LO-CPU.IP) (HI-CPU.IP) (LO-CPU.CS) (HI-CPU.CS)
-		CPU.IP = __fu16_i;
-		CPU.CS = __fu16_i(2);
+		CPU.IP = mmfu16_i;
+		CPU.CS = mmfu16_i(2);
 		return;
 	case 0xEB: // JMP SHORT-LABEL
-		CPU.EIP += __fi8_i + 2; // ±128 B
+		CPU.EIP += mmfi8_i + 2; // ±128 B
 		return;
 	case 0xEC: // IN AL, DX
 
@@ -2467,43 +2467,43 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0xF6: { // GRP3 R/M8, IMM8
-		const ubyte rm = __fu8_i; // Get ModR/M byte
-		ubyte im = __fu8_i(1);
-		int addr = get_rm16(rm);
+		const ubyte rm = mmfu8_i; // Get ModR/M byte
+		ubyte im = mmfu8_i(1);
+		int addr = mmrm16(rm);
 		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - TEST
-			__hflag8_1(im & __fu8(addr));
+			__hflag8_1(im & mmfu8(addr));
 			break;
 		case RM_REG_010: // 010 - NOT
-			__iu8(~__fu8(addr), addr);
+			mmiu8(~mmfu8(addr), addr);
 			break;
 		case RM_REG_011: // 011 - NEG
-			r = cast(ubyte)-__fu8(addr);
+			r = cast(ubyte)-mmfu8(addr);
 			CPU.CF = cast(ubyte)r;
 			__hflag8_2(r);
-			__iu8(r, addr);
+			mmiu8(r, addr);
 			break;
 		case RM_REG_100: // 100 - MUL
-			r = im * __fu8(addr);
+			r = im * mmfu8(addr);
 			__hflag8_4(r);
-			__iu8(r, addr);
+			mmiu8(r, addr);
 			break;
 		case RM_REG_101: // 101 - IMUL
-			r = cast(ubyte)(cast(byte)im * __fi8(addr));
+			r = cast(ubyte)(cast(byte)im * mmfi8(addr));
 			__hflag8_4(r);
-			__iu8(r, addr);
+			mmiu8(r, addr);
 			break;
 		case RM_REG_110: // 110 - DIV
 		//TODO: Check if im == 0 (#DE), DIV
-			const ubyte d = __fu8(addr);
+			const ubyte d = mmfu8(addr);
 			r = CPU.AX / d;
 			CPU.AH = cast(ubyte)(CPU.AX % d);
 			CPU.AL = cast(ubyte)(r);
 			break;
 		case RM_REG_111: // 111 - IDIV
 		//TODO: Check if im == 0 (#DE), IDIV
-			const byte d = __fi8(addr);
+			const byte d = mmfi8(addr);
 			r = cast(short)CPU.AX / d;
 			CPU.AH = cast(ubyte)(cast(short)CPU.AX % d);
 			CPU.AL = cast(ubyte)r;
@@ -2516,41 +2516,41 @@ void exec16(ubyte op) {
 		return;
 	}
 	case 0xF7: { // GRP3 R/M16, IMM16
-		const ubyte rm = __fu8_i; // Get ModR/M byte
-		ushort im = __fu16_i(1);
-		int addr = get_rm16(rm, 1);
+		const ubyte rm = mmfu8_i; // Get ModR/M byte
+		ushort im = mmfu16_i(1);
+		int addr = mmrm16(rm, 1);
 		int r = void;
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - TEST
-			__hflag16_1(im & __fu16(addr));
+			__hflag16_1(im & mmfu16(addr));
 			break;
 		case RM_REG_010: // 010 - NOT
-			__iu16(~im, addr);
+			mmiu16(~im, addr);
 			break;
 		case RM_REG_011: // 011 - NEG
-			r = -__fu16(addr);
+			r = -mmfu16(addr);
 			CPU.CF = cast(ubyte)r;
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_100: // 100 - MUL
-			r = im * __fu16(addr);
+			r = im * mmfu16(addr);
 			__hflag16_4(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_101: // 101 - IMUL
-			r = im * __fi16(addr);
+			r = im * mmfi16(addr);
 			__hflag16_4(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_110: // 110 - DIV
-			r = im / __fu16(addr);
+			r = im / mmfu16(addr);
 			__hflag16_4(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		case RM_REG_111: // 111 - IDIV
-			r = im / __fi16(addr);
+			r = im / mmfi16(addr);
 			__hflag16_4(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			break;
 		default:
 			log_info("Invalid ModR/M on GRP3_8");
@@ -2584,9 +2584,9 @@ void exec16(ubyte op) {
 		++CPU.EIP;
 		return;
 	case 0xFE: { // GRP4 R/M8
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm);
-		int r = __fu8(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm);
+		int r = mmfu8(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - INC
 			++r;
@@ -2598,26 +2598,26 @@ void exec16(ubyte op) {
 			log_info("Invalid ModR/M on GRP4_8");
 			goto EXEC16_ILLEGAL;
 		}
-		__iu16(r, addr);
+		mmiu16(r, addr);
 		__hflag16_2(r);
 		CPU.EIP += 2;
 		return;
 	}
 	case 0xFF: { // GRP5 R/M16
-		const ubyte rm = __fu8_i;
-		const uint addr = get_rm16(rm, 1);
-		int r = __fu16(addr);
+		const ubyte rm = mmfu8_i;
+		const uint addr = mmrm16(rm, 1);
+		int r = mmfu16(addr);
 		switch (rm & RM_REG) {
 		case RM_REG_000: // 000 - INC
 			++r;
 			__hflag16_2(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			CPU.EIP += 2;
 			return;
 		case RM_REG_001: // 001 - DEC
 			--r;
 			__hflag16_2(r);
-			__iu16(r, addr);
+			mmiu16(r, addr);
 			CPU.EIP += 2;
 			break;
 		case RM_REG_010: // 010 - CALL R/M16 (near) -- Indirect within segment
@@ -2625,7 +2625,7 @@ void exec16(ubyte op) {
 			CPU.IP = cast(ushort)r;
 			break;
 		case RM_REG_011: { // 011 - CALL MEM16 (far) -- Indirect outside segment
-			ushort nip = cast(ushort)get_ad(__fu16(addr + 2), r);
+			ushort nip = cast(ushort)get_ad(mmfu16(addr + 2), r);
 			push16(CPU.CS);
 			push16(CPU.IP);
 			CPU.IP = nip;
@@ -2635,10 +2635,10 @@ void exec16(ubyte op) {
 			CPU.IP = cast(ushort)(r + 2);
 			break;
 		case RM_REG_101: // 101 - JMP MEM16 (far) -- Indirect outside segment
-			CPU.IP = cast(ushort)get_ad(__fu16(addr), r + 2);
+			CPU.IP = cast(ushort)get_ad(mmfu16(addr), r + 2);
 			break;
 		case RM_REG_110: // 110 - PUSH MEM16
-			push16(__fu16(get_ad(__fu16(addr + 2), r)));
+			push16(mmfu16(get_ad(mmfu16(addr + 2), r)));
 			CPU.EIP += 2;
 			break;
 		default:

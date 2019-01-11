@@ -9,7 +9,7 @@ unittest {
 	vdos_init;
 
 	test("MemString");
-	__istr("Hello", 10);
+	mmistr("Hello", 10);
 	assert(MemString(10) == "Hello");
 	OK;
 

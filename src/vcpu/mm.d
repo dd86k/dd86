@@ -1,5 +1,17 @@
 /**
  * mm: Processor memory manager
+ *
+ * The following function names are encoded using this example.
+ * mmfu16_i
+ * ||||||++- Immediate (fetch only, optional)
+ * |||+++--- Type (unsigned 16-bit)
+ * ||+------ Fetch (f), can also be Insert (i)
+ * ++------- Memory Manager
+ *
+ * While functions require an asbolute memory location, immediate functions
+ * may accept an optional memory offset from EIP + 1.
+ *
+ * Functions to handle ModR/M and SIB bytes: `mmrm16`, `mmrm32`, `mmsib32`
  */
 module vcpu.mm;
 
@@ -21,8 +33,8 @@ import logger;
  */
 extern (C)
 pragma(inline, true)
-void __iu8(int op, int addr) {
-	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN __iu8", PANIC_MEMORY_ACCESS);
+void mmiu8(int op, int addr) {
+	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmiu8", PANIC_MEMORY_ACCESS);
 	MEMORY[addr] = cast(ubyte)op;
 }
 
@@ -33,8 +45,8 @@ void __iu8(int op, int addr) {
  *   addr = Memory address
  */
 extern (C)
-void __iu16(int data, int addr) {
-	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN __iu16", PANIC_MEMORY_ACCESS);
+void mmiu16(int data, int addr) {
+	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmiu16", PANIC_MEMORY_ACCESS);
 	*cast(ushort*)(MEMORY + addr) = cast(ushort)data;
 }
 
@@ -45,8 +57,8 @@ void __iu16(int data, int addr) {
  *   addr = Memory address
  */
 extern (C)
-void __iu32(uint op, int addr) {
-	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN __iu32", PANIC_MEMORY_ACCESS);
+void mmiu32(int op, int addr) {
+	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmiu32", PANIC_MEMORY_ACCESS);
 	*cast(uint*)(MEMORY + addr) = op;
 }
 
@@ -58,8 +70,8 @@ void __iu32(uint op, int addr) {
  *   addr = Memory location
  */
 extern (C)
-void __iarr(void *ops, size_t size, size_t addr) {
-	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN __iarr", PANIC_MEMORY_ACCESS);
+void mmiarr(void *ops, size_t size, size_t addr) {
+	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmiarr", PANIC_MEMORY_ACCESS);
 	memcpy(MEMORY + addr, ops, size);
 }
 
@@ -70,8 +82,8 @@ void __iarr(void *ops, size_t size, size_t addr) {
  *   addr = Memory address, default: CS:IP
  */
 extern (C)
-void __istr(immutable(char) *data, size_t addr = CPU.EIP) {
-	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN __istr", PANIC_MEMORY_ACCESS);
+void mmistr(immutable(char) *data, size_t addr = CPU.EIP) {
+	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmistr", PANIC_MEMORY_ACCESS);
 	strcpy(cast(char*)(MEMORY + addr), data);
 }
 
@@ -82,8 +94,8 @@ void __istr(immutable(char) *data, size_t addr = CPU.EIP) {
  *   addr = Memory Address (EIP by default)
  */
 extern (C)
-void __iwstr(immutable(wchar)[] data, size_t addr = CPU.EIP) {
-	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN __iwstr", PANIC_MEMORY_ACCESS);
+void mmiwstr(immutable(wchar)[] data, size_t addr = CPU.EIP) {
+	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmiwstr", PANIC_MEMORY_ACCESS);
 	wcscpy(cast(wchar_t*)(MEMORY + addr), cast(wchar_t*)data);
 }
 
@@ -97,8 +109,8 @@ void __iwstr(immutable(wchar)[] data, size_t addr = CPU.EIP) {
  * Returns: BYTE
  */
 extern (C)
-ubyte __fu8(uint addr) {
-	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN __fu8", PANIC_MEMORY_ACCESS);
+ubyte mmfu8(uint addr) {
+	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmfu8", PANIC_MEMORY_ACCESS);
 	return MEMORY[addr];
 }
 
@@ -108,8 +120,8 @@ ubyte __fu8(uint addr) {
  * Returns: BYTE
  */
 extern (C)
-byte __fi8(uint addr) {
-	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN __fi8", PANIC_MEMORY_ACCESS);
+byte mmfi8(uint addr) {
+	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmfi8", PANIC_MEMORY_ACCESS);
 	return cast(byte)MEMORY[addr];
 }
 
@@ -119,8 +131,8 @@ byte __fi8(uint addr) {
  * Returns: WORD
  */
 extern (C)
-ushort __fu16(uint addr) {
-	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN __fu16", PANIC_MEMORY_ACCESS);
+ushort mmfu16(uint addr) {
+	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmfu16", PANIC_MEMORY_ACCESS);
 	return *cast(ushort*)(MEMORY + addr);
 }
 
@@ -130,8 +142,8 @@ ushort __fu16(uint addr) {
  * Returns: signed WORD
  */
 extern (C)
-short __fi16(uint addr) {
-	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN __fi16", PANIC_MEMORY_ACCESS);
+short mmfi16(uint addr) {
+	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmfi16", PANIC_MEMORY_ACCESS);
 	return *cast(short*)(MEMORY + addr);
 }
 
@@ -141,8 +153,8 @@ short __fi16(uint addr) {
  * Returns: DWORD
  */
 extern (C)
-uint __fu32(uint addr) {
-	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN __fu32", PANIC_MEMORY_ACCESS);
+uint mmfu32(uint addr) {
+	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmfu32", PANIC_MEMORY_ACCESS);
 	return *cast(uint*)(MEMORY + addr);
 }
 
@@ -170,7 +182,7 @@ char[] MemString(uint pos) {
  * Returns: BYTE
  */
 extern (C)
-ubyte __fu8_i(int n = 0) {
+ubyte mmfu8_i(int n = 0) {
 	return MEMORY[CPU.EIP + 1 + n];
 }
 
@@ -180,7 +192,7 @@ ubyte __fu8_i(int n = 0) {
  * Returns: Signed BYTE
  */
 extern (C)
-byte __fi8_i(int n = 0) {
+byte mmfi8_i(int n = 0) {
 	return cast(byte)MEMORY[CPU.EIP + 1 + n];
 }
 
@@ -190,7 +202,7 @@ byte __fi8_i(int n = 0) {
  * Returns: WORD
  */
 extern (C)
-ushort __fu16_i(int n = 0) {
+ushort mmfu16_i(int n = 0) {
 	return *cast(ushort*)(MEMORY + CPU.EIP + 1 + n);
 }
 
@@ -200,7 +212,7 @@ ushort __fu16_i(int n = 0) {
  * Returns: signed WORD
  */
 extern (C)
-short __fi16_i(int n = 0) {
+short mmfi16_i(int n = 0) {
 	return *cast(short*)(MEMORY + CPU.EIP + 1 + n);
 }
 
@@ -210,7 +222,7 @@ short __fi16_i(int n = 0) {
  * Returns: signed WORD
  */
 extern (C)
-int __fi32_i(int n = 0) {
+int mmfi32_i(int n = 0) {
 	return *cast(int*)(MEMORY + CPU.EIP + 1 + n);
 }
 
@@ -244,7 +256,7 @@ bool C_OVERFLOW(size_t addr) {
  * Returns: Effective Address
  */
 extern (C)
-uint get_rm16(ubyte rm, ubyte wide = 0) {
+uint mmrm16(ubyte rm, ubyte wide = 0) {
 	//uint r = void;
 	//TODO: Reset Seg to SEG_NONE
 	//TODO: Use general purpose variable to hold segreg value
@@ -257,21 +269,21 @@ uint get_rm16(ubyte rm, ubyte wide = 0) {
 		case RM_RM_011: return CPU.DI + CPU.BP;
 		case RM_RM_100: return CPU.SI;
 		case RM_RM_101: return CPU.DI;
-		case RM_RM_110: return __fu16_i(1);
+		case RM_RM_110: return mmfu16_i(1);
 		case RM_RM_111: return CPU.BX;
 		default:
 		}
 		break; // MOD 00
 	case RM_MOD_01: { // MOD 01, Memory Mode, 8-bit displacement follows
 		switch (rm & RM_RM) {
-		case RM_RM_000: return CPU.SI + CPU.BX + __fi8_i(1);
-		case RM_RM_001: return CPU.DI + CPU.BX + __fi8_i(1);
-		case RM_RM_010: return CPU.SI + CPU.BP + __fi8_i(1);
-		case RM_RM_011: return CPU.DI + CPU.BP + __fi8_i(1);
-		case RM_RM_100: return CPU.SI + __fi8_i(1);
-		case RM_RM_101: return CPU.DI + __fi8_i(1);
-		case RM_RM_110: return CPU.BP + __fi8_i(1);
-		case RM_RM_111: return CPU.BX + __fi8_i(1);
+		case RM_RM_000: return CPU.SI + CPU.BX + mmfi8_i(1);
+		case RM_RM_001: return CPU.DI + CPU.BX + mmfi8_i(1);
+		case RM_RM_010: return CPU.SI + CPU.BP + mmfi8_i(1);
+		case RM_RM_011: return CPU.DI + CPU.BP + mmfi8_i(1);
+		case RM_RM_100: return CPU.SI + mmfi8_i(1);
+		case RM_RM_101: return CPU.DI + mmfi8_i(1);
+		case RM_RM_110: return CPU.BP + mmfi8_i(1);
+		case RM_RM_111: return CPU.BX + mmfi8_i(1);
 		default:
 		}
 		++CPU.EIP;
@@ -279,14 +291,14 @@ uint get_rm16(ubyte rm, ubyte wide = 0) {
 	}
 	case RM_MOD_10: // MOD 10, Memory Mode, 16-bit displacement follows
 		switch (rm & RM_RM) { // R/M
-		case RM_RM_000: return CPU.SI + CPU.BX + __fi16_i(1);
-		case RM_RM_001: return CPU.DI + CPU.BX + __fi16_i(1);
-		case RM_RM_010: return CPU.SI + CPU.BP + __fi16_i(1);
-		case RM_RM_011: return CPU.DI + CPU.BP + __fi16_i(1);
-		case RM_RM_100: return CPU.SI + __fi16_i(1);
-		case RM_RM_101: return CPU.DI + __fi16_i(1);
-		case RM_RM_110: return CPU.BP + __fi16_i(1);
-		case RM_RM_111: return CPU.BX + __fi16_i(1);
+		case RM_RM_000: return CPU.SI + CPU.BX + mmfi16_i(1);
+		case RM_RM_001: return CPU.DI + CPU.BX + mmfi16_i(1);
+		case RM_RM_010: return CPU.SI + CPU.BP + mmfi16_i(1);
+		case RM_RM_011: return CPU.DI + CPU.BP + mmfi16_i(1);
+		case RM_RM_100: return CPU.SI + mmfi16_i(1);
+		case RM_RM_101: return CPU.DI + mmfi16_i(1);
+		case RM_RM_110: return CPU.BP + mmfi16_i(1);
+		case RM_RM_111: return CPU.BX + mmfi16_i(1);
 		default:
 		}
 		CPU.EIP += 2;
@@ -332,7 +344,7 @@ uint get_rm16(ubyte rm, ubyte wide = 0) {
  * Returns: Calculated address
  */
 extern (C)
-uint get_rm32(ubyte rm, ubyte wide = 0) {
+uint mmrm32(ubyte rm, ubyte wide = 0) {
 	//TODO: segment overload support
 	uint r = void;
 	switch (rm & RM_MOD) { // MOD
@@ -343,7 +355,7 @@ uint get_rm32(ubyte rm, ubyte wide = 0) {
 		case RM_RM_010: r = CPU.EDX; break;
 		case RM_RM_011: r = CPU.EBX; break;
 		case RM_RM_100: /*TODO: SIB mode*/ break;
-		case RM_RM_101: r = __fi32_i(1); break;
+		case RM_RM_101: r = mmfi32_i(1); break;
 		case RM_RM_110: r = CPU.ESI; break;
 		case RM_RM_111: r = CPU.EDI; break;
 		default:
@@ -351,14 +363,14 @@ uint get_rm32(ubyte rm, ubyte wide = 0) {
 		break; // MOD 00
 	case RM_MOD_01: { // MOD 01, Memory Mode, 8-bit displacement follows
 		switch (rm & RM_RM) {
-		case RM_RM_000: r = CPU.EAX + __fi8_i(1); break;
-		case RM_RM_001: r = CPU.ECX + __fi8_i(1); break;
-		case RM_RM_010: r = CPU.EDX + __fi8_i(1); break;
-		case RM_RM_011: r = CPU.EBX + __fi8_i(1); break;
+		case RM_RM_000: r = CPU.EAX + mmfi8_i(1); break;
+		case RM_RM_001: r = CPU.ECX + mmfi8_i(1); break;
+		case RM_RM_010: r = CPU.EDX + mmfi8_i(1); break;
+		case RM_RM_011: r = CPU.EBX + mmfi8_i(1); break;
 		case RM_RM_100: /*TODO: SIB mode + D8*/ break;
-		case RM_RM_101: r = CPU.EBP + __fi8_i(1); break;
-		case RM_RM_110: r = CPU.ESI + __fi8_i(1); break;
-		case RM_RM_111: r = CPU.EDI + __fi8_i(1); break;
+		case RM_RM_101: r = CPU.EBP + mmfi8_i(1); break;
+		case RM_RM_110: r = CPU.ESI + mmfi8_i(1); break;
+		case RM_RM_111: r = CPU.EDI + mmfi8_i(1); break;
 		default:
 		}
 		++CPU.EIP;
@@ -366,14 +378,14 @@ uint get_rm32(ubyte rm, ubyte wide = 0) {
 	}
 	case RM_MOD_10: // MOD 10, Memory Mode, 32-bit displacement follows
 		switch (rm & RM_RM) { // R/M
-		case RM_RM_000: r = CPU.EAX + __fi32_i(1); break;
-		case RM_RM_001: r = CPU.ECX + __fi32_i(1); break;
-		case RM_RM_010: r = CPU.EDX + __fi32_i(1); break;
-		case RM_RM_011: r = CPU.EBX + __fi32_i(1); break;
+		case RM_RM_000: r = CPU.EAX + mmfi32_i(1); break;
+		case RM_RM_001: r = CPU.ECX + mmfi32_i(1); break;
+		case RM_RM_010: r = CPU.EDX + mmfi32_i(1); break;
+		case RM_RM_011: r = CPU.EBX + mmfi32_i(1); break;
 		case RM_RM_100: /*TODO: SIB mode + D32*/ break;
-		case RM_RM_101: r = CPU.EBP + __fi32_i(1); break;
-		case RM_RM_110: r = CPU.ESI + __fi32_i(1); break;
-		case RM_RM_111: r = CPU.EDI + __fi32_i(1); break;
+		case RM_RM_101: r = CPU.EBP + mmfi32_i(1); break;
+		case RM_RM_110: r = CPU.ESI + mmfi32_i(1); break;
+		case RM_RM_111: r = CPU.EDI + mmfi32_i(1); break;
 		default:
 		}
 		CPU.EIP += 2;

@@ -343,7 +343,7 @@ private enum : ushort {
 extern (C)
 void push16(ushort value) {
 	CPU.SP -= 2; // decrement after push is 286+
-	__iu16(value, get_ad(CPU.SS, CPU.SP));
+	mmiu16(value, get_ad(CPU.SS, CPU.SP));
 }
 
 /**
@@ -354,7 +354,7 @@ extern (C)
 ushort pop16() {
 	const uint addr = get_ad(CPU.SS, CPU.SP);
 	CPU.SP += 2;
-	return __fu16(addr);
+	return mmfu16(addr);
 }
 
 /**
@@ -364,7 +364,7 @@ ushort pop16() {
 extern (C)
 void push32(uint value) {
 	CPU.SP -= 4;
-	__iu32(value, get_ad(CPU.SS, CPU.SP));
+	mmiu32(value, get_ad(CPU.SS, CPU.SP));
 }
 
 /**
@@ -375,5 +375,5 @@ extern (C)
 uint pop32() {
 	const uint addr = get_ad(CPU.SS, CPU.SP);
 	CPU.SP += 2;
-	return __fu32(addr);
+	return mmfu32(addr);
 }

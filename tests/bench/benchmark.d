@@ -14,7 +14,7 @@ unittest {
 
     sub("String utilities");
 
-    __istr("Hello! This is a test! I love pie.", 10);
+    mmistr("Hello! This is a test! I love pie.", 10);
 
     StopWatch sw;
 

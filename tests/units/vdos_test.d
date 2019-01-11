@@ -65,7 +65,7 @@ unittest {
 
 	/*test("INT 21h->39_00h");
 	CPU.DS = CPU.CS; CPU.DX = CPU.IP;
-	__istr("TESTDIR\0");
+	mmistr("TESTDIR\0");
 	CPU.AH = 0x39;
 	INT(0x21);
 	assert(exists("TESTDIR"));
@@ -82,7 +82,7 @@ unittest {
 	// CREATE/TRUNC FILE
 
 	test("INT 21h->3C_00h");
-	__istr("TESTFILE\0");
+	mmistr("TESTFILE\0");
 	CPU.CL = 0; // No attributes
 	CPU.AH = 0x3C;
 	INT(0x21);
