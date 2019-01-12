@@ -5,13 +5,14 @@ module vcpu.core;
 
 import logger : log_info;
 import vcpu.v16 : exec16;
+import vcpu.v32 : exec32;
 import vcpu.mm;
 import appconfig : INIT_MEM, TSC_SLEEP;
 
-/*enum : ubyte { // Emulated CPU
+enum : ubyte { // Emulated CPU
 	CPU_8086,
 	CPU_80486
-}*/
+}
 
 enum : ubyte { // CPU Mode
 	CPU_MODE_REAL,
@@ -59,7 +60,7 @@ enum : ubyte {
 	RM_RM = RM_RM_111,	/// Used for masking the R/M bits (00 000 111)
 }
 
-/// CPU Object
+/// CPU structure, 
 extern (C)
 struct CPU_t {
 	union {
@@ -106,15 +107,9 @@ struct CPU_t {
 	uint CR0, CR1, CR2, CR3;
 	uint DR0, DR1, DR2, DR3, DR4, DR5, DR6, DR7;
 
-	/// Preferred Segment register, defaults to SEG_NONE
-	ubyte Segment;
-	/// Current mode, defaults to CPU_MODE_REAL
-	ubyte Mode;
-
 	// Flags are bytes because single flags are affected a lot more often than
 	// EFLAGS operations, e.g. PUSHDF.
-	align(2):
-	__gshared ubyte
+	align(2) ubyte
 	CF,	/// Bit  0, Carry Flag
 	PF,	/// Bit  2, Parity Flag
 	AF,	/// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
@@ -129,17 +124,24 @@ struct CPU_t {
 	NT,	/// Bit 14, Nested task Flag
 	RF,	/// Bit 16, Resume Flag
 	VM;	/// Bit 17, Virtual 8086 Mode
+
+	/// Preferred Segment register, defaults to SEG_NONE
+	ubyte Segment;
+	/// Current mode, defaults to CPU_MODE_REAL
+	ubyte Mode;
+	/// CPU Type: 8086, 80486, etc.
+	ubyte Type;
 }
 
 /// Main Central Processing Unit
 public __gshared CPU_t CPU = void;
 
 /**
- * Runnning level.
+ * Runnning level.$(BR)
  * Used to determine the "level of execution", such as the "deepness" of a program.
  * When a program terminates, RLEVEL is decreased.
  * If HLT is sent, RLEVEL is set to 0.
- * If RLEVEL reaches 0 (or lower), the emulator either stops, or returns to the virtual shell.
+ * If RLEVEL reaches 0 (or lower), the emulator either stops, or returns to the virtual shell.$(BR)
  * tl;dr: Emulates CALLs
  */
 __gshared short RLEVEL = 1;
@@ -158,21 +160,31 @@ extern (C) __gshared void function()[256] PROT_MAP;
 extern (C)
 void vcpu_init() {
 	import core.stdc.stdlib : malloc;
-	RESET;
 	MEMORY = cast(ubyte*)malloc(INIT_MEM);
+	CPU.CS = 0xFFFF;
 	MODE_MAP[0] = &mode_real;
-	MODE_MAP[1] = &mode_invalid;
-	MODE_MAP[2] = &mode_invalid;
-	MODE_MAP[3] = &mode_invalid;
 	
-	//TODO: Variate on CPU types
+	//REAL_MAP[0x00] = &v16_add_rm8_reg8;
+	switch (CPU.Type) {
+	case CPU_8086:
+		MODE_MAP[1] = &mode_invalid;
+		MODE_MAP[2] = &mode_invalid;
+		MODE_MAP[3] = &mode_invalid;
+	
+		break;
+	case CPU_80486:
+		MODE_MAP[1] = &mode_prot;
+		MODE_MAP[2] = &mode_invalid;
+		MODE_MAP[3] = &mode_invalid;
+		
+		break;
+	default:
+	}
 }
 
 /// Start the emulator at CS:IP (default: FFFF:0000h)
 extern (C)
 void vcpu_run() {
-	debug import logger : logexec;
-
 	int sleep = opt_sleep;
 	while (RLEVEL > 0) {
 		CPU.EIP = get_ip;
@@ -191,7 +203,8 @@ void mode_real(ubyte op) {
 
 extern (C)
 void mode_prot(ubyte op) {
-	
+	exec32(op);
+	//PROT_MAP[op]();
 }
 
 extern (C)
@@ -229,7 +242,8 @@ uint get_ip() {
 	return get_ad(CPU.CS, CPU.IP);
 }
 
-/// (8086, 80486) RESET instruction function
+/// RESET instruction function
+/// This function does not perform security checks
 extern (C)
 private void RESET() {
 	CPU.Mode = CPU_MODE_REAL;
@@ -337,13 +351,23 @@ private enum : ushort {
 //
 
 /**
- * Push a WORD value into stack.
+ * (8086) Push a WORD value into stack.
  * Params: value = WORD value to PUSH
  */
 extern (C)
 void push16(ushort value) {
-	CPU.SP -= 2; // decrement after push is 286+
+	CPU.SP -= 2;
 	mmiu16(value, get_ad(CPU.SS, CPU.SP));
+}
+
+/**
+ * (80206+) Push a WORD value into stack.
+ * Params: value = WORD value to PUSH
+ */
+extern (C)
+void push16a(ushort value) {
+	mmiu16(value, get_ad(CPU.SS, CPU.SP));
+	CPU.SP -= 2;
 }
 
 /**

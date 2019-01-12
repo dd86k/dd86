@@ -1,13 +1,13 @@
 /**
  * mm: Processor memory manager
- *
+ * ---
  * The following function names are encoded using this example.
  * mmfu16_i
  * ||||||++- Immediate (fetch only, optional)
  * |||+++--- Type (unsigned 16-bit)
  * ||+------ Fetch (f), can also be Insert (i)
  * ++------- Memory Manager
- *
+ * ---
  * While functions require an asbolute memory location, immediate functions
  * may accept an optional memory offset from EIP + 1.
  *
@@ -79,7 +79,7 @@ void mmiarr(void *ops, size_t size, size_t addr) {
  * Insert an ASCIZ string in MEMORY
  * Params:
  *   data = String value
- *   addr = Memory address, default: CS:IP
+ *   addr = Memory address, default: EIP
  */
 extern (C)
 void mmistr(immutable(char) *data, size_t addr = CPU.EIP) {
