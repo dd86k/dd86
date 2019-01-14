@@ -6,12 +6,18 @@ module vcpu.v32; // 80486+
 import vcpu.core;
 import vcpu.v16 : exec16;
 
+extern (C)
+void exec32(ubyte op) {
+	v32(op);
+	//PROT_MAP[op]();
+}
+
 /**
  * Execute an instruction in 32-bit PROTECTED mode
  * Params: op = opcode
  */
 extern (C)
-void exec32(ubyte op) {
+void v32(ubyte op) {
 	switch (op) {
 	case 0x00: // ADD
 		

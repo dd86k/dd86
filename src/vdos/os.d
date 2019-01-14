@@ -88,19 +88,16 @@ void print_stack() {
 
 extern (C)
 void panic(ushort code,
-	immutable(char) *modname = cast(immutable(char)*)__MODULE__,
+	lazy immutable(char) *name = cast(immutable(char)*)__MODULE__,
 	int line = __LINE__) {
 	import core.stdc.stdlib : exit;
-	//TODO: Setup SEH that points here
 
 	enum RANGE = 26, TARGET = (RANGE / 2) - 1;
 	v_printf(
 		"\n\n\n\n"~
 		"A fatal exception occured, which DD-DOS couldn't recover.\n\n"~
-		"STOP: %4Xh (%s@L%d)\nEXEC:\n",
-		//TODO: if SEH is setup, remove modname and line
-		// Otherwise it'll be even more debugging
-		code, modname, line
+		"STOP: %4Xh (%s L%d)\nEXEC:\n",
+		code, name, line
 	);
 	int i = RANGE;
 	ubyte *p = MEMORY + CPU.EIP - TARGET;
@@ -119,3 +116,5 @@ void panic(ushort code,
 	screen_draw;
 	exit(code); //TODO: Consider another strategy
 }
+
+//TODO: Function to handle SEH

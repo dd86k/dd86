@@ -4,8 +4,8 @@
 module vcpu.core;
 
 import logger : log_info;
-import vcpu.v16 : exec16;
-import vcpu.v32 : exec32;
+import vcpu.v16;
+import vcpu.v32;
 import vcpu.mm;
 import appconfig : INIT_MEM, TSC_SLEEP;
 
@@ -149,6 +149,9 @@ __gshared ubyte opt_sleep = 1; /// Is sleeping available to use? If so, use it
 __gshared ubyte *MEMORY = void; /// Memory bank
 __gshared int MEMORYSIZE = INIT_MEM; /// Memory size
 
+// Functions could be put in these tables at compile time. However, that would
+// remove the flexibility of choosing the functions per cpu type at
+// initialization.
 /// CPU Mode function table
 extern (C) __gshared void function(ubyte)[4] MODE_MAP;
 /// Real-mode instructions function table
@@ -159,26 +162,296 @@ extern (C) __gshared void function()[256] PROT_MAP;
 /// Initiate interpreter
 extern (C)
 void vcpu_init() {
-	import core.stdc.stdlib : malloc;
-	MEMORY = cast(ubyte*)malloc(INIT_MEM);
+	import core.stdc.stdlib : realloc;
+	MEMORY = cast(ubyte*)realloc(MEMORY, INIT_MEM); // in case of re-init
 	CPU.CS = 0xFFFF;
-	MODE_MAP[0] = &mode_real;
+	MODE_MAP[0] = &exec16;
 	
-	//REAL_MAP[0x00] = &v16_add_rm8_reg8;
+	REAL_MAP[0x00] = &v16_add_rm8_reg8;
+	REAL_MAP[0x01] = &v16_add_rm16_reg16;
+	REAL_MAP[0x02] = &v16_add_reg8_rm8;
+	REAL_MAP[0x03] = &v16_add_reg16_rm16;
+	REAL_MAP[0x04] = &v16_add_al_imm8;
+	REAL_MAP[0x05] = &v16_add_ax_imm16;
+	REAL_MAP[0x06] = &v16_push_es;
+	REAL_MAP[0x07] = &v16_pop_es;
+	REAL_MAP[0x08] = &v16_or_rm8_reg8;
+	REAL_MAP[0x09] = &v16_or_rm16_reg16;
+	REAL_MAP[0x0A] = &v16_or_reg8_rm8;
+	REAL_MAP[0x0B] = &v16_or_reg16_rm16;
+	REAL_MAP[0x0C] = &v16_or_al_imm8;
+	REAL_MAP[0x0D] = &v16_or_ax_imm16;
+	REAL_MAP[0x0E] = &v16_push_cs;
+	REAL_MAP[0x10] = &v16_adc_rm8_reg8;
+	REAL_MAP[0x11] = &v16_adc_rm16_reg16;
+	REAL_MAP[0x12] = &v16_adc_reg8_rm8;
+	REAL_MAP[0x13] = &v16_adc_reg16_rm16;
+	REAL_MAP[0x14] = &v16_adc_al_imm8;
+	REAL_MAP[0x15] = &v16_adc_ax_imm16;
+	REAL_MAP[0x16] = &v16_push_ss;
+	REAL_MAP[0x17] = &v16_pop_ss;
+	REAL_MAP[0x18] = &v16_sbb_rm8_reg8;
+	REAL_MAP[0x19] = &v16_sbb_rm16_reg16;
+	REAL_MAP[0x1A] = &v16_sbb_reg8_rm8;
+	REAL_MAP[0x1B] = &v16_sbb_reg16_rm16;
+	REAL_MAP[0x1C] = &v16_sbb_al_imm8;
+	REAL_MAP[0x1D] = &v16_sbb_ax_imm16;
+	REAL_MAP[0x1E] = &v16_push_ds;
+	REAL_MAP[0x1F] = &v16_pop_ds;
+	REAL_MAP[0x20] = &v16_and_rm8_reg8;
+	REAL_MAP[0x21] = &v16_and_rm16_reg16;
+	REAL_MAP[0x22] = &v16_and_reg8_rm8;
+	REAL_MAP[0x23] = &v16_and_reg16_rm16;
+	REAL_MAP[0x24] = &v16_and_al_imm8;
+	REAL_MAP[0x25] = &v16_and_ax_imm16;
+	REAL_MAP[0x26] = &v16_es;
+	REAL_MAP[0x27] = &v16_daa;
+	REAL_MAP[0x28] = &v16_sub_rm8_reg8;
+	REAL_MAP[0x29] = &v16_sub_rm16_reg16;
+	REAL_MAP[0x2A] = &v16_sub_reg8_rm8;
+	REAL_MAP[0x2B] = &v16_sub_reg16_rm16;
+	REAL_MAP[0x2C] = &v16_sub_al_imm8;
+	REAL_MAP[0x2D] = &v16_sub_ax_imm16;
+	REAL_MAP[0x2E] = &v16_cs;
+	REAL_MAP[0x2F] = &v16_das;
+	REAL_MAP[0x30] = &v16_xor_rm8_reg8;
+	REAL_MAP[0x31] = &v16_xor_rm16_reg16;
+	REAL_MAP[0x32] = &v16_xor_reg8_rm8;
+	REAL_MAP[0x33] = &v16_xor_reg16_rm16;
+	REAL_MAP[0x34] = &v16_xor_al_imm8;
+	REAL_MAP[0x35] = &v16_xor_ax_imm16;
+	REAL_MAP[0x36] = &v16_ss;
+	REAL_MAP[0x37] = &v16_aaa;
+	REAL_MAP[0x38] = &v16_cmp_rm8_reg8;
+	REAL_MAP[0x39] = &v16_cmp_rm16_reg16;
+	REAL_MAP[0x3A] = &v16_cmp_reg8_rm8;
+	REAL_MAP[0x3B] = &v16_cmp_reg16_rm16;
+	REAL_MAP[0x3C] = &v16_cmp_al_imm8;
+	REAL_MAP[0x3D] = &v16_cmp_ax_imm16;
+	REAL_MAP[0x3E] = &v16_ds;
+	REAL_MAP[0x3F] = &v16_aas;
+	REAL_MAP[0x40] = &v16_inc_ax;
+	REAL_MAP[0x41] = &v16_inc_cx;
+	REAL_MAP[0x42] = &v16_inc_dx;
+	REAL_MAP[0x43] = &v16_inc_bx;
+	REAL_MAP[0x44] = &v16_inc_sp;
+	REAL_MAP[0x45] = &v16_inc_bp;
+	REAL_MAP[0x46] = &v16_inc_si;
+	REAL_MAP[0x47] = &v16_inc_di;
+	REAL_MAP[0x48] = &v16_dec_ax;
+	REAL_MAP[0x49] = &v16_dec_cx;
+	REAL_MAP[0x4A] = &v16_dec_dx;
+	REAL_MAP[0x4B] = &v16_dec_bx;
+	REAL_MAP[0x4C] = &v16_dec_sp;
+	REAL_MAP[0x4D] = &v16_dec_bp;
+	REAL_MAP[0x4E] = &v16_dec_si;
+	REAL_MAP[0x4F] = &v16_dec_di;
+	REAL_MAP[0x50] = &v16_push_ax;
+	REAL_MAP[0x51] = &v16_push_cx;
+	REAL_MAP[0x52] = &v16_push_dx;
+	REAL_MAP[0x53] = &v16_push_bx;
+	REAL_MAP[0x54] = &v16_push_sp;
+	REAL_MAP[0x55] = &v16_push_bp;
+	REAL_MAP[0x56] = &v16_push_si;
+	REAL_MAP[0x57] = &v16_push_di;
+	REAL_MAP[0x58] = &v16_pop_ax;
+	REAL_MAP[0x59] = &v16_pop_cx;
+	REAL_MAP[0x5A] = &v16_pop_dx;
+	REAL_MAP[0x5B] = &v16_pop_bx;
+	REAL_MAP[0x5C] = &v16_pop_sp;
+	REAL_MAP[0x5D] = &v16_pop_bp;
+	REAL_MAP[0x5E] = &v16_pop_si;
+	REAL_MAP[0x5F] = &v16_pop_di;
+	REAL_MAP[0x70] = &v16_jo_short;
+	REAL_MAP[0x71] = &v16_jno_short;
+	REAL_MAP[0x72] = &v16_jb_short;
+	REAL_MAP[0x73] = &v16_jnb_short;
+	REAL_MAP[0x74] = &v16_je_short;
+	REAL_MAP[0x75] = &v16_jne_short;
+	REAL_MAP[0x76] = &v16_jbe_short;
+	REAL_MAP[0x77] = &v16_jnbe_short;
+	REAL_MAP[0x78] = &v16_js_short;
+	REAL_MAP[0x79] = &v16_jns_short;
+	REAL_MAP[0x7A] = &v16_jp_short;
+	REAL_MAP[0x7B] = &v16_jnp_short;
+	REAL_MAP[0x7C] = &v16_jl_short;
+	REAL_MAP[0x7D] = &v16_jnl_short;
+	REAL_MAP[0x7E] = &v16_jle_short;
+	REAL_MAP[0x7F] = &v16_jnle_short;
+	REAL_MAP[0x80] = &v16_grp1_rm8_imm8;
+	REAL_MAP[0x81] = &v16_grp1_rm16_imm16;
+	REAL_MAP[0x82] = &v16_grp2_rm8_imm8;
+	REAL_MAP[0x83] = &v16_grp2_rm16_imm8;
+	REAL_MAP[0x84] = &v16_test_rm8_reg8;
+	REAL_MAP[0x85] = &v16_test_rm16_reg16;
+	REAL_MAP[0x86] = &v16_xchg_reg8_rm8;
+	REAL_MAP[0x87] = &v16_xchx_reg16_rm16;
+	REAL_MAP[0x88] = &v16_mov_rm8_reg8;
+	REAL_MAP[0x89] = &v16_mov_rm16_reg16;
+	REAL_MAP[0x8A] = &v16_mov_reg8;
+	REAL_MAP[0x8B] = &v16_mov_reg16_rm16;
+	REAL_MAP[0x8C] = &v16_mov_rm16_seg;
+	REAL_MAP[0x8D] = &v16_lea_reg16_mem16;
+	REAL_MAP[0x8E] = &v16_mov_seg_rm16;
+	REAL_MAP[0x8F] = &v16_pop_rm16;
+	REAL_MAP[0x90] = &v16_nop;
+	REAL_MAP[0x91] = &v16_xchg_ax_cx;
+	REAL_MAP[0x92] = &v16_xchg_ax_dx;
+	REAL_MAP[0x93] = &v16_xchg_ax_bx;
+	REAL_MAP[0x94] = &v16_xchg_ax_sp;
+	REAL_MAP[0x95] = &v16_xchg_ax_bp;
+	REAL_MAP[0x96] = &v16_xchg_ax_si;
+	REAL_MAP[0x97] = &v16_xchg_ax_di;
+	REAL_MAP[0x98] = &v16_cbw;
+	REAL_MAP[0x99] = &v16_cwd;
+	REAL_MAP[0x9A] = &v16_call_far;
+	REAL_MAP[0x9B] = &v16_wait;
+	REAL_MAP[0x9C] = &v16_pushf;
+	REAL_MAP[0x9D] = &v16_popf;
+	REAL_MAP[0x9E] = &v16_sahf;
+	REAL_MAP[0x9F] = &v16_lahf;
+	REAL_MAP[0xA0] = &v16_mov_al_mem8;
+	REAL_MAP[0xA1] = &v16_mov_ax_mem16;
+	REAL_MAP[0xA2] = &v16_mov_mem8_al;
+	REAL_MAP[0xA3] = &v16_mov_mem16_ax;
+	REAL_MAP[0xA4] = &v16_movs_str8;
+	REAL_MAP[0xA5] = &v16_movs_str16;
+	REAL_MAP[0xA6] = &v16_cmps_str8;
+	REAL_MAP[0xA7] = &v16_cmps_str16;
+	REAL_MAP[0xA8] = &v16_test_al_imm8;
+	REAL_MAP[0xA9] = &v16_test_ax_imm16;
+	REAL_MAP[0xAA] = &v16_stos_str8;
+	REAL_MAP[0xAB] = &v16_stos_str16;
+	REAL_MAP[0xAC] = &v16_lods_str8;
+	REAL_MAP[0xAD] = &v16_lods_str16;
+	REAL_MAP[0xAE] = &v16_scas_str8;
+	REAL_MAP[0xAF] = &v16_scas_str16;
+	REAL_MAP[0xB0] = &v16_mov_al_imm8;
+	REAL_MAP[0xB1] = &v16_mov_cl_imm8;
+	REAL_MAP[0xB2] = &v16_mov_dl_imm8;
+	REAL_MAP[0xB3] = &v16_mov_bl_imm8;
+	REAL_MAP[0xB4] = &v16_mov_ah_imm8;
+	REAL_MAP[0xB5] = &v16_mov_ch_imm8;
+	REAL_MAP[0xB6] = &v16_mov_dh_imm8;
+	REAL_MAP[0xB7] = &v16_mov_bh_imm8;
+	REAL_MAP[0xB8] = &v16_mov_ax_imm16;
+	REAL_MAP[0xB9] = &v16_mov_cx_imm16;
+	REAL_MAP[0xBA] = &v16_mov_dx_imm16;
+	REAL_MAP[0xBB] = &v16_mov_bx_imm16;
+	REAL_MAP[0xBC] = &v16_mov_sp_imm16;
+	REAL_MAP[0xBD] = &v16_mov_bp_imm16;
+	REAL_MAP[0xBE] = &v16_mov_si_imm16;
+	REAL_MAP[0xBF] = &v16_mov_di_imm16;
+	REAL_MAP[0xC0] = &v16_illegal;
+	REAL_MAP[0xC1] = &v16_illegal;
+	REAL_MAP[0xC2] = &v16_ret_imm16_near;
+	REAL_MAP[0xC3] = &v16_ret_near;
+	REAL_MAP[0xC4] = &v16_les_reg16_mem16;
+	REAL_MAP[0xC5] = &v16_lds_reg16_mem16;
+	REAL_MAP[0xC6] = &v16_mov_mem8_imm8;
+	REAL_MAP[0xC7] = &v16_mov_mem16_imm16;
+	REAL_MAP[0xC8] = &v16_illegal;
+	REAL_MAP[0xC9] = &v16_illegal;
+	REAL_MAP[0xCA] = &v16_ret_imm16_far;
+	REAL_MAP[0xCB] = &v16_ret_far;
+	REAL_MAP[0xCC] = &v16_int3;
+	REAL_MAP[0xCD] = &v16_int_imm8;
+	REAL_MAP[0xCE] = &v16_into;
+	REAL_MAP[0xCF] = &v16_iret;
+	REAL_MAP[0xD0] = &v16_grp2_rm8_1;
+	REAL_MAP[0xD1] = &v16_grp2_rm16_1;
+	REAL_MAP[0xD2] = &v16_grp2_rm8_cl;
+	REAL_MAP[0xD3] = &v16_grp2_rm16_cl;
+	REAL_MAP[0xD4] = &v16_aam;
+	REAL_MAP[0xD5] = &v16_aad;
+	REAL_MAP[0xD6] = &v16_illegal;
+	REAL_MAP[0xD7] = &v16_xlat;
+	REAL_MAP[0xD8] = &v16_illegal;
+	REAL_MAP[0xD9] = &v16_illegal;
+	REAL_MAP[0xDA] = &v16_illegal;
+	REAL_MAP[0xDB] = &v16_illegal;
+	REAL_MAP[0xDC] = &v16_illegal;
+	REAL_MAP[0xDD] = &v16_illegal;
+	REAL_MAP[0xDE] = &v16_illegal;
+	REAL_MAP[0xDF] = &v16_illegal;
+	REAL_MAP[0xE0] = &v16_loope;
+	REAL_MAP[0xE1] = &v16_loop;
+	REAL_MAP[0xE2] = &v16_jcxz;
+	REAL_MAP[0xE3] = &v16_jcxz;
+	REAL_MAP[0xE4] = &v16_in_al_imm8;
+	REAL_MAP[0xE5] = &v16_in_ax_imm8;
+	REAL_MAP[0xE6] = &v16_out_imm8_al;
+	REAL_MAP[0xE7] = &v16_out_imm8_ax;
+	REAL_MAP[0xE8] = &v16_call_near;
+	REAL_MAP[0xE9] = &v16_jmp_near;
+	REAL_MAP[0xEA] = &v16_jmp_Far;
+	REAL_MAP[0xEB] = &v16_jmp_short;
+	REAL_MAP[0xEC] = &v16_in_al_dx;
+	REAL_MAP[0xED] = &v16_in_ax_dx;
+	REAL_MAP[0xEE] = &v16_out_al_dx;
+	REAL_MAP[0xEF] = &v16_out_ax_dx;
+	REAL_MAP[0xF0] = &v16_lock;
+	REAL_MAP[0xF1] = &v16_lock;
+	REAL_MAP[0xF2] = &v16_repne;
+	REAL_MAP[0xF3] = &v16_rep;
+	REAL_MAP[0xF4] = &v16_hlt;
+	REAL_MAP[0xF5] = &v16_cmc;
+	REAL_MAP[0xF6] = &v16_grp3_rm8_imm8;
+	REAL_MAP[0xF7] = &v16_grp3_rm16_imm16;
+	REAL_MAP[0xF8] = &v16_clc;
+	REAL_MAP[0xF9] = &v16_stc;
+	REAL_MAP[0xFA] = &v16_cli;
+	REAL_MAP[0xFB] = &v16_sti;
+	REAL_MAP[0xFC] = &v16_cld;
+	REAL_MAP[0xFD] = &v16_std;
+	REAL_MAP[0xFE] = &v16_grp4_rm8;
+	REAL_MAP[0xFF] = &v16_grp4_rm16;
 	switch (CPU.Type) {
 	case CPU_8086:
 		MODE_MAP[1] = &mode_invalid;
 		MODE_MAP[2] = &mode_invalid;
 		MODE_MAP[3] = &mode_invalid;
-	
+		// While it is possible to map a range, it relies on
+		// memset32/64 which DMD linkers will not find
+		for (size_t i = 0x60; i < 0x70; ++i)
+			REAL_MAP[i] = &v16_illegal;
 		break;
 	case CPU_80486:
-		MODE_MAP[1] = &mode_prot;
+		MODE_MAP[1] = &exec32;
 		MODE_MAP[2] = &mode_invalid;
 		MODE_MAP[3] = &mode_invalid;
 		
+		//REAL_MAP[0x60] =
+		//REAL_MAP[0x61] =
+		//REAL_MAP[0x62] =
+		//REAL_MAP[0x63] =
+		//REAL_MAP[0x64] =
+		//REAL_MAP[0x65] =
+		REAL_MAP[0x66] = &v16_operand_override;
+		//REAL_MAP[0x67] =
+		//REAL_MAP[0x68] =
+		//REAL_MAP[0x69] =
+		//REAL_MAP[0x6A] =
+		//REAL_MAP[0x6B] =
+		//REAL_MAP[0x6C] =
+		//REAL_MAP[0x6D] =
+		//REAL_MAP[0x6E] =
+		//REAL_MAP[0x6F] =
 		break;
 	default:
+	}
+	
+	for (size_t i; i < 256; ++i) { // Sanity check
+		import core.stdc.stdio: printf;
+		import core.stdc.stdlib: exit;
+		/*if (REAL_MAP[i] == null) {
+			printf("REAL_MAP[%02Xh] is NULL!\n", i);
+			exit(1);
+		}*/
+		/*if (PROT_MAP[i] == null) {
+			printf("REAL_MAP[%02Xh] is NULL!\n", i);
+			exit(1);
+		}*/
 	}
 }
 
@@ -196,20 +469,7 @@ void vcpu_run() {
 }
 
 extern (C)
-void mode_real(ubyte op) {
-	exec16(op);
-	//REAL_MAP[op]();
-}
-
-extern (C)
-void mode_prot(ubyte op) {
-	exec32(op);
-	//PROT_MAP[op]();
-}
-
-extern (C)
 void mode_invalid(ubyte op) {
-	//TODO: Panic on invalid cpu mode
 }
 
 //
@@ -261,8 +521,7 @@ private void RESET() {
 /// to CPU_MODE_REAL. Useful in unittesting.
 extern (C)
 void fullreset() {
-	import core.stdc.string : memset;
-	memset(&CPU, 0, CPU_t.sizeof);
+	CPU = CPU_t();
 }
 
 //
