@@ -22,7 +22,7 @@ enum
  * DOS Structures
  */
 
-struct PSP { align(1):
+struct PSP_t { align(1):
 	ushort cpm_exit;	/// CP/M Exit (INT 20h) pointer
 	ushort first_seg;	/// First segment location pointer
 	ubyte reserved1;	// likely to pad with cpm_comp
@@ -52,10 +52,10 @@ struct PSP { align(1):
 	ubyte [127]cmd;	/// Command-line, terminates with CR character (Dh)
 }
 
-static assert(PSP.sizeof == 256);
+static assert(PSP_t.sizeof == 256);
 
 /// MS-DOS EXE header structure
-struct mz_hdr { align(1):
+struct MZ_HDR { align(1):
 	ushort e_magic;	/// Magic number, "MZ"
 	ushort e_cblp;	/// Bytes on last page of file (extra bytes), 9 bits
 	ushort e_cp;	/// Pages in file
@@ -73,15 +73,15 @@ struct mz_hdr { align(1):
 //	ushort[ERESWDS] e_res;	/// Reserved words
 //	uint   e_lfanew;	/// File address of new exe header
 }
-enum MZ_HDR_SIZE = mz_hdr.sizeof + (ERESWDS * 2);
+enum MZ_HDR_SIZE = MZ_HDR.sizeof + (ERESWDS * 2);
 
 /// MS_DOS EXE Relocation structure
-struct mz_rlc { align(1): // For AL=03h
+struct MZ_RLC { align(1): // For AL=03h
 	ushort offset;	/// Offset
 	ushort segment;	/// Segment of relocation
 }
 
-struct dos_struct { align(1):
+struct DOS_t { align(1):
 	ushort dev_clock;	/// CLOCK$ device driver, far call
 	ushort dev_console;	/// CON device driver, far call
 	ushort dev_printer;	/// LPT device driver, far call
@@ -93,7 +93,7 @@ struct dos_struct { align(1):
 }
 
 /// Cursor position structure
-struct curpos { align(1):
+struct CURSOR { align(1):
 	ubyte col;	/// Left 0-based horizontal cursor position
 	ubyte row;	/// Upper 0-based vertical cursor position
 }
@@ -109,7 +109,7 @@ static assert(__ivt.sizeof == 4, "IVT structure must be size of 4");
 // - 000h -- Interrupt Vector Table
 // - 400h -- ROM Communication Area
 // - 500h -- DOS Communication Area
-struct system_struct { align(1):
+struct SYSTEM_t { align(1):
 	union {
 		__ivt [256]IVT;
 		private ubyte [0x104]_padding0;
@@ -139,7 +139,7 @@ struct system_struct { align(1):
 	ushort screen_col;
 	ushort video_rbuf_size;	/// Size of current video regenerate buffer in bytes
 	ushort video_rbuf_off;	/// Offset of current video page in video regenerate buffer
-	curpos [8]cursor;	/// Cursor positions per page
+	CURSOR [8]cursor;	/// Cursor positions per page
 	ubyte video_scan_line_bottom;
 	ubyte video_scan_line_top;
 	ubyte screen_page;	/// current active page
@@ -210,14 +210,14 @@ struct system_struct { align(1):
 }
 
 static assert(
-	system_struct.COM1.offsetof == 0x400,
+	SYSTEM_t.COM1.offsetof == 0x400,
 	"System structure is misaligned"
 );
 static assert(
-	system_struct.kb_buf_off_start.offsetof == 0x480,
+	SYSTEM_t.kb_buf_off_start.offsetof == 0x480,
 	"System structure is misaligned"
 );
 /*static assert(
-	system_struct.print_scr_status.offsetof == 0x500,
+	SYSTEM_t.print_scr_status.offsetof == 0x500,
 	"System structure is misaligned"
 );*/

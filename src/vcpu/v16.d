@@ -1965,7 +1965,7 @@ void v16_grp2_rm16_cl() {	// D3h GRP2 R/M16, CL
 }
 
 void v16_aam() {	// D4h AAM
-	int r = CPU.AL % 0xA;
+	const int r = CPU.AL % 0xA;
 	__hflag8_5(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.AH = cast(ubyte)(r / 0xA);
@@ -1973,7 +1973,7 @@ void v16_aam() {	// D4h AAM
 }
 
 void v16_aad() {	// D5h AAD
-	int r = CPU.AL + (CPU.AH * 0xA);
+	const int r = CPU.AL + (CPU.AH * 0xA);
 	__hflag8_5(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.AH = 0;

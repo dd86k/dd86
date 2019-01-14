@@ -379,10 +379,10 @@ MEM_HELP:
  */
 extern (C)
 int vdos_readline(char *buf, int len) {
-	import vdos.structs : curpos;
+	import vdos.structs : CURSOR;
 	import os.term : Key, KeyInfo, ReadKey;
 
-	curpos *c = &SYSTEM.cursor[SYSTEM.screen_page];
+	CURSOR *c = &SYSTEM.cursor[SYSTEM.screen_page];
 	const ushort x = c.col; // initial cursor col value to update cursor position
 	const ushort y = c.row; // ditto
 	videochar *v = &VIDEO[(y * SYSTEM.screen_col) + x];	/// video index

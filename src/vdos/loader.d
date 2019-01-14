@@ -9,7 +9,7 @@ import core.stdc.stdlib : malloc, free;
 import vcpu.core;
 import vcpu.mm : mmfu16, mmiu16;
 import vdos.os : MinorVersion, MajorVersion;
-import vdos.structs : mz_hdr, MZ_HDR_SIZE, mz_rlc, PSP;
+import vdos.structs : MZ_HDR, MZ_HDR_SIZE, MZ_RLC, PSP_t;
 import vdos.codes;
 import logger;
 import ddc : NULL_CHAR;
@@ -41,7 +41,7 @@ int vdos_load(char *path) {
 	int fsize = cast(int)ftell(f); // >2G binary in MSDOS is not possible anyway
 	fseek(f, 0, SEEK_SET);
 
-	mz_hdr mzh = void; /// MZ header structure variable
+	MZ_HDR mzh = void; /// MZ header structure variable
 
 	CPU.CS = 0x2000; // TEMPORARY LOADING SEGMENT
 	CPU.DS = 0x2000;
@@ -83,7 +83,7 @@ int vdos_load(char *path) {
 			csize -= PAGE - mzh.e_cblp;
 
 		debug {
-			v_printf("RELOC TABLE: %d -- %d B\n", mzh.e_lfarlc,  mz_rlc.sizeof * mzh.e_crlc);
+			v_printf("RELOC TABLE: %d -- %d B\n", mzh.e_lfarlc, MZ_RLC.sizeof * mzh.e_crlc);
 			v_printf("STURCT STRUCT SIZE: %d\n", mzh.sizeof);
 			v_printf("EXE HEADER SIZE: %d\n", hsize);
 			v_printf("CODE: %d -- %d B\n", codebase, csize);
@@ -108,9 +108,9 @@ int vdos_load(char *path) {
 			if (LOGLEVEL)
 				v_printf("[INFO] Relocation(s): %d\n", mzh.e_crlc);
 			fseek(f, mzh.e_lfarlc, SEEK_SET); // 1.
-			const int rs = mzh.e_crlc * mz_rlc.sizeof; /// Relocation table size
+			const int rs = mzh.e_crlc * MZ_RLC.sizeof; /// Relocation table size
 			//TODO: Use MEMORY instead of a malloc
-			mz_rlc* r = cast(mz_rlc*)malloc(rs); /// Relocation table pointer
+			MZ_RLC* r = cast(MZ_RLC*)malloc(rs); /// Relocation table pointer
 			fread(r, rs, 1, f); // Read whole relocation table
 
 			// temporary value
@@ -182,7 +182,7 @@ FILE_COM:
  */
 extern (C) private
 int MakePSP(immutable(char) *path = NULL_CHAR) { //TODO: Consider default "NULL"
-	PSP* psp = cast(PSP*)(MEMORY + get_ip - 0x100);
+	PSP_t* psp = cast(PSP_t*)(MEMORY + get_ip - 0x100);
 
 	psp.minorversion = MinorVersion;
 	psp.majorversion = MajorVersion;

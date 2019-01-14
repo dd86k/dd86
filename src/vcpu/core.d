@@ -15,10 +15,10 @@ enum : ubyte { // Emulated CPU
 }
 
 enum : ubyte { // CPU Mode
-	CPU_MODE_REAL,
-	CPU_MODE_PROTECTED,
-	CPU_MODE_VM8086,
-	//CPU_MODE_SMM
+	CPU_MODE_REAL, /// Read-address mode
+	CPU_MODE_PROTECTED, /// Protected mode
+	//CPU_MODE_SMM, /// System Management Mode
+	CPU_MODE_VM8086, /// 8086 Virtual Mode
 }
 
 enum : ubyte { // Segment override (for Seg)
@@ -165,7 +165,7 @@ void vcpu_init() {
 	import core.stdc.stdlib : realloc;
 	MEMORY = cast(ubyte*)realloc(MEMORY, INIT_MEM); // in case of re-init
 	CPU.CS = 0xFFFF;
-	MODE_MAP[0] = &exec16;
+	MODE_MAP[CPU_MODE_REAL] = &exec16;
 	
 	REAL_MAP[0x00] = &v16_add_rm8_reg8;
 	REAL_MAP[0x01] = &v16_add_rm16_reg16;
@@ -409,18 +409,18 @@ void vcpu_init() {
 	REAL_MAP[0xFF] = &v16_grp4_rm16;
 	switch (CPU.Type) {
 	case CPU_8086:
-		MODE_MAP[1] = &mode_invalid;
-		MODE_MAP[2] = &mode_invalid;
-		MODE_MAP[3] = &mode_invalid;
+		MODE_MAP[CPU_MODE_PROTECTED] = &mode_invalid;
+		//MODE_MAP[] = &mode_invalid;
+		//MODE_MAP[] = &mode_invalid;
 		// While it is possible to map a range, it relies on
 		// memset32/64 which DMD linkers will not find
 		for (size_t i = 0x60; i < 0x70; ++i)
 			REAL_MAP[i] = &v16_illegal;
 		break;
 	case CPU_80486:
-		MODE_MAP[1] = &exec32;
-		MODE_MAP[2] = &mode_invalid;
-		MODE_MAP[3] = &mode_invalid;
+		MODE_MAP[CPU_MODE_PROTECTED] = &exec32;
+		//MODE_MAP[2] = &mode_invalid;
+		//MODE_MAP[3] = &mode_invalid;
 		
 		//REAL_MAP[0x60] =
 		//REAL_MAP[0x61] =
@@ -459,12 +459,12 @@ void vcpu_init() {
 /// Start the emulator at CS:IP (default: FFFF:0000h)
 extern (C)
 void vcpu_run() {
-	int sleep = opt_sleep;
+	const int sleep = opt_sleep;
 	while (RLEVEL > 0) {
 		CPU.EIP = get_ip;
 		//TODO: Check CPU.EIP against segments and memory size
 
-		ubyte op = MEMORY[CPU.EIP];
+		const ubyte op = MEMORY[CPU.EIP];
 		MODE_MAP[CPU.Mode](op);
 	}
 }

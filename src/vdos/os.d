@@ -6,7 +6,7 @@ module vdos.os;
 import ddc;
 import vcpu.core : MEMORY, CPU, get_ip, FLAG;
 import vdos.codes, vdos.interrupts;
-import vdos.structs : system_struct, dos_struct, curpos;
+import vdos.structs : SYSTEM_t, DOS_t, CURSOR;
 import vdos.video;
 import logger;
 import appconfig : __MM_SYS_DOS, INIT_MEM;
@@ -38,20 +38,20 @@ __gshared ubyte
 
 // Live structures in MEMORY
 
-__gshared dos_struct *DOS = void;
-__gshared system_struct *SYSTEM = void;
+__gshared DOS_t *DOS = void;
+__gshared SYSTEM_t *SYSTEM = void;
 
 extern (C)
 void vdos_init() {
 	// Setting a memory pointer as ubyte* (as vdos_settings*) is not
 	// supported in CTFE, so it's done in run-time instead
-	SYSTEM = cast(system_struct*)MEMORY;
+	SYSTEM = cast(SYSTEM_t*)MEMORY;
 	SYSTEM.memsize = INIT_MEM >> 10; // DIV 1024
 	SYSTEM.video_mode = 3;
 	SYSTEM.screen_row = 25;
 	SYSTEM.screen_col = 80;
 
-	DOS = cast(dos_struct*)(MEMORY + __MM_SYS_DOS);
+	DOS = cast(DOS_t*)(MEMORY + __MM_SYS_DOS);
 
 	screen_init;
 }

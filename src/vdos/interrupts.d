@@ -11,7 +11,7 @@ import vcpu.utils : __int_enter, __int_exit;
 import vdos.os : SYSTEM, DOS, BIOS_TICK, MinorVersion, MajorVersion, OEM_ID;
 import vdos.codes;
 import vdos.loader : vdos_load;
-import vdos.structs : curpos;
+import vdos.structs : CURSOR;
 import vdos.video : v_printf, v_put_s, v_putc;
 import os.io : OSTime, os_time, OSDate, os_date, os_pexist;
 import vcpu.mm : MemString;
@@ -35,14 +35,15 @@ void INT(ubyte code) {
 			break;
 		case 0x02: // Set cursor position
 			SYSTEM.screen_page = CPU.BL > 8 ? 0 : CPU.BH;
-			curpos* pos = &SYSTEM.cursor[SYSTEM.screen_page];
-			pos.row = CPU.DH; //TODO: Check against system rows/columns current size
-			pos.col = CPU.DL;
+			CURSOR* c = &SYSTEM.cursor[SYSTEM.screen_page];
+			c.row = CPU.DH; //TODO: Check against system rows/columns current size
+			c.col = CPU.DL;
 			break;
 		case 0x03: // Get cursor position and size
+			const CURSOR c = SYSTEM.cursor[SYSTEM.screen_page];
 			CPU.AX = SYSTEM.screen_page; //TODO: Check if graphical mode
-			//CPU.DH = cast(ubyte)CursorTop;
-			//CPU.DL = cast(ubyte)CursorLeft;
+			CPU.DH = c.row;
+			CPU.DL = c.col;
 			break;
 		case 0x04: // Read light pen position
 
@@ -119,7 +120,7 @@ void INT(ubyte code) {
 			break;
 		case 2: // Write character to stdout
 			CPU.AL = CPU.DL;
-			putchar(CPU.AL);
+			v_putc(CPU.AL);
 			break;
 		case 5: // Write character to printer
 
@@ -304,6 +305,7 @@ void INT(ubyte code) {
 		v_putc(CPU.AL);
 		break;
 	default:
+		//TODO: Handle incorrect interrupt vector
 	}
 
 	__int_exit;
