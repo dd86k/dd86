@@ -182,6 +182,7 @@ void vcpu_init() {
 	REAL_MAP[0x0C] = &v16_or_al_imm8;
 	REAL_MAP[0x0D] = &v16_or_ax_imm16;
 	REAL_MAP[0x0E] = &v16_push_cs;
+	REAL_MAP[0x0F] = &v16_illegal;
 	REAL_MAP[0x10] = &v16_adc_rm8_reg8;
 	REAL_MAP[0x11] = &v16_adc_rm16_reg16;
 	REAL_MAP[0x12] = &v16_adc_reg8_rm8;
@@ -440,14 +441,14 @@ void vcpu_init() {
 		break;
 	default:
 	}
-	
+
 	for (size_t i; i < 256; ++i) { // Sanity check
 		import core.stdc.stdio: printf;
 		import core.stdc.stdlib: exit;
-		/*if (REAL_MAP[i] == null) {
+		if (REAL_MAP[i] == null) {
 			printf("REAL_MAP[%02Xh] is NULL!\n", i);
 			exit(1);
-		}*/
+		}
 		/*if (PROT_MAP[i] == null) {
 			printf("REAL_MAP[%02Xh] is NULL!\n", i);
 			exit(1);
