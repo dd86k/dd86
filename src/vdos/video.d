@@ -172,7 +172,7 @@ struct videochar {
 		struct {
 			ubyte ascii;	/// character, usually CP437
 			// 7 6 5 4 3 2 1 0
-			// |-|-|-|-|-|-|-| attribute structure
+			// |-|-|-|-|-|-|-|
 			// | | | | +-+-+-+- foreground (4 bits)
 			// | +-+-+--------- background (3 bits)
 			// +--------------- blink/special (1 bit)
@@ -260,7 +260,8 @@ void screen_draw() {
 		// Solution 5b
 		ubyte lfg = 0xFF; /// last foreground color
 		ubyte lbg = 0xFF; /// last background color
-		for (size_t i, x, bi, sc = w * h; sc; ++i, --sc) {
+		size_t bi;
+		for (size_t i, x, sc = w * h; sc; ++i, --sc) {
 			const ubyte a = VIDEO[i].attribute;
 			ubyte cfg = a & 15;
 			ubyte cbg = a >> 4;

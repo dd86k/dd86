@@ -43,10 +43,10 @@ int vdos_load(char *path) {
 
 	MZ_HDR mzh = void; /// MZ header structure variable
 
-	CPU.CS = 0x2000; // TEMPORARY LOADING SEGMENT
-	CPU.DS = 0x2000;
-	CPU.ES = 0x2000;
-	CPU.SS = 0x2000;
+	CPU.CS = 0x200; // TEMPORARY LOADING SEGMENT
+	CPU.DS = 0x200;
+	CPU.ES = 0x200;
+	CPU.SS = 0x200;
 
 	if (fsize == 0) {
 		fclose(f);
@@ -114,7 +114,7 @@ int vdos_load(char *path) {
 			fread(r, rs, 1, f); // Read whole relocation table
 
 			// temporary value
-			ushort rel = 0x2000; // usually the loading segment
+			//ushort rel = 0x2000; // usually the loading segment
 			int i;
 			debug v_putn(" #    seg: off -> loadseg");
 			do {
@@ -125,7 +125,7 @@ int vdos_load(char *path) {
 				);
 				mmiu16(mzh.e_cs + loadseg, addr); // 4. & 5.
 				++r; ++i;
-			} while (--mzh.e_crlc);
+			} while (--mzh.e_crlc >= 0);
 			free(r);
 		} else {
 			//if (LOGLEVEL)
