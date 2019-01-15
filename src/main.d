@@ -182,7 +182,7 @@ NO_ARGS:
 		}
 
 		if (opt_sleep == 0)
-			v_putn("MAX_PERF");
+			log_info("MAX_PERF");
 	}
 
 	screen_draw;

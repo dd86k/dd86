@@ -62,11 +62,11 @@ void print_regs() {
 		"EIP=%08X  IP=%04X  (%08X)\n"~
 		"EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X\n"~
 		"ESP=%08X  EBP=%08X  ESI=%08X  EDI=%08X\n"~
-		"CS=%04X  DS=%04X  ES=%04X  SS=%04X\n",
+		"CS=%04X  DS=%04X  ES=%04X  FS=%04X  GS=%04X  SS=%04X\n",
 		CPU.EIP, CPU.IP, get_ip,
 		CPU.EAX, CPU.EBX, CPU.ECX, CPU.EDX,
 		CPU.ESP, CPU.EBP, CPU.ESI, CPU.EDI,
-		CPU.CS, CPU.DS, CPU.ES, CPU.SS,
+		CPU.CS, CPU.DS, CPU.ES, CPU.FS, CPU.GS, CPU.SS
 	);
 	v_put("EFLAG=");
 	if (CPU.OF) v_putn("OF ");
@@ -78,6 +78,7 @@ void print_regs() {
 	if (CPU.AF) v_putn("AF ");
 	if (CPU.PF) v_putn("PF ");
 	if (CPU.CF) v_putn("CF ");
+	//TODO: Print rest of flags
 	v_printf("(%8Xh)\n", FLAG);
 }
 
@@ -88,7 +89,7 @@ void print_stack() {
 
 extern (C)
 void panic(ushort code,
-	lazy immutable(char) *name = cast(immutable(char)*)__MODULE__,
+	lazy immutable(char) *name = cast(immutable(char)*)__FILE__,
 	int line = __LINE__) {
 	import core.stdc.stdlib : exit;
 
@@ -103,7 +104,7 @@ void panic(ushort code,
 	ubyte *p = MEMORY + CPU.EIP - TARGET;
 	while (--i) {
 		if (i == TARGET)
-			v_printf(" > %02X<", *p);
+			v_printf(" >%02X<", *p);
 		else
 			v_printf(" %02X", *p);
 		++p;

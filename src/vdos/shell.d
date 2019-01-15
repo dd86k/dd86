@@ -68,10 +68,10 @@ int vdos_command(immutable(char) *command) {
 	const int argc = sargs(command, argv); /// argument count
 	lowercase(*argv);
 
-	enum uint L_EXE = 0x6578652E; /// ".exe", LSB
-	enum uint L_COM = 0x6D6F632E; /// ".com", LSB
-	//enum uint U_EXE = 0x4558452E; /// ".EXE", LSB
-	//enum uint U_COM = 0x4D4F432E; /// ".COM", LSB
+	enum uint EXE_L = 0x6578652E; /// ".exe", LSB
+	enum uint COM_L = 0x6D6F632E; /// ".com", LSB
+	//enum uint EXE_U = 0x4558452E; /// ".EXE", LSB
+	//enum uint COM_U = 0x4D4F432E; /// ".COM", LSB
 
 	//TODO: TREE, DIR (waiting on OS directory crawler)
 	//TODO: search for executable in (virtual, user set) PATH
@@ -85,7 +85,7 @@ int vdos_command(immutable(char) *command) {
 		// While it is possible to compare strings (even with slices),
 		// this works the fastests. This will be changed when needed.
 		switch (ext) {
-		case L_COM, L_EXE: // already lowercased
+		case COM_L, EXE_L: // already lowercased
 			vdos_load(*argv);
 			vcpu_run;
 			return 0;
@@ -96,14 +96,14 @@ int vdos_command(immutable(char) *command) {
 		char [512]appname = void;
 		memcpy(cast(char*)appname, *argv, argl); // dont copy null
 		uint* appext = cast(uint*)(cast(char*)appname + argl);
-		*appext = L_COM;
+		*appext = COM_L;
 		*(appext + 1) = 0;
 		if (os_pexist(cast(char*)appname)) {
 			vdos_load(cast(char*)appname);
 			vcpu_run;
 			return 0;
 		}
-		*appext = L_EXE;
+		*appext = EXE_L;
 		if (os_pexist(cast(char*)appname)) {
 			vdos_load(cast(char*)appname);
 			vcpu_run;
