@@ -12,7 +12,7 @@ import vdos.codes;
 import vdos.loader : vdos_load;
 import vdos.video;
 import logger;
-import os.term : con_init, Clear, SetPos;
+import os.term : con_init, Clear, SetPos, WindowSize, GetWinSize;
 import os.io : os_pexist;
 import appconfig : APP_VERSION, PLATFORM, BUILD_TYPE, C_RUNTIME;
 
@@ -144,6 +144,13 @@ NO_ARGS:
 	if (LOGLEVEL > LOG_DEBUG) {
 		printf("E: Unknown log level: %d\n", LOGLEVEL);
 		return EDOS_INVALID_FUNCTION;
+	}
+	
+	WindowSize s;
+	GetWinSize(&s);
+	if (s.Width < 80 || s.Height < 25) {
+		puts("Terminal should be at least 80 by 25 characters");
+		return 1;
 	}
 
 	//TODO: Read settings here

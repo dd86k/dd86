@@ -295,11 +295,11 @@ void screen_draw() {
 			++x;
 			if (x == w) {
 				*(s + bi) = '\n';
-				++bi;
+				if (i < sc) ++bi;
 				x = 0;
 			}
 		}
-		write(STDOUT_FILENO, cast(char*)s, bi);
+		write(STDOUT_FILENO, s, bi);
 	}
 }
 
