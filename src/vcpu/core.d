@@ -60,7 +60,7 @@ enum : ubyte {
 	RM_RM = RM_RM_111,	/// Used for masking the R/M bits (00 000 111)
 }
 
-/// CPU structure, 
+/// CPU structure
 extern (C)
 struct CPU_t {
 	union {
@@ -166,7 +166,7 @@ void vcpu_init() {
 	MEMORY = cast(ubyte*)realloc(MEMORY, INIT_MEM); // in case of re-init
 	CPU.CS = 0xFFFF;
 	MODE_MAP[CPU_MODE_REAL] = &exec16;
-	
+
 	REAL_MAP[0x00] = &v16_add_rm8_reg8;
 	REAL_MAP[0x01] = &v16_add_rm16_reg16;
 	REAL_MAP[0x02] = &v16_add_reg8_rm8;
@@ -412,7 +412,7 @@ void vcpu_init() {
 		MODE_MAP[CPU_MODE_PROTECTED] = &mode_invalid;
 		//MODE_MAP[] = &mode_invalid;
 		//MODE_MAP[] = &mode_invalid;
-		// While it is possible to map a range, it relies on
+		// While it is possible to map a range, but it relies on
 		// memset32/64 which DMD linkers will not find
 		for (size_t i = 0x60; i < 0x70; ++i)
 			REAL_MAP[i] = &v16_illegal;
@@ -442,15 +442,15 @@ void vcpu_init() {
 	default:
 	}
 
-	for (size_t i; i < 256; ++i) { // Sanity check
+	for (size_t i; i < 256; ++i) { // Sanity checker
 		import core.stdc.stdio: printf;
 		import core.stdc.stdlib: exit;
 		if (REAL_MAP[i] == null) {
-			printf("REAL_MAP[%02Xh] is NULL!\n", i);
+			printf("Assert: REAL_MAP[%02Xh] is NULL!\n", i);
 			exit(1);
 		}
 		/*if (PROT_MAP[i] == null) {
-			printf("REAL_MAP[%02Xh] is NULL!\n", i);
+			printf("Assert: REAL_MAP[%02Xh] is NULL!\n", i);
 			exit(1);
 		}*/
 	}

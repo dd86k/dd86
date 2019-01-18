@@ -90,7 +90,7 @@ void INT(ubyte code) {
 		switch (CPU.AH) {
 		case 0: // Get system time by number of clock ticks since midnight
 			OSTime t = void;
-			os_time(&t);
+			os_time(t);
 			uint c = cast(uint)( //TODO: FIXME
 				((cast(float)t.hour * 60 * 60) +
 				(cast(float)t.minute * 60) +
@@ -143,7 +143,7 @@ void INT(ubyte code) {
 			char *p = cast(char *)(MEMORY + get_ad(CPU.DS, CPU.DX));
 			ushort l;
 			while (p[l] != '$' && l < 255) ++l;
-			v_put_s(cast(immutable)p, l - 1);
+			v_put_s(p, l - 1);
 
 			CPU.AL = 0x24;
 			break;
@@ -174,7 +174,7 @@ void INT(ubyte code) {
 			break;
 		case 0x2A: { // Get system date
 			OSDate d = void;
-			os_date(&d); // os.io
+			os_date(d); // os.io
 			CPU.CX = d.year;
 			CPU.DH = d.month;
 			CPU.DL = d.day;
@@ -186,7 +186,7 @@ void INT(ubyte code) {
 			break;
 		case 0x2C: { // Get system time
 			OSTime t = void;
-			os_time(&t); // os.io
+			os_time(t); // os.io
 			CPU.CH = t.hour;
 			CPU.CL = t.minute;
 			CPU.DH = t.second;

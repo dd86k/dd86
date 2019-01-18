@@ -62,7 +62,7 @@ SHL_S:
  *   Returns -3 if EXIT has been requested
  */
 extern (C)
-int vdos_command(immutable(char) *command) {
+int vdos_command(const(char) *command) {
 	char **argv = // argument vector, sizeof(char *)
 		cast(char**)(MEMORY + 0x1200 + _BUFS + 1);
 	const int argc = sargs(command, argv); /// argument count

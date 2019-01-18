@@ -181,7 +181,7 @@ FILE_COM:
  * Returns: 0 on success
  */
 extern (C) private
-int MakePSP(immutable(char) *path = NULL_CHAR) { //TODO: Consider default "NULL"
+int MakePSP(const(char) *path = NULL_CHAR) { //TODO: Consider default "NULL"
 	PSP_t* psp = cast(PSP_t*)(MEMORY + get_ip - 0x100);
 
 	psp.minorversion = MinorVersion;

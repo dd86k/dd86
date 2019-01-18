@@ -160,8 +160,8 @@ version (Posix) {
 		[ 0x1b, 0x5b, 0x33, 0x38, 0x3b, 0x35, 0x3b, 0x00, 0x00, 0x6d ];
 	__gshared ubyte *bg_s = /// bg string -- "\033[48;5;00m"
 		[ 0x1b, 0x5b, 0x34, 0x38, 0x3b, 0x35, 0x3b, 0x00, 0x00, 0x6d ];
-	__gshared ushort *s_fg = void;
-	__gshared ushort *s_bg = void;
+	__gshared ushort *fg = void; /// Foreground color string pointer
+	__gshared ushort *bg = void; /// Background color string pointer
 	__gshared char *str = void;
 }
 
@@ -186,7 +186,6 @@ static assert(videochar.sizeof == 2);
  * Initiates screen, including intermediate buffer.
  * Usually called by vdos.
  */
-extern (C)
 void screen_init() {
 	import core.stdc.string : memset;
 	VIDEO = cast(videochar*)(MEMORY + __VIDEO_ADDRESS);
@@ -208,8 +207,8 @@ void screen_init() {
 		ibufout.Right = 79;
 	}
 	version (Posix) {
-		s_fg = cast(ushort*)(fg_s + 7);
-		s_bg = cast(ushort*)(bg_s + 7);
+		fg = cast(ushort*)(fg_s + 7);
+		bg = cast(ushort*)(bg_s + 7);
 		// 24 extra bytes for:
 		// 10 char fg
 		// 10 char bg
@@ -224,7 +223,6 @@ void screen_init() {
  * (Windows) Uses WriteConsoleOutputA
  * (Posix) Uses write(2) to STDOUT_FILENO
  */
-extern (C)
 void screen_draw() {
 	version (Windows) {
 		const uint sc = SYSTEM.screen_col * SYSTEM.screen_row; /// screen size
@@ -237,21 +235,6 @@ void screen_draw() {
 		//WriteConsoleOutputW(hOut, ibuf, ibufsize, bufcoord, &ibufout);
 	}
 	version (Posix) {
-		// Result format: one draw / 60 draws
-		// NOTE: Hiding the cursor show no improvements in tests
-		// solution 1: one write(2) per character and attribute (discarded)
-		//             3-20 ms / 550-680 ms
-		// solution 2: prepare buffer, one write(2) (discarded)
-		//             0.250-2 ms / 130-160 ms
-		// solution 3: write(2) per line (discarded)
-		//             0.230-2 ms / 150-160 ms
-		// solution 4: writev(2) with multiple "buffers" (discarded)
-		//             2-7 ms / 177-189 ms
-		// solution 5a: write(2) per line with semi-smart color diff
-		//              0.166-1 ms / ~33 ms
-		// solution 5b: one write(2) with semi-smart color diff
-		//              0.28-1 ms / 15-36 ms
-
 		const uint w = SYSTEM.screen_col; /// width
 		const uint h = SYSTEM.screen_row; /// height
 		char *s = str;
@@ -260,20 +243,20 @@ void screen_draw() {
 		// Solution 5b
 		ubyte lfg = 0xFF; /// last foreground color
 		ubyte lbg = 0xFF; /// last background color
-		size_t bi;
+		size_t bi; /// buffer index
 		for (size_t i, x, sc = w * h; sc; ++i, --sc) {
 			const ubyte a = VIDEO[i].attribute;
 			ubyte cfg = a & 15;
 			ubyte cbg = a >> 4;
 			if (cfg != lfg) {
-				*s_fg = vatable[cfg];
+				*fg = vatable[cfg];
 				*cast(ulong*)(s + bi) = *cast(ulong*)fg_s;
 				*cast(ushort*)(s + bi + 8) = *cast(ushort*)(fg_s + 8);
 				lfg = cfg;
 				bi += 10;
 			}
 			if (cbg != lbg) {
-				*s_bg = vatable[cbg];
+				*bg = vatable[cbg];
 				*cast(ulong*)(s + bi) = *cast(ulong*)bg_s;
 				*cast(ushort*)(s + bi + 8) = *cast(ushort*)(bg_s + 8);
 				lbg = cbg;
@@ -295,8 +278,9 @@ void screen_draw() {
 			++x;
 			if (x == w) {
 				*(s + bi) = '\n';
-				if (i < sc) ++bi;
+				if (sc <= 1) break;
 				x = 0;
+				++bi;
 			}
 		}
 		write(STDOUT_FILENO, s, bi);
@@ -305,7 +289,6 @@ void screen_draw() {
 
 /// Clear virtual video RAM, resets every cells to white/black with null
 /// character
-extern (C)
 void screen_clear() {
 	const int t = (SYSTEM.screen_row * SYSTEM.screen_col) / 2;
 	uint *v = cast(uint*)VIDEO;
@@ -313,7 +296,6 @@ void screen_clear() {
 }
 
 /// Print the pretty DD-DOS logo
-extern (C)
 void screen_logo() {
 	// ┌─────────────────────────────────────────────────────┐
 	// │ ┌──────┐ ┌──────┐        ┌──────┐ ┌──────┐ ┌──────┐ │
@@ -360,8 +342,7 @@ void screen_logo() {
  * Params:
  *   s = String, null-terminated
  */
-extern (C) public
-void v_put(immutable(char) *s) {
+void v_put(const(char) *s) {
 	int i;
 	while (s[i] != 0 && i < MAX_STR) {
 		v_putc(s[i]);
@@ -377,8 +358,7 @@ void v_put(immutable(char) *s) {
  *   s = String, null-terminated
  *   size = String length
  */
-extern (C) public
-void v_put_s(immutable(char) *s, uint size) {
+void v_put_s(const(char) *s, uint size) {
 	while (size >= 0 && *s != 0) {
 		v_putc(*s);
 		++s;
@@ -394,8 +374,7 @@ void v_put_s(immutable(char) *s, uint size) {
  * Params:
  *   s = String (optional)
  */
-extern (C) public
-void v_putn(immutable(char) *s = null) {
+void v_putn(const(char) *s = null) {
 	if (s) v_put(s);
 	v_putc('\n');
 }
@@ -407,28 +386,31 @@ void v_putn(immutable(char) *s = null) {
  * Params:
  *   c = Character
  */
-extern (C) public
 void v_putc(char c) {
 	import vdos.structs : CURSOR;
 
 	CURSOR *cur = &SYSTEM.cursor[SYSTEM.screen_page];
-	uint pos = void; /// character position on screen
+	uint pos = void; // character position
 
-	switch (c) {
-	case '\a': return;
-	case '\n':
-		++cur.row;
+	if (c < 32) goto CONTROL_CHAR; // ASCII
+
+	// Normal character
+	pos = (cur.row * SYSTEM.screen_col) + cur.col;
+	++cur.col;
+	if (cur.col >= SYSTEM.screen_col) {
 		cur.col = 0;
-		if (cur.row >= SYSTEM.screen_row) {
-			--cur.row;
-			v_scroll;
-		}
-		return;
-	case '\t': //TODO: \t handling, +8 cols?
+		++cur.row;
+	}
+	if (cur.row >= SYSTEM.screen_row) {
+		--cur.row;
+		v_scroll;
+	}
+	VIDEO[pos].ascii = c;
+	return;
 
-		break;
-	default:
-		pos = (cur.row * SYSTEM.screen_col) + cur.col;
+CONTROL_CHAR:
+	switch (c) {
+	case '\0':
 		++cur.col;
 		if (cur.col >= SYSTEM.screen_col) {
 			cur.col = 0;
@@ -438,12 +420,25 @@ void v_putc(char c) {
 			--cur.row;
 			v_scroll;
 		}
-		VIDEO[pos].ascii = c;
+		return;
+	case '\n':
+		++cur.row;
+		cur.col = 0;
+		if (cur.row >= SYSTEM.screen_row) {
+			--cur.row;
+			v_scroll;
+		}
+		return;
+	case '\t':
+		v_put_s("        ", 8);
+		break;
+	case '\a', '\r', '\f', '\v', '\b': // D characters
+	default:
+		return;
 	}
 }
 
-extern (C) public
-void v_printf(immutable(char) *f, ...) {
+void v_printf(const(char) *f, ...) {
 	import ddc : vsnprintf, va_list, va_start, puts;
 
 	va_list args = void;
@@ -453,19 +448,17 @@ void v_printf(immutable(char) *f, ...) {
 	uint c = vsnprintf(cast(char*)b, 512, f, args);
 
 	if (c > 0)
-		v_put_s(cast(immutable(char)*)b, c);
+		v_put_s(cast(char *)b, c);
 }
 
 /// Scroll screen once, does not redraw screen
 /// Note: This function goes one line overboard video memory
-extern (C) public
 void v_scroll() {
 	uint sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
 	videochar *d = cast(videochar*)VIDEO; /// destination
 	videochar *s = d + sc; /// source
 
-	videochar tp = void;
-	tp.ascii = 0;
+	videochar tp;
 	tp.attribute = VIDEO[sc - 1].attribute;
 	for (size_t i; i < SYSTEM.screen_col; ++i)
 		s[i].WORD = tp.WORD;
@@ -477,7 +470,6 @@ void v_scroll() {
 }
 
 /// Update cursor positions on host machine using current screen page
-extern (C) public
 void v_updatecur() {
 	import vdos.structs : CURSOR;
 	import os.term : SetPos;

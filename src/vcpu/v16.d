@@ -1079,11 +1079,13 @@ void v16_pop_di() {	// 5Fh POP DI
 }
 
 void v16_operand_override() {	// 66h OPERAND OVERRIDE
-	++CPU.EIP;
 	exec32(MEMORY[CPU.EIP]);
+	++CPU.EIP;
 }
 
 void v16_address_override() {	// 67h ADDRESS OVERRIDE
+	//TODO: CPU.AddressPrefix
+	++CPU.EIP;
 }
 
 void v16_jo_short() {	// 70h JO SHORT-LABEL

@@ -21,6 +21,8 @@ import vcpu.core;
 import vdos.codes : PANIC_MEMORY_ACCESS;
 import logger;
 
+extern (C):
+
 //
 // Insert into memory functions
 //
@@ -31,8 +33,6 @@ import logger;
  *   op = BYTE value
  *   addr = Memory address
  */
-extern (C)
-pragma(inline, true)
 void mmiu8(int op, int addr) {
 	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmiu8", PANIC_MEMORY_ACCESS);
 	MEMORY[addr] = cast(ubyte)op;
@@ -44,7 +44,6 @@ void mmiu8(int op, int addr) {
  *   data = WORD value (will be casted)
  *   addr = Memory address
  */
-extern (C)
 void mmiu16(int data, int addr) {
 	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmiu16", PANIC_MEMORY_ACCESS);
 	*cast(ushort*)(MEMORY + addr) = cast(ushort)data;
@@ -56,7 +55,6 @@ void mmiu16(int data, int addr) {
  *   op = DWORD value
  *   addr = Memory address
  */
-extern (C)
 void mmiu32(int op, int addr) {
 	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmiu32", PANIC_MEMORY_ACCESS);
 	*cast(uint*)(MEMORY + addr) = op;
@@ -69,7 +67,6 @@ void mmiu32(int op, int addr) {
  *   size = Data size
  *   addr = Memory location
  */
-extern (C)
 void mmiarr(void *ops, size_t size, size_t addr) {
 	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmiarr", PANIC_MEMORY_ACCESS);
 	memcpy(MEMORY + addr, ops, size);
@@ -81,8 +78,7 @@ void mmiarr(void *ops, size_t size, size_t addr) {
  *   data = String value
  *   addr = Memory address, default: EIP
  */
-extern (C)
-void mmistr(immutable(char) *data, size_t addr = CPU.EIP) {
+void mmistr(const(char) *data, size_t addr = CPU.EIP) {
 	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmistr", PANIC_MEMORY_ACCESS);
 	strcpy(cast(char*)(MEMORY + addr), data);
 }
@@ -93,7 +89,6 @@ void mmistr(immutable(char) *data, size_t addr = CPU.EIP) {
  *   data = Wide wtring data
  *   addr = Memory Address (EIP by default)
  */
-extern (C)
 void mmiwstr(immutable(wchar)[] data, size_t addr = CPU.EIP) {
 	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmiwstr", PANIC_MEMORY_ACCESS);
 	wcscpy(cast(wchar_t*)(MEMORY + addr), cast(wchar_t*)data);
@@ -108,7 +103,6 @@ void mmiwstr(immutable(wchar)[] data, size_t addr = CPU.EIP) {
  * Params: addr = Memory address
  * Returns: BYTE
  */
-extern (C)
 ubyte mmfu8(uint addr) {
 	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmfu8", PANIC_MEMORY_ACCESS);
 	return MEMORY[addr];
@@ -119,7 +113,6 @@ ubyte mmfu8(uint addr) {
  * Params: addr = Memory address
  * Returns: BYTE
  */
-extern (C)
 byte mmfi8(uint addr) {
 	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmfi8", PANIC_MEMORY_ACCESS);
 	return cast(byte)MEMORY[addr];
@@ -130,7 +123,6 @@ byte mmfi8(uint addr) {
  * Params: addr = Memory address
  * Returns: WORD
  */
-extern (C)
 ushort mmfu16(uint addr) {
 	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmfu16", PANIC_MEMORY_ACCESS);
 	return *cast(ushort*)(MEMORY + addr);
@@ -141,7 +133,6 @@ ushort mmfu16(uint addr) {
  * Params: addr = Memory address
  * Returns: signed WORD
  */
-extern (C)
 short mmfi16(uint addr) {
 	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmfi16", PANIC_MEMORY_ACCESS);
 	return *cast(short*)(MEMORY + addr);
@@ -152,7 +143,6 @@ short mmfi16(uint addr) {
  * Params: addr = Memory address
  * Returns: DWORD
  */
-extern (C)
 uint mmfu32(uint addr) {
 	if (C_OVERFLOW(addr)) log_crit("ACCESS VIOLATION IN mmfu32", PANIC_MEMORY_ACCESS);
 	return *cast(uint*)(MEMORY + addr);
@@ -163,7 +153,6 @@ uint mmfu32(uint addr) {
  * Params: pos = Starting position
  * Returns: String
  */
-extern (C)
 char[] MemString(uint pos) {
 //TODO: Check overflows
 	return cast(char[])
@@ -181,7 +170,6 @@ char[] MemString(uint pos) {
  * Params: n = Optional offset (+1)
  * Returns: BYTE
  */
-extern (C)
 ubyte mmfu8_i(int n = 0) {
 	return MEMORY[CPU.EIP + 1 + n];
 }
@@ -191,7 +179,6 @@ ubyte mmfu8_i(int n = 0) {
  * Params: n = Optional offset from EIP+1
  * Returns: Signed BYTE
  */
-extern (C)
 byte mmfi8_i(int n = 0) {
 	return cast(byte)MEMORY[CPU.EIP + 1 + n];
 }
@@ -201,7 +188,6 @@ byte mmfi8_i(int n = 0) {
  * Params: n = Optional offset (+1)
  * Returns: WORD
  */
-extern (C)
 ushort mmfu16_i(int n = 0) {
 	return *cast(ushort*)(MEMORY + CPU.EIP + 1 + n);
 }
@@ -211,7 +197,6 @@ ushort mmfu16_i(int n = 0) {
  * Params: n = Optional offset (+1)
  * Returns: signed WORD
  */
-extern (C)
 short mmfi16_i(int n = 0) {
 	return *cast(short*)(MEMORY + CPU.EIP + 1 + n);
 }
@@ -221,7 +206,6 @@ short mmfi16_i(int n = 0) {
  * Params: n = Optional offset (+1)
  * Returns: signed WORD
  */
-extern (C)
 int mmfi32_i(int n = 0) {
 	return *cast(int*)(MEMORY + CPU.EIP + 1 + n);
 }
@@ -236,7 +220,7 @@ int mmfi32_i(int n = 0) {
  * Returns: True if overflowed
  */
 pragma(inline, true)
-extern (C) private
+private
 bool C_OVERFLOW(size_t addr) {
 	return addr < 0 || addr > MEMORYSIZE;
 }
@@ -255,7 +239,6 @@ bool C_OVERFLOW(size_t addr) {
  *   wide = wide bit set in opcode
  * Returns: Effective Address
  */
-extern (C)
 uint mmrm16(ubyte rm, ubyte wide = 0) {
 	//uint r = void;
 	//TODO: Reset Seg to SEG_NONE
@@ -343,7 +326,6 @@ uint mmrm16(ubyte rm, ubyte wide = 0) {
  *   wide = WIDE bit
  * Returns: Calculated address
  */
-extern (C)
 uint mmrm32(ubyte rm, ubyte wide = 0) {
 	//TODO: segment overload support
 	uint r = void;

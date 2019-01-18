@@ -6,6 +6,8 @@
  */
 module os.io;
 
+extern (C):
+
 //TODO: File/directory walker
 
 struct OSTime {
@@ -21,8 +23,7 @@ struct OSDate {
  * Params: ost = OSTime structure pointer
  * Returns: 0 on success, non-zero on error when applicable
  */
-extern (C)
-int os_time(OSTime *ost) {
+int os_time(ref OSTime ost) {
 	version (Windows) {
 		import core.sys.windows.windows : SYSTEMTIME, GetLocalTime;
 		SYSTEMTIME s = void;
@@ -58,8 +59,7 @@ int os_time(OSTime *ost) {
  * Params: osd = OSDate structure pointer
  * Returns: 0 on success
  */
-extern (C)
-int os_date(OSDate *osd) {
+int os_date(ref OSDate osd) {
 	version (Windows) {
 		import core.sys.windows.winbase : SYSTEMTIME, GetLocalTime;
 		SYSTEMTIME s = void;
@@ -90,7 +90,6 @@ int os_date(OSDate *osd) {
  * Params: p = Path
  * Returns: 0 on success
  */
-extern (C)
 int os_scwd(char *p) {
 	version (Windows) {
 		import core.sys.windows.winbase : SetCurrentDirectoryA;
@@ -107,7 +106,6 @@ int os_scwd(char *p) {
  * Params: p = string buffer
  * Returns: non-zero on success
  */
-extern (C)
 int os_gcwd(char *p) {
 	version (Windows) {
 		import core.sys.windows.winbase : GetCurrentDirectoryA;
@@ -125,7 +123,6 @@ int os_gcwd(char *p) {
  * Params: p = Path
  * Returns: Non-zero if exists
  */
-extern (C)
 int os_pexist(char *p) {
 	version (Windows) {
 		import core.sys.windows.windows : GetFileAttributesA;
@@ -143,7 +140,6 @@ int os_pexist(char *p) {
  * Params: p = Path buffer
  * Returns: Non-zero if directory
  */
-extern (C)
 int os_pisdir(char *p) {
 	version (Windows) {
 		import core.sys.windows.windows :

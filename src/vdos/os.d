@@ -79,7 +79,7 @@ void print_regs() {
 	if (CPU.PF) v_putn("PF ");
 	if (CPU.CF) v_putn("CF ");
 	//TODO: Print rest of flags
-	v_printf("(%8Xh)\n", FLAG);
+	v_printf("(%Xh)\n", FLAG);
 }
 
 extern (C)
@@ -89,7 +89,7 @@ void print_stack() {
 
 extern (C)
 void panic(ushort code,
-	lazy immutable(char) *name = cast(immutable(char)*)__FILE__,
+	lazy const(char) *name = cast(const(char)*)__MODULE__,
 	int line = __LINE__) {
 	import core.stdc.stdlib : exit;
 

@@ -13,10 +13,10 @@ module ddc;
 enum NULL_CHAR = cast(char*)0; /// Null character pointer
 
 public extern (C) {
-	int printf(immutable(char)*, ...);
+	int printf(const(char)*, ...);
 	void putchar(int);
 	char* fgets(char*, int, shared FILE*);
-	int fputs(immutable(char)*, shared FILE*);
+	int fputs(const(char)*, shared FILE*);
 	int getchar();
 }
 
@@ -75,10 +75,10 @@ version (CRuntime_Microsoft) {
 
 	//TODO: Check library strings to fix vsnprintf linkage
 	version (DigitalMars) extern (C)
-	int vsnprintf(char *, size_t, immutable(char) *, va_list);
+	int vsnprintf(char *, size_t, const(char) *, va_list);
 
 	version (LDC) extern (C)
-	int __stdio_common_vsprintf(char *, size_t, immutable(char) *, va_list);
+	int __stdio_common_vsprintf(char *, size_t, const(char) *, va_list);
 	version (LDC) alias __stdio_common_vsprintf vsnprintf;
 
 	public import core.stdc.stdio : puts;
