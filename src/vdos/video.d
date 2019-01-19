@@ -359,11 +359,8 @@ void v_put(const(char) *s) {
  *   size = String length
  */
 void v_put_s(const(char) *s, uint size) {
-	while (size >= 0 && *s != 0) {
-		v_putc(*s);
-		++s;
-		--size;
-	}
+	for (size_t i; i < size && s[i] != 0; ++i)
+		v_putc(s[i]);
 }
 
 /**
@@ -410,7 +407,7 @@ void v_putc(char c) {
 
 CONTROL_CHAR:
 	switch (c) {
-	case '\0':
+	case 0: // '\0'
 		++cur.col;
 		if (cur.col >= SYSTEM.screen_col) {
 			cur.col = 0;
@@ -422,19 +419,17 @@ CONTROL_CHAR:
 		}
 		return;
 	case '\n':
-		++cur.row;
 		cur.col = 0;
-		if (cur.row >= SYSTEM.screen_row) {
-			--cur.row;
+		if (cur.row + 1 >= SYSTEM.screen_row)
 			v_scroll;
-		}
+		else
+			++cur.row;
 		return;
 	case '\t':
 		v_put_s("        ", 8);
 		break;
-	case '\a', '\r', '\f', '\v', '\b': // D characters
-	default:
-		return;
+	//case 27: // ESC codes
+	default: // non-printable/usable
 	}
 }
 

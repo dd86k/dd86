@@ -143,7 +143,7 @@ void INT(ubyte code) {
 			char *p = cast(char *)(MEMORY + get_ad(CPU.DS, CPU.DX));
 			ushort l;
 			while (p[l] != '$' && l < 255) ++l;
-			v_put_s(p, l - 1);
+			v_put_s(p, l);
 
 			CPU.AL = 0x24;
 			break;
