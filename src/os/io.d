@@ -123,7 +123,7 @@ int os_gcwd(char *p) {
  * Params: p = Path
  * Returns: Non-zero if exists
  */
-int os_pexist(char *p) {
+int os_pexist(const(char) *p) {
 	version (Windows) {
 		import core.sys.windows.windows : GetFileAttributesA;
 		return GetFileAttributesA(p) != 0xFFFF_FFFF;

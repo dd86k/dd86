@@ -343,11 +343,8 @@ void screen_logo() {
  *   s = String, null-terminated
  */
 void v_put(const(char) *s) {
-	int i;
-	while (s[i] != 0 && i < MAX_STR) {
+	for (size_t i; s[i] != 0 && i < MAX_STR; ++i)
 		v_putc(s[i]);
-		++i;
-	}
 }
 
 /**

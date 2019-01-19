@@ -34,7 +34,7 @@ private enum {
  * Notes: Refer to EXEC2BIN.ASM from MS-DOS 2.0 for details, at EXELOAD.
  */
 extern (C)
-int vdos_load(char *path) {
+int vdos_load(const(char) *path) {
 	FILE *f = fopen(path, "rb"); /// file handle
 
 	fseek(f, 0, SEEK_END); // for ftell
@@ -181,8 +181,8 @@ FILE_COM:
  * Returns: 0 on success
  */
 extern (C) private
-int MakePSP(const(char) *path = NULL_CHAR) { //TODO: Consider default "NULL"
-	PSP_t* psp = cast(PSP_t*)(MEMORY + get_ip - 0x100);
+int MakePSP(const(char) *path = NULL_CHAR) { //TODO: Consider passing a structure
+	PSP_t *psp = cast(PSP_t*)(MEMORY + get_ip - 0x100);
 
 	psp.minorversion = MinorVersion;
 	psp.majorversion = MajorVersion;

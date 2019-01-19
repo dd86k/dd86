@@ -68,10 +68,10 @@ void INT(ubyte code) {
 		break;
 	case 0x16: // Keyboard
 		switch (CPU.AH) {
-		case 0:
+		case 0: // Get keystroke
 
 			break;
-		case 1:
+		case 1: // Check keystroke
 
 			break;
 		case 2: // SHIFT

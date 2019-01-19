@@ -9,6 +9,8 @@ import vcpu.v32;
 import vcpu.mm;
 import appconfig : INIT_MEM, TSC_SLEEP;
 
+extern (C):
+
 enum : ubyte { // Emulated CPU
 	CPU_8086,
 	CPU_80486
@@ -61,7 +63,6 @@ enum : ubyte {
 }
 
 /// CPU structure
-extern (C)
 struct CPU_t {
 	union {
 		uint EIP;
@@ -153,14 +154,13 @@ __gshared int MEMORYSIZE = INIT_MEM; /// Memory size
 // remove the flexibility of choosing the functions per cpu type at
 // initialization.
 /// CPU Mode function table
-extern (C) __gshared void function(ubyte)[4] MODE_MAP;
+__gshared void function(ubyte)[4] MODE_MAP;
 /// Real-mode instructions function table
-extern (C) __gshared void function()[256] REAL_MAP;
+__gshared void function()[256] REAL_MAP;
 /// Protected-mode instructions function table
-extern (C) __gshared void function()[256] PROT_MAP;
+__gshared void function()[256] PROT_MAP;
 
-/// Initiate interpreter
-extern (C)
+/// Initiate x86 interpreter
 void vcpu_init() {
 	import core.stdc.stdlib : realloc;
 	MEMORY = cast(ubyte*)realloc(MEMORY, INIT_MEM); // in case of re-init
@@ -457,7 +457,6 @@ void vcpu_init() {
 }
 
 /// Start the emulator at CS:IP (default: FFFF:0000h)
-extern (C)
 void vcpu_run() {
 	const int sleep = opt_sleep;
 	while (RLEVEL > 0) {
@@ -469,7 +468,6 @@ void vcpu_run() {
 	}
 }
 
-extern (C)
 void mode_invalid(ubyte op) {
 }
 
@@ -487,8 +485,6 @@ void mode_invalid(ubyte op) {
  *   o = Generic register value
  * Returns: SEG:ADDR Location
  */
-extern (C)
-pragma(inline, true)
 uint get_ad(int s, int o) {
 	return (s << 4) | o;
 }
@@ -497,7 +493,6 @@ uint get_ad(int s, int o) {
  * (8086) Get next instruction location
  * Returns: CS:IP effective address
  */
-extern (C)
 pragma(inline, true)
 uint get_ip() {
 	return get_ad(CPU.CS, CPU.IP);
@@ -505,7 +500,6 @@ uint get_ip() {
 
 /// RESET instruction function
 /// This function does not perform security checks
-extern (C)
 private void RESET() {
 	CPU.Mode = CPU_MODE_REAL;
 	CPU.Segment = SEG_NONE;
@@ -520,7 +514,6 @@ private void RESET() {
 /// Resets the entire vcpu. Does not refer to the RESET instruction!
 /// This sets all registers to 0. Segment is set to SET_NONE, and Mode is set
 /// to CPU_MODE_REAL. Useful in unittesting.
-extern (C)
 void fullreset() {
 	CPU = CPU_t();
 }
@@ -542,6 +535,59 @@ private enum : ushort {
 	MASK_OF = 0x800
 	// i486
 }
+
+//
+// Stack handling
+//
+
+/**
+ * (8086) Push a WORD value into stack.
+ * Params: value = WORD value to PUSH
+ */
+void push16(ushort value) {
+	CPU.SP -= 2;
+	mmiu16(value, get_ad(CPU.SS, CPU.SP));
+}
+
+/**
+ * (80206+) Push a WORD value into stack.
+ * Params: value = WORD value to PUSH
+ */
+void push16a(ushort value) {
+	mmiu16(value, get_ad(CPU.SS, CPU.SP));
+	CPU.SP -= 2;
+}
+
+/**
+ * Pop a WORD value from stack.
+ * Returns: WORD value
+ */
+ushort pop16() {
+	const uint addr = get_ad(CPU.SS, CPU.SP);
+	CPU.SP += 2;
+	return mmfu16(addr);
+}
+
+/**
+ * Push a DWORD value into stack.
+ * Params: value = DWORD value
+ */
+void push32(uint value) {
+	CPU.SP -= 4;
+	mmiu32(value, get_ad(CPU.SS, CPU.SP));
+}
+
+/**
+ * Pop a DWORD value from stack.
+ * Returns: WORD value
+ */
+uint pop32() {
+	const uint addr = get_ad(CPU.SS, CPU.SP);
+	CPU.SP += 2;
+	return mmfu32(addr);
+}
+
+extern (D):
 
 /**
  * Get FLAG as WORD.
@@ -604,60 +650,4 @@ private enum : ushort {
 /// Params: flag = EFLAG dword
 @property void EFLAG(uint flag) {
 	//TODO: EFLAG
-}
-
-//
-// Stack handling
-//
-
-/**
- * (8086) Push a WORD value into stack.
- * Params: value = WORD value to PUSH
- */
-extern (C)
-void push16(ushort value) {
-	CPU.SP -= 2;
-	mmiu16(value, get_ad(CPU.SS, CPU.SP));
-}
-
-/**
- * (80206+) Push a WORD value into stack.
- * Params: value = WORD value to PUSH
- */
-extern (C)
-void push16a(ushort value) {
-	mmiu16(value, get_ad(CPU.SS, CPU.SP));
-	CPU.SP -= 2;
-}
-
-/**
- * Pop a WORD value from stack.
- * Returns: WORD value
- */
-extern (C)
-ushort pop16() {
-	const uint addr = get_ad(CPU.SS, CPU.SP);
-	CPU.SP += 2;
-	return mmfu16(addr);
-}
-
-/**
- * Push a DWORD value into stack.
- * Params: value = DWORD value
- */
-extern (C)
-void push32(uint value) {
-	CPU.SP -= 4;
-	mmiu32(value, get_ad(CPU.SS, CPU.SP));
-}
-
-/**
- * Pop a DWORD value from stack.
- * Returns: WORD value
- */
-extern (C)
-uint pop32() {
-	const uint addr = get_ad(CPU.SS, CPU.SP);
-	CPU.SP += 2;
-	return mmfu32(addr);
 }
