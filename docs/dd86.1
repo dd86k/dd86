@@ -1,0 +1,71 @@
+." Hi! This manual (man page) was written by dd86k.
+." Please read man-pages(7) and groff_man(7) about the manual page format.
+."
+.TH DD/86 1 "January 2019" dd86k "User manual"
+.SH NAME
+dd86 -- Lightweight x86/DOS virtual machine and emulation layer
+
+.SH SYNOPSIS
+.SY dd86
+.OP \-vPN
+.RI [FILE
+.IR .\|.\|. ]
+.YS
+
+.SH DESCRIPTION
+.B DD/86
+is a simple 8086 virtual machine, aiming to run legacy MS-DOS applications on any platforms.
+
+For more information regarding technical internal implementations, please see the DD/86 Technical Reference Manual.
+
+.SH OPTIONS
+.IP -v
+Increments logging level by one. In release builds, this is initially set to silence. Not recommended for TUI applications.
+
+.IP -P
+Disable thread sleeping and cycle timing mechanisms.
+
+.IP -N
+Do not show starting messages.
+
+.IP FILE
+Start a program (COM, MZ), all additional after this accounts for FILE.
+
+.SH ERROR CODES
+This section addresses error codes, including panic error codes.
+
+Descriptions tagged with (cli) are codes used within the command-line interface.
+
+.EX
+Code		Hex		Description
+1		1H		(cli) Invalid or unknown parameter
+2		2H		(cli) File not found at given location
+3		3H		(cli) File could not be loaded
+255		FFH		Unknown error. Defaults to LOG_CRIT
+57005		DEADH		Manually initiated panic screen
+.EE
+
+.SH WARNINGS
+This project is still currently going under active development.
+
+.SH NOTES
+None at this moment.
+
+.SH BUGS
+Likely a lot. Please file an Issue on Github if you find any.
+
+.SH AUTHOR
+The DD/86 project, the DD/86 Technical Reference Manual, and this manpage was
+written by dd86k.
+
+.SH CONTACT
+.UR https://github.com/dd86k/dd86
+Homepage:
+.UE
+
+.MT devddstuff@gmail.com
+Email:
+.ME
+
+.SH HISTORY
+This project started in early January 2017.
