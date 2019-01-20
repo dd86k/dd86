@@ -11,13 +11,13 @@ import vdos.video;
 import logger;
 import appconfig : __MM_SYS_DOS, INIT_MEM;
 
-enum BANNER = 
-	`_______ _______        _______  ______  _______`~"\n"~
-	`|  __  \|  __  \  ___  |  __  \/  __  \/ _____/`~"\n"~
-	`| |  \ || |  \ | |___| | |  \ || /  \ |\____ \` ~"\n"~
-	`| |__/ || |__/ |       | |__/ || \__/ |_____\ \`~"\n"~
-	`|______/|______/       |______/\______/\______/`~"\n"
-	; /// ASCII banner screen, fancy!
+/// Project logo, fancy!
+enum LOGO =
+	`_______ _______     ___ ______   ______`~"\n"~
+	`|  __  \|  __  \   /  //  __  \ / ____/`~"\n"~
+	`| |  \ || |  \ |  /  / \ \__/ //  __ \`~"\n"~
+	`| |__/ || |__/ | /  /  / /__\ \| \__\ \`~"\n"~
+	`|______/|______//__/   \______/\______/`~"\n";
 
 /// OEM IDs
 enum OEM_ID { // Used for INT 21h AH=30 so far.
@@ -69,22 +69,22 @@ void print_regs() {
 		CPU.CS, CPU.DS, CPU.ES, CPU.FS, CPU.GS, CPU.SS
 	);
 	v_put("EFLAG=");
-	if (CPU.OF) v_putn("OF ");
-	if (CPU.DF) v_putn("DF ");
-	if (CPU.IF) v_putn("IF ");
-	if (CPU.TF) v_putn("TF ");
-	if (CPU.SF) v_putn("SF ");
-	if (CPU.ZF) v_putn("ZF ");
-	if (CPU.AF) v_putn("AF ");
-	if (CPU.PF) v_putn("PF ");
-	if (CPU.CF) v_putn("CF ");
+	if (CPU.OF) v_putln("OF ");
+	if (CPU.DF) v_putln("DF ");
+	if (CPU.IF) v_putln("IF ");
+	if (CPU.TF) v_putln("TF ");
+	if (CPU.SF) v_putln("SF ");
+	if (CPU.ZF) v_putln("ZF ");
+	if (CPU.AF) v_putln("AF ");
+	if (CPU.PF) v_putln("PF ");
+	if (CPU.CF) v_putln("CF ");
 	//TODO: Print rest of flags
 	v_printf("(%Xh)\n", FLAG);
 }
 
 extern (C)
 void print_stack() {
-	v_putn("print_stack::Not implemented");
+	v_putln("print_stack::Not implemented");
 }
 
 extern (C)
@@ -96,7 +96,7 @@ void panic(ushort code,
 	enum RANGE = 26, TARGET = (RANGE / 2) - 1;
 	v_printf(
 		"\n\n\n\n"~
-		"A fatal exception occured, which DD-DOS couldn't recover.\n\n"~
+		"A fatal exception occured, which DD/86 couldn't recover.\n\n"~
 		"STOP: %4Xh (%s L%d)\nEXEC:\n",
 		code, name, line
 	);

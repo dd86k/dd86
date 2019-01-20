@@ -1,11 +1,10 @@
-┌─────────────────────────────────────────────────────┐
-│ ┌──────┐ ┌──────┐        ┌──────┐ ┌──────┐ ┌──────┐ │
-│ │ ┌──┐ └┐│ ┌──┐ └┐ ┌───┐ │ ┌──┐ └┐│ ┌──┐ │┌┘ ────┬┘ │
-│ │ │  │  ││ │  │  │ └───┘ │ │  │  ││ │  │ │└────┐ │  │
-│ │ └──┘ ┌┘│ └──┘ ┌┘       │ └──┘ ┌┘│ └──┘ │┌────┘ │  │
-│ └──────┘ └──────┘        └──────┘ └──────┘└──────┘  │
-└─────────────────────────────────────────────────────┘
-DD-DOS - IBM PC Virtual Machine and DOS Emulation Layer
+_______ _______     ___ ______   ______
+|  __  \|  __  \   /  //  __  \ / ____/
+| |  \ || |  \ |  /  / \ \__/ //  __ \
+| |__/ || |__/ | /  /  / /__\ \| \__\ \
+|______/|______//__/   \______/\______/
+DD/86
+IBM PC Virtual Machine and DOS Emulation Layer
 
 This project aims to be a complete IBM PC emulation layer for DOS
 applications, like NTVDM and dosemu, for multiple operating systems.
@@ -14,16 +13,16 @@ applications, like NTVDM and dosemu, for multiple operating systems.
 - Thomas Edison
 
 Project homes:
-	https://git.dd86k.space/dd86k/dd-dos
-	https://github.com/dd86k/dd-dos (mirror)
+	https://git.dd86k.space/dd86k/dd86
+	https://github.com/dd86k/dd86 (mirror)
 
 ┌───────────────┐
 │ DOCUMENTATION │
 └───────────────┘
 
 Manuals
-	User: docs/dd-dos.1
-	Technical: https://dd86k.space/docs/dd-dos-manual.pdf
+	User: docs/dd86.1
+	Technical: https://dd86k.space/docs/dd86-manual.pdf
 
 For operating system support,
 	see docs/SUPPORT.

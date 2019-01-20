@@ -41,7 +41,7 @@ SHL_S:
 
 	switch (vdos_command(cast(immutable)inbuf)) {
 	case -1, -2:
-		v_putn("Bad command or file name");
+		v_putln("Bad command or file name");
 		goto SHL_S;
 	case -3:
 		//TODO: Proper application exit
@@ -118,7 +118,7 @@ int vdos_command(const(char) *command) {
 	if (strcmp(*argv, "cd") == 0 || strcmp(*argv, "chdir") == 0) {
 		if (argc > 1) {
 			if (strcmp(argv[1], "/?") == 0) {
-				v_putn(
+				v_putln(
 					"Display or set current working directory\n"~
 					"  CD or CHDIR [FOLDER]\n\n"~
 					"By default, CD will display the current working directory"
@@ -127,14 +127,14 @@ int vdos_command(const(char) *command) {
 				if (os_pisdir(*(argv + 1))) {
 					os_scwd(*(argv + 1));
 				} else {
-					v_putn("Directory not found or entry is not a directory");
+					v_putln("Directory not found or entry is not a directory");
 				}
 			}
 		} else {
 			if (os_gcwd(cast(char*)command))
-				v_putn(command);
+				v_putln(command);
 			else
-				v_putn("Error getting current directory");
+				v_putln("Error getting current directory");
 			return 2;
 		}
 		return 0;
@@ -170,13 +170,13 @@ int vdos_command(const(char) *command) {
 
 	if (strcmp(*argv, "echo") == 0) {
 		if (argc == 1) {
-			v_putn("ECHO is on");
+			v_putln("ECHO is on");
 		} else {
 			for (int i = 1; i < argc; ++i) {
 				v_put(cast(immutable)argv[i]);
 				v_put(" ");
 			}
-			v_putn;
+			v_putln;
 		}
 		return 0;
 	}
@@ -185,17 +185,17 @@ int vdos_command(const(char) *command) {
 	// H
 
 	if (strcmp(*argv, "help") == 0) {
-		v_putn(
+		v_putln(
 			"Internal commands available\n\n"~
 			"CD .......... Change working directory\n"~
 			"CLS ......... Clear screen\n"~
 			"DATE ........ Get current date\n"~
 			"DIR ......... Show directory content\n"~
-			"EXIT ........ Exit DD-DOS or script\n"~
+			"EXIT ........ Exit interactive session or script\n"~
 			"TREE ........ Show directory structure\n"~
 			"TIME ........ Get current time\n"~
 			"MEM ......... Show memory information\n"~
-			"VER ......... Show DD-DOS and MS-DOS version"
+			"VER ......... Show emulator and MS-DOS versions"
 		);
 		return 0;
 	}
@@ -234,12 +234,12 @@ int vdos_command(const(char) *command) {
 			);
 			return 0;
 		} else if (strcmp(argv[1], "/debug") == 0) {
-			v_putn("Not implemented");
+			v_putln("Not implemented");
 		} else if (strcmp(argv[1], "/free") == 0) {
-			v_putn("Not implemented");
+			v_putln("Not implemented");
 		} else if (strcmp(argv[1], "/?") == 0) {
 MEM_HELP:
-			v_putn(
+			v_putln(
 				"Display memory statistics\n"~
 				"MEM [OPTIONS]\n\n"~
 				"OPTIONS\n"~
@@ -250,7 +250,7 @@ MEM_HELP:
 			);
 			return 0;
 		}
-		v_putn("Not implemented. Only /stats is implemented");
+		v_putln("Not implemented. Only /stats is implemented");
 		return 0;
 	}
 
@@ -268,7 +268,7 @@ MEM_HELP:
 
 	if (strcmp(*argv, "ver") == 0) {
 		v_printf(
-			"DD-DOS v"~APP_VERSION~
+			"DD/86 v"~APP_VERSION~
 			", reporting MS-DOS v%d.%d (compiled: %d.%d)\n",
 			MajorVersion, MinorVersion,
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION
@@ -279,7 +279,7 @@ MEM_HELP:
 	// ? -- debugging
 
 	if (strcmp(*argv, "??") == 0) {
-		v_putn(
+		v_putln(
 `?load FILE  Load an executable FILE into memory
 ?p          Toggle performance mode
 ?panic      Manually panic
@@ -296,8 +296,8 @@ MEM_HELP:
 				CPU.CS = 0; CPU.IP = 0x100; // Temporary
 				vdos_load(argv[1]);
 			} else
-				v_putn("File not found");
-		} else v_putn("Executable required");
+				v_putln("File not found");
+		} else v_putln("Executable required");
 		return 0;
 	}
 	if (strcmp(*argv, "?run") == 0) {
@@ -310,41 +310,41 @@ MEM_HELP:
 			switch (argv[1][0]) {
 			case '0', 's':
 				LOGLEVEL = LOG_DEBUG;
-				v_putn("DEBUG");
+				v_putln("DEBUG");
 				break;
 			case '1', 'c':
 				LOGLEVEL = LOG_CRIT;
-				v_putn("CRTICAL");
+				v_putln("CRTICAL");
 				break;
 			case '2', 'e':
 				LOGLEVEL = LOG_ERROR;
-				v_putn("ERRORS");
+				v_putln("ERRORS");
 				break;
 			case '3', 'w':
 				LOGLEVEL = LOG_WARN;
-				v_putn("WARNINGS");
+				v_putln("WARNINGS");
 				break;
 			case '4', 'i':
 				LOGLEVEL = LOG_INFO;
-				v_putn("INFORMAL");
+				v_putln("INFORMAL");
 				break;
 			case '5', 'd':
 				LOGLEVEL = LOG_DEBUG;
-				v_putn("DEBUG");
+				v_putln("DEBUG");
 				break;
 			default:
-				v_putn("Invalid log level");
+				v_putln("Invalid log level");
 			} // switch
 		} else if (LOGLEVEL) {
 			LOGLEVEL = LOG_SILENCE;
-			v_putn("SILENCE");
+			v_putln("SILENCE");
 		} else {
 			debug {
 				LOGLEVEL = LOG_DEBUG;
-				v_putn("DEBUG");
+				v_putln("DEBUG");
 			} else {
 				LOGLEVEL = LOG_INFO;
-				v_putn("INFO");
+				v_putln("INFO");
 			}
 		}
 		return 0;
@@ -425,7 +425,7 @@ READ_S:
 	case Key.Enter:
 		buf[s] = '\n';
 		buf[s + 1] = 0;
-		v_putn;
+		v_putln;
 		return s + 2;
 	case Key.Home:
 		i = 0;

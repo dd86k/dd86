@@ -4,7 +4,7 @@ import vcpu.core : CPU;
 import vdos.os, vdos.interrupts;
 
 unittest {
-	section("DD-DOS (MS-DOS, IBM PC)");
+	section("DOS (MS-DOS, IBM PC)");
 
 	/*
 	 * Hardware (and/or BIOS)

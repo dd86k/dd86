@@ -4,12 +4,17 @@ dd-dos.exe
 dd-dos-test-library.exe
 dd-dos
 dd-dos-test-library
+dd86.exe
+dd86-test-library.exe
+dd86
+dd86-test-library
 dub.selections.json
+
 # dub_platform_probe*.s files
 dub*.s
 *.lst
 
-# DD-DOS generated
+# DD/86 generated
 ddoc
 
 # Personal stuff

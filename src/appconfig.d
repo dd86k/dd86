@@ -1,15 +1,15 @@
 /**
- * appconfig: DD-DOS compilation configuration settings and messages
+ * appconfig: DD/86 compilation configuration settings and messages
  *
  * Pragmas of type msg are only allowed here.
  */
 module appconfig;
 
 import os.sleep : SLEEP_TIME;
-import vdos.os : BANNER, DOS_MAJOR_VERSION, DOS_MINOR_VERSION;
+import vdos.os : LOGO, DOS_MAJOR_VERSION, DOS_MINOR_VERSION;
 import vdos.structs;
 
-pragma(msg, BANNER);
+pragma(msg, LOGO);
 
 debug {
 	pragma(msg, "[DEBUG]\tON");
@@ -19,11 +19,11 @@ debug {
 	enum BUILD_TYPE = "RELEASE";	/// For printing purposes
 }
 
-pragma(msg, "[DOS]\tDD-DOS version: ", APP_VERSION);
+pragma(msg, "[DOS]\tDD/86 version: ", APP_VERSION);
 pragma(msg, "[DOS]\tMS-DOS version: ", DOS_MAJOR_VERSION, ".", DOS_MINOR_VERSION);
 
 version (BigEndian) pragma(msg,
-`WARNING: DD-DOS has not been tested on big-endian platforms!
+`WARNING: DD/86 has not been tested on big-endian platforms!
 You might want to run 'dub test' beforehand to check if everything is OK.
 `);
 
@@ -70,7 +70,7 @@ version (X86) {
 
 }
 
-enum APP_VERSION = "0.0.0"; /// DD-DOS version
+enum APP_VERSION = "0.0.0"; /// DD/86 version
 
 //
 // CPU

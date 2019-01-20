@@ -13,7 +13,7 @@ import vdos.structs : MZ_HDR, MZ_HDR_SIZE, MZ_RLC, PSP_t;
 import vdos.codes;
 import logger;
 import ddc : NULL_CHAR;
-import vdos.video : v_printf, v_putn;
+import vdos.video : v_printf, v_putln;
 
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;
@@ -116,7 +116,7 @@ int vdos_load(const(char) *path) {
 			// temporary value
 			//ushort rel = 0x2000; // usually the loading segment
 			int i;
-			debug v_putn(" #    seg: off -> loadseg");
+			debug v_putln(" #    seg: off -> loadseg");
 			do {
 				const int addr = get_ad(r.segment, r.offset); // 2.
 				const ushort loadseg = mmfu16(addr); /// 3. Load segment

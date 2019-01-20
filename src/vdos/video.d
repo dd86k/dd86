@@ -295,7 +295,7 @@ void screen_clear() {
 	for (size_t i; i < t; ++i) v[i] = 0x0700_0700;
 }
 
-/// Print the pretty DD-DOS logo
+/// Print the pretty logo
 void screen_logo() {
 	// ┌─────────────────────────────────────────────────────┐
 	// │ ┌──────┐ ┌──────┐        ┌──────┐ ┌──────┐ ┌──────┐ │
@@ -352,7 +352,7 @@ void v_put(const(char) *s) {
  * This function affects the virtual system cursor position.
  * Equivalent to fputs(s, stdout).
  * Params:
- *   s = String, null-terminated
+ *   s = String
  *   size = String length
  */
 void v_put_s(const(char) *s, uint size) {
@@ -368,7 +368,7 @@ void v_put_s(const(char) *s, uint size) {
  * Params:
  *   s = String (optional)
  */
-void v_putn(const(char) *s = null) {
+void v_putln(const(char) *s = null) {
 	if (s) v_put(s);
 	v_putc('\n');
 }

@@ -6,7 +6,7 @@ module main;
 import core.stdc.string : strcmp;
 import ddc : puts, printf, fputs, stderr, stdout;
 import vcpu.core : vcpu_init, vcpu_run, opt_sleep;
-import vdos.os : BANNER, SYSTEM, vdos_init;
+import vdos.os : LOGO, SYSTEM, vdos_init;
 import vdos.shell : vdos_shell;
 import vdos.codes;
 import vdos.loader : vdos_load;
@@ -27,11 +27,11 @@ enum COPYRIGHT = "Copyright (c) 2017-2019 dd86k\n\n";
 /// Print version screen to stdout
 void _version() {
 	printf(
-		BANNER~
+		LOGO~
 		DESCRIPTION~
 		COPYRIGHT~
-		"dd-dos-"~PLATFORM~" v"~APP_VERSION~"-"~BUILD_TYPE~" ("~__TIMESTAMP__~")\n"~
-		"Homepage: <https://git.dd86k.space/dd86k/dd-dos>\n"~
+		"DD/86-"~PLATFORM~" v"~APP_VERSION~"-"~BUILD_TYPE~" ("~__TIMESTAMP__~")\n"~
+		"Homepage: <https://git.dd86k.space/dd86k/dd86>\n"~
 		"License: MIT <https://opensource.org/licenses/MIT>\n"~
 		"Compiler: "~__VENDOR__~" v%d\n"~
 		"Runtime: "~C_RUNTIME~" v%d\n",
@@ -44,8 +44,8 @@ void help() {
 	puts(
 		DESCRIPTION~
 		"USAGE\n"~
-		"	dd-dos [-vPN] [FILE [FILEARGS]]\n"~
-		"	dd-dos {-V|--version|-h|--help}\n\n"~
+		"	dd86 [-vPN] [FILE [FILEARGS]]\n"~
+		"	dd86 {-V|--version|-h|--help}\n\n"~
 		"OPTIONS\n"~
 		"	-P	Do not sleep between cycles\n"~
 		"	-N	Remove starting messages and banner\n"~
@@ -156,7 +156,7 @@ NO_ARGS:
 	//TODO: Read settings here
 
 	//
-	// Welcome to DD-DOS
+	// Welcome to DD/86
 	//
 
 	//sleep_init;	// sleep timers
@@ -166,8 +166,8 @@ NO_ARGS:
 
 	if (arg_info) {
 		v_printf(
-			"Starting DD-DOS...\n\n"~
-			"DD-DOS Ver "~APP_VERSION~" "~__DATE__~"\n"~
+			"Starting DD/86...\n\n"~
+			"Ver "~APP_VERSION~" "~__DATE__~"\n"~
 			"Processor: Intel 8086\n"~
 			"Memory: %dK OK\n\n",
 			SYSTEM.memsize);

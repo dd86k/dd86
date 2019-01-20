@@ -64,9 +64,9 @@ enum : ubyte {
 +/
 
 /*
- * DD-DOS Critical Error Codes
+ * DD/86 Critical Error Codes
  * Prefix: PANIC_
- * Source: DD-DOS Technical Reference Manual
+ * Source: DD/86 Technical Reference Manual
  */
 enum : ushort {
 	PANIC_FILE_NOT_LOADED	= 0x03,

@@ -1,4 +1,4 @@
-# DD-DOS source folder structure
+# DD/86 source folder structure
 
 | Folder | Description |
 |---|---|
@@ -8,7 +8,7 @@
 | src/vdos | Virtual DOS system, shell, and machine |
 
 ```
-|------------ DD-DOS ------------|
+|------------ DD/86 -------------|
 +------+     +------+     +------+     +-----------+
 | vcpu | <=> | vdos | <=> | os.* | <=> | OS (host) |
 +------+     +------+     +------+     +-----------+
