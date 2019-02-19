@@ -9,6 +9,9 @@ import core.stdc.stdlib : malloc;
 import vcpu.core : MEMORY;
 import vdos.os : SYSTEM;
 
+nothrow:
+@nogc:
+
 private enum __EGA_ADDRESS = 0xA_0000;
 private enum __MDA_ADDRESS = 0xB_0000;
 private enum __VGA_ADDRESS = 0xB_8000;

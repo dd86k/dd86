@@ -8,6 +8,9 @@ module vcpu.utils;
 import vcpu.core, vcpu.mm;
 import logger;
 
+nothrow:
+@nogc:
+
 //
 // CPU Flag handling utilities
 //
@@ -18,13 +21,13 @@ import logger;
  * Params: r = Operation result
  */
 extern (C)
-void __hflag8_1(int r) {
-	setZF(r);
-	setAF_8(r);
-	setSF_8(r);
-	setPF_8(r);
-	setOF_8(r);
-	setCF_8(r);
+void cpuf8_1(int r) {
+	ZF(r);
+	AF8(r);
+	SF8(r);
+	PF8(r);
+	OF8(r);
+	CF8(r);
 }
 
 /**
@@ -33,13 +36,13 @@ void __hflag8_1(int r) {
  * Params: r = Operation result
  */
 extern (C)
-void __hflag16_1(int r) {
-	setZF(r);
-	setAF_16(r);
-	setSF_16(r);
-	setPF_16(r);
-	setOF_16(r);
-	setCF_16(r);
+void cpuf16_1(int r) {
+	ZF(r);
+	AF16(r);
+	SF16(r);
+	PF16(r);
+	OF16(r);
+	CF16(r);
 }
 
 /**
@@ -49,12 +52,12 @@ void __hflag16_1(int r) {
  * Params: r = Operation result
  */
 extern (C)
-void __hflag8_2(int r) {
-	setZF(r);
-	setAF_8(r);
-	setSF_8(r);
-	setPF_8(r);
-	setOF_8(r);
+void cpuf8_2(int r) {
+	ZF(r);
+	AF8(r);
+	SF8(r);
+	PF8(r);
+	OF8(r);
 }
 
 /**
@@ -64,12 +67,12 @@ void __hflag8_2(int r) {
  * Params: r = Operation result
  */
 extern (C)
-void __hflag16_2(int r) {
-	setZF(r);
-	setAF_16(r);
-	setSF_16(r);
-	setPF_16(r);
-	setOF_16(r);
+void cpuf16_2(int r) {
+	ZF(r);
+	AF16(r);
+	SF16(r);
+	PF16(r);
+	OF16(r);
 }
 
 /**
@@ -80,10 +83,10 @@ void __hflag16_2(int r) {
  * Params: r = Input number
  */
 extern (C)
-void __hflag8_3(int r) {
-	setZF(r);
-	setSF_8(r);
-	setPF_8(r);
+void cpuf8_3(int r) {
+	ZF(r);
+	SF8(r);
+	PF8(r);
 	CPU.OF = CPU.CF = 0;
 }
 
@@ -95,10 +98,10 @@ void __hflag8_3(int r) {
  * Params: r = Input number
  */
 extern (C)
-void __hflag16_3(int r) {
-	setZF(r);
-	setSF_16(r);
-	setPF_16(r);
+void cpuf16_3(int r) {
+	ZF(r);
+	SF16(r);
+	PF16(r);
 	CPU.OF = CPU.CF = 0;
 }
 
@@ -109,9 +112,9 @@ void __hflag16_3(int r) {
  * Params: r = Input number
  */
 extern (C)
-void __hflag8_4(int r) {
-	setOF_8(r);
-	setCF_8(r);
+void cpuf8_4(int r) {
+	OF8(r);
+	CF8(r);
 }
 
 /**
@@ -121,9 +124,9 @@ void __hflag8_4(int r) {
  * Params: r = Input number
  */
 extern (C)
-void __hflag16_4(int r) {
-	setOF_16(r);
-	setCF_16(r);
+void cpuf16_4(int r) {
+	OF16(r);
+	CF16(r);
 }
 
 /**
@@ -133,10 +136,10 @@ void __hflag16_4(int r) {
  * Params: r = Input number
  */
 extern (C)
-void __hflag8_5(int r) {
-	setZF(r);
-	setSF_8(r);
-	setPF_8(r);
+void cpuf8_5(int r) {
+	ZF(r);
+	SF8(r);
+	PF8(r);
 }
 
 /**
@@ -146,50 +149,77 @@ void __hflag8_5(int r) {
  * Params: r = Input number
  */
 extern (C)
-void __hflag16_5(int r) {
-	setZF(r);
-	setSF_16(r);
-	setPF_16(r);
+void cpuf16_5(int r) {
+	ZF(r);
+	SF16(r);
+	PF16(r);
+}
+
+extern (C)
+void cpuf32_1(long r) {
+	ZF(r);
+	AF32(r);
+	SF32(r);
+	PF32(r);
+	OF32(r);
+	CF32(r);
 }
 
 //
 // Conditional flag handlers
 //
 
-extern (C)
 pragma(inline, true) {
-	void setCF_8(int r) {
-		CPU.CF = (r & 0x100) != 0;
-	}
-	void setCF_16(int r) {
-		CPU.CF = (r & 0x10000) != 0;
-	}
-	void setPF_8(int r) {
-		CPU.PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0; // XNOR(TEMP[0:7]);
-	}
-	void setPF_16(int r) {
-		CPU.PF = ~(cast(ushort)r ^ cast(ushort)r) != 0;
-	}
-	void setAF_8(int r) {
-		CPU.AF = (r & 0x10) != 0;
-	}
-	void setAF_16(int r) {
-		CPU.AF = (r & 0x100) != 0;
-	}
-	void setZF(int r) {
+	void ZF(int r) {
 		CPU.ZF = r == 0;
 	}
-	void setSF_8(int r) {
+	void ZF(long r) {
+		CPU.ZF = r == 0;
+	}
+	void CF8(int r) {
+		CPU.CF = (r & 0x100) != 0;
+	}
+	void PF8(int r) {
+		CPU.PF = ~(cast(ubyte)r ^ cast(ubyte)r) != 0; // XNOR(TEMP[0:7]);
+	}
+	void SF8(int r) {
 		CPU.SF = (r & 0x80) != 0;
 	}
-	void setSF_16(int r) {
-		CPU.SF = (r & 0x8000) != 0;
+	void AF8(int r) {
+		CPU.AF = (r & 0x10) != 0;
 	}
-	void setOF_8(int r) {
+	void OF8(int r) {
 		CPU.OF = r > 0xFF || r < 0;
 	}
-	void setOF_16(int r) {
+	void PF16(int r) {
+		CPU.PF = ~(cast(ushort)r ^ cast(ushort)r) != 0;
+	}
+	void CF16(int r) {
+		CPU.CF = (r & 0x1_0000) != 0;
+	}
+	void AF16(int r) {
+		CPU.AF = (r & 0x100) != 0;
+	}
+	void SF16(int r) {
+		CPU.SF = (r & 0x8000) != 0;
+	}
+	void OF16(int r) {
 		CPU.OF = r > 0xFFFF || r < 0;
+	}
+	void PF32(long r) {
+		CPU.PF = ~(cast(uint)r ^ cast(uint)r) != 0;
+	}
+	void CF32(long r) {
+		CPU.CF = (r & 0x1_0000_0000) != 0;
+	}
+	void AF32(long r) {
+		CPU.AF = (r & 0x100_0000) != 0;
+	}
+	void SF32(long r) {
+		CPU.SF = (r & 0x8000_0000) != 0;
+	}
+	void OF32(long r) {
+		CPU.OF = r > 0xFFFF_FFFF || r < 0;
 	}
 }
 

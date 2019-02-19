@@ -15,6 +15,9 @@ import logger;
 import ddc : NULL_CHAR;
 import vdos.video : v_printf, v_putln;
 
+nothrow:
+@nogc:
+
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;
 private enum ZM_MAGIC = 0x4D5A;

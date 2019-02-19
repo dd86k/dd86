@@ -5,6 +5,9 @@ module logger;
 
 import vdos.video, vdos.codes;
 
+nothrow:
+@nogc:
+
 enum {
 	LOG_SILENCE	= 0,	/// Complete silence
 	LOG_CRIT	= 1,	/// Non-recoverable errors, program stopped

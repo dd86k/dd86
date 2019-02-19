@@ -8,6 +8,8 @@ import vdos.interrupts;
 import logger;
 
 extern (C):
+nothrow:
+@nogc:
 
 /**
  * Execute an instruction in REAL mode
@@ -33,7 +35,7 @@ void v16_add_rm8_reg8() {	// 00h ADD R/M8, REG8
 	case RM_REG_111: r += CPU.BH; break;
 	default:
 	}
-	__hflag8_1(r);
+	cpuf8_1(r);
 	mmiu8(r, addr);
 	CPU.EIP += 2;
 }
@@ -53,7 +55,7 @@ void v16_add_rm16_reg16() {	// 01h ADD R/M16, REG16
 	case RM_REG_111: r += CPU.DI; break;
 	default:
 	}
-	__hflag16_1(r);
+	cpuf16_1(r);
 	mmiu16(r, addr);
 	CPU.EIP += 2;
 }
@@ -73,7 +75,7 @@ void v16_add_reg8_rm8() {	// 02h ADD REG8, R/M8
 	case RM_REG_111: r += CPU.BH; CPU.BH = cast(ubyte)r; break;
 	default:
 	}
-	__hflag8_1(r);
+	cpuf8_1(r);
 	CPU.EIP += 2;
 }
 
@@ -92,20 +94,20 @@ void v16_add_reg16_rm16() {	// 03h ADD REG16, R/M16
 	case RM_REG_111: r += CPU.DI; CPU.DI = cast(ushort)r; break;
 	default:
 	}
-	__hflag16_1(r);
+	cpuf16_1(r);
 	CPU.EIP += 2;
 }
 
 void v16_add_al_imm8() {	// 04h ADD AL, IMM8
 	const int r = CPU.AL + mmfu8_i;
-	__hflag8_1(r);
+	cpuf8_1(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
 void v16_add_ax_imm16() {	// 05h ADD AX, IMM16
 	const int r = CPU.AX + mmfu16_i;
-	__hflag16_1(r);
+	cpuf16_1(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 2;
 }
@@ -135,7 +137,7 @@ void v16_or_rm8_reg8() {	// 08h OR R/M8, REG8
 	case RM_REG_111: r |= CPU.BH; break;
 	default:
 	}
-	__hflag8_3(r);
+	cpuf8_3(r);
 	mmiu8(r, addr);
 	CPU.EIP += 2;
 }
@@ -155,7 +157,7 @@ void v16_or_rm16_reg16() {	// 09h OR R/M16, REG16
 	case RM_REG_111: r |= CPU.DI; break;
 	default:
 	}
-	__hflag16_3(r);
+	cpuf16_3(r);
 	mmiu16(r, addr);
 	CPU.EIP += 2;
 }
@@ -175,7 +177,7 @@ void v16_or_reg8_rm8() {	// 0Ah OR REG8, R/M8
 	case RM_REG_111: r |= CPU.BH; CPU.BH = cast(ubyte)r; break;
 	default:
 	}
-	__hflag8_3(r);
+	cpuf8_3(r);
 	CPU.EIP += 2;
 }
 
@@ -194,20 +196,20 @@ void v16_or_reg16_rm16() {	// 0Bh OR REG16, R/M16
 	case RM_REG_111: r |= CPU.DI; CPU.DI = cast(ushort)r; break;
 	default:
 	}
-	__hflag16_3(r);
+	cpuf16_3(r);
 	CPU.EIP += 2;
 }
 
 void v16_or_al_imm8() {	// 0Ch OR AL, IMM8
 	const int r = CPU.AL | mmfu8_i;
-	__hflag8_3(r);
+	cpuf8_3(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
 void v16_or_ax_imm16() {	// 0Dh OR AX, IMM16
 	const int r = CPU.AX | mmfu16_i;
-	__hflag16_3(r);
+	cpuf16_3(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
@@ -233,7 +235,7 @@ void v16_adc_rm8_reg8() {	// 10h ADC R/M8, REG8
 	default:
 	}
 	if (CPU.CF) ++r;
-	__hflag8_3(r);
+	cpuf8_3(r);
 	mmiu8(r, addr);
 	CPU.EIP += 2;
 }
@@ -254,7 +256,7 @@ void v16_adc_rm16_reg16() {	// 11h ADC R/M16, REG16
 	default:
 	}
 	if (CPU.CF) ++r;
-	__hflag16_3(r);
+	cpuf16_3(r);
 	mmiu16(r, addr);
 	CPU.EIP += 2;
 }
@@ -275,7 +277,7 @@ void v16_adc_reg8_rm8() {	// 12h ADC REG8, R/M8
 	case RM_REG_111: r += CPU.BH; CPU.BH = cast(ubyte)r; break;
 	default:
 	}
-	__hflag8_3(r);
+	cpuf8_3(r);
 	CPU.EIP += 2;
 }
 
@@ -295,13 +297,13 @@ void v16_adc_reg16_rm16() {	// 13h ADC REG16, R/M16
 	case RM_REG_111: r += CPU.DI; CPU.DI = cast(ushort)r; break;
 	default:
 	}
-	__hflag16_3(r);
+	cpuf16_3(r);
 	CPU.EIP += 2;
 }
 
 void v16_adc_al_imm8() {	// 14h ADC AL, IMM8
 	int r = CPU.AL + mmfu8_i;
-	__hflag8_1(r);
+	cpuf8_1(r);
 	if (CPU.CF) ++r;
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
@@ -309,7 +311,7 @@ void v16_adc_al_imm8() {	// 14h ADC AL, IMM8
 
 void v16_adc_ax_imm16() {	// 15h ADC AX, IMM16
 	int r = CPU.AX + mmfu16_i;
-	__hflag16_1(r);
+	cpuf16_1(r);
 	if (CPU.CF) ++r;
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
@@ -341,7 +343,7 @@ void v16_sbb_rm8_reg8() {	// 18h SBB R/M8, REG8
 	default:
 	}
 	if (CPU.CF) --r;
-	__hflag8_3(r);
+	cpuf8_3(r);
 	mmiu8(r, addr);
 	CPU.EIP += 2;
 }
@@ -362,7 +364,7 @@ void v16_sbb_rm16_reg16() {	// 19h SBB R/M16, REG16
 	default:
 	}
 	if (CPU.CF) --r;
-	__hflag16_3(r);
+	cpuf16_3(r);
 	mmiu16(r, addr);
 	CPU.EIP += 2;
 }
@@ -383,7 +385,7 @@ void v16_sbb_reg8_rm8() {	// 1Ah SBB REG8, R/M8
 	case RM_REG_111: r = CPU.BH - r; CPU.BH = cast(ubyte)r; break;
 	default:
 	}
-	__hflag8_3(r);
+	cpuf8_3(r);
 	CPU.EIP += 2;
 }
 
@@ -403,14 +405,14 @@ void v16_sbb_reg16_rm16() {	// 1Bh SBB REG16, R/M16
 	case RM_REG_111: r = CPU.DI - r; CPU.DI = cast(ushort)r; break;
 	default:
 	}
-	__hflag16_3(r);
+	cpuf16_3(r);
 	CPU.EIP += 2;
 }
 
 void v16_sbb_al_imm8() {	// 1Ch SBB AL, IMM8
 	int r = CPU.AL - mmfu8_i;
 	if (CPU.CF) --r;
-	__hflag8_3(r);
+	cpuf8_3(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
@@ -418,7 +420,7 @@ void v16_sbb_al_imm8() {	// 1Ch SBB AL, IMM8
 void v16_sbb_ax_imm16() {	// 1Dh SBB AX, IMM16
 	int r = CPU.AX - mmfu16_i;
 	if (CPU.CF) --r;
-	__hflag16_3(r);
+	cpuf16_3(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
@@ -448,7 +450,7 @@ void v16_and_rm8_reg8() {	// 20h AND R/M8, REG8
 	case RM_REG_111: r &= CPU.BL; break;
 	default:
 	}
-	__hflag8_3(r);
+	cpuf8_3(r);
 	mmiu8(r, addr);
 	CPU.EIP += 2;
 }
@@ -468,7 +470,7 @@ void v16_and_rm16_reg16() {	// 21h AND R/M16, REG16
 	case RM_REG_111: r &= CPU.DI; break;
 	default:
 	}
-	__hflag16_3(r);
+	cpuf16_3(r);
 	mmiu16(r, addr);
 	CPU.EIP += 2;
 }
@@ -488,7 +490,7 @@ void v16_and_reg8_rm8() {	// 22h AND REG8, R/M8
 	case RM_REG_111: r = CPU.BH & r; CPU.BH = cast(ubyte)r; break;
 	default:
 	}
-	__hflag8_3(r);
+	cpuf8_3(r);
 	CPU.EIP += 2;
 }
 
@@ -507,20 +509,20 @@ void v16_and_reg16_rm16() {	// 23h AND REG16, R/M16
 	case RM_REG_111: r = CPU.DI & r; CPU.DI = cast(ushort)r; break;
 	default:
 	}
-	__hflag16_3(r);
+	cpuf16_3(r);
 	CPU.EIP += 2;
 }
 
 void v16_and_al_imm8() {	// 24h AND AL, IMM8
 	const int r = CPU.AL & mmfu8_i;
-	__hflag8_3(r);
+	cpuf8_3(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
 void v16_and_ax_imm16() {	// 25h AND AX, IMM16
 	const int r = CPU.AX & mmfu16_i;
-	__hflag16_3(r);
+	cpuf16_3(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
@@ -552,10 +554,9 @@ void v16_daa() {	// 27h DAA
 		CPU.AF = 0;
 	}
 
-
 	CPU.ZF = r == 0;
 	CPU.SF = r & 0x80;
-	setPF_8(r);
+	PF8(r);
 	CPU.AL = cast(ubyte)r;
 
 	++CPU.EIP;
@@ -576,7 +577,7 @@ void v16_sub_rm8_reg8() {	// 28h SUB R/M8, REG8
 	case RM_REG_111: r -= CPU.BH; break;
 	default:
 	}
-	__hflag8_1(r);
+	cpuf8_1(r);
 	mmiu8(r, addr);
 	CPU.EIP += 2;
 }
@@ -596,7 +597,7 @@ void v16_sub_rm16_reg16() {	// 29h SUB R/M16, REG16
 	case RM_REG_111: r -= CPU.DI; break;
 	default:
 	}
-	__hflag16_1(r);
+	cpuf16_1(r);
 	mmiu16(r, addr);
 	CPU.EIP += 2;
 }
@@ -616,7 +617,7 @@ void v16_sub_reg8_rm8() {	// 2Ah SUB REG8, R/M8
 	case RM_REG_111: r = CPU.BH - r; CPU.BH = cast(ubyte)r; break;
 	default:
 	}
-	__hflag8_1(r);
+	cpuf8_1(r);
 	CPU.EIP += 2;
 }
 
@@ -635,20 +636,20 @@ void v16_sub_reg16_rm16() {	// 2Bh SUB REG16, R/M16
 	case RM_REG_111: r = CPU.DI - r; CPU.DI = cast(ushort)r; break;
 	default:
 	}
-	__hflag16_1(r);
+	cpuf16_1(r);
 	CPU.EIP += 2;
 }
 
 void v16_sub_al_imm8() {	// 2Ch SUB AL, IMM8
 	const int r = CPU.AL - mmfu8_i;
-	__hflag8_1(r);
+	cpuf8_1(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
 void v16_sub_ax_imm16() {	// 2Dh SUB AX, IMM16
 	const int r = CPU.AX - mmfu16_i;
-	__hflag16_1(r);
+	cpuf16_1(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
@@ -692,7 +693,7 @@ void v16_xor_rm8_reg8() {	// 30h XOR R/M8, REG8
 	case RM_REG_111: r ^= CPU.BH; break;
 	default:
 	}
-	__hflag8_3(r);
+	cpuf8_3(r);
 	mmiu8(r, addr);
 	CPU.EIP += 2;
 }
@@ -712,7 +713,7 @@ void v16_xor_rm16_reg16() {	// 31h XOR R/M16, REG16
 	case RM_REG_111: r ^= CPU.DI; break;
 	default:
 	}
-	__hflag16_3(r);
+	cpuf16_3(r);
 	mmiu16(r, addr);
 	CPU.EIP += 2;
 }
@@ -732,7 +733,7 @@ void v16_xor_reg8_rm8() {	// 32h XOR REG8, R/M8
 	case RM_REG_111: r = CPU.BH ^ r; CPU.BH = cast(ubyte)r; break;
 	default:
 	}
-	__hflag8_3(r);
+	cpuf8_3(r);
 	CPU.EIP += 2;
 }
 
@@ -751,20 +752,20 @@ void v16_xor_reg16_rm16() {	// 33h XOR REG16, R/M16
 	case RM_REG_111: r = CPU.DI ^ r; CPU.DI = cast(ushort)r; break;
 	default:
 	}
-	__hflag16_3(r);
+	cpuf16_3(r);
 	CPU.EIP += 2;
 }
 
 void v16_xor_al_imm8() {	// 34h XOR AL, IMM8
 	const int r = CPU.AL ^ mmfu8_i;
-	__hflag8_3(r);
+	cpuf8_3(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
 void v16_xor_ax_imm16() {	// 35h XOR AX, IMM16
 	const int r = CPU.AX ^ mmfu16_i;
-	__hflag16_3(r);
+	cpuf16_3(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
@@ -798,7 +799,7 @@ void v16_cmp_rm8_reg8() {	// 38h CMP R/M8, REG8
 	case RM_REG_111: r -= CPU.BH; break;
 	default:
 	}
-	__hflag8_1(r);
+	cpuf8_1(r);
 	CPU.EIP += 2;
 }
 
@@ -817,7 +818,7 @@ void v16_cmp_rm16_reg16() {	// 39h CMP R/M16, REG16
 	case RM_REG_111: r -= CPU.DI; break;
 	default:
 	}
-	__hflag16_1(r);
+	cpuf16_1(r);
 	CPU.EIP += 2;
 }
 
@@ -836,7 +837,7 @@ void v16_cmp_reg8_rm8() {	// 3Ah CMP REG8, R/M8
 	case RM_REG_111: r = CPU.BH - r; break;
 	default:
 	}
-	__hflag8_1(r);
+	cpuf8_1(r);
 	CPU.EIP += 2;
 }
 
@@ -855,17 +856,17 @@ void v16_cmp_reg16_rm16() {	// 3Bh CMP REG16, R/M16
 	case RM_REG_111: r = CPU.DI - r; break;
 	default:
 	}
-	__hflag16_1(r);
+	cpuf16_1(r);
 	CPU.EIP += 2;
 }
 
 void v16_cmp_al_imm8() {	// 3Ch CMP AL, IMM8
-	__hflag8_1(CPU.AL - mmfu8_i);
+	cpuf8_1(CPU.AL - mmfu8_i);
 	CPU.EIP += 2;
 }
 
 void v16_cmp_ax_imm16() {	// 3Dh CMP AX, IMM16
-	__hflag16_1(CPU.AX - mmfu16_i);
+	cpuf16_1(CPU.AX - mmfu16_i);
 	CPU.EIP += 3;
 }
 
@@ -888,112 +889,112 @@ void v16_aas() {	// 3Fh AAS
 
 void v16_inc_ax() {	// 40h INC AX
 	const int r = CPU.AX + 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.AX = cast(ubyte)r;
 	++CPU.EIP;
 }
 
 void v16_inc_cx() {	// 41h INC CX
 	const int r = CPU.CX + 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.CX = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_inc_dx() {	// 42h INC DX
 	const int r = CPU.DX + 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.DX = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_inc_bx() {	// 43h INC BX
 	const int r = CPU.BX + 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.BX = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_inc_sp() {	// 44h INC SP
 	const int r = CPU.SP + 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.SP = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_inc_bp() {	// 45h INC BP
 	const int r = CPU.BP + 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.BP = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_inc_si() {	// 46h INC SI
 	const int r = CPU.SI + 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.SI = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_inc_di() {	// 47h INC DI
 	const int r = CPU.DI + 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.DI = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_dec_ax() {	// 48h DEC AX
 	const int r = CPU.AX - 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.AX = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_dec_cx() {	// 49h DEC CX
 	const int r = CPU.CX - 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.CX = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_dec_dx() {	// 4Ah DEC DX
 	const int r = CPU.DX - 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.DX = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_dec_bx() {	// 4Bh DEC BX
 	const int r = CPU.BX - 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.BX = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_dec_sp() {	// 4Ch DEC SP
 	const int r = CPU.SP - 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.SP = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_dec_bp() {	// 4Dh DEC BP
 	const int r = CPU.BP - 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.BP = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_dec_si() {	// 4Eh DEC SI
 	const int r = CPU.SI - 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.SI = cast(ushort)r;
 	++CPU.EIP;
 }
 
 void v16_dec_di() {	// 4Fh DEC DI
 	const int r = CPU.DI - 1;
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.DI = cast(ushort)r;
 	++CPU.EIP;
 }
@@ -1178,7 +1179,7 @@ void v16_grp1_rm8_imm8() {	// 80h GRP1 R/M8, IMM8
 		log_info("Invalid ModR/M from GRP1_8");
 		v16_illegal;
 	}
-	__hflag8_1(r);
+	cpuf8_1(r);
 	CPU.EIP += 3;
 }
 
@@ -1208,7 +1209,7 @@ void v16_grp1_rm16_imm16() {	// 81h GRP1 R/M16, IMM16
 		log_info("Invalid ModR/M from GRP1_16");
 		v16_illegal;
 	}
-	__hflag16_1(r);
+	cpuf16_1(r);
 	CPU.EIP += 4;
 }
 
@@ -1232,7 +1233,7 @@ void v16_grp2_rm8_imm8() {	// 82h GRP2 R/M8, IMM8
 		log_info("Invalid ModR/M for GRP2_8");
 		v16_illegal;
 	}
-	__hflag8_1(r);
+	cpuf8_1(r);
 	CPU.EIP += 3;
 }
 
@@ -1258,7 +1259,7 @@ void v16_grp2_rm16_imm8() {	// 83h GRP2 R/M16, IMM8
 		log_info("Invalid ModR/M for GRP2_16");
 		v16_illegal;
 	}
-	__hflag16_1(r);
+	cpuf16_1(r);
 	CPU.EIP += 3;
 }
 
@@ -1277,7 +1278,7 @@ void v16_test_rm8_reg8() {	// 84h TEST R/M8, REG8
 	case RM_REG_111: r = CPU.BH & n; break;
 	default:
 	}
-	__hflag8_3(r);
+	cpuf8_3(r);
 	CPU.EIP += 2;
 }
 
@@ -1296,7 +1297,7 @@ void v16_test_rm16_reg16() {	// 85h TEST R/M16, REG16
 	case RM_REG_111: r = CPU.DI & n; break;
 	default:
 	}
-	__hflag16_3(r);
+	cpuf16_3(r);
 	CPU.EIP += 2;
 }
 
@@ -1596,7 +1597,7 @@ void v16_movs_str16() {	// A5h MOVS DEST-STR16, SRC-STR16
 }
 
 void v16_cmps_str8() {	// A6h CMPS DEST-STR8, SRC-STR8
-	__hflag8_1(
+	cpuf8_1(
 		mmfu8(get_ad(CPU.DS, CPU.SI)) -
 		mmfu8(get_ad(CPU.ES, CPU.DI))
 	);
@@ -1610,7 +1611,7 @@ void v16_cmps_str8() {	// A6h CMPS DEST-STR8, SRC-STR8
 }
 
 void v16_cmps_str16() {	// A7h CMPSW DEST-STR16, SRC-STR16
-	__hflag16_1(
+	cpuf16_1(
 		mmfu16(get_ad(CPU.DS, CPU.SI)) - mmfu16(get_ad(CPU.ES, CPU.DI))
 	);
 	if (CPU.DF) {
@@ -1623,12 +1624,12 @@ void v16_cmps_str16() {	// A7h CMPSW DEST-STR16, SRC-STR16
 }
 
 void v16_test_al_imm8() {	// A8h TEST AL, IMM8
-	__hflag8_3(CPU.AL & mmfu8_i);
+	cpuf8_3(CPU.AL & mmfu8_i);
 	CPU.EIP += 2;
 }
 
 void v16_test_ax_imm16() {	// A9h TEST AX, IMM16
-	__hflag16_3(CPU.AX & mmfu16_i);
+	cpuf16_3(CPU.AX & mmfu16_i);
 	CPU.EIP += 3;
 }
 
@@ -1657,13 +1658,13 @@ void v16_lods_str16() {	// ADh LODS SRC-STR16
 }
 
 void v16_scas_str8() {	// AEh SCAS DEST-STR8
-	__hflag8_1(CPU.AL - mmfu8(get_ad(CPU.ES, CPU.DI)));
+	cpuf8_1(CPU.AL - mmfu8(get_ad(CPU.ES, CPU.DI)));
 	if (CPU.DF) --CPU.DI; else ++CPU.DI;
 	++CPU.EIP;
 }
 
 void v16_scas_str16() {	// AFh SCAS DEST-STR16
-	__hflag16_1(CPU.AX - mmfu16(get_ad(CPU.ES, CPU.DI)));
+	cpuf16_1(CPU.AX - mmfu16(get_ad(CPU.ES, CPU.DI)));
 	if (CPU.DF) CPU.DI -= 2; else CPU.DI += 2;
 	++CPU.EIP;
 }
@@ -1860,11 +1861,11 @@ void v16_grp2_rm8_1() {	// D0h GRP2 R/M8, 1
 	case RM_REG_011: // 011 - RCR
 		if (r & 1) { r |= 0x200; CPU.OF = 1; } r >>= 1; break;
 	case RM_REG_100: // 100 - SAL/SHL
-		r <<= 1; __hflag8_1(r); break;
+		r <<= 1; cpuf8_1(r); break;
 	case RM_REG_101: // 101 - SHR
-		r >>= 1; __hflag8_1(r); break;
+		r >>= 1; cpuf8_1(r); break;
 	case RM_REG_111: // 111 - SAR
-		if (r & 0x80) r |= 0x100; r >>= 1; __hflag8_1(r); break;
+		if (r & 0x80) r |= 0x100; r >>= 1; cpuf8_1(r); break;
 	default: // 110
 		log_info("Invalid ModR/M for GRP2 R/M8, 1");
 		v16_illegal;
@@ -1887,11 +1888,11 @@ void v16_grp2_rm16_1() {	// D1h GRP2 R/M16, 1
 	case RM_REG_011: // 011 - RCR
 		if (r & 1) { r |= 0x2_0000; CPU.OF = 1; } r >>= 1; break;
 	case RM_REG_100: // 100 - SAL/SHL
-		r <<= 1; __hflag16_1(r); break;
+		r <<= 1; cpuf16_1(r); break;
 	case RM_REG_101: // 101 - SHR
-		r >>= 1; __hflag16_1(r); break;
+		r >>= 1; cpuf16_1(r); break;
 	case RM_REG_111: // 111 - SAR
-		if (r & 0x8000) r |= 0x1_0000; r >>= 1; __hflag16_1(r); break;
+		if (r & 0x8000) r |= 0x1_0000; r >>= 1; cpuf16_1(r); break;
 	default: // 110
 		log_info("Invalid ModR/M for GRP2 R/M16, 1");
 		v16_illegal;
@@ -1968,7 +1969,7 @@ void v16_grp2_rm16_cl() {	// D3h GRP2 R/M16, CL
 
 void v16_aam() {	// D4h AAM
 	const int r = CPU.AL % 0xA;
-	__hflag8_5(r);
+	cpuf8_5(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.AH = cast(ubyte)(r / 0xA);
 	++CPU.EIP;
@@ -1976,7 +1977,7 @@ void v16_aam() {	// D4h AAM
 
 void v16_aad() {	// D5h AAD
 	const int r = CPU.AL + (CPU.AH * 0xA);
-	__hflag8_5(r);
+	cpuf8_5(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.AH = 0;
 	++CPU.EIP;
@@ -2091,24 +2092,24 @@ void v16_loop() {	// E2h LOOP SHORT-LABEL
 	int r = void;
 	switch (rm & RM_REG) {
 	case RM_REG_000: // 000 - TEST
-		__hflag8_1(im & mmfu8(addr)); break;
+		cpuf8_1(im & mmfu8(addr)); break;
 	case RM_REG_010: // 010 - NOT
 		mmiu8(~mmfu8(addr), addr); break;
 	case RM_REG_011: // 011 - NEG
 		import core.stdc.stdio : printf;
 		r = cast(ubyte)-mmfi8(addr);
-		__hflag8_1(r);
+		cpuf8_1(r);
 		CPU.CF = cast(ubyte)r;
 		mmiu8(r, addr);
 		break;
 	case RM_REG_100: // 100 - MUL
 		r = im * mmfu8(addr);
-		__hflag8_4(r);
+		cpuf8_4(r);
 		mmiu8(r, addr);
 		break;
 	case RM_REG_101: // 101 - IMUL
 		r = cast(ubyte)(cast(byte)im * mmfi8(addr));
-		__hflag8_4(r);
+		cpuf8_4(r);
 		mmiu8(r, addr);
 		break;
 	case RM_REG_110: // 110 - DIV
@@ -2139,33 +2140,33 @@ void v16_loop() {	// E2h LOOP SHORT-LABEL
 	int r = void;
 	switch (rm & RM_REG) {
 	case RM_REG_000: // 000 - TEST
-		__hflag16_1(im & mmfu16(addr)); break;
+		cpuf16_1(im & mmfu16(addr)); break;
 	case RM_REG_010: // 010 - NOT
 		mmiu16(~im, addr); break;
 	case RM_REG_011: // 011 - NEG
 		r = -mmfi16(addr);
-		__hflag16_1(r);
+		cpuf16_1(r);
 		CPU.CF = cast(ubyte)r;
 		mmiu16(r, addr);
 		break;
 	case RM_REG_100: // 100 - MUL
 		r = im * mmfu16(addr);
-		__hflag16_4(r);
+		cpuf16_4(r);
 		mmiu16(r, addr);
 		break;
 	case RM_REG_101: // 101 - IMUL
 		r = im * mmfi16(addr);
-		__hflag16_4(r);
+		cpuf16_4(r);
 		mmiu16(r, addr);
 		break;
 	case RM_REG_110: // 110 - DIV
 		r = im / mmfu16(addr);
-		__hflag16_4(r);
+		cpuf16_4(r);
 		mmiu16(r, addr);
 		break;
 	case RM_REG_111: // 111 - IDIV
 		r = im / mmfi16(addr);
-		__hflag16_4(r);
+		cpuf16_4(r);
 		mmiu16(r, addr);
 		break;
 	default:
@@ -2221,7 +2222,7 @@ void v16_grp4_rm8() {	// FEh GRP4 R/M8
 		v16_illegal;
 	}
 	mmiu16(r, addr);
-	__hflag16_2(r);
+	cpuf16_2(r);
 	CPU.EIP += 2;
 }
 
@@ -2232,13 +2233,13 @@ void v16_grp4_rm16() {	// FFh GRP5 R/M16
 	switch (rm & RM_REG) {
 	case RM_REG_000: // 000 - INC
 		++r;
-		__hflag16_2(r);
+		cpuf16_2(r);
 		mmiu16(r, addr);
 		CPU.EIP += 2;
 		return;
 	case RM_REG_001: // 001 - DEC
 		--r;
-		__hflag16_2(r);
+		cpuf16_2(r);
 		mmiu16(r, addr);
 		CPU.EIP += 2;
 		break;

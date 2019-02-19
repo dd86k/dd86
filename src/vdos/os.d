@@ -11,6 +11,9 @@ import vdos.video;
 import logger;
 import appconfig : __MM_SYS_DOS, INIT_MEM;
 
+nothrow:
+@nogc:
+
 /// Project logo, fancy!
 enum LOGO =
 	`_______ _______     ___ ______   ______`~"\n"~
@@ -89,7 +92,7 @@ void print_stack() {
 
 extern (C)
 void panic(ushort code,
-	lazy const(char) *name = cast(const(char)*)__MODULE__,
+	const(char) *name = cast(const(char)*)__MODULE__,
 	int line = __LINE__) {
 	import core.stdc.stdlib : exit;
 
@@ -115,7 +118,7 @@ void panic(ushort code,
 	print_stack;*/
 
 	screen_draw;
-	exit(code); //TODO: Consider another strategy
+	//gracefulexit(code)
 }
 
 //TODO: Function to handle SEH

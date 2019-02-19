@@ -22,6 +22,8 @@ import vdos.codes : PANIC_MEMORY_ACCESS;
 import logger;
 
 extern (C):
+nothrow:
+@nogc:
 
 //
 // Insert into memory functions

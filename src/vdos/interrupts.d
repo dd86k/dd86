@@ -16,6 +16,9 @@ import vdos.video : v_printf, v_put_s, v_putc;
 import os.io : OSTime, os_time, OSDate, os_date, os_pexist;
 import vcpu.mm : MemString;
 
+nothrow:
+@nogc:
+
 /// Raise interrupt.
 /// Params: code = Interrupt byte
 extern (C)

@@ -10,6 +10,8 @@ import vcpu.mm;
 import appconfig : INIT_MEM, TSC_SLEEP;
 
 extern (C):
+nothrow:
+@nogc:
 
 enum : ubyte { // Emulated CPU
 	CPU_8086,
@@ -154,11 +156,11 @@ __gshared int MEMORYSIZE = INIT_MEM; /// Memory size
 // remove the flexibility of choosing the functions per cpu type at
 // initialization.
 /// CPU Mode function table
-__gshared void function(ubyte)[4] MODE_MAP;
+__gshared void function(ubyte) [4]MODE_MAP;
 /// Real-mode instructions function table
-__gshared void function()[256] REAL_MAP;
+__gshared void function() [256]REAL_MAP;
 /// Protected-mode instructions function table
-__gshared void function()[256] PROT_MAP;
+__gshared void function() [256]PROT_MAP;
 
 /// Initiate x86 interpreter
 void vcpu_init() {

@@ -7,6 +7,8 @@ import vcpu.core;
 import vcpu.v16 : exec16;
 
 extern (C):
+nothrow:
+@nogc:
 
 pragma(inline, true)
 void exec32(ubyte op) {
