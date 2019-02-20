@@ -8,7 +8,7 @@ module os.io;
 
 extern (C):
 nothrow:
-@nogc:
+
 
 //TODO: File/directory walker
 

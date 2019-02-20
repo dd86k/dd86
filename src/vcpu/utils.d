@@ -9,7 +9,7 @@ import vcpu.core, vcpu.mm;
 import logger;
 
 nothrow:
-@nogc:
+
 
 //
 // CPU Flag handling utilities
@@ -155,7 +155,12 @@ void cpuf16_5(int r) {
 	PF16(r);
 }
 
-extern (C)
+/**
+ * Handle result for DWORD.
+ * Affected: ZF, AF, SF, PF, OF, CF
+ * Params: r = DWORD result
+ */
+pragma(inline, true)
 void cpuf32_1(long r) {
 	ZF(r);
 	AF32(r);
@@ -163,6 +168,21 @@ void cpuf32_1(long r) {
 	PF32(r);
 	OF32(r);
 	CF32(r);
+}
+
+/**
+ * Handle result for DWORD.
+ * Affected: OF, SF, ZF, AF, PF
+ * Undefined: CF undefined
+ * Params: r = DWORD result
+ */
+pragma(inline, true)
+void cpuf32_2(long r) {
+	ZF(r);
+	AF32(r);
+	SF32(r);
+	PF32(r);
+	OF32(r);
 }
 
 //

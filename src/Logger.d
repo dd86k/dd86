@@ -6,7 +6,7 @@ module logger;
 import vdos.video, vdos.codes;
 
 nothrow:
-@nogc:
+
 
 enum {
 	LOG_SILENCE	= 0,	/// Complete silence

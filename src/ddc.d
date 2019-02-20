@@ -11,7 +11,7 @@
 module ddc;
 
 nothrow:
-@nogc:
+
 
 enum NULL_CHAR = cast(char*)0; /// Null character pointer
 

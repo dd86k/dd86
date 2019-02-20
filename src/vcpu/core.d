@@ -11,7 +11,7 @@ import appconfig : INIT_MEM, TSC_SLEEP;
 
 extern (C):
 nothrow:
-@nogc:
+
 
 enum : ubyte { // Emulated CPU
 	CPU_8086,

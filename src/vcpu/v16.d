@@ -9,7 +9,7 @@ import logger;
 
 extern (C):
 nothrow:
-@nogc:
+
 
 /**
  * Execute an instruction in REAL mode

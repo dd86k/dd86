@@ -6,7 +6,7 @@ module os.term;
 import ddc : putchar, getchar, fputs, stdout;
 
 nothrow:
-@nogc:
+
 
 private import core.stdc.stdio : printf;
 private alias sys = core.stdc.stdlib.system;

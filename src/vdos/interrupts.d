@@ -17,7 +17,7 @@ import os.io : OSTime, os_time, OSDate, os_date, os_pexist;
 import vcpu.mm : MemString;
 
 nothrow:
-@nogc:
+
 
 /// Raise interrupt.
 /// Params: code = Interrupt byte

@@ -12,7 +12,7 @@ import logger;
 import appconfig : __MM_SYS_DOS, INIT_MEM;
 
 nothrow:
-@nogc:
+
 
 /// Project logo, fancy!
 enum LOGO =

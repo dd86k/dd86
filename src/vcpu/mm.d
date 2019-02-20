@@ -23,7 +23,7 @@ import logger;
 
 extern (C):
 nothrow:
-@nogc:
+
 
 //
 // Insert into memory functions
