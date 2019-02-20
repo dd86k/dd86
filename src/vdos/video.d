@@ -9,18 +9,16 @@ import core.stdc.stdlib : malloc;
 import vcpu.core : MEMORY;
 import vdos.os : SYSTEM;
 
+extern (C):
 nothrow:
 
 private enum __EGA_ADDRESS = 0xA_0000;
 private enum __MDA_ADDRESS = 0xB_0000;
 private enum __VGA_ADDRESS = 0xB_8000;
 enum __VIDEO_ADDRESS = __VGA_ADDRESS; /// Default video address
-
 enum MAX_STR = 2048; /// maximum string length to print
 
-extern (C):
-
-__gshared videochar* VIDEO = void;	/// video buffer
+__gshared videochar *VIDEO = void;	/// video buffer
 
 // VGA reference: http://www.brackeen.com/vga/basics.html
 // Unicode reference: https://unicode-table.com
@@ -167,7 +165,7 @@ version (Posix) {
 	__gshared char *str = void;
 }
 
-/// Video adapter character (EGC, CGA, VGA)
+/// Video adapter character (EGA, CGA, VGA)
 struct videochar {
 	union {
 		ushort WORD;
@@ -242,7 +240,6 @@ void screen_draw() {
 		char *s = str;
 
 		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
-		// Solution 5b
 		ubyte lfg = 0xFF; /// last foreground color
 		ubyte lbg = 0xFF; /// last background color
 		size_t bi; /// buffer index

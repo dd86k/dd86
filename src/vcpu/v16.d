@@ -10,7 +10,6 @@ import logger;
 extern (C):
 nothrow:
 
-
 /**
  * Execute an instruction in REAL mode
  * Params: op = opcode

@@ -1,14 +1,13 @@
 /**
  * v32: Protected-mode instructions
  */
-module vcpu.v32; // 80486+
+module vcpu.v32; // 80386/80486+
 
 import vcpu.core;
 import vcpu.v16 : exec16;
 
 extern (C):
 nothrow:
-
 
 pragma(inline, true)
 void exec32(ubyte op) {
@@ -32,4 +31,17 @@ void v32(ubyte op) {
 	default: //TODO: illegal op exec32
 
 	}
+}
+
+void v32_add_rm8_reg8() {	// 00h ADD R/M8, REG8
+	
+}
+
+void v32_add_rm32_reg32() {
+	
+}
+
+void v32_opcode_prefix() {
+	++CPU.EIP;
+	exec16(MEMORY[CPU.EIP]);
 }

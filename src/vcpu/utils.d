@@ -31,18 +31,16 @@ void cpuf8_1(int r) {
 }
 
 /**
- * Handle result for GROUP1 (UNSIGNED WORD)
- * Affected: OF, SF, ZF, AF, CF, PF
- * Params: r = Operation result
+ * Handle result for BYTE
+ * Affected: SF, ZF, PF
+ * Undefined: OF, CF, AF
+ * Params: r = Input number
  */
 extern (C)
-void cpuf16_1(int r) {
+void cpuf8_5(int r) {
 	ZF(r);
-	AF16(r);
-	SF16(r);
-	PF16(r);
-	OF16(r);
-	CF16(r);
+	SF8(r);
+	PF8(r);
 }
 
 /**
@@ -61,21 +59,6 @@ void cpuf8_2(int r) {
 }
 
 /**
- * Handle result for GROUP2 (UNSIGNED WORD)
- * Affected: OF, SF, ZF, AF, PF
- * Undefined: CF
- * Params: r = Operation result
- */
-extern (C)
-void cpuf16_2(int r) {
-	ZF(r);
-	AF16(r);
-	SF16(r);
-	PF16(r);
-	OF16(r);
-}
-
-/**
  * Handle result for TEST (BYTE)
  * Affected: SF, ZF, PF
  * Cleared: OF, CF
@@ -88,6 +71,48 @@ void cpuf8_3(int r) {
 	SF8(r);
 	PF8(r);
 	CPU.OF = CPU.CF = 0;
+}
+
+/**
+ * Handle result for MUL (BYTE)
+ * Affected: OF, CF
+ * Undefined: SF, ZF, AF, PF
+ * Params: r = Input number
+ */
+extern (C)
+void cpuf8_4(int r) {
+	OF8(r);
+	CF8(r);
+}
+
+/**
+ * Handle result for GROUP1 (UNSIGNED WORD)
+ * Affected: OF, SF, ZF, AF, CF, PF
+ * Params: r = Operation result
+ */
+extern (C)
+void cpuf16_1(int r) {
+	ZF(r);
+	AF16(r);
+	SF16(r);
+	PF16(r);
+	OF16(r);
+	CF16(r);
+}
+
+/**
+ * Handle result for GROUP2 (UNSIGNED WORD)
+ * Affected: OF, SF, ZF, AF, PF
+ * Undefined: CF
+ * Params: r = Operation result
+ */
+extern (C)
+void cpuf16_2(int r) {
+	ZF(r);
+	AF16(r);
+	SF16(r);
+	PF16(r);
+	OF16(r);
 }
 
 /**
@@ -106,18 +131,6 @@ void cpuf16_3(int r) {
 }
 
 /**
- * Handle result for MUL (BYTE)
- * Affected: OF, CF
- * Undefined: SF, ZF, AF, PF
- * Params: r = Input number
- */
-extern (C)
-void cpuf8_4(int r) {
-	OF8(r);
-	CF8(r);
-}
-
-/**
  * Handle result for MUL (WORD)
  * Affected: OF, CF
  * Undefined: SF, ZF, AF, PF
@@ -127,19 +140,6 @@ extern (C)
 void cpuf16_4(int r) {
 	OF16(r);
 	CF16(r);
-}
-
-/**
- * Handle result for BYTE
- * Affected: SF, ZF, PF
- * Undefined: OF, CF, AF
- * Params: r = Input number
- */
-extern (C)
-void cpuf8_5(int r) {
-	ZF(r);
-	SF8(r);
-	PF8(r);
 }
 
 /**
@@ -183,6 +183,46 @@ void cpuf32_2(long r) {
 	SF32(r);
 	PF32(r);
 	OF32(r);
+}
+
+/**
+ * Handle result for DWORD.
+ * Affected: SF, ZF, PF
+ * Cleared: OF, CF
+ * Undefined: AF
+ * Params: r = DWORD result
+ */
+pragma(inline, true)
+void cpuf32_3(long r) {
+	CPU.OF = CPU.CF = 0;
+	ZF(r);
+	SF32(r);
+	PF32(r);
+}
+
+/**
+ * Handle result for MUL (DWORD)
+ * Affected: OF, CF
+ * Undefined: SF, ZF, AF, PF
+ * Params: r = Input number
+ */
+pragma(inline, true)
+void cpuf32_4(long r) {
+	OF32(r);
+	CF32(r);
+}
+
+/**
+ * Handle result for DWORD
+ * Affected: SF, ZF, PF
+ * Undefined: OF, CF, AF
+ * Params: r = Input number
+ */
+pragma(inline, true)
+void cpuf16_5(long r) {
+	ZF(r);
+	SF32(r);
+	PF32(r);
 }
 
 //
@@ -262,8 +302,7 @@ ushort bswap16(ushort n) {
 pragma(inline, true)
 extern (C)
 uint bswap32(uint n) {
-	return
-		(n >> 24) | (n & 0xFF_0000) >> 8 |
+	return (n >> 24) | (n & 0xFF_0000) >> 8 |
 		(n & 0xFF00) << 8 | (n << 24);
 }
 
