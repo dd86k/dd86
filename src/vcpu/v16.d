@@ -19,7 +19,7 @@ void exec16(ubyte op) {
 	REAL_MAP[op]();
 }
 
-void v16_add_rm8_reg8() {	// 00h ADD R/M8, REG8
+void v16_00() {	// 00h ADD R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -39,7 +39,7 @@ void v16_add_rm8_reg8() {	// 00h ADD R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v16_add_rm16_reg16() {	// 01h ADD R/M16, REG16
+void v16_01() {	// 01h ADD R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -59,7 +59,7 @@ void v16_add_rm16_reg16() {	// 01h ADD R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v16_add_reg8_rm8() {	// 02h ADD REG8, R/M8
+void v16_02() {	// 02h ADD REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -78,7 +78,7 @@ void v16_add_reg8_rm8() {	// 02h ADD REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v16_add_reg16_rm16() {	// 03h ADD REG16, R/M16
+void v16_03() {	// 03h ADD REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -97,31 +97,31 @@ void v16_add_reg16_rm16() {	// 03h ADD REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v16_add_al_imm8() {	// 04h ADD AL, IMM8
+void v16_04() {	// 04h ADD AL, IMM8
 	const int r = CPU.AL + mmfu8_i;
 	cpuf8_1(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
-void v16_add_ax_imm16() {	// 05h ADD AX, IMM16
+void v16_05() {	// 05h ADD AX, IMM16
 	const int r = CPU.AX + mmfu16_i;
 	cpuf16_1(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 2;
 }
 
-void v16_push_es() {	// 06h PUSH ES
-	push16(CPU.ES);
+void v16_06() {	// 06h PUSH ES
+	CPU.push16(CPU.ES);
 	++CPU.EIP;
 }
 
-void v16_pop_es() {	// 07h POP ES
-	CPU.ES = pop16;
+void v16_07() {	// 07h POP ES
+	CPU.ES = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_or_rm8_reg8() {	// 08h OR R/M8, REG8
+void v16_08() {	// 08h OR R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -141,7 +141,7 @@ void v16_or_rm8_reg8() {	// 08h OR R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v16_or_rm16_reg16() {	// 09h OR R/M16, REG16
+void v16_09() {	// 09h OR R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -161,7 +161,7 @@ void v16_or_rm16_reg16() {	// 09h OR R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v16_or_reg8_rm8() {	// 0Ah OR REG8, R/M8
+void v16_0A() {	// 0Ah OR REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -180,7 +180,7 @@ void v16_or_reg8_rm8() {	// 0Ah OR REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v16_or_reg16_rm16() {	// 0Bh OR REG16, R/M16
+void v16_0B() {	// 0Bh OR REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -199,26 +199,26 @@ void v16_or_reg16_rm16() {	// 0Bh OR REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v16_or_al_imm8() {	// 0Ch OR AL, IMM8
+void v16_0C() {	// 0Ch OR AL, IMM8
 	const int r = CPU.AL | mmfu8_i;
 	cpuf8_3(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
-void v16_or_ax_imm16() {	// 0Dh OR AX, IMM16
+void v16_0D() {	// 0Dh OR AX, IMM16
 	const int r = CPU.AX | mmfu16_i;
 	cpuf16_3(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
 
-void v16_push_cs() {	// 0Eh PUSH CS
-	push16(CPU.CS);
+void v16_0E() {	// 0Eh PUSH CS
+	CPU.push16(CPU.CS);
 	++CPU.EIP;
 }
 
-void v16_adc_rm8_reg8() {	// 10h ADC R/M8, REG8
+void v16_10() {	// 10h ADC R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -239,7 +239,7 @@ void v16_adc_rm8_reg8() {	// 10h ADC R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v16_adc_rm16_reg16() {	// 11h ADC R/M16, REG16
+void v16_11() {	// 11h ADC R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -260,7 +260,7 @@ void v16_adc_rm16_reg16() {	// 11h ADC R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v16_adc_reg8_rm8() {	// 12h ADC REG8, R/M8
+void v16_12() {	// 12h ADC REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -280,7 +280,7 @@ void v16_adc_reg8_rm8() {	// 12h ADC REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v16_adc_reg16_rm16() {	// 13h ADC REG16, R/M16
+void v16_13() {	// 13h ADC REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -300,7 +300,7 @@ void v16_adc_reg16_rm16() {	// 13h ADC REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v16_adc_al_imm8() {	// 14h ADC AL, IMM8
+void v16_14() {	// 14h ADC AL, IMM8
 	int r = CPU.AL + mmfu8_i;
 	cpuf8_1(r);
 	if (CPU.CF) ++r;
@@ -308,7 +308,7 @@ void v16_adc_al_imm8() {	// 14h ADC AL, IMM8
 	CPU.EIP += 2;
 }
 
-void v16_adc_ax_imm16() {	// 15h ADC AX, IMM16
+void v16_15() {	// 15h ADC AX, IMM16
 	int r = CPU.AX + mmfu16_i;
 	cpuf16_1(r);
 	if (CPU.CF) ++r;
@@ -316,17 +316,17 @@ void v16_adc_ax_imm16() {	// 15h ADC AX, IMM16
 	CPU.EIP += 3;
 }
 
-void v16_push_ss() {	// 16h PUSH SS
-	push16(CPU.SS);
+void v16_16() {	// 16h PUSH SS
+	CPU.push16(CPU.SS);
 	++CPU.EIP;
 }
 
-void v16_pop_ss() {	// 17h POP SS
-	CPU.SS = pop16;
+void v16_17() {	// 17h POP SS
+	CPU.SS = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_sbb_rm8_reg8() {	// 18h SBB R/M8, REG8
+void v16_18() {	// 18h SBB R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -347,7 +347,7 @@ void v16_sbb_rm8_reg8() {	// 18h SBB R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v16_sbb_rm16_reg16() {	// 19h SBB R/M16, REG16
+void v16_19() {	// 19h SBB R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -368,7 +368,7 @@ void v16_sbb_rm16_reg16() {	// 19h SBB R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v16_sbb_reg8_rm8() {	// 1Ah SBB REG8, R/M8
+void v16_1A() {	// 1Ah SBB REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -388,7 +388,7 @@ void v16_sbb_reg8_rm8() {	// 1Ah SBB REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v16_sbb_reg16_rm16() {	// 1Bh SBB REG16, R/M16
+void v16_1B() {	// 1Bh SBB REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -408,7 +408,7 @@ void v16_sbb_reg16_rm16() {	// 1Bh SBB REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v16_sbb_al_imm8() {	// 1Ch SBB AL, IMM8
+void v16_1C() {	// 1Ch SBB AL, IMM8
 	int r = CPU.AL - mmfu8_i;
 	if (CPU.CF) --r;
 	cpuf8_3(r);
@@ -416,7 +416,7 @@ void v16_sbb_al_imm8() {	// 1Ch SBB AL, IMM8
 	CPU.EIP += 2;
 }
 
-void v16_sbb_ax_imm16() {	// 1Dh SBB AX, IMM16
+void v16_1D() {	// 1Dh SBB AX, IMM16
 	int r = CPU.AX - mmfu16_i;
 	if (CPU.CF) --r;
 	cpuf16_3(r);
@@ -424,17 +424,17 @@ void v16_sbb_ax_imm16() {	// 1Dh SBB AX, IMM16
 	CPU.EIP += 3;
 }
 
-void v16_push_ds() {	// 1Eh PUSH DS
-	push16(CPU.DS);
+void v16_1E() {	// 1Eh PUSH DS
+	CPU.push16(CPU.DS);
 	++CPU.EIP;
 }
 
-void v16_pop_ds() {	// 1Fh POP DS
-	CPU.DS = pop16;
+void v16_1F() {	// 1Fh POP DS
+	CPU.DS = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_and_rm8_reg8() {	// 20h AND R/M8, REG8
+void v16_20() {	// 20h AND R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -454,7 +454,7 @@ void v16_and_rm8_reg8() {	// 20h AND R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v16_and_rm16_reg16() {	// 21h AND R/M16, REG16
+void v16_21() {	// 21h AND R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -474,7 +474,7 @@ void v16_and_rm16_reg16() {	// 21h AND R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v16_and_reg8_rm8() {	// 22h AND REG8, R/M8
+void v16_22() {	// 22h AND REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -493,7 +493,7 @@ void v16_and_reg8_rm8() {	// 22h AND REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v16_and_reg16_rm16() {	// 23h AND REG16, R/M16
+void v16_23() {	// 23h AND REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -512,26 +512,26 @@ void v16_and_reg16_rm16() {	// 23h AND REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v16_and_al_imm8() {	// 24h AND AL, IMM8
+void v16_24() {	// 24h AND AL, IMM8
 	const int r = CPU.AL & mmfu8_i;
 	cpuf8_3(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
-void v16_and_ax_imm16() {	// 25h AND AX, IMM16
+void v16_25() {	// 25h AND AX, IMM16
 	const int r = CPU.AX & mmfu16_i;
 	cpuf16_3(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
 
-void v16_es() {	// 26h ES: (Segment override prefix)
+void v16_26() {	// 26h ES: (Segment override prefix)
 	CPU.Segment = SEG_ES;
 	++CPU.EIP;
 }
 
-void v16_daa() {	// 27h DAA
+void v16_27() {	// 27h DAA
 	int r = CPU.AL;
 
 	if (((CPU.AL & 0xF) > 9) || CPU.AF) {
@@ -561,7 +561,7 @@ void v16_daa() {	// 27h DAA
 	++CPU.EIP;
 }
 
-void v16_sub_rm8_reg8() {	// 28h SUB R/M8, REG8
+void v16_28() {	// 28h SUB R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -581,7 +581,7 @@ void v16_sub_rm8_reg8() {	// 28h SUB R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v16_sub_rm16_reg16() {	// 29h SUB R/M16, REG16
+void v16_29() {	// 29h SUB R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -601,7 +601,7 @@ void v16_sub_rm16_reg16() {	// 29h SUB R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v16_sub_reg8_rm8() {	// 2Ah SUB REG8, R/M8
+void v16_2A() {	// 2Ah SUB REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -620,7 +620,7 @@ void v16_sub_reg8_rm8() {	// 2Ah SUB REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v16_sub_reg16_rm16() {	// 2Bh SUB REG16, R/M16
+void v16_2B() {	// 2Bh SUB REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -639,26 +639,26 @@ void v16_sub_reg16_rm16() {	// 2Bh SUB REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v16_sub_al_imm8() {	// 2Ch SUB AL, IMM8
+void v16_2C() {	// 2Ch SUB AL, IMM8
 	const int r = CPU.AL - mmfu8_i;
 	cpuf8_1(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
-void v16_sub_ax_imm16() {	// 2Dh SUB AX, IMM16
+void v16_2D() {	// 2Dh SUB AX, IMM16
 	const int r = CPU.AX - mmfu16_i;
 	cpuf16_1(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
 
-void v16_cs() {	// 2Eh CS:
+void v16_2E() {	// 2Eh CS:
 	CPU.Segment = SEG_CS;
 	++CPU.EIP;
 }
 
-void v16_das() {	// 2Fh DAS
+void v16_2F() {	// 2Fh DAS
 	const ubyte oldAL = CPU.AL;
 	const ubyte oldCF = CPU.CF;
 	CPU.CF = 0;
@@ -677,7 +677,7 @@ void v16_das() {	// 2Fh DAS
 	++CPU.EIP;
 }
 
-void v16_xor_rm8_reg8() {	// 30h XOR R/M8, REG8
+void v16_30() {	// 30h XOR R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -697,7 +697,7 @@ void v16_xor_rm8_reg8() {	// 30h XOR R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v16_xor_rm16_reg16() {	// 31h XOR R/M16, REG16
+void v16_31() {	// 31h XOR R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -717,7 +717,7 @@ void v16_xor_rm16_reg16() {	// 31h XOR R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v16_xor_reg8_rm8() {	// 32h XOR REG8, R/M8
+void v16_32() {	// 32h XOR REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -736,7 +736,7 @@ void v16_xor_reg8_rm8() {	// 32h XOR REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v16_xor_reg16_rm16() {	// 33h XOR REG16, R/M16
+void v16_33() {	// 33h XOR REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -755,26 +755,26 @@ void v16_xor_reg16_rm16() {	// 33h XOR REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v16_xor_al_imm8() {	// 34h XOR AL, IMM8
+void v16_34() {	// 34h XOR AL, IMM8
 	const int r = CPU.AL ^ mmfu8_i;
 	cpuf8_3(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
-void v16_xor_ax_imm16() {	// 35h XOR AX, IMM16
+void v16_35() {	// 35h XOR AX, IMM16
 	const int r = CPU.AX ^ mmfu16_i;
 	cpuf16_3(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
 
-void v16_ss() {	// 36h SS:
+void v16_36() {	// 36h SS:
 	CPU.Segment = SEG_SS;
 	++CPU.EIP;
 }
 
-void v16_aaa() {	// 37h AAA
+void v16_37() {	// 37h AAA
 	if (((CPU.AL & 0xF) > 9) || CPU.AF) {
 		CPU.AX += 0x106;
 		CPU.AF = CPU.CF = 1;
@@ -783,7 +783,7 @@ void v16_aaa() {	// 37h AAA
 	++CPU.EIP;
 }
 
-void v16_cmp_rm8_reg8() {	// 38h CMP R/M8, REG8
+void v16_38() {	// 38h CMP R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -802,7 +802,7 @@ void v16_cmp_rm8_reg8() {	// 38h CMP R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v16_cmp_rm16_reg16() {	// 39h CMP R/M16, REG16
+void v16_39() {	// 39h CMP R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -821,7 +821,7 @@ void v16_cmp_rm16_reg16() {	// 39h CMP R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v16_cmp_reg8_rm8() {	// 3Ah CMP REG8, R/M8
+void v16_3A() {	// 3Ah CMP REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -840,7 +840,7 @@ void v16_cmp_reg8_rm8() {	// 3Ah CMP REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v16_cmp_reg16_rm16() {	// 3Bh CMP REG16, R/M16
+void v16_3B() {	// 3Bh CMP REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -859,22 +859,22 @@ void v16_cmp_reg16_rm16() {	// 3Bh CMP REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v16_cmp_al_imm8() {	// 3Ch CMP AL, IMM8
+void v16_3C() {	// 3Ch CMP AL, IMM8
 	cpuf8_1(CPU.AL - mmfu8_i);
 	CPU.EIP += 2;
 }
 
-void v16_cmp_ax_imm16() {	// 3Dh CMP AX, IMM16
+void v16_3D() {	// 3Dh CMP AX, IMM16
 	cpuf16_1(CPU.AX - mmfu16_i);
 	CPU.EIP += 3;
 }
 
-void v16_ds() {	// 3Eh DS:
+void v16_3E() {	// 3Eh DS:
 	CPU.Segment = SEG_DS;
 	++CPU.EIP;
 }
 
-void v16_aas() {	// 3Fh AAS
+void v16_3F() {	// 3Fh AAS
 	if (((CPU.AL & 0xF) > 9) || CPU.AF) {
 		CPU.AX -= 6;
 		CPU.AH -= 1;
@@ -886,273 +886,273 @@ void v16_aas() {	// 3Fh AAS
 	++CPU.EIP;
 }
 
-void v16_inc_ax() {	// 40h INC AX
+void v16_40() {	// 40h INC AX
 	const int r = CPU.AX + 1;
 	cpuf16_2(r);
 	CPU.AX = cast(ubyte)r;
 	++CPU.EIP;
 }
 
-void v16_inc_cx() {	// 41h INC CX
+void v16_41() {	// 41h INC CX
 	const int r = CPU.CX + 1;
 	cpuf16_2(r);
 	CPU.CX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_inc_dx() {	// 42h INC DX
+void v16_42() {	// 42h INC DX
 	const int r = CPU.DX + 1;
 	cpuf16_2(r);
 	CPU.DX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_inc_bx() {	// 43h INC BX
+void v16_43() {	// 43h INC BX
 	const int r = CPU.BX + 1;
 	cpuf16_2(r);
 	CPU.BX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_inc_sp() {	// 44h INC SP
+void v16_44() {	// 44h INC SP
 	const int r = CPU.SP + 1;
 	cpuf16_2(r);
 	CPU.SP = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_inc_bp() {	// 45h INC BP
+void v16_45() {	// 45h INC BP
 	const int r = CPU.BP + 1;
 	cpuf16_2(r);
 	CPU.BP = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_inc_si() {	// 46h INC SI
+void v16_46() {	// 46h INC SI
 	const int r = CPU.SI + 1;
 	cpuf16_2(r);
 	CPU.SI = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_inc_di() {	// 47h INC DI
+void v16_47() {	// 47h INC DI
 	const int r = CPU.DI + 1;
 	cpuf16_2(r);
 	CPU.DI = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_dec_ax() {	// 48h DEC AX
+void v16_48() {	// 48h DEC AX
 	const int r = CPU.AX - 1;
 	cpuf16_2(r);
 	CPU.AX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_dec_cx() {	// 49h DEC CX
+void v16_49() {	// 49h DEC CX
 	const int r = CPU.CX - 1;
 	cpuf16_2(r);
 	CPU.CX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_dec_dx() {	// 4Ah DEC DX
+void v16_4A() {	// 4Ah DEC DX
 	const int r = CPU.DX - 1;
 	cpuf16_2(r);
 	CPU.DX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_dec_bx() {	// 4Bh DEC BX
+void v16_4B() {	// 4Bh DEC BX
 	const int r = CPU.BX - 1;
 	cpuf16_2(r);
 	CPU.BX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_dec_sp() {	// 4Ch DEC SP
+void v16_4C() {	// 4Ch DEC SP
 	const int r = CPU.SP - 1;
 	cpuf16_2(r);
 	CPU.SP = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_dec_bp() {	// 4Dh DEC BP
+void v16_4D() {	// 4Dh DEC BP
 	const int r = CPU.BP - 1;
 	cpuf16_2(r);
 	CPU.BP = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_dec_si() {	// 4Eh DEC SI
+void v16_4E() {	// 4Eh DEC SI
 	const int r = CPU.SI - 1;
 	cpuf16_2(r);
 	CPU.SI = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_dec_di() {	// 4Fh DEC DI
+void v16_4F() {	// 4Fh DEC DI
 	const int r = CPU.DI - 1;
 	cpuf16_2(r);
 	CPU.DI = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v16_push_ax() {	// 50h PUSH AX
-	push16(CPU.AX);
+void v16_50() {	// 50h PUSH AX
+	CPU.push16(CPU.AX);
 	++CPU.EIP;
 }
 
-void v16_push_cx() {	// 51h PUSH CX
-	push16(CPU.CX);
+void v16_51() {	// 51h PUSH CX
+	CPU.push16(CPU.CX);
 	++CPU.EIP;
 }
 
-void v16_push_dx() {	// 52h PUSH DX
-	push16(CPU.DX);
+void v16_52() {	// 52h PUSH DX
+	CPU.push16(CPU.DX);
 	++CPU.EIP;
 }
 
-void v16_push_bx() {	// 53h PUSH BX
-	push16(CPU.BX);
+void v16_53() {	// 53h PUSH BX
+	CPU.push16(CPU.BX);
 	++CPU.EIP;
 }
 
-void v16_push_sp() {	// 54h PUSH SP
-	push16(CPU.SP);
+void v16_54() {	// 54h PUSH SP
+	CPU.push16(CPU.SP);
 	++CPU.EIP;
 }
 
-void v16_push_bp() {	// 55h PUSH BP
-	push16(CPU.BP);
+void v16_55() {	// 55h PUSH BP
+	CPU.push16(CPU.BP);
 	++CPU.EIP;
 }
 
-void v16_push_si() {	// 56h PUSH SI
-	push16(CPU.SI);
+void v16_56() {	// 56h PUSH SI
+	CPU.push16(CPU.SI);
 	++CPU.EIP;
 }
 
-void v16_push_di() {	// 57h PUSH DI
-	push16(CPU.DI);
+void v16_57() {	// 57h PUSH DI
+	CPU.push16(CPU.DI);
 	++CPU.EIP;
 }
 
-void v16_pop_ax() {	// 58h POP AX
-	CPU.AX = pop16;
+void v16_58() {	// 58h POP AX
+	CPU.AX = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_pop_cx() {	// 59h POP CX
-	CPU.CX = pop16;
+void v16_59() {	// 59h POP CX
+	CPU.CX = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_pop_dx() {	// 5Ah POP DX
-	CPU.DX = pop16;
+void v16_5A() {	// 5Ah POP DX
+	CPU.DX = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_pop_bx() {	// 5Bh POP BX
-	CPU.BX = pop16;
+void v16_5B() {	// 5Bh POP BX
+	CPU.BX = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_pop_sp() {	// 5Ch POP SP
-	CPU.SP = pop16;
+void v16_5C() {	// 5Ch POP SP
+	CPU.SP = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_pop_bp() {	// 5Dh POP BP
-	CPU.BP = pop16;
+void v16_5D() {	// 5Dh POP BP
+	CPU.BP = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_pop_si() {	// 5Eh POP SI
-	CPU.SI = pop16;
+void v16_5E() {	// 5Eh POP SI
+	CPU.SI = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_pop_di() {	// 5Fh POP DI
-	CPU.DI = pop16;
+void v16_5E() {	// 5Fh POP DI
+	CPU.DI = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_operand_override() {	// 66h OPERAND OVERRIDE
+void v16_66() {	// 66h OPERAND OVERRIDE
 	exec32(MEMORY[CPU.EIP]);
 	++CPU.EIP;
 }
 
-void v16_address_override() {	// 67h ADDRESS OVERRIDE
+void v16_67() {	// 67h ADDRESS OVERRIDE
 	//TODO: CPU.AddressPrefix
 	++CPU.EIP;
 }
 
-void v16_jo_short() {	// 70h JO SHORT-LABEL
+void v16_70() {	// 70h JO SHORT-LABEL
 	CPU.EIP += CPU.OF ? mmfi8_i + 2 : 2;
 }
 
-void v16_jno_short() {	// 71h JNO SHORT-LABEL
+void v16_71() {	// 71h JNO SHORT-LABEL
 	CPU.EIP += CPU.OF ? 2 : mmfi8_i + 2;
 }
 
-void v16_jb_short() {	// 72h JB/JNAE/JC SHORT-LABEL
+void v16_72() {	// 72h JB/JNAE/JC SHORT-LABEL
 	CPU.EIP += CPU.CF ? mmfi8_i + 2 : 2;
 }
 
-void v16_jnb_short() {	// 73h JNB/JAE/JNC SHORT-LABEL
+void v16_73() {	// 73h JNB/JAE/JNC SHORT-LABEL
 	CPU.EIP += CPU.CF ? 2 : mmfi8_i + 2;
 }
 
-void v16_je_short() {	// 74h JE/NZ SHORT-LABEL
+void v16_74() {	// 74h JE/NZ SHORT-LABEL
 	CPU.EIP += CPU.ZF ? mmfi8_i + 2 : 2;
 }
 
-void v16_jne_short() {	// 75h JNE/JNZ SHORT-LABEL
+void v16_75() {	// 75h JNE/JNZ SHORT-LABEL
 	CPU.EIP += CPU.ZF ? 2 : mmfi8_i + 2;
 }
 
-void v16_jbe_short() {	// 76h JBE/JNA SHORT-LABEL
+void v16_76() {	// 76h JBE/JNA SHORT-LABEL
 	CPU.EIP += (CPU.CF || CPU.ZF) ? mmfi8_i + 2 : 2;
 }
 
-void v16_jnbe_short() {	// 77h JNBE/JA SHORT-LABEL
+void v16_77() {	// 77h JNBE/JA SHORT-LABEL
 	CPU.EIP += CPU.CF == 0 && CPU.ZF == 0 ? mmfi8_i + 2 : 2;
 }
 
-void v16_js_short() {	// 78h JS SHORT-LABEL
+void v16_78() {	// 78h JS SHORT-LABEL
 	CPU.EIP += CPU.SF ? mmfi8_i + 2 : 2;
 }
 
-void v16_jns_short() {	// 79h JNS SHORT-LABEL
+void v16_79() {	// 79h JNS SHORT-LABEL
 	CPU.EIP += CPU.SF ? 2 : mmfi8_i + 2;
 }
 
-void v16_jp_short() {	// 7Ah JP/JPE SHORT-LABEL
+void v16_7A() {	// 7Ah JP/JPE SHORT-LABEL
 	CPU.EIP += CPU.PF ? mmfi8_i + 2 : 2;
 }
 
-void v16_jnp_short() {	// 7Bh JNP/JPO SHORT-LABEL
+void v16_7B() {	// 7Bh JNP/JPO SHORT-LABEL
 	CPU.EIP += CPU.PF ? 2 : mmfi8_i + 2;
 }
 
-void v16_jl_short() {	// 7Ch JL/JNGE SHORT-LABEL
+void v16_7C() {	// 7Ch JL/JNGE SHORT-LABEL
 	CPU.EIP += CPU.SF != CPU.OF ? mmfi8_i + 2 : 2;
 }
 
-void v16_jnl_short() {	// 7Dh JNL/JGE SHORT-LABEL
+void v16_7D() {	// 7Dh JNL/JGE SHORT-LABEL
 	CPU.EIP += CPU.SF == CPU.OF ? mmfi8_i + 2 : 2;
 }
 
-void v16_jle_short() {	// 7Eh JLE/JNG SHORT-LABEL
+void v16_7E() {	// 7Eh JLE/JNG SHORT-LABEL
 	CPU.EIP += CPU.SF != CPU.OF || CPU.ZF ? mmfi8_i + 2 : 2;
 }
 
-void v16_jnle_short() {	// 7Fh JNLE/JG SHORT-LABEL
+void v16_7F() {	// 7Fh JNLE/JG SHORT-LABEL
 	CPU.EIP += CPU.SF == CPU.OF && CPU.ZF == 0 ? mmfi8_i + 2 : 2;
 }
 
-void v16_grp1_rm8_imm8() {	// 80h GRP1 R/M8, IMM8
+void v16_80() {	// 80h GRP1 R/M8, IMM8
 	const ubyte rm = mmfu8_i; // Get ModR/M byte
 	const ushort im = mmfu8_i(1);
 	const int addr = mmrm16(rm);
@@ -1182,7 +1182,7 @@ void v16_grp1_rm8_imm8() {	// 80h GRP1 R/M8, IMM8
 	CPU.EIP += 3;
 }
 
-void v16_grp1_rm16_imm16() {	// 81h GRP1 R/M16, IMM16
+void v16_81() {	// 81h GRP1 R/M16, IMM16
 	const ubyte rm = mmfu8_i; // Get ModR/M byte
 	const ushort im = mmfu16_i(1);
 	const int addr = mmrm16(rm, 1);
@@ -1212,7 +1212,7 @@ void v16_grp1_rm16_imm16() {	// 81h GRP1 R/M16, IMM16
 	CPU.EIP += 4;
 }
 
-void v16_grp2_rm8_imm8() {	// 82h GRP2 R/M8, IMM8
+void v16_82() {	// 82h GRP2 R/M8, IMM8
 	const ubyte rm = mmfu8_i; // Get ModR/M byte
 	const ushort im = mmfu8_i(1);
 	const int addr = mmrm16(rm);
@@ -1236,7 +1236,7 @@ void v16_grp2_rm8_imm8() {	// 82h GRP2 R/M8, IMM8
 	CPU.EIP += 3;
 }
 
-void v16_grp2_rm16_imm8() {	// 83h GRP2 R/M16, IMM8
+void v16_83() {	// 83h GRP2 R/M16, IMM8
 	const ubyte rm = mmfu8_i; // Get ModR/M byte
 	const ushort im = mmfu8_i(1);
 	const int addr = mmrm16(rm, 1);
@@ -1262,7 +1262,7 @@ void v16_grp2_rm16_imm8() {	// 83h GRP2 R/M16, IMM8
 	CPU.EIP += 3;
 }
 
-void v16_test_rm8_reg8() {	// 84h TEST R/M8, REG8
+void v16_84() {	// 84h TEST R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const int n = mmfu8(mmrm16(rm));
 	int r = void;
@@ -1281,7 +1281,7 @@ void v16_test_rm8_reg8() {	// 84h TEST R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v16_test_rm16_reg16() {	// 85h TEST R/M16, REG16
+void v16_85() {	// 85h TEST R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const int n = mmfu16(mmrm16(rm, 1));
 	int r = void;
@@ -1300,7 +1300,7 @@ void v16_test_rm16_reg16() {	// 85h TEST R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v16_xchg_reg8_rm8() {	// 86h XCHG REG8, R/M8
+void v16_86() {	// 86h XCHG REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm);
 	const ubyte s = mmfu8(addr);
@@ -1323,7 +1323,7 @@ void v16_xchg_reg8_rm8() {	// 86h XCHG REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v16_xchx_reg16_rm16() {	// 87h XCHG REG16, R/M16
+void v16_87() {	// 87h XCHG REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm, 1);
 	// temp <- REG
@@ -1345,7 +1345,7 @@ void v16_xchx_reg16_rm16() {	// 87h XCHG REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v16_mov_rm8_reg8() {	// 88h MOV R/M8, REG8
+void v16_88() {	// 88h MOV R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	int addr = mmrm16(rm);
 	switch (rm & RM_REG) {
@@ -1362,7 +1362,7 @@ void v16_mov_rm8_reg8() {	// 88h MOV R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v16_mov_rm16_reg16() {	// 89h MOV R/M16, REG16
+void v16_89() {	// 89h MOV R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	int addr = mmrm16(rm, 1);
 	switch (rm & RM_REG) {
@@ -1379,7 +1379,7 @@ void v16_mov_rm16_reg16() {	// 89h MOV R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v16_mov_reg8() {	// 8Ah MOV REG8, R/M8
+void v16_8A() {	// 8Ah MOV REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm);
 	const ubyte r = mmfu8(addr);
@@ -1397,7 +1397,7 @@ void v16_mov_reg8() {	// 8Ah MOV REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v16_mov_reg16_rm16() {	// 8Bh MOV REG16, R/M16
+void v16_8B() {	// 8Bh MOV REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm, 1);
 	const ushort r = mmfu16(addr);
@@ -1415,7 +1415,7 @@ void v16_mov_reg16_rm16() {	// 8Bh MOV REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v16_mov_rm16_seg() {	// 8Ch MOV R/M16, SEGREG
+void v16_8C() {	// 8Ch MOV R/M16, SEGREG
 	// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 	const byte rm = mmfu8_i;
 	const int addr = mmrm16(rm, 1);
@@ -1431,7 +1431,7 @@ void v16_mov_rm16_seg() {	// 8Ch MOV R/M16, SEGREG
 	CPU.EIP += 2;
 }
 
-void v16_lea_reg16_mem16() {	// 8Dh LEA REG16, MEM16
+void v16_8D() {	// 8Dh LEA REG16, MEM16
 	const ubyte rm = mmfu8_i;
 	const ushort addr = cast(ushort)mmrm16(rm, 1);
 	switch (rm & RM_REG) {
@@ -1448,7 +1448,7 @@ void v16_lea_reg16_mem16() {	// 8Dh LEA REG16, MEM16
 	CPU.EIP += 2;
 }
 
-void v16_mov_seg_rm16() {	// 8Eh MOV SEGREG, R/M16
+void v16_8E() {	// 8Eh MOV SEGREG, R/M16
 	// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 	const byte rm = mmfu8_i;
 	const ushort addr = mmfu16(mmrm16(rm, 1));
@@ -1464,141 +1464,141 @@ void v16_mov_seg_rm16() {	// 8Eh MOV SEGREG, R/M16
 	CPU.EIP += 2;
 }
 
-void v16_pop_rm16() {	// 8Fh POP R/M16
+void v16_8F() {	// 8Fh POP R/M16
 	const ubyte rm = mmfu8_i;
 	if (rm & RM_REG) { // REG must be 000
 		log_info("Invalid ModR/M for POP R/M16");
 		v16_illegal;
 	}
-	mmiu16(pop16, mmrm16(rm, 1));
+	mmiu16(CPU.pop16, mmrm16(rm, 1));
 	CPU.EIP += 2;
 }
 
-void v16_nop() {	// 90h NOP (aka XCHG AX, AX)
+void v16_90() {	// 90h NOP (aka XCHG AX, AX)
 	++CPU.EIP;
 }
 
-void v16_xchg_ax_cx() {	// 91h XCHG AX, CX
+void v16_91() {	// 91h XCHG AX, CX
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.CX;
 	CPU.CX = r;
 	++CPU.EIP;
 }
 
-void v16_xchg_ax_dx() {	// 92h XCHG AX, DX
+void v16_92() {	// 92h XCHG AX, DX
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.DX;
 	CPU.DX = r;
 	++CPU.EIP;
 }
 
-void v16_xchg_ax_bx() {	// 93h XCHG AX, BX
+void v16_93() {	// 93h XCHG AX, BX
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.BX;
 	CPU.BX = r;
 	++CPU.EIP;
 }
 
-void v16_xchg_ax_sp() {	// 94h XCHG AX, SP
+void v16_94() {	// 94h XCHG AX, SP
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.SP;
 	CPU.SP = r;
 	++CPU.EIP;
 }
 
-void v16_xchg_ax_bp() {	// 95h XCHG AX, BP
+void v16_95() {	// 95h XCHG AX, BP
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.BP;
 	CPU.BP = r;
 	++CPU.EIP;
 }
 
-void v16_xchg_ax_si() {	// 96h XCHG AX, SI
+void v16_96() {	// 96h XCHG AX, SI
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.SI;
 	CPU.SI = r;
 	++CPU.EIP;
 }
 
-void v16_xchg_ax_di() {	// 97h XCHG AX, DI
+void v16_97() {	// 97h XCHG AX, DI
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.DI;
 	CPU.DI = r;
 	++CPU.EIP;
 }
 
-void v16_cbw() {	// 98h CBW
+void v16_98() {	// 98h CBW
 	CPU.AH = CPU.AL & 0x80 ? 0xFF : 0;
 	++CPU.EIP;
 }
 
-void v16_cwd() {	// 99h CWD
+void v16_99() {	// 99h CWD
 	CPU.DX = CPU.AX & 0x8000 ? 0xFFFF : 0;
 	++CPU.EIP;
 }
 
-void v16_call_far() {	// 9Ah CALL FAR_PROC
-	push16(CPU.CS);
-	push16(CPU.IP);
+void v16_9A() {	// 9Ah CALL FAR_PROC
+	CPU.push16(CPU.CS);
+	CPU.push16(CPU.IP);
 	CPU.CS = mmfu16_i;
 	CPU.IP = mmfu16_i(2);
 }
 
-void v16_wait() {	// 9Bh WAIT
+void v16_9B() {	// 9Bh WAIT
 	//TODO: WAIT
 	++CPU.EIP;
 }
 
-void v16_pushf() {	// 9Ch PUSHF
-	push16(FLAG);
+void v16_9C() {	// 9Ch PUSHF
+	CPU.push16(CPU.FLAG);
 	++CPU.EIP;
 }
 
-void v16_popf() {	// 9Dh POPF
-	FLAG = pop16;
+void v16_9D() {	// 9Dh POPF
+	CPU.FLAG = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_sahf() {	// 9Eh SAHF (Save AH to Flags)
-	FLAGB = CPU.AH;
+void v16_9E() {	// 9Eh SAHF (Save AH to Flags)
+	CPU.FLAGB = CPU.AH;
 	++CPU.EIP;
 }
 
-void v16_lahf() {	// 9Fh LAHF (Load AH from Flags)
-	CPU.AH = FLAGB;
+void v16_9F() {	// 9Fh LAHF (Load AH from Flags)
+	CPU.AH = CPU.FLAGB;
 	++CPU.EIP;
 }
 
-void v16_mov_al_mem8() {	// A0h MOV AL, MEM8
+void v16_A0() {	// A0h MOV AL, MEM8
 	CPU.AL = mmfu8(mmfu16_i);
 	CPU.EIP += 2;
 }
 
-void v16_mov_ax_mem16() {	// A1h MOV AX, MEM16
+void v16_A1() {	// A1h MOV AX, MEM16
 	CPU.AX = mmfu16(mmfu16_i);
 	CPU.EIP += 3;
 }
 
-void v16_mov_mem8_al() {	// A2h MOV MEM8, AL
+void v16_A2() {	// A2h MOV MEM8, AL
 	mmiu8(CPU.AL, mmfu16_i);
 	CPU.EIP += 2;
 }
 
-void v16_mov_mem16_ax() {	// A3h MOV MEM16, AX
+void v16_A3() {	// A3h MOV MEM16, AX
 	mmiu16(CPU.AX, mmfu16_i);
 	CPU.EIP += 3;
 }
 
-void v16_movs_str8() {	// A4h MOVS DEST-STR8, SRC-STR8
+void v16_A4() {	// A4h MOVS DEST-STR8, SRC-STR8
 }
 
-void v16_movs_str16() {	// A5h MOVS DEST-STR16, SRC-STR16
+void v16_A5() {	// A5h MOVS DEST-STR16, SRC-STR16
 }
 
-void v16_cmps_str8() {	// A6h CMPS DEST-STR8, SRC-STR8
+void v16_A6() {	// A6h CMPS DEST-STR8, SRC-STR8
 	cpuf8_1(
-		mmfu8(get_ad(CPU.DS, CPU.SI)) -
-		mmfu8(get_ad(CPU.ES, CPU.DI))
+		mmfu8(address(CPU.DS, CPU.SI)) -
+		mmfu8(address(CPU.ES, CPU.DI))
 	);
 	if (CPU.DF) {
 		--CPU.DI;
@@ -1609,9 +1609,9 @@ void v16_cmps_str8() {	// A6h CMPS DEST-STR8, SRC-STR8
 	}
 }
 
-void v16_cmps_str16() {	// A7h CMPSW DEST-STR16, SRC-STR16
+void v16_A7() {	// A7h CMPSW DEST-STR16, SRC-STR16
 	cpuf16_1(
-		mmfu16(get_ad(CPU.DS, CPU.SI)) - mmfu16(get_ad(CPU.ES, CPU.DI))
+		mmfu16(address(CPU.DS, CPU.SI)) - mmfu16(address(CPU.ES, CPU.DI))
 	);
 	if (CPU.DF) {
 		CPU.DI -= 2;
@@ -1622,143 +1622,143 @@ void v16_cmps_str16() {	// A7h CMPSW DEST-STR16, SRC-STR16
 	}
 }
 
-void v16_test_al_imm8() {	// A8h TEST AL, IMM8
+void v16_A8() {	// A8h TEST AL, IMM8
 	cpuf8_3(CPU.AL & mmfu8_i);
 	CPU.EIP += 2;
 }
 
-void v16_test_ax_imm16() {	// A9h TEST AX, IMM16
+void v16_A9() {	// A9h TEST AX, IMM16
 	cpuf16_3(CPU.AX & mmfu16_i);
 	CPU.EIP += 3;
 }
 
-void v16_stos_str8() {	// AAh STOS DEST-STR8
-	mmiu8(CPU.AL, get_ad(CPU.ES, CPU.DI));
+void v16_AA() {	// AAh STOS DEST-STR8
+	mmiu8(CPU.AL, address(CPU.ES, CPU.DI));
 	if (CPU.DF) --CPU.DI; else ++CPU.DI;
 	++CPU.EIP;
 }
 
-void v16_stos_str16() {	// ABh STOS DEST-STR16
-	mmiu16(CPU.AX, get_ad(CPU.ES, CPU.DI));
+void v16_AB() {	// ABh STOS DEST-STR16
+	mmiu16(CPU.AX, address(CPU.ES, CPU.DI));
 	if (CPU.DF) CPU.DI -= 2; else CPU.DI += 2;
 	++CPU.EIP;
 }
 
-void v16_lods_str8() {	// ACh LODS SRC-STR8
-	CPU.AL = mmfu8(get_ad(CPU.DS, CPU.SI));
+void v16_AC() {	// ACh LODS SRC-STR8
+	CPU.AL = mmfu8(address(CPU.DS, CPU.SI));
 	if (CPU.DF) --CPU.SI; else ++CPU.SI;
 	++CPU.EIP;
 }
 
-void v16_lods_str16() {	// ADh LODS SRC-STR16
-	CPU.AX = mmfu16(get_ad(CPU.DS, CPU.SI));
+void v16_AD() {	// ADh LODS SRC-STR16
+	CPU.AX = mmfu16(address(CPU.DS, CPU.SI));
 	if (CPU.DF) CPU.SI -= 2; else CPU.SI += 2;
 	++CPU.EIP;
 }
 
-void v16_scas_str8() {	// AEh SCAS DEST-STR8
-	cpuf8_1(CPU.AL - mmfu8(get_ad(CPU.ES, CPU.DI)));
+void v16_AE() {	// AEh SCAS DEST-STR8
+	cpuf8_1(CPU.AL - mmfu8(address(CPU.ES, CPU.DI)));
 	if (CPU.DF) --CPU.DI; else ++CPU.DI;
 	++CPU.EIP;
 }
 
-void v16_scas_str16() {	// AFh SCAS DEST-STR16
-	cpuf16_1(CPU.AX - mmfu16(get_ad(CPU.ES, CPU.DI)));
+void v16_AF() {	// AFh SCAS DEST-STR16
+	cpuf16_1(CPU.AX - mmfu16(address(CPU.ES, CPU.DI)));
 	if (CPU.DF) CPU.DI -= 2; else CPU.DI += 2;
 	++CPU.EIP;
 }
 
-void v16_mov_al_imm8() {	// B0h MOV AL, IMM8
+void v16_B0() {	// B0h MOV AL, IMM8
 	CPU.AL = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v16_mov_cl_imm8() {	// B1h MOV CL, IMM8
+void v16_B1() {	// B1h MOV CL, IMM8
 	CPU.CL = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v16_mov_dl_imm8() {	// B2h MOV DL, IMM8
+void v16_B2() {	// B2h MOV DL, IMM8
 	CPU.DL = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v16_mov_bl_imm8() {	// B3h MOV BL, IMM8
+void v16_B3() {	// B3h MOV BL, IMM8
 	CPU.BL = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v16_mov_ah_imm8() {	// B4h MOV AH, IMM8
+void v16_B4() {	// B4h MOV AH, IMM8
 	CPU.AH = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v16_mov_ch_imm8() {	// B5h MOV CH, IMM8
+void v16_B5() {	// B5h MOV CH, IMM8
 	CPU.CH = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v16_mov_dh_imm8() {	// B6h MOV DH, IMM8  
+void v16_B6() {	// B6h MOV DH, IMM8  
 	CPU.DH = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v16_mov_bh_imm8() {	// B7h MOV BH, IMM8
+void v16_B7() {	// B7h MOV BH, IMM8
 	CPU.BH = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v16_mov_ax_imm16() {	// B8h MOV AX, IMM16
+void v16_B8() {	// B8h MOV AX, IMM16
 	CPU.AX = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v16_mov_cx_imm16() {	// B9h MOV CX, IMM16
+void v16_B9() {	// B9h MOV CX, IMM16
 	CPU.CX = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v16_mov_dx_imm16() {	// BAh MOV DX, IMM16
+void v16_BA() {	// BAh MOV DX, IMM16
 	CPU.DX = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v16_mov_bx_imm16() {	// BBh MOV BX, IMM16
+void v16_BB() {	// BBh MOV BX, IMM16
 	CPU.BX = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v16_mov_sp_imm16() {	// BCh MOV SP, IMM16
+void v16_BC() {	// BCh MOV SP, IMM16
 	CPU.SP = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v16_mov_bp_imm16() {	// BDh MOV BP, IMM16
+void v16_BD() {	// BDh MOV BP, IMM16
 	CPU.BP = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v16_mov_si_imm16() {	// BEh MOV SI, IMM16
+void v16_BE() {	// BEh MOV SI, IMM16
 	CPU.SI = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v16_mov_di_imm16() {	// BFh MOV DI, IMM16
+void v16_BF() {	// BFh MOV DI, IMM16
 	CPU.DI = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v16_ret_imm16_near() {	// C2 RET IMM16 (NEAR)
+void v16_C2() {	// C2 RET IMM16 (NEAR)
 	const ushort sp = mmfi16_i;
-	CPU.IP = pop16;
+	CPU.IP = CPU.pop16;
 	CPU.SP += sp;
 }
 
-void v16_ret_near() {	// C3h RET (NEAR)
-	CPU.IP = pop16;
+void v16_C3() {	// C3h RET (NEAR)
+	CPU.IP = CPU.pop16;
 }
 
-void v16_les_reg16_mem16() {	// C4h LES REG16, MEM16
+void v16_C4() {	// C4h LES REG16, MEM16
 	const ubyte rm = mmfu8_i;
 	const ushort r = mmfu16(mmrm16(rm, 1));
 	CPU.Segment = SEG_ES;
@@ -1776,7 +1776,7 @@ void v16_les_reg16_mem16() {	// C4h LES REG16, MEM16
 	CPU.EIP += 2;
 }
 
-void v16_lds_reg16_mem16() {	// C5h LDS REG16, MEM16
+void v16_C5() {	// C5h LDS REG16, MEM16
 	const ubyte rm = mmfu8_i;
 	const ushort r = mmfu16(mmrm16(rm, 1));
 	CPU.Segment = SEG_DS;
@@ -1794,7 +1794,7 @@ void v16_lds_reg16_mem16() {	// C5h LDS REG16, MEM16
 	CPU.EIP += 2;
 }
 
-void v16_mov_mem8_imm8() {	// C6h MOV MEM8, IMM8
+void v16_C6() {	// C6h MOV MEM8, IMM8
 	const ubyte rm = mmfu8_i;
 	if (rm & RM_REG) { // No register operation allowed
 		log_info("Invalid ModR/M for MOV MEM8");
@@ -1803,7 +1803,7 @@ void v16_mov_mem8_imm8() {	// C6h MOV MEM8, IMM8
 	mmiu8(mmfu8_i(1), mmrm16(rm));
 }
 
-void v16_mov_mem16_imm16() {	// C7h MOV MEM16, IMM16
+void v16_C7() {	// C7h MOV MEM16, IMM16
 	const ubyte rm = mmfu8_i;
 	if (rm & RM_REG) { // No register operation allowed
 		log_info("Invalid ModR/M for MOV MEM16");
@@ -1812,41 +1812,41 @@ void v16_mov_mem16_imm16() {	// C7h MOV MEM16, IMM16
 	mmiu16(mmfu16_i(1), mmrm16(rm, 1));
 }
 
-void v16_ret_imm16_far() {	// CAh RET IMM16 (FAR)
+void v16_CA() {	// CAh RET IMM16 (FAR)
 	const uint addr = CPU.EIP + 1;
-	CPU.IP = pop16;
-	CPU.CS = pop16;
+	CPU.IP = CPU.pop16;
+	CPU.CS = CPU.pop16;
 	CPU.SP += mmfi16(addr);
 }
 
-void v16_ret_far() {	// CBh RET (FAR)
-	CPU.IP = pop16;
-	CPU.CS = pop16;
+void v16_CB() {	// CBh RET (FAR)
+	CPU.IP = CPU.pop16;
+	CPU.CS = CPU.pop16;
 }
 
-void v16_int3() {	// CCh INT 3
+void v16_CC() {	// CCh INT 3
 	INT(3);
 	++CPU.EIP;
 }
 
-void v16_int_imm8() {	// CDh INT IMM8
+void v16_CD() {	// CDh INT IMM8
 	INT(mmfu8_i);
 	CPU.EIP += 2;
 }
 
-void v16_into() {	// CEh INTO
+void v16_CE() {	// CEh INTO
 	if (CPU.CF) INT(4);
 	++CPU.EIP;
 }
 
-void v16_iret() {	// CFh IRET
-	CPU.IP = pop16;
-	CPU.CS = pop16;
-	FLAG = pop16;
+void v16_CF() {	// CFh IRET
+	CPU.IP = CPU.pop16;
+	CPU.CS = CPU.pop16;
+	CPU.FLAG = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v16_grp2_rm8_1() {	// D0h GRP2 R/M8, 1
+void v16_D0() {	// D0h GRP2 R/M8, 1
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -1873,7 +1873,7 @@ void v16_grp2_rm8_1() {	// D0h GRP2 R/M8, 1
 	CPU.EIP += 2;
 }
 
-void v16_grp2_rm16_1() {	// D1h GRP2 R/M16, 1
+void v16_D1() {	// D1h GRP2 R/M16, 1
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -1900,7 +1900,7 @@ void v16_grp2_rm16_1() {	// D1h GRP2 R/M16, 1
 	CPU.EIP += 2;
 }
 
-void v16_grp2_rm8_cl() {	// D2h GRP2 R/M8, CL
+void v16_D2() {	// D2h GRP2 R/M8, CL
 	// The 8086 does not mask the rotation count.
 	/*const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm);
@@ -1933,7 +1933,7 @@ void v16_grp2_rm8_cl() {	// D2h GRP2 R/M8, CL
 	CPU.EIP += 2;
 }
 
-void v16_grp2_rm16_cl() {	// D3h GRP2 R/M16, CL
+void v16_D3() {	// D3h GRP2 R/M16, CL
 	// The 8086 does not mask the rotation count.
 	/*const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm, 1);
@@ -1966,7 +1966,7 @@ void v16_grp2_rm16_cl() {	// D3h GRP2 R/M16, CL
 	CPU.EIP += 2;
 }
 
-void v16_aam() {	// D4h AAM
+void v16_D4() {	// D4h AAM
 	const int r = CPU.AL % 0xA;
 	cpuf8_5(r);
 	CPU.AL = cast(ubyte)r;
@@ -1974,7 +1974,7 @@ void v16_aam() {	// D4h AAM
 	++CPU.EIP;
 }
 
-void v16_aad() {	// D5h AAD
+void v16_D5() {	// D5h AAD
 	const int r = CPU.AL + (CPU.AH * 0xA);
 	cpuf8_5(r);
 	CPU.AL = cast(ubyte)r;
@@ -1982,56 +1982,56 @@ void v16_aad() {	// D5h AAD
 	++CPU.EIP;
 }
 
-void v16_xlat() {	// D7h XLAT SOURCE-TABLE
-	CPU.AL = mmfu8(get_ad(CPU.DS, CPU.BX) + cast(byte)CPU.AL);
+void v16_D7() {	// D7h XLAT SOURCE-TABLE
+	CPU.AL = mmfu8(address(CPU.DS, CPU.BX) + cast(byte)CPU.AL);
 	++CPU.EIP;
 }
 
-void v16_loopne() {	// E0h LOOPNE/LOOPNZ SHORT-LABEL
+void v16_E0() {	// E0h LOOPNE/LOOPNZ SHORT-LABEL
 	--CPU.CX;
 	if (CPU.CX && CPU.ZF == 0) CPU.EIP += mmfi8_i;
 	else CPU.EIP += 2;
 }
 
-void v16_loope() {	// E1h LOOPE/LOOPZ SHORT-LABEL
+void v16_E1() {	// E1h LOOPE/LOOPZ SHORT-LABEL
 	--CPU.CX;
 	if (CPU.CX && CPU.ZF) CPU.EIP += mmfi8_i;
 	else CPU.EIP += 2;
 }
 
-void v16_loop() {	// E2h LOOP SHORT-LABEL
+void v16_E2() {	// E2h LOOP SHORT-LABEL
 	--CPU.CX;
 	if (CPU.CX) CPU.EIP += mmfi8_i;
 	else CPU.EIP += 2;
 }
 
- void v16_jcxz() {	// E3 JCXZ SHORT-LABEL
+ void v16_E3() {	// E3 JCXZ SHORT-LABEL
 	if (CPU.CX == 0) CPU.EIP += mmfi8_i;
 	else CPU.EIP += 2;
  }
  
- void v16_in_al_imm8() {	// E4h IN AL, IMM8
+ void v16_E4() {	// E4h IN AL, IMM8
  }
  
- void v16_in_ax_imm8() {	// E5h IN AX, IMM8
+ void v16_E5() {	// E5h IN AX, IMM8
  }
  
- void v16_out_imm8_al() {	// E6h OUT IMM8, AL
+ void v16_E6() {	// E6h OUT IMM8, AL
  }
  
- void v16_out_imm8_ax() {	// E7h OUT IMM8, AX
+ void v16_E7() {	// E7h OUT IMM8, AX
  }
  
- void v16_call_near() {	// E8h CALL NEAR-PROC
-	push16(CPU.IP);
+ void v16_E8() {	// E8h CALL NEAR-PROC
+	CPU.push16(CPU.IP);
 	CPU.EIP += mmfi16_i; // Direct within segment
  }
  
- void v16_jmp_near() {	// E9h JMP NEAR-LABEL
+ void v16_E9() {	// E9h JMP NEAR-LABEL
 	CPU.EIP += mmfi16_i + 3; // ±32 KB
  }
  
- void v16_jmp_Far() {	// EAh JMP FAR-LABEL
+ void v16_EA() {	// EAh JMP FAR-LABEL
 	// Any segment, any fragment, 5 byte instruction.
 	// EAh (LO-CPU.IP) (HI-CPU.IP) (LO-CPU.CS) (HI-CPU.CS)
 	const ushort ip = mmfu16_i;
@@ -2040,28 +2040,28 @@ void v16_loop() {	// E2h LOOP SHORT-LABEL
 	CPU.CS = cs;
  }
  
- void v16_jmp_short() {	// EBh JMP SHORT-LABEL
+ void v16_EB() {	// EBh JMP SHORT-LABEL
 	CPU.EIP += mmfi8_i + 2; // ±128 B
  }
  
- void v16_in_al_dx() {	// ECh IN AL, DX
+ void v16_EC() {	// ECh IN AL, DX
  }
  
- void v16_in_ax_dx() {	// EDh IN AX, DX
+ void v16_ED() {	// EDh IN AX, DX
  }
  
- void v16_out_al_dx() {	// EEh OUT AL, DX
+ void v16_EE() {	// EEh OUT AL, DX
  }
  
- void v16_out_ax_dx() {	// EFh OUT AX, DX
+ void v16_EF() {	// EFh OUT AX, DX
  }
  
- void v16_lock() {	// F0h LOCK (prefix)
+ void v16_F0() {	// F0h LOCK (prefix)
 	//CPU.Lock = 1;
 	++CPU.EIP;
  }
  
- void v16_repne() {	// F2h REPNE/REPNZ
+ void v16_F2() {	// F2h REPNE/REPNZ
 	while (CPU.CX > 0) {
 		//TODO: Finish REPNE/REPNZ properly?
 		v16_cmps_str8;
@@ -2071,20 +2071,20 @@ void v16_loop() {	// E2h LOOP SHORT-LABEL
 	++CPU.EIP;
  }
  
- void v16_rep() {	// F3h REP/REPE/REPNZ
+ void v16_F3() {	// F3h REP/REPE/REPNZ
  }
  
- void v16_hlt() {	// F4h HLT
+ void v16_F4() {	// F4h HLT
 	RLEVEL = 0;
 	++CPU.EIP;
  }
  
- void v16_cmc() {	// F5h CMCCMC
+ void v16_F5() {	// F5h CMCCMC
 	CPU.CF = !CPU.CF;
 	++CPU.EIP;
  }
  
- void v16_grp3_rm8_imm8() {	// F6h GRP3 R/M8, IMM8
+ void v16_F6() {	// F6h GRP3 R/M8, IMM8
 	const ubyte rm = mmfu8_i;
 	const ubyte im = mmfu8_i(1);
 	const int addr = mmrm16(rm);
@@ -2132,7 +2132,7 @@ void v16_loop() {	// E2h LOOP SHORT-LABEL
 	CPU.EIP += 3;
  }
  
- void v16_grp3_rm16_imm16() {	// F7 GRP3 R/M16, IMM16
+ void v16_F7() {	// F7 GRP3 R/M16, IMM16
 	const ubyte rm = mmfu8_i; // Get ModR/M byte
 	ushort im = mmfu16_i(1);
 	int addr = mmrm16(rm, 1);
@@ -2175,37 +2175,37 @@ void v16_loop() {	// E2h LOOP SHORT-LABEL
 	CPU.EIP += 4;
 }
 
-void v16_clc() {	// F8h CLC
+void v16_F8() {	// F8h CLC
 	CPU.CF = 0;
 	++CPU.EIP;
 }
 
-void v16_stc() {	// F9h STC
+void v16_F9() {	// F9h STC
 	CPU.CF = 1;
 	++CPU.EIP;
 }
 
-void v16_cli() {	// FAh CLI
+void v16_FA() {	// FAh CLI
 	CPU.IF = 0;
 	++CPU.EIP;
 }
 
-void v16_sti() {	// FBh STI
+void v16_FB() {	// FBh STI
 	CPU.IF = 1;
 	++CPU.EIP;
 }
 
-void v16_cld() {	// FCh CLD
+void v16_FC() {	// FCh CLD
 	CPU.DF = 0;
 	++CPU.EIP;
 }
 
-void v16_std() {	// FDh STD
+void v16_FD() {	// FDh STD
 	CPU.DF = 1;
 	++CPU.EIP;
 }
 
-void v16_grp4_rm8() {	// FEh GRP4 R/M8
+void v16_FE() {	// FEh GRP4 R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -2225,7 +2225,7 @@ void v16_grp4_rm8() {	// FEh GRP4 R/M8
 	CPU.EIP += 2;
 }
 
-void v16_grp4_rm16() {	// FFh GRP5 R/M16
+void v16_FF() {	// FFh GRP5 R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -2243,24 +2243,23 @@ void v16_grp4_rm16() {	// FFh GRP5 R/M16
 		CPU.EIP += 2;
 		break;
 	case RM_REG_010: // 010 - CALL R/M16 (near) -- Indirect within segment
-		push16(CPU.IP);
+		CPU.push16(CPU.IP);
 		CPU.IP = cast(ushort)r;
 		break;
-	case RM_REG_011: { // 011 - CALL MEM16 (far) -- Indirect outside segment
-		ushort nip = cast(ushort)get_ad(mmfu16(addr + 2), r);
-		push16(CPU.CS);
-		push16(CPU.IP);
+	case RM_REG_011: // 011 - CALL MEM16 (far) -- Indirect outside segment
+		ushort nip = cast(ushort)address(mmfu16(addr + 2), r);
+		CPU.push16(CPU.CS);
+		CPU.push16(CPU.IP);
 		CPU.IP = nip;
 		break;
-	}
 	case RM_REG_100: // 100 - JMP R/M16 (near) -- Indirect within segment
 		CPU.IP = cast(ushort)(r + 2);
 		break;
 	case RM_REG_101: // 101 - JMP MEM16 (far) -- Indirect outside segment
-		CPU.IP = cast(ushort)get_ad(mmfu16(addr), r + 2);
+		CPU.IP = cast(ushort)address(mmfu16(addr), r + 2);
 		break;
 	case RM_REG_110: // 110 - PUSH MEM16
-		push16(mmfu16(get_ad(mmfu16(addr + 2), r)));
+		CPU.push16(mmfu16(address(mmfu16(addr + 2), r)));
 		CPU.EIP += 2;
 		break;
 	default:

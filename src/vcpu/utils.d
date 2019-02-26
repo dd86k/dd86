@@ -317,18 +317,39 @@ void __int_enter() { // REAL-MODE
 		#GP
 	IF stack not large enough for a 6-byte return information
 		#SS*/
-	push16(FLAG);
+	CPU.push16(CPU.FLAG);
 	CPU.IF = CPU.TF = 0;
-	push16(CPU.CS);
-	push16(CPU.IP);
+	CPU.push16(CPU.CS);
+	CPU.push16(CPU.IP);
 	//CS ← IDT[inum].selector;
 	//IP ← IDT[inum].offset;
 }
 
 extern (C)
 void __int_exit() { // REAL-MODE
-	CPU.IP = pop16;
-	CPU.CS = pop16;
+	CPU.IP = CPU.pop16;
+	CPU.CS = CPU.pop16;
 	CPU.IF = CPU.TF = 1;
-	FLAG = pop16;
+	CPU.FLAG = CPU.pop16;
+}
+
+/**
+ * Get memory address out of a segment value and a register value.
+ * Params:
+ *   s = Segment register value
+ *   o = Generic register value
+ * Returns: SEG:ADDR Location
+ */
+pragma(inline, true)
+uint address(int s, int o) {
+	return (s << 4) | o;
+}
+
+/**
+ * (8086) Get next instruction location
+ * Returns: CS:IP effective address
+ */
+pragma(inline, true)
+uint get_ip() {
+	return address(CPU.CS, CPU.IP);
 }

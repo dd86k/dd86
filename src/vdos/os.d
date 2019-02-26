@@ -1,18 +1,17 @@
 /**
- * os: Virtual DOS
+ * Virtual DOS
  */
 module vdos.os;
 
 import ddc;
-import vcpu.core : MEMORY, CPU, get_ip, FLAG;
-import vdos.codes, vdos.interrupts;
+import vcpu.core, vcpu.utils, vdos.codes, vdos.interrupts;
 import vdos.structs : SYSTEM_t, DOS_t, CURSOR;
 import vdos.video;
 import logger;
 import appconfig : __MM_SYS_DOS, INIT_MEM;
 
+extern (C):
 nothrow:
-
 
 /// Project logo, fancy!
 enum LOGO =
@@ -31,15 +30,14 @@ enum
 	DOS_MAJOR_VERSION = 5, /// Default major DOS version
 	DOS_MINOR_VERSION = 0; /// Default minor DOS version
 
+/// BIOS tick frequency multiplier per second (18.2 times/sec)
 enum float BIOS_TICK = 1 / 18.2f;
-
-extern (C):
 
 __gshared ubyte
 	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
 	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
 
-// Live structures in MEMORY
+// Live structures mapped to virtual memory (MEMORY)
 
 __gshared DOS_t *DOS = void;
 __gshared SYSTEM_t *SYSTEM = void;
@@ -71,7 +69,7 @@ void print_regs() {
 		CPU.ESP, CPU.EBP, CPU.ESI, CPU.EDI,
 		CPU.CS, CPU.DS, CPU.ES, CPU.FS, CPU.GS, CPU.SS
 	);
-	v_put("EFLAG=");
+	v_put("ECPU.FLAG=");
 	if (CPU.OF) v_putln("OF ");
 	if (CPU.DF) v_putln("DF ");
 	if (CPU.IF) v_putln("IF ");
@@ -82,7 +80,7 @@ void print_regs() {
 	if (CPU.PF) v_putln("PF ");
 	if (CPU.CF) v_putln("CF ");
 	//TODO: Print rest of flags
-	v_printf("(%Xh)\n", FLAG);
+	v_printf("(%Xh)\n", CPU.FLAG);
 }
 
 extern (C)
@@ -105,13 +103,8 @@ void panic(ushort code,
 	);
 	int i = RANGE;
 	ubyte *p = MEMORY + CPU.EIP - TARGET;
-	while (--i) {
-		if (i == TARGET)
-			v_printf(" >%02X<", *p);
-		else
-			v_printf(" %02X", *p);
-		++p;
-	}
+	while (--i)
+		v_printf(i == TARGET ? " >%02X<" : " %02X", *p++);
 	v_put("\n--\n");
 	print_regs;
 	/*printf("--\n"); Temporary commented until print_stack is implemented

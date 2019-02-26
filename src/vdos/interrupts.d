@@ -6,22 +6,18 @@
 module vdos.interrupts;
 
 import ddc;
-import vcpu.core : CPU, MEMORY, get_ad, RLEVEL;
-import vcpu.utils : __int_enter, __int_exit;
-import vdos.os : SYSTEM, DOS, BIOS_TICK, MinorVersion, MajorVersion, OEM_ID;
-import vdos.codes;
+import vcpu.core, vcpu.utils, vdos.os, vdos.codes;
 import vdos.loader : vdos_load;
 import vdos.structs : CURSOR;
 import vdos.video : v_printf, v_put_s, v_putc;
 import os.io : OSTime, os_time, OSDate, os_date, os_pexist;
 import vcpu.mm : MemString;
 
+extern (C):
 nothrow:
-
 
 /// Raise interrupt.
 /// Params: code = Interrupt byte
-extern (C)
 void INT(ubyte code) {
 	debug v_printf("[dbug] INTERRUPT: %02Xh\n", code);
 
@@ -94,11 +90,11 @@ void INT(ubyte code) {
 		case 0: // Get system time by number of clock ticks since midnight
 			OSTime t = void;
 			os_time(t);
-			uint c = cast(uint)( //TODO: FIXME
-				((cast(float)t.hour * 60 * 60) +
-				(cast(float)t.minute * 60) +
-				cast(float)t.second) * BIOS_TICK
-			);
+			const uint c = cast(uint)(cast(float)(
+				(t.hour * 60 * 60) +
+				(t.minute * 60) +
+				t.second
+			) * BIOS_TICK);
 			CPU.CS = c >> 16;
 			CPU.DX = cast(ushort)c;
 			break;
@@ -143,7 +139,7 @@ void INT(ubyte code) {
 
 			break;
 		case 9: { // Write string to stdout
-			char *p = cast(char *)(MEMORY + get_ad(CPU.DS, CPU.DX));
+			char *p = cast(char *)(MEMORY + address(CPU.DS, CPU.DX));
 			ushort l;
 			while (p[l] != '$' && l < 255) ++l;
 			v_put_s(p, l);
@@ -258,7 +254,7 @@ void INT(ubyte code) {
 		case 0x4B: { // Load/execute program
 			switch (CPU.AL) {
 			case 0: // Load and execute the program.
-				char[] p = MemString(get_ad(CPU.DS, CPU.DX));
+				char[] p = MemString(address(CPU.DS, CPU.DX));
 				if (os_pexist(cast(char*)p)) {
 					vdos_load(cast(char*)p);
 					CPU.CF = 0;

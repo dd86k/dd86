@@ -187,7 +187,7 @@ unittest {
 	test("06h  PUSH ES");
 	CPU.ES = 189;
 	exec16(0x06);
-	assert(mmfu16(get_ad(CPU.SS, CPU.SP)) == 189);
+	assert(mmfu16(address(CPU.SS, CPU.SP)) == 189);
 	OK;
 
 	// POP ES
@@ -272,7 +272,7 @@ unittest {
 	test("0Eh  PUSH CS");
 	CPU.CS = 318;
 	exec16(0x0E);
-	assert(mmfu16(get_ad(CPU.SS, CPU.SP)) == 318);
+	assert(mmfu16(address(CPU.SS, CPU.SP)) == 318);
 	OK;
 
 	// ADC R/M8, REG8
@@ -304,7 +304,7 @@ unittest {
 	test("16h  PUSH SS");
 	CPU.SS = 202;
 	exec16(0x16);
-	assert(mmfu16(get_ad(CPU.SS, CPU.SP)) == 202);
+	assert(mmfu16(address(CPU.SS, CPU.SP)) == 202);
 	OK;
 
 	// POP SS
@@ -343,7 +343,7 @@ unittest {
 	test("1Eh  PUSH DS");
 	CPU.DS = 444;
 	exec16(0x1E);
-	assert(mmfu16(get_ad(CPU.SS, CPU.SP)) == 444);
+	assert(mmfu16(address(CPU.SS, CPU.SP)) == 444);
 	OK;
 
 	// POP DS
@@ -674,48 +674,48 @@ unittest {
 	test("50h  PUSH AX");
 	CPU.AX = 0xDAD;
 	exec16(0x50);
-	assert(CPU.AX == mmfu16(get_ad(CPU.SS, CPU.SP)));
+	assert(CPU.AX == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	test("51h  PUSH CX");
 	CPU.CX = 0x4488;
 	exec16(0x51);
-	assert(CPU.CX == mmfu16(get_ad(CPU.SS, CPU.SP)));
+	assert(CPU.CX == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	test("52h  PUSH DX");
 	CPU.DX = 0x4321;
 	exec16(0x52);
-	assert(CPU.DX == mmfu16(get_ad(CPU.SS, CPU.SP)));
+	assert(CPU.DX == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	test("53h  PUSH BX");
 	CPU.BX = 0x1234;
 	exec16(0x53);
-	assert(CPU.BX == mmfu16(get_ad(CPU.SS, CPU.SP)));
+	assert(CPU.BX == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	test("54h  PUSH SP");
 	exec16(0x54);
-	assert(CPU.SP == mmfu16(get_ad(CPU.SS, CPU.SP)) - 2);
+	assert(CPU.SP == mmfu16(address(CPU.SS, CPU.SP)) - 2);
 	OK;
 
 	test("55h  PUSH BP");
 	CPU.BP = 0xFBAC;
 	exec16(0x55);
-	assert(CPU.BP == mmfu16(get_ad(CPU.SS, CPU.SP)));
+	assert(CPU.BP == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	test("56h  PUSH SI");
 	CPU.SI = 0xF00F;
 	exec16(0x56);
-	assert(CPU.SI == mmfu16(get_ad(CPU.SS, CPU.SP)));
+	assert(CPU.SI == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	test("57h  PUSH DI");
 	CPU.DI = 0xB0B;
 	exec16(0x57);
-	assert(CPU.DI == mmfu16(get_ad(CPU.SS, CPU.SP)));
+	assert(CPU.DI == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	// POP
@@ -723,7 +723,7 @@ unittest {
 	CPU.SS = 0x100; CPU.SP = 0x20;
 
 	test("58h  POP AX");
-	push16(0xFFAA);
+	CPU.push16(0xFFAA);
 	exec16(0x58);
 	assert(CPU.AX == 0xFFAA);
 	OK;
@@ -1367,7 +1367,7 @@ unittest {
 
 	test("8Fh  POP R/M16");
 	CPU.CX = 0x4000;
-	push16(1234);
+	CPU.push16(1234);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
 	exec16(0x8F);
 	assert(mmfu16(CPU.CX) == 1234);
@@ -1469,15 +1469,15 @@ unittest {
 
 	test("9Ch  PUSHF");
 	exec16(0x9C);
-	assert(mmfu16(get_ad(CPU.SS, CPU.SP)) == FLAG);
+	assert(mmfu16(address(CPU.SS, CPU.SP)) == CPU.FLAG);
 	OK;
 
 	// POPF
 
 	test("9Dh  POPF");
-	CPU.BX = FLAG;
+	CPU.BX = CPU.FLAG;
 	exec16(0x9D); // Popped!
-	assert(CPU.BX == FLAG);
+	assert(CPU.BX == CPU.FLAG);
 	OK;
 
 	// SAHF
@@ -1485,15 +1485,15 @@ unittest {
 	test("9Eh  SAHF");
 	CPU.AH = 1;
 	exec16(0x9E);
-	assert(FLAGB == 3);
+	assert(CPU.FLAGB == 3);
 	OK;
 
 	// LAHF
 
 	test("9Fh  LAHF");
-	FLAGB = 7; // 111
+	CPU.FLAGB = 7; // 111
 	exec16(0x9F);
-	assert(FLAGB == 7); // 101
+	assert(CPU.FLAGB == 7); // 101
 	OK;
 
 	// MOV AL, MEM8
@@ -1606,14 +1606,14 @@ unittest {
 	CPU.ES = 0x20; CPU.DI = 0x20;        
 	CPU.AL = 'Q';
 	exec16(0xAA);
-	assert(MEMORY[get_ad(CPU.ES, CPU.DI - 1)] == 'Q');
+	assert(MEMORY[address(CPU.ES, CPU.DI - 1)] == 'Q');
 	OK;
 
 	test("ABh  STOSW");
 	CPU.ES = 0x200; CPU.DI = 0x200;        
 	CPU.AX = 0xACDC;
 	exec16(0xAB);
-	assert(mmfu16(get_ad(CPU.ES, CPU.DI - 2)) == 0xACDC);
+	assert(mmfu16(address(CPU.ES, CPU.DI - 2)) == 0xACDC);
 	OK;
 
 	// LODS
@@ -1621,10 +1621,10 @@ unittest {
 	test("ACh  LODS"); // of dosh
 	CPU.AL = 0;
 	CPU.DS = 0xA0; CPU.SI = 0x200;
-	MEMORY[get_ad(CPU.DS, CPU.SI)] = 'H';
+	MEMORY[address(CPU.DS, CPU.SI)] = 'H';
 	exec16(0xAC);
 	assert(CPU.AL == 'H');
-	MEMORY[get_ad(CPU.DS, CPU.SI)] = 'e';
+	MEMORY[address(CPU.DS, CPU.SI)] = 'e';
 	exec16(0xAC);
 	assert(CPU.AL == 'e');
 	OK;
@@ -1632,10 +1632,10 @@ unittest {
 	test("ADh  LODSW");
 	CPU.AX = 0;
 	CPU.DS = 0x40; CPU.SI = 0x80;
-	mmiu16(0x48AA, get_ad(CPU.DS, CPU.SI));
+	mmiu16(0x48AA, address(CPU.DS, CPU.SI));
 	exec16(0xAD);
 	assert(CPU.AX == 0x48AA);
-	mmiu16(0x65BB, get_ad(CPU.DS, CPU.SI));
+	mmiu16(0x65BB, address(CPU.DS, CPU.SI));
 	exec16(0xAD);
 	assert(CPU.AX == 0x65BB);
 	OK;
@@ -1656,7 +1656,7 @@ unittest {
 
 	test("AFh  SCASW");
 	CPU.CS = 0x800; CPU.ES = 0x800; CPU.EIP = 0x30; CPU.DI = 0x30;
-	mmiu16(0xFE22, get_ad(CPU.ES, CPU.DI));
+	mmiu16(0xFE22, address(CPU.ES, CPU.DI));
 	CPU.AX = 0xFE22;
 	exec16(0xAF);
 	assert(CPU.ZF);
@@ -1768,7 +1768,7 @@ unittest {
 
 	test("C2h  RET IMM16 (NEAR)");
 	CPU.IP = 0x200;
-	push16(CPU.IP);
+	CPU.push16(CPU.IP);
 	CPU.IP = 0x340;
 	exec16(0xC2);
 	assert(CPU.IP == 0x200);
@@ -1777,7 +1777,7 @@ unittest {
 
 	test("C3h  RET (NEAR)");
 	CPU.IP = 0x200;
-	push16(CPU.IP);
+	CPU.push16(CPU.IP);
 	CPU.IP = 0x340;
 	exec16(0xC3);
 	assert(CPU.IP == 0x200);
@@ -1829,8 +1829,8 @@ unittest {
 	CPU.SP = 0x1000;
 	CPU.IP = 0x100;
 	CPU.CS = 0x800;
-	push16(CPU.CS);
-	push16(CPU.IP);
+	CPU.push16(CPU.CS);
+	CPU.push16(CPU.IP);
 	CPU.IP = 0x200;
 	CPU.CS = 0x400;
 	CPU.EIP = get_ip;
@@ -1845,8 +1845,8 @@ unittest {
 	test("CBh  RET (FAR)");
 	CPU.IP = 0x200;
 	CPU.CS = 0x900;
-	push16(CPU.CS);
-	push16(CPU.IP);
+	CPU.push16(CPU.CS);
+	CPU.push16(CPU.IP);
 	CPU.IP = 0x300;
 	CPU.CS = 0x500;
 	exec16(0xCB);
@@ -1920,7 +1920,7 @@ unittest {
 	CPU.AL = 10;
 	CPU.DS = 0x400;
 	CPU.BX = 0x20;
-	mmiu8(36, get_ad(CPU.DS, CPU.BX) + CPU.AL);
+	mmiu8(36, address(CPU.DS, CPU.BX) + CPU.AL);
 	exec16(0xD7);
 	assert(CPU.AL == 36);
 	OK;

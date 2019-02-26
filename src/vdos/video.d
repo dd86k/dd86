@@ -95,9 +95,6 @@ version (Posix) {
 	// bytes of memory, but due to alignment (fetch performance) reasons, it's
 	// better to have this 4 bytes wide.
 	// The table can also be put into a file and read at run-time.
-	//TODO: See if the table should be filled with actual characters
-	//      since D characters are UTF-8. Which might avoid us to make a MSB
-	//      version of this table. However, this is safer.
 	/// cp437-utf8-le default character translation table
 	__gshared uint [256]vctable = [
 		0x000020, 0xBA98E2, 0xBB98E2, 0xA599E2, 0xA699E2, 0xA399E2, 0xA099E2, 0x9897E2,

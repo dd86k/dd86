@@ -1,12 +1,12 @@
 /**
- * loader: Executable file loader. Should somewhat be like EXEC.
+ * Executable file loader. Should somewhat be like EXEC.
  */
 module vdos.loader;
 
 import core.stdc.stdio :
 	FILE, fopen, fseek, ftell, fclose, fread, SEEK_END, SEEK_SET;
 import core.stdc.stdlib : malloc, free;
-import vcpu.core;
+import vcpu.core, vcpu.utils;
 import vcpu.mm : mmfu16, mmiu16;
 import vdos.os : MinorVersion, MajorVersion;
 import vdos.structs : MZ_HDR, MZ_HDR_SIZE, MZ_RLC, PSP_t;
@@ -15,8 +15,8 @@ import logger;
 import ddc : NULL_CHAR;
 import vdos.video : v_printf, v_putln;
 
+extern (C):
 nothrow:
-
 
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;
@@ -36,7 +36,6 @@ private enum {
  * Returns: 0 if successfully loaded
  * Notes: Refer to EXEC2BIN.ASM from MS-DOS 2.0 for details, at EXELOAD.
  */
-extern (C)
 int vdos_load(const(char) *path) {
 	FILE *f = fopen(path, "rb"); /// file handle
 
@@ -121,7 +120,7 @@ int vdos_load(const(char) *path) {
 			int i;
 			debug v_putln(" #    seg: off -> loadseg");
 			do {
-				const int addr = get_ad(r.segment, r.offset); // 2.
+				const int addr = address(r.segment, r.offset); // 2.
 				const ushort loadseg = mmfu16(addr); /// 3. Load segment
 				debug v_printf("%2d   %04X:%04X -> cs:%04X+CPU.CS:%04X = %04X\n",
 					i, r.segment, r.offset, mzh.e_cs, CPU.CS, loadseg

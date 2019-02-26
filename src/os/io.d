@@ -1,14 +1,15 @@
 /**
- * io: Basic OS I/O utilities
+ * Basic OS I/O utilities
  *
  * Includes OS utilities, such as changing/getting the current working
  * directory, setting/getting file attributes, directory walkers, etc.
+ *
+ * It is preferrable while importing this module to alias it.
  */
 module os.io;
 
 extern (C):
 nothrow:
-
 
 //TODO: File/directory walker
 
