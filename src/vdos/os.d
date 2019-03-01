@@ -69,7 +69,7 @@ void print_regs() {
 		CPU.ESP, CPU.EBP, CPU.ESI, CPU.EDI,
 		CPU.CS, CPU.DS, CPU.ES, CPU.FS, CPU.GS, CPU.SS
 	);
-	v_put("ECPU.FLAG=");
+	v_put("EFLAG=");
 	if (CPU.OF) v_putln("OF ");
 	if (CPU.DF) v_putln("DF ");
 	if (CPU.IF) v_putln("IF ");
