@@ -4,7 +4,9 @@
 module vcpu.v32; // 80386/80486+
 
 import vcpu.core, vcpu.mm;
-import vcpu.v32 : exec16;
+import vcpu.v16 : exec16;
+import vcpu.utils, vdos.interrupts;
+import logger;
 
 extern (C):
 nothrow:
@@ -1090,7 +1092,7 @@ void v32_5E() {	// 5Eh POP SI
 	++CPU.EIP;
 }
 
-void v32_5E() {	// 5Fh POP DI
+void v32_5F() {	// 5Fh POP DI
 	CPU.DI = CPU.pop16;
 	++CPU.EIP;
 }
@@ -2082,7 +2084,7 @@ void v32_E2() {	// E2h LOOP SHORT-LABEL
  void v32_F2() {	// F2h REPNE/REPNZ
 	while (CPU.CX > 0) {
 		//TODO: Finish REPNE/REPNZ properly?
-		v32_cmps_str8;
+		v32_A6;
 		--CPU.CX;
 		if (CPU.ZF == 0) break;
 	}

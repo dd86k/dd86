@@ -62,7 +62,7 @@ struct TaskSeg16_t {
 	uint SP0, SP1, SP2;
 	ushort IP, FLAG, AX, CX, DX, BX, SP, BP, SI, DI, ES, CS, SS, DS, LDT;
 }
-static assert(TaskSeg16_t.sizeof == 44);
+static assert(TaskSeg16_t.sizeof == 48);
 
 /// 32-bit Task Segment
 struct TaskSeg32_t {
@@ -77,7 +77,7 @@ struct TaskSeg32_t {
 	ushort ES, res3, CS, res4, SS, res5, DS, res6, FS, res7, GS, res8,
 		LDT, res9, flags, iobase;
 }
-static assert(TaskSeg32_t.sizeof == 132);
+static assert(TaskSeg32_t.sizeof == 104);
 
 /**
  * Get a segment descriptor from MEMORY location to ease parsing and reading.

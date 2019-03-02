@@ -417,7 +417,7 @@ void vcpu_init() {
 	REAL_MAP[0x5C] = &v16_5C;
 	REAL_MAP[0x5D] = &v16_5D;
 	REAL_MAP[0x5E] = &v16_5E;
-	REAL_MAP[0x5F] = &v16_5F;
+	REAL_MAP[0x5F] = &v16_illegal;
 	REAL_MAP[0x70] = &v16_70;
 	REAL_MAP[0x71] = &v16_71;
 	REAL_MAP[0x72] = &v16_72;
@@ -520,7 +520,7 @@ void vcpu_init() {
 	REAL_MAP[0xD3] = &v16_D3;
 	REAL_MAP[0xD4] = &v16_D4;
 	REAL_MAP[0xD5] = &v16_D5;
-	REAL_MAP[0xD6] = &v16_D6;
+	REAL_MAP[0xD6] = &v16_illegal;
 	REAL_MAP[0xD7] = &v16_D7;
 	REAL_MAP[0xD8] = &v16_illegal;
 	REAL_MAP[0xD9] = &v16_illegal;
@@ -547,7 +547,7 @@ void vcpu_init() {
 	REAL_MAP[0xEE] = &v16_EE;
 	REAL_MAP[0xEF] = &v16_EF;
 	REAL_MAP[0xF0] = &v16_F0;
-	REAL_MAP[0xF1] = &v16_F1;
+	REAL_MAP[0xF1] = &v16_illegal;
 	REAL_MAP[0xF2] = &v16_F2;
 	REAL_MAP[0xF3] = &v16_F3;
 	REAL_MAP[0xF4] = &v16_F4;
@@ -577,7 +577,7 @@ void vcpu_init() {
 		//REAL_MAP[0x63] =
 		//REAL_MAP[0x64] =
 		//REAL_MAP[0x65] =
-		REAL_MAP[0x66] = &v16_operand_override;
+		REAL_MAP[0x66] = &v16_66;
 		//REAL_MAP[0x67] =
 		//REAL_MAP[0x68] =
 		//REAL_MAP[0x69] =

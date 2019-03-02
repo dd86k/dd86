@@ -1073,7 +1073,7 @@ void v16_5E() {	// 5Eh POP SI
 	++CPU.EIP;
 }
 
-void v16_5E() {	// 5Fh POP DI
+void v16_5F() {	// 5Fh POP DI
 	CPU.DI = CPU.pop16;
 	++CPU.EIP;
 }
@@ -2064,7 +2064,7 @@ void v16_E2() {	// E2h LOOP SHORT-LABEL
  void v16_F2() {	// F2h REPNE/REPNZ
 	while (CPU.CX > 0) {
 		//TODO: Finish REPNE/REPNZ properly?
-		v16_cmps_str8;
+		v16_A6;
 		--CPU.CX;
 		if (CPU.ZF == 0) break;
 	}
@@ -2132,7 +2132,7 @@ void v16_E2() {	// E2h LOOP SHORT-LABEL
 	CPU.EIP += 3;
  }
  
- void v16_F7() {	// F7 GRP3 R/M16, IMM16
+ void v16_F7() {	// F7h GRP3 R/M16, IMM16
 	const ubyte rm = mmfu8_i; // Get ModR/M byte
 	ushort im = mmfu16_i(1);
 	int addr = mmrm16(rm, 1);
