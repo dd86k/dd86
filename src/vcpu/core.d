@@ -129,11 +129,49 @@ struct CPU_t { extern (C): nothrow:
 		ushort SP;
 	}
 	ushort CS, SS, DS, ES, FS, GS;
-	uint CR0, CR1, CR2, CR3;
+	uint TR3, TR4, TR5, TR6, TR7;
 	uint DR0, DR1, DR2, DR3, DR4, DR5, DR6, DR7;
+	// CR0 and CR3 are function properties, and CR1 is never used
+	uint CR2; /// Holds address in case of paging exception
 
-	// Flags are bytes because single flags are affected a lot more often than
-	// whole CPU.FLAG operations, e.g. PUSHDF.
+	// CR0
+	align(2) ubyte
+	PE,	/// Bit 0, Protection Enable
+	MP,	/// Bit 1, Math Present
+	EM,	/// Bit 2, Emulation
+	TS,	/// Bit 3, Task Switched
+	ET,	/// Bit 4, Extension Type (for 387 DX math co-processor)
+	NE,	/// Bit 5, Numeric Error
+	WP,	/// Bit 16, Write Protect
+	AM,	/// Bit 18, Alignement Mask
+	NW,	/// Bit 29, No Write-through
+	CD,	/// Bit 30, Cache Disable
+	PG;	/// Bit 31, Paging bit
+
+	// CR3
+	align(2) ubyte
+	PWT,	/// Bit 3, Page-level Writes Transparent
+	PCD;	/// Bit 4, Page-level Cache Disable
+
+	@property uint CR0() {
+		//TODO: CR0
+		return 0;
+	}
+
+	@property void CR0(uint r) {
+		//TODO: CR0
+	}
+
+	@property uint CR3() {
+		//TODO: CR3
+		return 0;
+	}
+
+	@property void CR3(uint r) {
+		//TODO: CR3
+	}
+
+	// EFLAG
 	align(2) ubyte
 	CF,	/// Bit  0, Carry Flag
 	PF,	/// Bit  2, Parity Flag
@@ -144,9 +182,10 @@ struct CPU_t { extern (C): nothrow:
 	IF,	/// Bit  9, Interrupt Flag
 	DF,	/// Bit 10, Direction Flag
 	OF,	/// Bit 11, Overflow Flag
-	// i486
+	// i286
 	IOPL,	/// Bit 13:12, I/O Privilege Level
 	NT,	/// Bit 14, Nested task Flag
+	// i386
 	RF,	/// Bit 16, Resume Flag
 	VM;	/// Bit 17, Virtual 8086 Mode
 

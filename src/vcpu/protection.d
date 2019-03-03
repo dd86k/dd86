@@ -1,5 +1,6 @@
 /**
- * Protected mode functions, structures, and utilities.
+ * Protected mode functions, structures, and utilities. Includes paging and
+ * segmentation features.
  *
  * All functions in this module have the `p_` prefix.
  */
@@ -9,6 +10,10 @@ import vcpu.core : MEMORY;
 
 extern (C):
 nothrow:
+
+//
+// * Protection features
+//
 
 /**
  * Segment Descriptor Table
@@ -38,7 +43,7 @@ nothrow:
  *  15:0  Segment limit 15:0
  * ```
  *
- * This structure is used for GDT, LDT, IDT, and TSS descriptor tables.
+ * This structure is used for GDT, LDT, IDT, TSS, DSD, CSD, SSD descriptor tables.
  */
 struct SegDesc_t {
 	union {
@@ -56,13 +61,35 @@ struct SegDesc_t {
 }
 static assert(SegDesc_t.sizeof == 8);
 
+/**
+ * Get a segment descriptor from MEMORY location to ease parsing and reading.
+ * Params: loc = Memory location
+ * Returns: Segment Descriptor structure pointer from MEMORY
+ */
+pragma(inline, true)
+SegDesc_t *p_segdesc(uint loc) {
+	return cast(SegDesc_t*)(MEMORY + loc);
+}
+
+//
+// * Paging features
+//
+
+struct Page {
+	uint size;
+	ubyte *data;
+}
+
+//
+// * Task features
+//
+
 /// 16-bit Task Segment
 struct TaskSeg16_t {
-	ushort prev_task;
-	uint SP0, SP1, SP2;
-	ushort IP, FLAG, AX, CX, DX, BX, SP, BP, SI, DI, ES, CS, SS, DS, LDT;
+	ushort prev_task, SP0, SS0, SP1, SS1, SP2, SS2,
+		IP, FLAG, AX, CX, DX, BX, SP, BP, SI, DI, ES, CS, SS, DS, LDT;
 }
-static assert(TaskSeg16_t.sizeof == 48);
+static assert(TaskSeg16_t.sizeof == 44);
 
 /// 32-bit Task Segment
 struct TaskSeg32_t {
@@ -78,16 +105,6 @@ struct TaskSeg32_t {
 		LDT, res9, flags, iobase;
 }
 static assert(TaskSeg32_t.sizeof == 104);
-
-/**
- * Get a segment descriptor from MEMORY location to ease parsing and reading.
- * Params: loc = Memory location
- * Returns: Segment Descriptor structure pointer from MEMORY
- */
-pragma(inline, true)
-SegDesc_t *p_segdesc(uint loc) {
-	return cast(SegDesc_t*)(MEMORY + loc);
-}
 
 /**
  * Get a 16-bit task segment from MEMORY location to ease parsing and reading.
