@@ -132,10 +132,9 @@ struct CPU_t { extern (C): nothrow:
 	uint TR3, TR4, TR5, TR6, TR7;
 	uint DR0, DR1, DR2, DR3, DR4, DR5, DR6, DR7;
 	// CR0 and CR3 are function properties, and CR1 is never used
-	uint CR2; /// Holds address in case of paging exception
+	uint CR2; /// Holds Page-Fault Linear Address
 
-	// CR0
-	align(2) ubyte
+	align(2) ubyte // CR0
 	PE,	/// Bit 0, Protection Enable
 	MP,	/// Bit 1, Math Present
 	EM,	/// Bit 2, Emulation
@@ -148,8 +147,7 @@ struct CPU_t { extern (C): nothrow:
 	CD,	/// Bit 30, Cache Disable
 	PG;	/// Bit 31, Paging bit
 
-	// CR3
-	align(2) ubyte
+	align(2) ubyte // CR3
 	PWT,	/// Bit 3, Page-level Writes Transparent
 	PCD;	/// Bit 4, Page-level Cache Disable
 
@@ -188,11 +186,17 @@ struct CPU_t { extern (C): nothrow:
 	// i386
 	RF,	/// Bit 16, Resume Flag
 	VM;	/// Bit 17, Virtual 8086 Mode
+	
+	//
+	// CPU internals
+	//
 
 	/// Preferred Segment register, defaults to SEG_NONE
 	ubyte Segment;
 	/// Current operation mode, defaults to CPU_MODE_REAL
 	ubyte Mode;
+	/// Current execution level (ring)
+	ubyte Ring;
 	/// Set if OPCODE PREFIX (66h) has been set
 	ubyte Prefix_Operand;
 	/// Set if ADDRESS PREFIX (67h) has been set
@@ -324,7 +328,6 @@ struct CPU_t { extern (C): nothrow:
 		CPU.FLAG = cast(ushort)flag;
 	}
 }
-
 static assert(__traits(isPOD, CPU_t));
 
 /// Main Central Processing Unit

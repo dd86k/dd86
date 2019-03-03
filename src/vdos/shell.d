@@ -11,12 +11,16 @@ import vdos.video;
 import vdos.os;
 import vdos.interrupts : INT;
 import vdos.codes : PANIC_MANUAL;
-import os.io;
-import logger;
-import appconfig : C_RUNTIME, APP_VERSION, BUILD_TYPE;
+import os.io, logger, appconfig;
 
-// Internal input buffer length.
-private enum _BUFS = 127;
+enum : int { // Shell errors
+	/// Command not found
+	ESHL_COMMAND_NOT_FOUND = -1,
+	/// Generic error (avoid to use)
+	ESHL_GENERIC_ERROR = -2,
+	/// Shell session exit
+	ESHL_EXIT = -3,
+}
 
 /**
  * Enter virtual shell (vDOS), assuming all modules have been initiated.
@@ -24,8 +28,8 @@ private enum _BUFS = 127;
  */
 extern (C)
 void vdos_shell() {
-	char *inbuf = // internal input buffer
-		cast(char*)(MEMORY + 0x1200);
+	/// Internal input buffer
+	char *inbuf = cast(char*)(MEMORY + __MM_SHL_DATA);
 SHL_S:
 	//TODO: Print $PROMPT
 	if (os_gcwd(inbuf))
@@ -36,14 +40,17 @@ SHL_S:
 	v_updatecur; // update cursor pos
 	screen_draw;
 
-	vdos_readline(inbuf, _BUFS);
+	vdos_readline(inbuf, __SHL_BUFSIZE);
 	if (*inbuf == '\n') goto SHL_S; // Nothing to process
 
 	switch (vdos_command(cast(immutable)inbuf)) {
-	case -1, -2:
+	case ESHL_COMMAND_NOT_FOUND:
 		v_putln("Bad command or file name");
 		goto SHL_S;
-	case -3:
+	case ESHL_GENERIC_ERROR:
+		v_putln("Something went wrong");
+		goto SHL_S;
+	case ESHL_EXIT:
 		//TODO: Proper application exit
 		return;
 	default: goto SHL_S;
@@ -52,46 +59,39 @@ SHL_S:
 
 /**
  * Execute a command with its arguments, useful for scripting.
- * Uses memory location 1200h + _BUFS + 1 for argument list. (argv)
  * Params: command == Command string with arguments
  * Returns: Error code (ERRORLEVEL), see Note
- * Note:
- *   vdos_command include non-DOS error codes:
- *   Returns -1 on command not found
- *   Returns -2 on error (e.g. trying to call a directory)
- *   Returns -3 if EXIT has been requested
+ * Note: This function may return negative, non-DOS-related, error codes. See
+ * ESHEL_* enumeration values.
  */
 extern (C)
 int vdos_command(const(char) *command) {
 	char **argv = // argument vector, sizeof(char *)
-		cast(char**)(MEMORY + 0x1200 + _BUFS + 1);
+		cast(char**)(MEMORY + __MM_SHL_DATA + __SHL_BUFSIZE + 1);
 	const int argc = sargs(command, argv); /// argument count
-	lowercase(*argv);
 
 	enum uint EXE_L = 0x6578652E; /// ".exe", LSB
 	enum uint COM_L = 0x6D6F632E; /// ".com", LSB
-	//enum uint EXE_U = 0x4558452E; /// ".EXE", LSB
-	//enum uint COM_U = 0x4D4F432E; /// ".COM", LSB
 
 	//TODO: TREE, DIR (waiting on OS directory crawler)
 	//TODO: search for executable in (virtual, user set) PATH
 
 	int argl = cast(int)strlen(*argv);
 
-	//TODO: Do case-insensitive globbing instead (Posix)
 	if (os_pexist(*argv)) {
-		if (os_pisdir(*argv)) return -2;
-		uint ext = *cast(uint*)&argv[0][argl-4];
+		if (os_pisdir(*argv)) return ESHL_COMMAND_NOT_FOUND;
+		uint ext = *cast(uint*)&argv[0][argl-4]; // Gross but works
 		// While it is possible to compare strings (even with slices),
 		// this works the fastests. This will be changed when needed.
+		//TODO: Lowercase here
 		switch (ext) {
-		case COM_L, EXE_L: // already lowercased
+		case COM_L, EXE_L:
 			vdos_load(*argv);
 			vcpu_run;
 			return 0;
-		default: return -1;
+		default: return ESHL_COMMAND_NOT_FOUND;
 		}
-	} else {
+	} else { // Else, try with other extensions
 		//TODO: Clean this up, move +ext checking to function
 		char [512]appname = void;
 		memcpy(cast(char*)appname, *argv, argl); // dont copy null
@@ -110,6 +110,8 @@ int vdos_command(const(char) *command) {
 			return 0;
 		}
 	}
+
+	lowercase(*argv); // Done after for case-sensitive systems
 
 	// ** INTERNAL COMMANDS **
 
@@ -180,7 +182,7 @@ int vdos_command(const(char) *command) {
 		}
 		return 0;
 	}
-	if (strcmp(*argv, "exit") == 0) return -3;
+	if (strcmp(*argv, "exit") == 0) return ESHL_EXIT;
 
 	// H
 
@@ -238,8 +240,7 @@ int vdos_command(const(char) *command) {
 		} else if (strcmp(argv[1], "/free") == 0) {
 			v_putln("Not implemented");
 		} else if (strcmp(argv[1], "/?") == 0) {
-MEM_HELP:
-			v_putln(
+MEM_HELP:		v_putln(
 				"Display memory statistics\n"~
 				"MEM [OPTIONS]\n\n"~
 				"OPTIONS\n"~
@@ -284,9 +285,10 @@ MEM_HELP:
 ?p          Toggle performance mode
 ?panic      Manually panic
 ?r          Print interpreter registers info
-?run        Start the interpreter at current CS:IP values
-?s          Print stack (Not implemented)
-?v          Toggle verbose mode`
+?run        Start vcpu at current CS:IP or EIP
+?s          Print stack (Planned feature)
+?set        Set option (Planned feature)
+?v          Set verbose mode`
 		);
 		return 0;
 	}
@@ -367,7 +369,7 @@ MEM_HELP:
 		return 0;
 	}
 
-	return -1;
+	return ESHL_COMMAND_NOT_FOUND;
 }
 
 /**

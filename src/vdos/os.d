@@ -113,5 +113,3 @@ void panic(ushort code,
 	screen_draw;
 	//gracefulexit(code)
 }
-
-//TODO: Function to handle SEH

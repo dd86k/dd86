@@ -1,5 +1,6 @@
 /**
- * appconfig: DD/86 compilation configuration settings and messages
+ * DD/86 compilation configuration settings and messages. This includes compile
+ * configuration options for vcpu, memory manager, vdos, and os layer module.
  *
  * Pragmas of type msg are only allowed here.
  */
@@ -57,23 +58,17 @@ version (X86) {
 } else version (ARM) {
 	version (LittleEndian) enum PLATFORM = "aarch32le";
 	version (BigEndian) enum PLATFORM = "aarch32be";
-	static assert(0,
-		"ARM is currently not supported");
 } else version (AArch64) {
 	version (LittleEndian) enum PLATFORM = "aarch64le";
 	version (BigEndian) enum PLATFORM = "aarch64be";
-	static assert(0,
-		"AArch64 is currently not supported");
 } else {
-	static assert(0,
-		"This platform is not supported");
-
+	static assert(0, "This platform is not supported");
 }
 
 enum APP_VERSION = "0.0.0"; /// DD/86 version
 
 //
-// CPU
+// * CPU
 //
 
 // It is planned to redo this section, part of Issue #20
@@ -91,19 +86,25 @@ enum uint TSC_SLEEP = cast(uint)(
 //pragma(msg, "[CONFIG]\tvcpu sleeps every ", TSC_SLEEP, " instructions");
 
 //
-// Memory
+// * Memory settings
 //
 
-/// Default initial amount of memory
-enum INIT_MEM = 0x10_0000;
+/// Default initial amount of memory for the virtual machine
 // 0x4_0000    256K MS-DOS minimum
 // 0xA_0000    640K
 // 0x10_0000  1024K Recommended
 // 0x20_0000  2048K
 // 0x40_0000  4096K
+enum INIT_MEM = 0x10_0000;
 
 enum __MM_COM_ROM = 0x400;	/// ROM Communication Area, 400h
 enum __MM_COM_DOS = 0x500;	/// DOS Communication Area, 500h
-// Includes I/O drivers from IO.SYS and IBMBIO.COM
 enum __MM_SYS_DEV = 0x700;	/// System Device Drivers location, 700h
 enum __MM_SYS_DOS = 0x1160;	/// MS-DOS data location, 1160h
+
+//
+// * DOS settings
+//
+
+enum __SHL_BUFSIZE = 127;	/// Input buffer size
+enum __MM_SHL_DATA = 0x5E40;	/// Virtual shell data location
