@@ -36,7 +36,8 @@ void v32(ubyte op) {
 	}
 }
 
-//TODO: 32-bit EXTENSION CURRENT INSTRUCTION: 00h
+//TODO: 32-bit EXTENSION CURRENT INSTRUCTION: 02h
+//TODO: ACCESS CHECKING CURRENT INSTRUCTION: 00h
 
 void v32_00() {	// 00h ADD R/M8, REG8
 	const ubyte rm = mmfu8_i;
@@ -58,10 +59,10 @@ void v32_00() {	// 00h ADD R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v32_01() {	// 01h ADD R/M16, REG16
+void v32_01() {	// 01h ADD R/M32, REG32
 	const ubyte rm = mmfu8_i;
-	const uint addr = mmrm16(rm, 1);
-	int r = mmfu16(addr);
+	const uint addr = mmrm32(rm, 1);
+	long r = mmfu32(addr);
 	switch (rm & RM_REG) {
 	case RM_REG_000: r += CPU.AX; break;
 	case RM_REG_001: r += CPU.CX; break;
@@ -73,8 +74,8 @@ void v32_01() {	// 01h ADD R/M16, REG16
 	case RM_REG_111: r += CPU.DI; break;
 	default:
 	}
-	cpuf16_1(r);
-	mmiu16(r, addr);
+	cpuf32_1(r);
+	mmiu32(cast(int)r, addr);
 	CPU.EIP += 2;
 }
 
@@ -235,6 +236,253 @@ void v32_0D() {	// 0Dh OR AX, IMM16
 void v32_0E() {	// 0Eh PUSH CS
 	CPU.push16(CPU.CS);
 	++CPU.EIP;
+}
+
+void v32_0F() {	// 0Fh Two-byte escape
+	switch (MEMORY[++CPU.EIP]) {
+	case 0x00: // GRP6
+	
+		break;
+	case 0x01: // GRP7
+	
+		break;
+	case 0x02: // LAR REG32, R/M16
+	
+		break;
+	case 0x03: // LSL REG32, R/M16
+	
+		break;
+	case 0x06: // CLTS
+		
+		break;
+	case 0x08: // INVD
+	
+		break;
+	case 0x09: // WBINVD
+	
+		break;
+	case 0x20: // MOV CR*, REG32
+	
+		break;
+	case 0x21: // MOV DR*, REG32
+	
+		break;
+	case 0x22: // MOV REG32, CR*
+	
+		break;
+	case 0x23: // MOV REG32, DR*
+	
+		break;
+	case 0x24: // MOV TR*, REG32
+	
+		break;
+	case 0x26: // MOV REG32, TR*
+	
+		break;
+	case 0x80: // JO IMM32
+	
+		break;
+	case 0x81: // JNO IMM32
+	
+		break;
+	case 0x82: // JB IMM32
+	
+		break;
+	case 0x83: // JNB IMM32
+	
+		break;
+	case 0x84: // JZ IMM32
+	
+		break;
+	case 0x85: // JNZ IMM32
+	
+		break;
+	case 0x86: // JBE IMM32
+	
+		break;
+	case 0x87: // JNBE IMM32
+	
+		break;
+	case 0x88: // JS IMM32
+	
+		break;
+	case 0x89: // JNO IMM32
+	
+		break;
+	case 0x8A: // JP IMM32
+	
+		break;
+	case 0x8B: // JNP IMM32
+	
+		break;
+	case 0x8C: // JL IMM32
+	
+		break;
+	case 0x8D: // JNL IMM32
+	
+		break;
+	case 0x8E: // JLE IMM32
+	
+		break;
+	case 0x8F: // JNLE IMM32
+	
+		break;
+	case 0x90: // SETO IMM32
+	
+		break;
+	case 0x91: // SETNO IMM32
+	
+		break;
+	case 0x92: // SETB IMM32
+	
+		break;
+	case 0x93: // SETNB IMM32
+	
+		break;
+	case 0x94: // SETZ IMM32
+	
+		break;
+	case 0x95: // SETNZ IMM32
+	
+		break;
+	case 0x96: // SETBE IMM32
+	
+		break;
+	case 0x97: // SETNBE IMM32
+	
+		break;
+	case 0x98: // SETS IMM32
+	
+		break;
+	case 0x99: // SETNO IMM32
+	
+		break;
+	case 0x9A: // SETP IMM32
+	
+		break;
+	case 0x9B: // SETNP IMM32
+	
+		break;
+	case 0x9C: // SETL IMM32
+	
+		break;
+	case 0x9D: // SETNL IMM32
+	
+		break;
+	case 0x9E: // SETLE IMM32
+	
+		break;
+	case 0x9F: // SETNLE IMM32
+	
+		break;
+	case 0xA0: // PUSH FS
+	
+		break;
+	case 0xA1: // POP FS
+	
+		break;
+	case 0xA3: // BT R/M32, REG32
+	
+		break;
+	case 0xA4: // SHLD R/M32, IMM32
+	
+		break;
+	case 0xA5: // SHLD R/M32, CR*
+	
+		break;
+	case 0xA6: // CMPXCHG R/M8, REG8
+	
+		break;
+	case 0xA7: // CMPXCHG REG32, R/M32
+	
+		break;
+	case 0xA8: // PUSH GS
+	
+		break;
+	case 0xA9: // POP GS
+	
+		break;
+	case 0xAB: // BTS R/M32, REG32
+	
+		break;
+	case 0xAC: // SHRD R/M32, IMM32
+	
+		break;
+	case 0xAD: // SHRD R/M32, CR*
+	
+		break;
+	case 0xAF: // IMUL REG32, R/M32
+	
+		break;
+	case 0xB2: // LSS MEM32/48
+	
+		break;
+	case 0xB3: // BTR R/M32, REG32
+	
+		break;
+	case 0xB4: // LFS MEM32/48
+	
+		break;
+	case 0xB5: // LGS MEM32/48
+	
+		break;
+	case 0xB6: // MOVZX REG32, R/M8
+	
+		break;
+	case 0xB7: // MOVZX REG32, R/M16
+	
+		break;
+	case 0xBA: // GRP8 R/M32, IMM8
+	
+		break;
+	case 0xBB: // BTC R/M32, REG32
+	
+		break;
+	case 0xBC: // BSF REG32, R/M32
+	
+		break;
+	case 0xBD: // BSR REG32, R/M32
+	
+		break;
+	case 0xBE: // MOVSX REG32, R/M8
+	
+		break;
+	case 0xBF: // MOVSX REG32, R/M16
+	
+		break;
+	case 0xC0: // XADD R/M8, REG8
+	
+		break;
+	case 0xC1: // XADD R/M32, REG32
+	
+		break;
+	case 0xC8: // BSWAP EAX
+	
+		break;
+	case 0xC9: // BSWAP ECX
+	
+		break;
+	case 0xCA: // BSWAP EDX
+	
+		break;
+	case 0xCB: // BSWAP EBX
+	
+		break;
+	case 0xCC: // BSWAP ESP
+	
+		break;
+	case 0xCD: // BSWAP EBP
+	
+		break;
+	case 0xCE: // BSWAP ESI
+	
+		break;
+	case 0xCF: // BSWAP EDI
+	
+		break;
+	default:
+		v32_illegal;
+	}
 }
 
 void v32_10() {	// 10h ADC R/M8, REG8

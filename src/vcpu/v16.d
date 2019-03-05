@@ -1084,7 +1084,7 @@ void v16_66() {	// 66h OPERAND OVERRIDE
 }
 
 void v16_67() {	// 67h ADDRESS OVERRIDE
-	//TODO: CPU.AddressPrefix
+	CPU.Prefix_Address = 1;
 	++CPU.EIP;
 }
 
@@ -2057,7 +2057,7 @@ void v16_E2() {	// E2h LOOP SHORT-LABEL
  }
  
  void v16_F0() {	// F0h LOCK (prefix)
-	//CPU.Lock = 1;
+	CPU.Lock = 1;
 	++CPU.EIP;
  }
  
@@ -2112,14 +2112,14 @@ void v16_E2() {	// E2h LOOP SHORT-LABEL
 		mmiu8(r, addr);
 		break;
 	case RM_REG_110: // 110 - DIV
-	//TODO: Check if im == 0 (#DE), DIV
+		if (im == 0) INT(0);
 		const ubyte d = mmfu8(addr);
 		r = CPU.AX / d;
 		CPU.AH = cast(ubyte)(CPU.AX % d);
 		CPU.AL = cast(ubyte)(r);
 		break;
 	case RM_REG_111: // 111 - IDIV
-	//TODO: Check if im == 0 (#DE), IDIV
+		if (im == 0) INT(0);
 		const byte d = mmfi8(addr);
 		r = cast(short)CPU.AX / d;
 		CPU.AH = cast(ubyte)(cast(short)CPU.AX % d);
@@ -2269,6 +2269,5 @@ void v16_FF() {	// FFh GRP5 R/M16
 }
 
 void v16_illegal() {	// Illegal instruction
-	log_info("INVALID OPERATION CODE");
-	//TODO: Raise vector on illegal op
+	INT(6);
 }

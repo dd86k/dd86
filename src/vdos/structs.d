@@ -99,12 +99,19 @@ struct CURSOR { align(1):
 }
 
 struct __ivt { align(1):
-	ushort offset, segment;
+	union {
+		uint value;
+		alias value this;
+		struct {
+			ushort offset, segment;
+		}
+	}
 }
 
 static assert(__ivt.sizeof == 4, "IVT structure must be size of 4");
 
 /// BIOS data area
+// 300h would usually contain bootstrap code on an actual IBM PC
 // Includes:
 // - 000h -- Interrupt Vector Table
 // - 400h -- ROM Communication Area
@@ -116,10 +123,8 @@ struct SYSTEM_t { align(1):
 		ushort hdd_offset;	/// HDD address Parameter
 		ushort hdd_segment;	/// HDD address Parameter
 	}
-	// 300h would usually contain bootstrap code on an actual IBM PC
 	// 400h
-	ushort COM1; ushort COM2; ushort COM3; ushort COM4;
-	ushort LPT1; ushort LPT2; ushort LPT3; ushort LPT4;
+	ushort COM1, COM2, COM3, COM4, LPT1, LPT2, LPT3, LPT4;
 	ushort equip_flag;	/// See INT 11h
 	ubyte pcjr_ir_kb_er_count;	/// (PCjr) Infrared keyboard link error count
 	ushort memsize;	/// Memory size (in KB)
@@ -208,16 +213,6 @@ struct SYSTEM_t { align(1):
 	ubyte [14]diskette_init_table;	/// DOS
 	ushort mode;	// Referring to the MODE command
 }
-
-static assert(
-	SYSTEM_t.COM1.offsetof == 0x400,
-	"System structure is misaligned"
-);
-static assert(
-	SYSTEM_t.kb_buf_off_start.offsetof == 0x480,
-	"System structure is misaligned"
-);
-/*static assert(
-	SYSTEM_t.print_scr_status.offsetof == 0x500,
-	"System structure is misaligned"
-);*/
+static assert(SYSTEM_t.COM1.offsetof == 0x400);
+static assert(SYSTEM_t.kb_buf_off_start.offsetof == 0x480);
+//static assert(SYSTEM_t.print_scr_status.offsetof == 0x500);

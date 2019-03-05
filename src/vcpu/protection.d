@@ -11,6 +11,8 @@ import vcpu.core : MEMORY;
 extern (C):
 nothrow:
 
+__gshared SegDesc_t *GDT;
+
 //
 // * Protection features
 //

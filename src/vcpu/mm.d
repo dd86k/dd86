@@ -375,7 +375,7 @@ uint mmrm32(ubyte rm, ubyte wide = 0) {
 		CPU.EIP += 2;
 		break; // MOD 10
 	case RM_MOD_11: // MOD 11, Register Mode
-		ubyte m = rm & RM_RM;
+		const ubyte m = rm & RM_RM;
 		if (wide) switch (m) {
 		case RM_RM_000: return CPU.EAX;
 		case RM_RM_001: return CPU.ECX;

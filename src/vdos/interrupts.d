@@ -16,14 +16,63 @@ import vcpu.mm : MemString;
 extern (C):
 nothrow:
 
-/// Raise interrupt.
+/// Raise and handle interrupt. This includes pre and post phases for interrupt
+/// phases.
 /// Params: code = Interrupt byte
 void INT(ubyte code) {
 	debug v_printf("[dbug] INTERRUPT: %02Xh\n", code);
 
 	__int_enter;
 
-	switch (code) {
+	switch (code) { //TODO: Call usercode from IVT
+	case 0x00: // #DE
+	
+		break;
+	case 0x01: // #DB
+	
+		break;
+	case 0x02: // NMI
+	
+		break;
+	case 0x03: // #BP
+	
+		break;
+	case 0x04: // #OF
+	
+		break;
+	case 0x05: // #BR or Print Screen
+	
+		break;
+	case 0x06: // #UD
+	
+		break;
+	case 0x07: // #NM
+	
+		break;
+	case 0x08: // #DF or IRQ0 System Timer
+	
+		break;
+	case 0x09: // Coprocessor overrun or IRQ1 Keyboard Event
+	
+		break;
+	case 0x0A: // #TS
+	
+		break;
+	case 0x0B: // #NP or IRQ3 COM2
+	
+		break;
+	case 0x0C: // #SS or IRQ4 COM1
+	
+		break;
+	case 0x0D: // #GP or IRQ5 Disk driver
+	
+		break;
+	case 0x0E: // #PF or IRQ6 Diskette driver
+	
+		break;
+	case 0x0F: // IRQ7 Printer driver
+	
+		break;
 	case 0x10: // VIDEO
 		switch (CPU.AH) {
 		case 0: // Set video mode

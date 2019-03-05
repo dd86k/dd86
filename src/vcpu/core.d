@@ -186,7 +186,7 @@ struct CPU_t { extern (C): nothrow:
 	// i386
 	RF,	/// Bit 16, Resume Flag
 	VM;	/// Bit 17, Virtual 8086 Mode
-	
+
 	//
 	// CPU internals
 	//
@@ -201,10 +201,15 @@ struct CPU_t { extern (C): nothrow:
 	ubyte Prefix_Operand;
 	/// Set if ADDRESS PREFIX (67h) has been set
 	ubyte Prefix_Address;
+	/// LOCK
+	ubyte Lock;
+	/// WAIT
+	ubyte Wait;
+
 	/// CPU model: 8086, 80486, etc.
 	ubyte Model;
 
-	//TODO: step(ubyte bytes = 1, ushort time = 0)
+	//TODO: step(ubyte  = 1, ushort l = 0)
 
 	//
 	// Stack handling
@@ -606,29 +611,29 @@ void vcpu_init() {
 	REAL_MAP[0xFF] = &v16_FF;
 	switch (CPU.Model) {
 	case CPU_8086:
-		// While it is possible to map a range, range sets relie on
+		// While it is possible to map a range, range sets rely on
 		// memset32/64 which DMD linkers will not find
 		for (size_t i = 0x60; i < 0x70; ++i)
 			REAL_MAP[i] = &v16_illegal;
 		break;
 	case CPU_80486:
 		MODE_MAP[CPU_MODE_PROTECTED] = &exec32;
-		//REAL_MAP[0x60] =
-		//REAL_MAP[0x61] =
-		//REAL_MAP[0x62] =
-		//REAL_MAP[0x63] =
-		//REAL_MAP[0x64] =
-		//REAL_MAP[0x65] =
+		REAL_MAP[0x60] =
+		REAL_MAP[0x61] =
+		REAL_MAP[0x62] =
+		REAL_MAP[0x63] =
+		REAL_MAP[0x64] =
+		REAL_MAP[0x65] = &v16_illegal;
 		REAL_MAP[0x66] = &v16_66;
-		//REAL_MAP[0x67] =
-		//REAL_MAP[0x68] =
-		//REAL_MAP[0x69] =
-		//REAL_MAP[0x6A] =
-		//REAL_MAP[0x6B] =
-		//REAL_MAP[0x6C] =
-		//REAL_MAP[0x6D] =
-		//REAL_MAP[0x6E] =
-		//REAL_MAP[0x6F] =
+		REAL_MAP[0x67] = &v16_67;
+		REAL_MAP[0x68] =
+		REAL_MAP[0x69] =
+		REAL_MAP[0x6A] =
+		REAL_MAP[0x6B] =
+		REAL_MAP[0x6C] =
+		REAL_MAP[0x6D] =
+		REAL_MAP[0x6E] =
+		REAL_MAP[0x6F] = &v16_illegal;
 		break;
 	default:
 	}
