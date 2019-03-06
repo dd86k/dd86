@@ -10,13 +10,13 @@ private enum ERESWDS = 16; /// RESERVED WORDS (MZ EXE)
 /// File/Folder attribute. See INT 21h AH=3Ch
 // Trivia: Did you know Windows still use these values today?
 enum
-	READONLY = 1,
-	HIDDEN = 2,
-	SYSTEM = 4,
-	VOLLABEL = 8,
-	DIRECTORY = 16,
-	ARCHIVE = 32,
-	SHAREABLE = 128;
+	FS_ATTR_READONLY = 1,
+	FS_ATTR_HIDDEN = 2,
+	FS_ATTR_SYSTEM = 4,
+	FS_ATTR_VOLLABEL = 8,
+	FS_ATTR_DIRECTORY = 16,
+	FS_ATTR_ARCHIVE = 32,
+	FS_ATTR_SHAREABLE = 128;
 
 /*
  * DOS Structures
@@ -39,7 +39,7 @@ struct PSP_t { align(1):
 	uint prev_psp;	/// Pointer to the previous PSP (used in SHARE in DOS 3.3 and later)
 	uint reserved2;
 	union {
-		ushort version_;	/// DOS version
+		ushort dosversion;	/// DOS version
 		ubyte majorversion, minorversion;
 	}
 	ubyte [14]reserved3;
@@ -51,7 +51,6 @@ struct PSP_t { align(1):
 	ubyte cmd_length;	/// Number of bytes on the command-line
 	ubyte [127]cmd;	/// Command-line, terminates with CR character (Dh)
 }
-
 static assert(PSP_t.sizeof == 256);
 
 /// MS-DOS EXE header structure
@@ -76,7 +75,7 @@ struct MZ_HDR { align(1):
 enum MZ_HDR_SIZE = MZ_HDR.sizeof + (ERESWDS * 2);
 
 /// MS_DOS EXE Relocation structure
-struct MZ_RLC { align(1): // For AL=03h
+struct mz_reloc { align(1): // For AL=03h
 	ushort offset;	/// Offset
 	ushort segment;	/// Segment of relocation
 }
@@ -107,8 +106,7 @@ struct __ivt { align(1):
 		}
 	}
 }
-
-static assert(__ivt.sizeof == 4, "IVT structure must be size of 4");
+static assert(__ivt.sizeof == 4, "IVT.sizeof != 4");
 
 /// BIOS data area
 // 300h would usually contain bootstrap code on an actual IBM PC
@@ -119,9 +117,11 @@ static assert(__ivt.sizeof == 4, "IVT structure must be size of 4");
 struct SYSTEM_t { align(1):
 	union {
 		__ivt [256]IVT;
-		private ubyte [0x104]_padding0;
-		ushort hdd_offset;	/// HDD address Parameter
-		ushort hdd_segment;	/// HDD address Parameter
+		struct {
+			private ubyte [0x104]_padding0;
+			ushort hdd_offset;	/// HDD address Parameter
+			ushort hdd_segment;	/// HDD address Parameter
+		}
 	}
 	// 400h
 	ushort COM1, COM2, COM3, COM4, LPT1, LPT2, LPT3, LPT4;
