@@ -232,6 +232,8 @@ void screen_draw() {
 		//WriteConsoleOutputW(hOut, ibuf, ibufsize, bufcoord, &ibufout);
 	}
 	version (Posix) {
+		static ushort lasthash;
+		ushort newhash;
 		const uint w = SYSTEM.screen_col; /// width
 		const uint h = SYSTEM.screen_row; /// height
 		char *s = str;
@@ -241,7 +243,8 @@ void screen_draw() {
 		ubyte lbg = 0xFF; /// last background color
 		size_t bi; /// buffer index
 		for (size_t i, x, sc = w * h; sc; ++i, --sc) {
-			const ubyte a = VIDEO[i].attribute;
+			videochar v = VIDEO[i];
+			const ubyte a = v.attribute;
 			ubyte cfg = a & 15;
 			ubyte cbg = a >> 4;
 			if (cfg != lfg) {
@@ -258,7 +261,7 @@ void screen_draw() {
 				lbg = cbg;
 				bi += 10;
 			}
-			const uint c = vctable[VIDEO[i].ascii];
+			const uint c = vctable[v.ascii];
 			if (c < 128) { // +1
 				s[bi] = cast(ubyte)c;
 				++bi;
@@ -272,6 +275,7 @@ void screen_draw() {
 				bi += 2;
 			}
 			++x;
+			newhash ^= v.WORD;
 			if (x == w) {
 				*(s + bi) = '\n';
 				if (sc <= 1) break;
@@ -279,7 +283,11 @@ void screen_draw() {
 				++bi;
 			}
 		}
-		write(STDOUT_FILENO, s, bi);
+
+		if (lasthash != newhash) // I/O is expensive
+			write(STDOUT_FILENO, s, bi);
+
+		lasthash = newhash;
 	}
 }
 
