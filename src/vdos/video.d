@@ -85,6 +85,11 @@ version (Windows) {
 		0xB000, 0x1922, 0xB700, 0x1A22, 0x7F20, 0xB200, 0xA025, 0x2000
 	];*/
 }
+version (CRuntime_Glibc) {
+	// __va_list struct compatible with GNU C ABI
+	// Necessary for compilation on Glibc systems
+	import core.stdc.stdarg : __va_list_tag;
+}
 version (Posix) {
 	// Should cover Linux, FreeBSD, NetBSD, OpenBSD, DragonflyBSD, Haiku,
 	// OpenIndiana/Solaris, macOS
