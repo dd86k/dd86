@@ -5,12 +5,14 @@
  */
 module vdos.video;
 
+version (CRuntime_Glibc)
+	import core.stdc.stdarg : __va_list_tag;
+
 import core.stdc.stdlib : malloc;
 import vcpu.core : MEMORY;
 import vdos.os : SYSTEM;
 
 extern (C):
-
 
 private enum __EGA_ADDRESS = 0xA_0000;
 private enum __MDA_ADDRESS = 0xB_0000;
