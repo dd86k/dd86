@@ -4,14 +4,14 @@
 module vdos.os;
 
 import ddc;
-import vcpu.core, vcpu.utils, vdos.codes, vdos.interrupts;
+import vcpu.core, vcpu.utils, vdos.ecodes, vdos.interrupts;
 import vdos.structs : SYSTEM_t, DOS_t, CURSOR;
 import vdos.video;
 import logger;
 import appconfig : __MM_SYS_DOS, INIT_MEM;
 
 extern (C):
-nothrow:
+
 
 /// Project logo, fancy!
 enum LOGO =

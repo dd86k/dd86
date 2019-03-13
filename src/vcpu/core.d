@@ -10,7 +10,7 @@ import vcpu.v16, vcpu.v32, vcpu.mm, vcpu.utils;
 import appconfig : INIT_MEM, TSC_SLEEP;
 
 extern (C):
-nothrow:
+
 
 // Current CPU. So far only 8086 and 80486 are supported
 enum : ubyte {
@@ -87,7 +87,7 @@ private enum : uint {
 }
 
 /// CPU structure
-struct CPU_t { extern (C): nothrow:
+struct CPU_t { extern (C):
 	union {
 		uint EIP;
 		ushort IP;

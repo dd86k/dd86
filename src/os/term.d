@@ -5,7 +5,7 @@ module os.term;
 
 import ddc : putchar, getchar, fputs, stdout;
 
-nothrow:
+
 
 
 private import core.stdc.stdio : printf;

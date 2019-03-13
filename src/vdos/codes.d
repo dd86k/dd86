@@ -1,7 +1,7 @@
 /**
  * codes: Error codes
  */
-module vdos.codes;
+module vdos.ecodes;
 
 /*
  * DOS error codes

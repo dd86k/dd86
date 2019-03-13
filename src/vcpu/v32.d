@@ -9,7 +9,7 @@ import vcpu.utils, vdos.interrupts;
 import logger;
 
 extern (C):
-nothrow:
+
 
 pragma(inline, true)
 void exec32(ubyte op) {

@@ -10,7 +10,7 @@ import vcpu.core : MEMORY;
 import vdos.os : SYSTEM;
 
 extern (C):
-nothrow:
+
 
 private enum __EGA_ADDRESS = 0xA_0000;
 private enum __MDA_ADDRESS = 0xB_0000;
@@ -145,9 +145,9 @@ version (Posix) {
 		0xA189E2, 0x00B1C2, 0xA589E2, 0xA489E2, 0xA08CE2, 0xA18CE2, 0x00B7C3, 0x8889E2,
 		0x00B0C2, 0x9988E2, 0x00B7C2, 0x9A88E2, 0xBF81E2, 0x00B2C2, 0xA096E2, 0x000020
 	];
+	// ascii-encoded characters, terminal can accept a leading zero
+	// see https://i.stack.imgur.com/KTSQa.png for reference
 	__gshared ushort [16]vatable = [ /// xterm-256 attribute translation table
-		// ascii-encoded characters, terminal can accept a leading zero
-		// see https://i.stack.imgur.com/KTSQa.png for reference
 		// black, blue, green, cyan, red, magenta, brown, lightgray
 		0x3030, 0x3430, 0x3230, 0x3630, 0x3130, 0x3530, 0x3330, 0x3730,
 		// dark gray, ^blue, ^green, ^cyan, ^red, ^magenta, yellow, white
@@ -159,7 +159,7 @@ version (Posix) {
 		[ 0x1b, 0x5b, 0x34, 0x38, 0x3b, 0x35, 0x3b, 0x00, 0x00, 0x6d ];
 	__gshared ushort *fg = void; /// Foreground color string pointer
 	__gshared ushort *bg = void; /// Background color string pointer
-	__gshared char *str = void;
+	__gshared char *str = void; /// Screen stdout buffer
 }
 
 /// Video adapter character (EGA, CGA, VGA)
@@ -221,74 +221,71 @@ void screen_init() {
  * (Posix) Uses write(2) to STDOUT_FILENO
  */
 void screen_draw() {
-	version (Windows) {
-		const uint sc = SYSTEM.screen_col * SYSTEM.screen_row; /// screen size
-		for (size_t i; i < sc; ++i) {
-			//ibuf[i].UnicodeChar = vctable[VIDEO[i].ascii];
-			ibuf[i].AsciiChar = VIDEO[i].ascii;
-			ibuf[i].Attributes = VIDEO[i].attribute;
-		}
-		WriteConsoleOutputA(hOut, ibuf, ibufsize, bufcoord, &ibufout);
-		//WriteConsoleOutputW(hOut, ibuf, ibufsize, bufcoord, &ibufout);
+version (Windows) {
+	const uint sc = SYSTEM.screen_col * SYSTEM.screen_row; /// screen size
+	for (size_t i; i < sc; ++i) {
+		//ibuf[i].UnicodeChar = vctable[VIDEO[i].ascii];
+		ibuf[i].AsciiChar = VIDEO[i].ascii;
+		ibuf[i].Attributes = VIDEO[i].attribute;
 	}
-	version (Posix) {
-		static ushort lasthash;
-		ushort newhash;
-		const uint w = SYSTEM.screen_col; /// width
-		const uint h = SYSTEM.screen_row; /// height
-		char *s = str;
+	WriteConsoleOutputA(hOut, ibuf, ibufsize, bufcoord, &ibufout);
+	//WriteConsoleOutputW(hOut, ibuf, ibufsize, bufcoord, &ibufout);
+}
+version (Posix) {
+	__gshared ushort lasthash;
+	ushort newhash;
+	const uint w = SYSTEM.screen_col; /// width
+	const uint h = SYSTEM.screen_row; /// height
 
-		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
-		ubyte lfg = 0xFF; /// last foreground color
-		ubyte lbg = 0xFF; /// last background color
-		size_t bi; /// buffer index
-		for (size_t i, x, sc = w * h; sc; ++i, --sc) {
-			videochar v = VIDEO[i];
-			const ubyte a = v.attribute;
-			ubyte cfg = a & 15;
-			ubyte cbg = a >> 4;
-			if (cfg != lfg) {
-				*fg = vatable[cfg];
-				*cast(ulong*)(s + bi) = *cast(ulong*)fg_s;
-				*cast(ushort*)(s + bi + 8) = *cast(ushort*)(fg_s + 8);
-				lfg = cfg;
-				bi += 10;
-			}
-			if (cbg != lbg) {
-				*bg = vatable[cbg];
-				*cast(ulong*)(s + bi) = *cast(ulong*)bg_s;
-				*cast(ushort*)(s + bi + 8) = *cast(ushort*)(bg_s + 8);
-				lbg = cbg;
-				bi += 10;
-			}
-			const uint c = vctable[v.ascii];
-			if (c < 128) { // +1
-				s[bi] = cast(ubyte)c;
-				++bi;
-			} else if (c > 0xFFFF) { // +3
-				//*cast(ushort*)(s + bi) = cast(ushort)c;
-				//*(s + bi + 2) = *cp;
-				*cast(uint*)(s + bi) = c;
-				bi += 3;
-			} else { // +2
-				*cast(ushort*)(s + bi) = cast(ushort)c;
-				bi += 2;
-			}
-			++x;
-			newhash ^= v.WORD;
-			if (x == w) {
-				*(s + bi) = '\n';
-				if (sc <= 1) break;
-				x = 0;
-				++bi;
-			}
+	write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
+	ushort lfg = 0xFFFF; /// last foreground color
+	ushort lbg = 0xFFFF; /// last background color
+	size_t bi; /// buffer index
+	for (size_t i, x, sc = w * h; sc; ++i, --sc) {
+		videochar v = VIDEO[i];
+		const ubyte a = v.attribute;
+		ubyte cfg = a & 15;
+		ubyte cbg = a >> 4;
+		if (cfg != lfg) {
+			*fg = vatable[cfg];
+			*cast(ulong*)(str + bi) = *cast(ulong*)fg_s;
+			*cast(ushort*)(str + bi + 8) = *cast(ushort*)(fg_s + 8);
+			lfg = cfg;
+			bi += 10;
 		}
-
-		if (lasthash != newhash) // I/O is expensive
-			write(STDOUT_FILENO, s, bi);
-
-		lasthash = newhash;
+		if (cbg != lbg) {
+			*bg = vatable[cbg];
+			*cast(ulong*)(str + bi) = *cast(ulong*)bg_s;
+			*cast(ushort*)(str + bi + 8) = *cast(ushort*)(bg_s + 8);
+			lbg = cbg;
+			bi += 10;
+		}
+		const uint c = vctable[v.ascii];
+		if (c < 128) { // +1
+			str[bi] = cast(ubyte)c;
+			++bi;
+		} else if (c > 0xFFFF) { // +3
+			*cast(uint*)(str + bi) = c;
+			bi += 3;
+		} else { // +2
+			*cast(ushort*)(str + bi) = cast(ushort)c;
+			bi += 2;
+		}
+		++x;
+		newhash ^= v.WORD;
+		if (x == w) {
+			*(str + bi) = '\n';
+			if (sc <= 1) break;
+			x = 0;
+			++bi;
+		}
 	}
+
+	if (lasthash != newhash) // I/O is expensive!
+		write(STDOUT_FILENO, str, bi);
+
+	lasthash = newhash;
+}
 }
 
 /// Clear virtual video RAM, resets every cells to white/black with null
@@ -297,46 +294,6 @@ void screen_clear() {
 	const int t = (SYSTEM.screen_row * SYSTEM.screen_col) / 2;
 	uint *v = cast(uint*)VIDEO;
 	for (size_t i; i < t; ++i) v[i] = 0x0700_0700;
-}
-
-/// Print the pretty logo
-void screen_logo() {
-	// ┌─────────────────────────────────────────────────────┐
-	// │ ┌──────┐ ┌──────┐        ┌──────┐ ┌──────┐ ┌──────┐ │
-	// │ │ ┌──┐ └┐│ ┌──┐ └┐ ┌───┐ │ ┌──┐ └┐│ ┌──┐ │┌┘ ────┬┘ │
-	// │ │ │  │  ││ │  │  │ └───┘ │ │  │  ││ │  │ │└────┐ │  │
-	// │ │ └──┘ ┌┘│ └──┘ ┌┘       │ └──┘ ┌┘│ └──┘ │┌────┘ │  │
-	// │ └──────┘ └──────┘        └──────┘ └──────┘└──────┘  │
-	// └─────────────────────────────────────────────────────┘
-	enum l =
-	// ┌─────────────────────────────────────────────────────┐
-	"\xDA\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
-	"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
-	"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xBF\n"~
-	// │ ┌──────┐ ┌──────┐        ┌──────┐ ┌──────┐ ┌──────┐ │
-	"\xB3 \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF"~
-	"        \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF"~
-	" \xDA\xC4\xC4\xC4\xC4\xC4\xC4\xBF \xB3\n"~
-	// │ │ ┌──┐ └┐│ ┌──┐ └┐ ┌───┐ │ ┌──┐ └┐│ ┌──┐ │┌┘ ────┬┘ │
-	"\xB3 \xB3 \xDA\xC4\xC4\xBF \xC0\xBF\xB3 \xDA\xC4\xC4\xBF \xC0\xBF"~
-	" \xDA\xC4\xC4\xC4\xBF \xB3 \xDA\xC4\xC4\xBF \xC0\xBF\xB3 \xDA\xC4\xC4\xBF "~
-	"\xB3\xDA\xD9 \xC4\xC4\xC4\xC4\xC2\xD9 \xB3\n"~
-	// │ │ │  │  ││ │  │  │ └───┘ │ │  │  ││ │  │ │└────┐ │  │
-	"\xB3 \xB3 \xB3  \xB3  \xB3\xB3 \xB3  \xB3  \xB3 \xC0\xC4\xC4\xC4\xD9 \xB3"~
-	" \xB3  \xB3  \xB3\xB3 \xB3  \xB3 \xB3\xC0\xC4\xC4\xC4\xC4\xBF \xB3  \xB3\n"~
-	// │ │ └──┘ ┌┘│ └──┘ ┌┘       │ └──┘ ┌┘│ └──┘ │┌────┘ │  │
-	"\xB3 \xB3 \xC0\xC4\xC4\xD9 \xDA\xD9\xB3 \xC0\xC4\xC4\xD9 \xDA\xD9       "~
-	"\xB3 \xC0\xC4\xC4\xD9 \xDA\xD9\xB3 \xC0\xC4\xC4\xD9 \xB3"~
-	"\xDA\xC4\xC4\xC4\xC4\xD9 \xB3  \xB3\n"~
-	// │ └──────┘ └──────┘        └──────┘ └──────┘└──────┘  │
-	"\xB3 \xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9 \xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9    "~
-	"    \xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9 \xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9"~
-	"\xC0\xC4\xC4\xC4\xC4\xC4\xC4\xD9  \xB3\n"~
-	// └─────────────────────────────────────────────────────┘
-	"\xC0\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
-	"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4"~
-	"\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xD9\n";
-	v_put_s(l, l.length);
 }
 
 /**

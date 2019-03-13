@@ -6,7 +6,7 @@
 module vdos.interrupts;
 
 import ddc;
-import vcpu.core, vcpu.utils, vdos.os, vdos.codes;
+import vcpu.core, vcpu.utils, vdos.os, vdos.ecodes;
 import vdos.loader : vdos_load;
 import vdos.structs : CURSOR;
 import vdos.video : v_printf, v_put_s, v_putc;
@@ -14,7 +14,7 @@ import os.io : OSTime, os_time, OSDate, os_date, os_pexist;
 import vcpu.mm : MemString;
 
 extern (C):
-nothrow:
+
 
 /// Raise and handle interrupt. This includes pre and post phases for interrupt
 /// phases.

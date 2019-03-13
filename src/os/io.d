@@ -9,7 +9,7 @@
 module os.io;
 
 extern (C):
-nothrow:
+
 
 //TODO: File/directory walker
 

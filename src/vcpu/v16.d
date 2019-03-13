@@ -8,7 +8,7 @@ import vdos.interrupts;
 import logger;
 
 extern (C):
-nothrow:
+
 
 /**
  * Execute an instruction in REAL mode
@@ -1901,15 +1901,21 @@ void v16_D1() {	// D1h GRP2 R/M16, 1
 }
 
 void v16_D2() {	// D2h GRP2 R/M8, CL
-	// The 8086 does not mask the rotation count.
-	/*const ubyte rm = mmfu8_i;
+	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm);
+	int r = mmfu8(addr);
+	int m = void;
+	if (CPU.Model != CPU_8086) { // vm8086 still falls here
+		m = CPU.CL < 32 ? CPU.CL : CPU.CL & 32; // 5 bits
+	} else { // The 8086 does not mask the rotation count.
+		m = CPU.CL;
+	}
 	switch (rm & RM_REG) {
 	case RM_REG_000: // 000 - ROL
-
+		r <<= m;
 		break;
 	case RM_REG_001: // 001 - ROR
-
+		r >>= m;
 		break;
 	case RM_REG_010: // 010 - RCL
 
@@ -1929,7 +1935,8 @@ void v16_D2() {	// D2h GRP2 R/M8, CL
 	default:
 		log_info("Invalid ModR/M for GRP2 R/M8, CL");
 		v16_illegal;
-	}*/
+	}
+	mmiu8(r, addr);
 	CPU.EIP += 2;
 }
 

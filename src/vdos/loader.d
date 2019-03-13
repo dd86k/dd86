@@ -10,13 +10,13 @@ import vcpu.core, vcpu.utils;
 import vcpu.mm : mmfu16, mmiu16;
 import vdos.os : MinorVersion, MajorVersion;
 import vdos.structs : mz_hdr_t, MZ_HDR_SIZE, mz_reloc_t, PSP_t;
-import vdos.codes;
+import vdos.ecodes;
 import logger;
 import ddc : NULL_CHAR;
 import vdos.video : v_printf, v_putln;
 
 extern (C):
-nothrow:
+
 
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;
@@ -39,7 +39,7 @@ int vdos_load(const(char) *path) {
 	FILE *f = fopen(path, "rb"); /// file handle
 
 	fseek(f, 0, SEEK_END); // for ftell
-	int fsize = cast(int)ftell(f); // >2G binary in MSDOS is not possible anyway
+	int fsize = cast(int)ftell(f); // >2G binary in MSDOS is impossible anyway
 	fseek(f, 0, SEEK_SET);
 
 	CPU.CS = 0x200; // TEMPORARY LOADING SEGMENT

@@ -10,7 +10,7 @@ import vdos.loader : vdos_load;
 import vdos.video;
 import vdos.os;
 import vdos.interrupts : INT;
-import vdos.codes : PANIC_MANUAL;
+import vdos.ecodes : PANIC_MANUAL;
 import os.io, logger, appconfig;
 
 enum : int { // Shell errors
@@ -311,41 +311,41 @@ MEM_HELP:		v_putln(
 		if (argc >= 2) {
 			switch (argv[1][0]) {
 			case '0', 's':
-				LOGLEVEL = LOG_DEBUG;
+				LOGLEVEL = LogLevel.Debug;
 				v_putln("DEBUG");
 				break;
 			case '1', 'c':
-				LOGLEVEL = LOG_CRIT;
+				LOGLEVEL = LogLevel.Fatal;
 				v_putln("CRTICAL");
 				break;
 			case '2', 'e':
-				LOGLEVEL = LOG_ERROR;
+				LOGLEVEL = LogLevel.Error;
 				v_putln("ERRORS");
 				break;
 			case '3', 'w':
-				LOGLEVEL = LOG_WARN;
+				LOGLEVEL = LogLevel.Warning;
 				v_putln("WARNINGS");
 				break;
 			case '4', 'i':
-				LOGLEVEL = LOG_INFO;
+				LOGLEVEL = LogLevel.Info;
 				v_putln("INFORMAL");
 				break;
 			case '5', 'd':
-				LOGLEVEL = LOG_DEBUG;
+				LOGLEVEL = LogLevel.Debug;
 				v_putln("DEBUG");
 				break;
 			default:
 				v_putln("Invalid log level");
 			} // switch
 		} else if (LOGLEVEL) {
-			LOGLEVEL = LOG_SILENCE;
+			LOGLEVEL = LogLevel.Silence;
 			v_putln("SILENCE");
 		} else {
 			debug {
-				LOGLEVEL = LOG_DEBUG;
+				LOGLEVEL = LogLevel.Debug;
 				v_putln("DEBUG");
 			} else {
-				LOGLEVEL = LOG_INFO;
+				LOGLEVEL = LogLevel.Info;
 				v_putln("INFO");
 			}
 		}

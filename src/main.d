@@ -8,7 +8,7 @@ import ddc : puts, printf, fputs, stderr, stdout;
 import vcpu.core : vcpu_init, vcpu_run, opt_sleep;
 import vdos.os : LOGO, SYSTEM, vdos_init;
 import vdos.shell : vdos_shell;
-import vdos.codes;
+import vdos.ecodes;
 import vdos.loader : vdos_load;
 import vdos.video;
 import logger;
@@ -141,10 +141,12 @@ NO_ARGS:
 		}
 	}
 
-	if (LOGLEVEL > LOG_DEBUG) {
+	if (LOGLEVEL > LogLevel.Debug) {
 		printf("E: Unknown log level: %d\n", LOGLEVEL);
 		return EDOS_INVALID_FUNCTION;
 	}
+
+	//TODO: Read settings here
 	
 	WindowSize s;
 	GetWinSize(&s);
@@ -152,8 +154,6 @@ NO_ARGS:
 		puts("Terminal should be at least 80 by 25 characters");
 		return 1;
 	}
-
-	//TODO: Read settings here
 
 	//
 	// Welcome to DD/86
@@ -171,15 +171,16 @@ NO_ARGS:
 			"Processor: Intel 8086\n"~
 			"Memory: %dK OK\n\n",
 			SYSTEM.memsize);
+		
+		const(char) *logl;
 
 		switch (LOGLEVEL) {
-		case LOG_CRIT:  log_info("LOG_CRIT"); break;
-		case LOG_ERROR: log_info("LOG_ERROR"); break;
-		case LOG_WARN:  log_info("LOG_WARN"); break;
-		case LOG_INFO:  log_info("LOG_INFO"); break;
-		case LOG_DEBUG: log_info("LOG_DEBUG"); break;
+		case LogLevel.Info:  logl = "LogLevel.Info"; break;
+		case LogLevel.Debug: logl = "LogLevel.Debug"; break;
 		default:
 		}
+		
+		if (logl) log_info(logl);
 
 		if (opt_sleep == 0)
 			log_info("MAX_PERF");

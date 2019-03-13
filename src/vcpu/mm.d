@@ -18,11 +18,11 @@ module vcpu.mm;
 import core.stdc.string : memcpy, strcpy, strlen;
 import core.stdc.wchar_ : wchar_t, wcscpy;
 import vcpu.core;
-import vdos.codes : PANIC_MEMORY_ACCESS;
+import vdos.ecodes : PANIC_MEMORY_ACCESS;
 import logger;
 
 extern (C):
-nothrow:
+
 
 
 //

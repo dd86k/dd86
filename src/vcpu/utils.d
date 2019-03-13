@@ -8,7 +8,7 @@ module vcpu.utils;
 import vcpu.core, vcpu.mm;
 import logger;
 
-nothrow:
+
 
 
 //

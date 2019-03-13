@@ -10,7 +10,7 @@
  */
 module ddc;
 
-nothrow:
+
 
 
 enum NULL_CHAR = cast(char*)0; /// Null character pointer

@@ -9,7 +9,7 @@ module vcpu.protection;
 import vcpu.core : MEMORY;
 
 extern (C):
-nothrow:
+
 
 __gshared SegDesc_t *GDT;
 
