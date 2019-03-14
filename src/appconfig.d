@@ -22,6 +22,10 @@ private enum i486_FREQ = 16; // to 100
 //pragma(msg, "[CONFIG]\tIntel i486 = ", i486_FREQ, " MHz");
 //pragma(msg, "[CONFIG]\tvcpu sleeps every ", TSC_SLEEP, " instructions");
 
+/// Byte alignment for CPU flags. This includes EFLAG, CR0, and CR3 flags and
+/// will affect Test Registers and Debug Registers in the future.
+enum FLAG_ALIGNMENT = 2;
+
 //
 // * Memory settings
 //

@@ -7,7 +7,7 @@ module vcpu.core;
 
 import logger : log_info;
 import vcpu.v16, vcpu.v32, vcpu.mm, vcpu.utils;
-import appconfig : INIT_MEM;
+import appconfig : INIT_MEM, FLAG_ALIGNMENT;
 
 extern (C):
 
@@ -134,7 +134,7 @@ struct CPU_t { extern (C):
 	// CR0 and CR3 are function properties, and CR1 is never used
 	uint CR2; /// Holds Page-Fault Linear Address
 
-	align(2) ubyte // CR0
+	align(FLAG_ALIGNMENT) ubyte // CR0
 	PE,	/// Bit 0, Protection Enable
 	MP,	/// Bit 1, Math Present
 	EM,	/// Bit 2, Emulation
@@ -147,7 +147,7 @@ struct CPU_t { extern (C):
 	CD,	/// Bit 30, Cache Disable
 	PG;	/// Bit 31, Paging bit
 
-	align(2) ubyte // CR3
+	align(FLAG_ALIGNMENT) ubyte // CR3
 	PWT,	/// Bit 3, Page-level Writes Transparent
 	PCD;	/// Bit 4, Page-level Cache Disable
 
@@ -170,7 +170,7 @@ struct CPU_t { extern (C):
 	}
 
 	// EFLAG
-	align(2) ubyte
+	align(FLAG_ALIGNMENT) ubyte
 	CF,	/// Bit  0, Carry Flag
 	PF,	/// Bit  2, Parity Flag
 	AF,	/// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
@@ -196,14 +196,17 @@ struct CPU_t { extern (C):
 	/// Current operation mode, defaults to CPU_MODE_REAL
 	ubyte Mode;
 	/// Current execution level (ring)
-	ubyte Ring;
+	byte Ring;
+	/// Elapsed cycles
+	uint Cycles;
+
 	/// Set if OPCODE PREFIX (66h) has been set
 	ubyte Prefix_Operand;
 	/// Set if ADDRESS PREFIX (67h) has been set
 	ubyte Prefix_Address;
-	/// LOCK
+	/// LOCK prefix
 	ubyte Lock;
-	/// WAIT
+	/// WAIT prefix
 	ubyte Wait;
 
 	/// CPU model: 8086, 80486, etc.
@@ -216,27 +219,24 @@ struct CPU_t { extern (C):
 	//
 
 	/**
-	* (8086) Push a WORD value into stack.
-	* Params: value = WORD value to PUSH
-	*/
+	 * Push a WORD value into stack. Adjusts SP properly according to CPU
+	 * Model.
+	 * Params: value = WORD value to PUSH
+	 */
 	void push16(ushort value) {
-		CPU.SP -= 2;
-		mmiu16(value, address(CPU.SS, CPU.SP));
+		if (Model == CPU_8086) {
+			CPU.SP -= 2;
+			mmiu16(value, address(CPU.SS, CPU.SP));
+		} else {
+			mmiu16(value, address(CPU.SS, CPU.SP));
+			CPU.SP -= 2;
+		}
 	}
 
 	/**
-	* (80206+) Push a WORD value into stack.
-	* Params: value = WORD value to PUSH
-	*/
-	void push16a(ushort value) {
-		mmiu16(value, address(CPU.SS, CPU.SP));
-		CPU.SP -= 2;
-	}
-
-	/**
-	* Pop a WORD value from stack.
-	* Returns: WORD value
-	*/
+	 * Pop a WORD value from stack.
+	 * Returns: WORD value
+	 */
 	ushort pop16() {
 		const uint addr = address(CPU.SS, CPU.SP);
 		CPU.SP += 2;
@@ -244,18 +244,18 @@ struct CPU_t { extern (C):
 	}
 
 	/**
-	* Push a DWORD value into stack.
-	* Params: value = DWORD value
-	*/
+	 * Push a DWORD value into stack.
+	 * Params: value = DWORD value
+	 */
 	void push32(uint value) {
 		CPU.SP -= 4;
 		mmiu32(value, address(CPU.SS, CPU.SP));
 	}
 
 	/**
-	* Pop a DWORD value from stack.
-	* Returns: WORD value
-	*/
+	 * Pop a DWORD value from stack.
+	 * Returns: WORD value
+	 */
 	uint pop32() {
 		const uint addr = address(CPU.SS, CPU.SP);
 		CPU.SP += 2;
@@ -266,9 +266,9 @@ struct CPU_t { extern (C):
 	@property:
 
 	/**
-	* Get CPU.FLAG as WORD.
-	* Returns: CPU.FLAG as byte
-	*/
+	 * Get CPU.FLAG as WORD.
+	 * Returns: CPU.FLAG as byte
+	 */
 	ubyte FLAGB() {
 		ubyte b = 2; // bit 1 always set
 		if (CPU.SF) b |= MASK_SF;
@@ -290,9 +290,9 @@ struct CPU_t { extern (C):
 	}
 
 	/**
-	* Get CPU.FLAG as WORD.
-	* Returns: CPU.FLAG (WORD)
-	*/
+	 * Get CPU.FLAG as WORD.
+	 * Returns: CPU.FLAG (WORD)
+	 */
 	ushort FLAG() {
 		ushort b = CPU.FLAGB;
 		if (CPU.OF) b |= MASK_OF;
@@ -315,9 +315,9 @@ struct CPU_t { extern (C):
 	}
 
 	/**
-	* Get ECPU.FLAG as DWORD.
-	* Returns: ECPU.FLAG (DWORD)
-	*/
+	 * Get ECPU.FLAG as DWORD.
+	 * Returns: ECPU.FLAG (DWORD)
+	 */
 	uint EFLAG() {
 		uint b = CPU.FLAG;
 		if (CPU.RF) b |= MASK_RF;
@@ -333,7 +333,6 @@ struct CPU_t { extern (C):
 		CPU.FLAG = cast(ushort)flag;
 	}
 }
-static assert(__traits(isPOD, CPU_t));
 
 /// Main Central Processing Unit
 public __gshared CPU_t CPU = void;
