@@ -7,7 +7,7 @@ module vcpu.core;
 
 import logger : log_info;
 import vcpu.v16, vcpu.v32, vcpu.mm, vcpu.utils;
-import appconfig : INIT_MEM, TSC_SLEEP;
+import appconfig : INIT_MEM;
 
 extern (C):
 
@@ -350,7 +350,8 @@ public __gshared CPU_t CPU = void;
  * tl;dr: Emulates CALLs
  */
 __gshared short RLEVEL = 1;
-__gshared ubyte opt_sleep = 1; /// Is sleeping available to use? If so, use it
+//TODO: Move settings to a structure
+__gshared bool opt_sleep = 1; /// Is sleeping available to use? If so, use it
 __gshared ubyte *MEMORY = void; /// Memory bank
 __gshared int MEMORYSIZE = INIT_MEM; /// Memory size
 
@@ -654,11 +655,21 @@ void vcpu_init() {
 
 /// Start the emulator at CS:IP (default: FFFF:0000h)
 void vcpu_run() {
-	const int sleep = opt_sleep;
+	import os.sleep;
+
+	//swatch_t watch = void;
+	//watch.initw;
+
+	const bool sleep = opt_sleep;
+	
 	while (RLEVEL > 0) {
 		CPU.EIP = get_ip;
 		const ubyte op = MEMORY[CPU.EIP];
 		MODE_MAP[CPU.Mode](op);
+		
+		if (sleep) {
+			
+		}
 	}
 }
 

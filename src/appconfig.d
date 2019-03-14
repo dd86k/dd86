@@ -7,10 +7,48 @@
 module appconfig;
 
 import os.sleep : SLEEP_TIME;
-import vdos.os : LOGO, DOS_MAJOR_VERSION, DOS_MINOR_VERSION;
+import vdos.os : DOS_MAJOR_VERSION, DOS_MINOR_VERSION;
 import vdos.structs;
 
-pragma(msg, LOGO);
+//
+// * CPU
+//
+
+// in MHz
+private enum i8086_FREQ = 5; // to 10
+private enum i486_FREQ = 16; // to 100
+
+//pragma(msg, "[CONFIG]\tIntel 8086 = ", i8086_FREQ, " MHz");
+//pragma(msg, "[CONFIG]\tIntel i486 = ", i486_FREQ, " MHz");
+//pragma(msg, "[CONFIG]\tvcpu sleeps every ", TSC_SLEEP, " instructions");
+
+//
+// * Memory settings
+//
+
+/// Default initial amount of memory for the virtual machine
+// 0x4_0000    256K MS-DOS minimum
+// 0xA_0000    640K
+// 0x10_0000  1024K Recommended
+// 0x20_0000  2048K
+// 0x40_0000  4096K
+enum INIT_MEM = 0x10_0000;
+
+enum __MM_COM_ROM = 0x400;	/// ROM Communication Area, 400h
+enum __MM_COM_DOS = 0x500;	/// DOS Communication Area, 500h
+enum __MM_SYS_DEV = 0x700;	/// System Device Drivers location, 700h
+enum __MM_SYS_DOS = 0x1160;	/// MS-DOS data location, 1160h
+
+//
+// * DOS settings
+//
+
+enum __SHL_BUFSIZE = 127;	/// Input buffer size
+enum __MM_SHL_DATA = 0x5E40;	/// Virtual shell data location
+
+//
+// Compilation messages
+//
 
 debug {
 	pragma(msg, "[DEBUG]\tON");
@@ -66,45 +104,3 @@ version (X86) {
 }
 
 enum APP_VERSION = "0.0.0"; /// DD/86 version
-
-//
-// * CPU
-//
-
-// It is planned to redo this section, part of Issue #20
-
-// in MHz
-private enum i8086_FREQ = 5; // to 10
-private enum i486_FREQ = 16; // to 100
-
-/// Number of instructions to execute before sleeping for SLEEP_TIME
-enum uint TSC_SLEEP = cast(uint)(
-	(SLEEP_TIME * 1_000_000) / ((cast(float)1 / i8086_FREQ) * 1000)
-);
-//pragma(msg, "[CONFIG]\tIntel 8086 = ", i8086_FREQ, " MHz");
-//pragma(msg, "[CONFIG]\tIntel i486 = ", i486_FREQ, " MHz");
-//pragma(msg, "[CONFIG]\tvcpu sleeps every ", TSC_SLEEP, " instructions");
-
-//
-// * Memory settings
-//
-
-/// Default initial amount of memory for the virtual machine
-// 0x4_0000    256K MS-DOS minimum
-// 0xA_0000    640K
-// 0x10_0000  1024K Recommended
-// 0x20_0000  2048K
-// 0x40_0000  4096K
-enum INIT_MEM = 0x10_0000;
-
-enum __MM_COM_ROM = 0x400;	/// ROM Communication Area, 400h
-enum __MM_COM_DOS = 0x500;	/// DOS Communication Area, 500h
-enum __MM_SYS_DEV = 0x700;	/// System Device Drivers location, 700h
-enum __MM_SYS_DOS = 0x1160;	/// MS-DOS data location, 1160h
-
-//
-// * DOS settings
-//
-
-enum __SHL_BUFSIZE = 127;	/// Input buffer size
-enum __MM_SHL_DATA = 0x5E40;	/// Virtual shell data location

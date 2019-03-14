@@ -43,7 +43,7 @@ SHL_S:
 	vdos_readline(inbuf, __SHL_BUFSIZE);
 	if (*inbuf == '\n') goto SHL_S; // Nothing to process
 
-	switch (vdos_command(cast(immutable)inbuf)) {
+	switch (vdos_command(inbuf)) {
 	case ESHL_COMMAND_NOT_FOUND:
 		v_putln("Bad command or file name");
 		goto SHL_S;

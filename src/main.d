@@ -159,8 +159,7 @@ NO_ARGS:
 	// Welcome to DD/86
 	//
 
-	//sleep_init;	// sleep timers
-	vcpu_init;	// vcpu
+	vcpu_init;	// vcpu, watch
 	con_init;	// os.term
 	vdos_init;	// vdos, screen
 
@@ -171,12 +170,12 @@ NO_ARGS:
 			"Processor: Intel 8086\n"~
 			"Memory: %dK OK\n\n",
 			SYSTEM.memsize);
-		
+
 		const(char) *logl;
 
 		switch (LOGLEVEL) {
-		case LogLevel.Info:  logl = "LogLevel.Info"; break;
-		case LogLevel.Debug: logl = "LogLevel.Debug"; break;
+		case LogLevel.Info:  logl = "LogLevel=Info"; break;
+		case LogLevel.Debug: logl = "LogLevel=Debug"; break;
 		default:
 		}
 		
