@@ -19,33 +19,31 @@ import appconfig : APP_VERSION, PLATFORM, BUILD_TYPE, C_RUNTIME;
 private:
 extern (C):
 
-/// Description string, used in version and help screens
-enum DESCRIPTION = "IBM PC Virtual Machine and DOS Emulation Layer\n";
 /// Copyright string, used in version and license screens
 enum COPYRIGHT = "Copyright (c) 2017-2019 dd86k\n\n";
 
 /// Print version screen to stdout
 void _version() {
+	import d = std.compiler;
 	printf(
 		LOGO~
-		DESCRIPTION~
 		COPYRIGHT~
 		"DD/86-"~PLATFORM~" v"~APP_VERSION~"-"~BUILD_TYPE~" ("~__TIMESTAMP__~")\n"~
 		"Homepage: <https://git.dd86k.space/dd86k/dd86>\n"~
 		"License: MIT <https://opensource.org/licenses/MIT>\n"~
-		"Compiler: "~__VENDOR__~" v%d\n"~
-		"Runtime: "~C_RUNTIME~" v%d\n",
-		__VERSION__
+		"Compiler: "~__VENDOR__~" v%u.%03u\n"~
+		"Runtime: "~C_RUNTIME~"\n",
+		d.version_major, d.version_minor
 	);
 }
 
 /// Print help screen to stdout
 void help() {
 	puts(
-		DESCRIPTION~
+		"IBM PC Virtual Machine and DOS Emulation Layer\n"~
 		"USAGE\n"~
 		"	dd86 [-vPN] [FILE [FILEARGS]]\n"~
-		"	dd86 {-V|--version|-h|--help}\n\n"~
+		"	dd86 {-V|--version|-h|--help|--license}\n\n"~
 		"OPTIONS\n"~
 		"	-P	Do not sleep between cycles\n"~
 		"	-N	Remove starting messages and banner\n"~
@@ -162,6 +160,7 @@ NO_ARGS:
 	vcpu_init;	// vcpu, watch
 	con_init;	// os.term
 	vdos_init;	// vdos, screen
+	Clear;
 
 	if (arg_info) {
 		v_printf(

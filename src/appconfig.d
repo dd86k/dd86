@@ -56,10 +56,10 @@ enum __MM_SHL_DATA = 0x5E40;	/// Virtual shell data location
 
 debug {
 	pragma(msg, "[DEBUG]\tON");
-	enum BUILD_TYPE = "DEBUG";	/// For printing purposes
+	enum BUILD_TYPE = "debug";	/// For printing purposes
 } else {
 	pragma(msg, "[DEBUG]\tOFF");
-	enum BUILD_TYPE = "RELEASE";	/// For printing purposes
+	enum BUILD_TYPE = "release";	/// For printing purposes
 }
 
 pragma(msg, "[DOS]\tDD/86 version: ", APP_VERSION);
