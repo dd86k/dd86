@@ -15,8 +15,8 @@ buildType "debug-verbose" {
 	buildOptions "debugMode"
 	buildOptions "debugInfoC" platform="dmd"
 	buildOptions "debugInfoC" platform="ldc"
-	dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v" platform="dmd"
-	dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v" platform="ldc"
+	dflags "-betterC" "-preview=intpromote" "-vgc" "-vtls" "-v" platform="dmd"
+	dflags "-betterC" "-preview=intpromote" "-vgc" "-vtls" "-v" platform="ldc"
 	dflags "-vgc" "-vtls" "-v" platform="gdc"
 }
 
@@ -25,8 +25,8 @@ buildType "debug" {
 	buildOptions "debugMode"
 	buildOptions "debugInfoC" platform="dmd"
 	buildOptions "debugInfoC" platform="ldc"
-	dflags "-betterC" "-transition=intpromote" platform="dmd"
-	dflags "-betterC" "-transition=intpromote" platform="ldc"
+	dflags "-betterC" "-preview=intpromote" platform="dmd"
+	dflags "-betterC" "-preview=intpromote" platform="ldc"
 }
 
 #
@@ -36,22 +36,22 @@ buildType "debug" {
 buildType "release" {
 	targetType "executable"
 	buildOptions "releaseMode" "optimize"
-	dflags "-betterC" "-transition=intpromote" platform="dmd"
-	dflags "-betterC" "-transition=intpromote" platform="ldc"
+	dflags "-betterC" "-preview=intpromote" platform="dmd"
+	dflags "-betterC" "-preview=intpromote" platform="ldc"
 }
 
 buildType "release-nobounds" {
 	targetType "executable"
 	buildOptions "releaseMode" "noBoundsCheck" "optimize"
-	dflags "-betterC" "-transition=intpromote" platform="dmd"
-	dflags "-betterC" "-transition=intpromote" platform="ldc"
+	dflags "-betterC" "-preview=intpromote" platform="dmd"
+	dflags "-betterC" "-preview=intpromote" platform="ldc"
 }
 
 buildType "release-inline" {
 	targetType "executable"
 	buildOptions "releaseMode" "noBoundsCheck" "optimize" "inline"
-	dflags "-betterC" "-transition=intpromote" platform="dmd"
-	dflags "-betterC" "-transition=intpromote" platform="ldc"
+	dflags "-betterC" "-preview=intpromote" platform="dmd"
+	dflags "-betterC" "-preview=intpromote" platform="ldc"
 }
 
 #
@@ -62,8 +62,8 @@ buildType "unittest" { # default to dub test
 	targetName "tests"
 	targetType "executable"
 	buildOptions "unittests"
-	dflags "-transition=intpromote" platform="dmd"
-	dflags "-transition=intpromote" platform="ldc"
+	dflags "-preview=intpromote" platform="dmd"
+	dflags "-preview=intpromote" platform="ldc"
 
 	sourcePaths "tests/units/"
 	importPaths "tests/units/"
@@ -73,21 +73,21 @@ buildType "unittest" { # default to dub test
 buildType "docs" {
 	buildOptions "syntaxOnly"
 	# -Dd -> ddoc directory
-	dflags "-transition=intpromote" "-betterC" "-Ddddoc" "-c" platform="dmd"
-	dflags "-transition=intpromote" "-betterC" "-Ddddoc" "-c" platform="ldc"
+	dflags "-preview=intpromote" "-betterC" "-Ddddoc" "-c" platform="dmd"
+	dflags "-preview=intpromote" "-betterC" "-Ddddoc" "-c" platform="ldc"
 	dflags "-Ddddoc" "-c" platform="gdc"
 }
 
 buildType "cov" { # Unsupported, requires druntime
 	buildOptions "coverage" "debugInfo"
-	dflags "-transition=intpromote" "-betterC" platform="dmd"
-	dflags "-transition=intpromote" "-betterC" platform="ldc"
+	dflags "-preview=intpromote" "-betterC" platform="dmd"
+	dflags "-preview=intpromote" "-betterC" platform="ldc"
 }
 
 buildType "unittest-cov" {
 	buildOptions "unittests" "coverage" "debugMode" "debugInfo"
-	dflags "-transition=intpromote" platform="dmd"
-	dflags "-transition=intpromote" platform="ldc"
+	dflags "-preview=intpromote" platform="dmd"
+	dflags "-preview=intpromote" platform="ldc"
 
 	sourcePaths "tests/"
 	importPaths "tests/"
@@ -101,8 +101,8 @@ buildType "bench" { # utils
 	targetName "bench"
 	targetType "executable"
 	buildOptions "unittests"
-	dflags "-transition=intpromote" platform="dmd"
-	dflags "-transition=intpromote" platform="ldc"
+	dflags "-preview=intpromote" platform="dmd"
+	dflags "-preview=intpromote" platform="ldc"
 
 	sourceFiles "tests/test_utils.d" "tests/bench/benchmark.d"
 }
@@ -111,8 +111,8 @@ buildType "bench-screen" {
 	targetName "bench-screen"
 	targetType "executable"
 	buildOptions "unittests"
-	dflags "-transition=intpromote" platform="dmd"
-	dflags "-transition=intpromote" platform="ldc"
+	dflags "-preview=intpromote" platform="dmd"
+	dflags "-preview=intpromote" platform="ldc"
 
 	sourceFiles "tests/bench/screen.d"
 }
@@ -125,8 +125,8 @@ buildType "demo-screen" {
 	targetName "demo-screen"
 	targetType "executable"
 	buildOptions "unittests"
-	dflags "-transition=intpromote" platform="dmd"
-	dflags "-transition=intpromote" platform="ldc"
+	dflags "-preview=intpromote" platform="dmd"
+	dflags "-preview=intpromote" platform="ldc"
 
 	sourceFiles "tests/demo/screen.d"
 }

@@ -9,7 +9,6 @@ import logger;
 
 extern (C):
 
-
 /**
  * Execute an instruction in REAL mode
  * Params: op = opcode
@@ -1203,7 +1202,7 @@ void v16_81() {	// 81h GRP1 R/M16, IMM16
 	case RM_REG_110: // 110 - XOR
 		r ^= im; mmiu16(r, addr); break;
 	case RM_REG_111: // 111 - CMP
-		r -= im;  break;
+		r -= im; break;
 	default:
 		log_info("Invalid ModR/M from GRP1_16");
 		v16_illegal;
@@ -1326,10 +1325,11 @@ void v16_86() {	// 86h XCHG REG8, R/M8
 void v16_87() {	// 87h XCHG REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm, 1);
+	const ushort s = mmfu16(addr);
 	// temp <- REG
 	// REG  <- MEM
 	// MEM  <- temp
-	ushort r = void; const ushort s = mmfu16(addr);
+	ushort r = void;
 	switch (rm & RM_REG) {
 	case RM_REG_000: r = CPU.AX; CPU.AX = s; break;
 	case RM_REG_001: r = CPU.CX; CPU.CX = s; break;
@@ -1589,10 +1589,10 @@ void v16_A3() {	// A3h MOV MEM16, AX
 	CPU.EIP += 3;
 }
 
-void v16_A4() {	// A4h MOVS DEST-STR8, SRC-STR8
+void v16_A4() {	// TODO: A4h MOVS DEST-STR8, SRC-STR8
 }
 
-void v16_A5() {	// A5h MOVS DEST-STR16, SRC-STR16
+void v16_A5() {	// TODO: A5h MOVS DEST-STR16, SRC-STR16
 }
 
 void v16_A6() {	// A6h CMPS DEST-STR8, SRC-STR8
@@ -1852,19 +1852,42 @@ void v16_D0() {	// D0h GRP2 R/M8, 1
 	int r = mmfu8(addr);
 	switch (rm & RM_REG) {
 	case RM_REG_000: // 000 - ROL
-		r <<= 1; if (r & 0x100) { r |= 1; CPU.OF = 1; } break;
+		r <<= 1;
+		if (r & 0x100) {
+			r |= 1; CPU.OF = 1;
+		}
+		break;
 	case RM_REG_001: // 001 - ROR
-		if (r & 1) { r |= 0x100; CPU.OF = 1; } r >>= 1; break;
+		if (r & 1) {
+			r |= 0x100; CPU.OF = 1;
+		}
+		r >>= 1;
+		break;
 	case RM_REG_010: // 010 - RCL
-		r <<= 1; if (r & 0x200) { r |= 1; CPU.OF = 1; } break;
+		r <<= 1;
+		if (r & 0x200) {
+			r |= 1; CPU.OF = 1;
+		}
+		break;
 	case RM_REG_011: // 011 - RCR
-		if (r & 1) { r |= 0x200; CPU.OF = 1; } r >>= 1; break;
+		if (r & 1) {
+			r |= 0x200; CPU.OF = 1;
+		}
+		r >>= 1;
+		break;
 	case RM_REG_100: // 100 - SAL/SHL
-		r <<= 1; cpuf8_1(r); break;
+		r <<= 1;
+		cpuf8_1(r);
+		break;
 	case RM_REG_101: // 101 - SHR
-		r >>= 1; cpuf8_1(r); break;
+		r >>= 1;
+		cpuf8_1(r);
+		break;
 	case RM_REG_111: // 111 - SAR
-		if (r & 0x80) r |= 0x100; r >>= 1; cpuf8_1(r); break;
+		if (r & 0x80) r |= 0x100;
+		r >>= 1;
+		cpuf8_1(r);
+		break;
 	default: // 110
 		log_info("Invalid ModR/M for GRP2 R/M8, 1");
 		v16_illegal;
@@ -1879,19 +1902,41 @@ void v16_D1() {	// D1h GRP2 R/M16, 1
 	int r = mmfu16(addr);
 	switch (rm & RM_REG) {
 	case RM_REG_000: // 000 - ROL
-		r <<= 1; if (r & 0x1_0000) { r |= 1; CPU.OF = 1; } break;
+		r <<= 1;
+		if (r & 0x1_0000) {
+			r |= 1; CPU.OF = 1;
+		}
+		break;
 	case RM_REG_001: // 001 - ROR
-		if (r & 1) { r |= 0x1_0000; CPU.OF = 1; } r >>= 1; break;
+		if (r & 1) {
+			r |= 0x1_0000; CPU.OF = 1;
+		}
+		r >>= 1;
+		break;
 	case RM_REG_010: // 010 - RCL
-		r <<= 1; if (r & 0x2_0000) { r |= 1; CPU.OF = 1; } break;
+		r <<= 1; if (r & 0x2_0000) {
+			r |= 1; CPU.OF = 1;
+		}
+		break;
 	case RM_REG_011: // 011 - RCR
-		if (r & 1) { r |= 0x2_0000; CPU.OF = 1; } r >>= 1; break;
+		if (r & 1) {
+			r |= 0x2_0000; CPU.OF = 1;
+		}
+		r >>= 1;
+		break;
 	case RM_REG_100: // 100 - SAL/SHL
-		r <<= 1; cpuf16_1(r); break;
+		r <<= 1;
+		cpuf16_1(r);
+		break;
 	case RM_REG_101: // 101 - SHR
-		r >>= 1; cpuf16_1(r); break;
+		r >>= 1;
+		cpuf16_1(r);
+		break;
 	case RM_REG_111: // 111 - SAR
-		if (r & 0x8000) r |= 0x1_0000; r >>= 1; cpuf16_1(r); break;
+		if (r & 0x8000) r |= 0x1_0000;
+		r >>= 1;
+		cpuf16_1(r);
+		break;
 	default: // 110
 		log_info("Invalid ModR/M for GRP2 R/M16, 1");
 		v16_illegal;
@@ -1906,37 +1951,44 @@ void v16_D2() {	// D2h GRP2 R/M8, CL
 	int r = mmfu8(addr);
 	int m = void;
 	if (CPU.Model != CPU_8086) { // vm8086 still falls here
-		m = CPU.CL < 32 ? CPU.CL : CPU.CL & 32; // 5 bits
+		if (CPU.CL > 31) { // 5 bits
+			m = CPU.CL & 32;
+			CPU.CF = 1;
+		} else {
+			m = CPU.CL;
+		}
 	} else { // The 8086 does not mask the rotation count.
 		m = CPU.CL;
 	}
+
+	if (m == 0) goto NOP;
+
 	switch (rm & RM_REG) {
 	case RM_REG_000: // 000 - ROL
 		r <<= m;
+		if (r > 0xFF) {
+			r |= 1; CPU.OF = 1;
+		}
 		break;
 	case RM_REG_001: // 001 - ROR
-		r >>= m;
+		
 		break;
 	case RM_REG_010: // 010 - RCL
-
 		break;
 	case RM_REG_011: // 011 - RCR
-
 		break;
 	case RM_REG_100: // 100 - SAL/SHL
-
 		break;
 	case RM_REG_101: // 101 - SHR
-
 		break;
 	case RM_REG_111: // 111 - SAR
-
 		break;
 	default:
 		log_info("Invalid ModR/M for GRP2 R/M8, CL");
 		v16_illegal;
 	}
 	mmiu8(r, addr);
+NOP:
 	CPU.EIP += 2;
 }
 

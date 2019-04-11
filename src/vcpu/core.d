@@ -464,7 +464,7 @@ void vcpu_init() {
 	REAL_MAP[0x5C] = &v16_5C;
 	REAL_MAP[0x5D] = &v16_5D;
 	REAL_MAP[0x5E] = &v16_5E;
-	REAL_MAP[0x5F] = &v16_illegal;
+	REAL_MAP[0x5F] = &v16_5F;
 	REAL_MAP[0x70] = &v16_70;
 	REAL_MAP[0x71] = &v16_71;
 	REAL_MAP[0x72] = &v16_72;

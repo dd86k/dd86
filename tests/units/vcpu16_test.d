@@ -669,7 +669,7 @@ unittest {
 
 	// PUSH
 
-	CPU.SS = 0x100; CPU.SP = 0x60;
+	CPU.SS = 0x100; CPU.SP = 0x80;
 
 	test("50h  PUSH AX");
 	CPU.AX = 0xDAD;
@@ -727,47 +727,47 @@ unittest {
 	exec16(0x58);
 	assert(CPU.AX == 0xFFAA);
 	OK;
-	
-	CPU.SP -= 2;
+
 	test("59h  POP CX");
+	CPU.push16(0xFFAC);
 	exec16(0x59);
-	assert(CPU.CX == 0xFFAA);
+	assert(CPU.CX == 0xFFAC);
 	OK;
 
-	CPU.SP -= 2;
 	test("5Ah  POP DX");
+	CPU.push16(0xFFAD);
 	exec16(0x5A);
-	assert(CPU.DX == 0xFFAA);
+	assert(CPU.DX == 0xFFAD);
 	OK;
 
-	CPU.SP -= 2;
 	test("5Bh  POP BX");
+	CPU.push16(0xFFAB);
 	exec16(0x5B);
-	assert(CPU.BX == 0xFFAA);
+	assert(CPU.BX == 0xFFAB);
 	OK;
 
-	CPU.SP -= 2;
 	test("5Ch  POP SP");
+	CPU.push16(0x1FAA);
 	exec16(0x5C);
-	assert(CPU.SP == 0xFFAA);
+	assert(CPU.SP == 0x1FAA);
 	OK;
 
-	CPU.SP = 0x1E;
 	test("5Dh  POP BX");
+	CPU.push16(0x2FAA);
 	exec16(0x5D);
-	assert(CPU.BP == 0xFFAA);
+	assert(CPU.BP == 0x2FAA);
 	OK;
 
-	CPU.SP -= 2;
 	test("5Eh  POP SI");
+	CPU.push16(0x3FAA);
 	exec16(0x5E);
-	assert(CPU.SI == 0xFFAA);
+	assert(CPU.SI == 0x3FAA);
 	OK;
 
-	CPU.SP -= 2;
 	test("5Fh  POP DI");
+	CPU.push16(0x4FAA);
 	exec16(0x5F);
-	assert(CPU.DI == 0xFFAA);
+	assert(CPU.DI == 0x4FAA);
 	OK;
 
 	// Conditional Jumps
