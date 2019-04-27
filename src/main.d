@@ -26,61 +26,59 @@ enum COPYRIGHT = "Copyright (c) 2017-2019 dd86k\n\n";
 void _version() {
 	import d = std.compiler;
 	printf(
-		LOGO~
-		COPYRIGHT~
-		"DD/86-"~PLATFORM~" v"~APP_VERSION~"-"~BUILD_TYPE~" ("~__TIMESTAMP__~")\n"~
-		"Homepage: <https://git.dd86k.space/dd86k/dd86>\n"~
-		"License: MIT <https://opensource.org/licenses/MIT>\n"~
-		"Compiler: "~__VENDOR__~" v%u.%03u\n"~
-		"Runtime: "~C_RUNTIME~"\n",
-		d.version_major, d.version_minor
+	"DD/86-"~PLATFORM~" v"~APP_VERSION~"-"~BUILD_TYPE~" ("~__TIMESTAMP__~")\n"~
+	"Homepage: <https://git.dd86k.space/dd86k/dd86>\n"~
+	"License: MIT <https://opensource.org/licenses/MIT>\n"~
+	"Compiler: "~__VENDOR__~" v%u.%03u\n"~
+	"Runtime: "~C_RUNTIME~"\n",
+	d.version_major, d.version_minor
 	);
 }
 
 /// Print help screen to stdout
 void help() {
 	puts(
-		"IBM PC Virtual Machine and DOS Emulation Layer\n"~
-		"USAGE\n"~
-		"	dd86 [-vPN] [FILE [FILEARGS]]\n"~
-		"	dd86 {-V|--version|-h|--help|--license}\n\n"~
-		"OPTIONS\n"~
-		"	-P	Do not sleep between cycles\n"~
-		"	-N	Remove starting messages and banner\n"~
-		"	-v	Increase verbosity level\n"~
-		"	-V, --version  Print version screen, then exit\n"~
-		"	-h, --help     Print help screen, then exit\n"~
-		"	--license      Print license screen, then exit"
+	"IBM PC Virtual Machine and DOS Emulation Layer\n"~
+	"USAGE\n"~
+	"	dd86 [-vPN] [FILE [FILEARGS]]\n"~
+	"	dd86 {--version|-h|--help|--license}\n\n"~
+	"OPTIONS\n"~
+	"	-P	Do not sleep between cycles\n"~
+	"	-N	Remove starting messages and banner\n"~
+	"	-v	Increase verbosity level\n"~
+	"	--version  Print version screen, then exit\n"~
+	"	-h, --help     Print help screen, then exit\n"~
+	"	--license      Print license screen, then exit"
 	);
 }
 
 /// Print license screen to stdout
 void license() {
 	puts(
-		COPYRIGHT~
-		"Permission is hereby granted, free of charge, to any person obtaining a copy of\n"~
-		"this software and associated documentation files (the \"Software\"), to deal in\n"~
-		"the Software without restriction, including without limitation the rights to\n"~
-		"use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\n"~
-		"of the Software, and to permit persons to whom the Software is furnished to do\n"~
-		"so, subject to the following conditions:\n\n"~
-		"The above copyright notice and this permission notice shall be included in all\n"~
-		"copies or substantial portions of the Software.\n\n"~
-		"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"~
-		"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"~
-		"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"~
-		"AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"~
-		"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"~
-		"OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"~
-		"SOFTWARE."
+	COPYRIGHT~
+	"Permission is hereby granted, free of charge, to any person obtaining a copy of\n"~
+	"this software and associated documentation files (the \"Software\"), to deal in\n"~
+	"the Software without restriction, including without limitation the rights to\n"~
+	"use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\n"~
+	"of the Software, and to permit persons to whom the Software is furnished to do\n"~
+	"so, subject to the following conditions:\n\n"~
+	"The above copyright notice and this permission notice shall be included in all\n"~
+	"copies or substantial portions of the Software.\n\n"~
+	"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"~
+	"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"~
+	"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"~
+	"AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"~
+	"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"~
+	"OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"~
+	"SOFTWARE."
 	);
 }
 
 int main(int argc, char **argv) {
-	ubyte args = 1;
+	bool args = true;
 	ubyte arg_info = 1;
-	char *prog; /// FILE, COM or EXE to start
-//	char *args; /// FILEARGS, MUST not be over 127 characters
+	char *prog; /// FILE: COM or EXE to start
+//	char *args; /// FILEARGS: for FILE
 //	size_t arg_i; /// Argument length incrementor
 
 	// Pre-boot / CLI
@@ -88,7 +86,7 @@ int main(int argc, char **argv) {
 	while (--argc >= 1) {
 		++argv;
 
-		if (args == 0) goto NO_ARGS;
+		if (args == false) goto NO_ARGS;
 
 		if (*(*argv + 1) == '-') { // long arguments
 			char* a = *(argv) + 2;
@@ -116,7 +114,6 @@ int main(int argc, char **argv) {
 				case 'v': ++LOGLEVEL; break;
 				case '-': args = !args; break;
 				case 'h': help; return 0;
-				case 'V': _version; return 0;
 				default:
 					printf("Unknown parameter: -%c\n", *a);
 					return EDOS_INVALID_FUNCTION;
@@ -125,7 +122,6 @@ int main(int argc, char **argv) {
 			continue;
 		}
 NO_ARGS:
-
 		if (cast(int)prog == 0)
 			prog = *argv;
 		//TODO: Else, append program arguments (strcmp)
@@ -145,8 +141,8 @@ NO_ARGS:
 	}
 
 	//TODO: Read settings here
-	
-	WindowSize s;
+
+	WindowSize s = void;
 	GetWinSize(&s);
 	if (s.Width < 80 || s.Height < 25) {
 		puts("Terminal should be at least 80 by 25 characters");
@@ -168,7 +164,8 @@ NO_ARGS:
 			"Ver "~APP_VERSION~" "~__DATE__~"\n"~
 			"Processor: Intel 8086\n"~
 			"Memory: %dK OK\n\n",
-			SYSTEM.memsize);
+			SYSTEM.memsize
+		);
 
 		const(char) *logl;
 
@@ -177,7 +174,7 @@ NO_ARGS:
 		case LogLevel.Debug: logl = "LogLevel=Debug"; break;
 		default:
 		}
-		
+
 		if (logl) log_info(logl);
 
 		if (opt_sleep == 0)

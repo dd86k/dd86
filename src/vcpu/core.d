@@ -78,61 +78,70 @@ private enum : uint {
 	MASK_IF = 0x200,
 	MASK_DF = 0x400,
 	MASK_OF = 0x800,
+
 	// i286
-	MASK_IOPL = 0x3000, // Bit 13:12
-	MASK_NT = 0x4000, // Bit 14
+	MASK_IOPL = 0x3000,	/// Bit 13:12
+	MASK_NT   = 0x4000,	/// Bit 14
+
 	// i386
-	MASK_RF = 0x1_0000, // Bit 16
-	MASK_VM = 0x2_0000 // Bit 17
+	MASK_RF = 0x1_0000,	/// Bit 16
+	MASK_VM = 0x2_0000,	/// Bit 17
+
+	// CR0
+	MASK_CR0_PE = 1,	/// Bit 0
+	MASK_CR0_MP = 2,	/// Bit 1
+	MASK_CR0_EM = 4,	/// Bit 2
+	MASK_CR0_TS = 8,	/// Bit 3
+	MASK_CR0_ET = 0x10,	/// Bit 4
+	MASK_CR0_NE = 0x20,	/// Bit 5
+	MASK_CR0_WP = 0x1_0000,	/// Bit 16
+	MASK_CR0_AM = 0x4_0000,	/// Bit 18
+	MASK_CR0_PG = 0x8000_0000, /// Bit 31
+
+	// CR3
+	MASK_CR3_PWT = 8,	/// Bit 3
+	MASK_CR3_PCD = 0x10	/// Bit 4
 }
 
 /// CPU structure
 struct CPU_t { extern (C):
 	union {
-		uint EIP;
-		ushort IP;
+		uint EIP; ushort IP;
 	}
 	union {
-		uint EAX;
-		ushort AX;
+		uint EAX; ushort AX;
 		struct { ubyte AL, AH; }
 	}
 	union {
-		uint EBX;
-		ushort BX;
+		uint EBX; ushort BX;
 		struct { ubyte BL, BH; }
 	}
 	union {
-		uint ECX;
-		ushort CX;
+		uint ECX; ushort CX;
 		struct { ubyte CL, CH; }
 	}
 	union {
-		uint EDX;
-		ushort DX;
+		uint EDX; ushort DX;
 		struct { ubyte DL, DH; }
 	}
 	union {
-		uint ESI;
-		ushort SI;
+		uint ESI; ushort SI;
 	}
 	union {
-		uint EDI;
-		ushort DI;
+		uint EDI; ushort DI;
 	}
 	union {
-		uint EBP;
-		ushort BP;
+		uint EBP; ushort BP;
 	}
 	union {
-		uint ESP;
-		ushort SP;
+		uint ESP; ushort SP;
 	}
 	ushort CS, SS, DS, ES, FS, GS;
 	uint TR3, TR4, TR5, TR6, TR7;
 	uint DR0, DR1, DR2, DR3, DR4, DR5, DR6, DR7;
 	// CR0 and CR3 are function properties, and CR1 is never used
 	uint CR2; /// Holds Page-Fault Linear Address
+	uint CR3_PBDR;
 
 	align(FLAG_ALIGNMENT) ubyte // CR0
 	PE,	/// Bit 0, Protection Enable
