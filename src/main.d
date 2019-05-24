@@ -46,9 +46,9 @@ void help() {
 	"	-P	Do not sleep between cycles\n"~
 	"	-N	Remove starting messages and banner\n"~
 	"	-v	Increase verbosity level\n"~
-	"	--version  Print version screen, then exit\n"~
-	"	-h, --help     Print help screen, then exit\n"~
-	"	--license      Print license screen, then exit"
+	"	--version    Print version screen, then exit\n"~
+	"	-h, --help   Print help screen, then exit\n"~
+	"	--license    Print license screen, then exit"
 	);
 }
 
@@ -76,20 +76,19 @@ void license() {
 
 int main(int argc, char **argv) {
 	bool args = true;
-	ubyte arg_info = 1;
+	ubyte cliv = 1; /// CLI startup messages
 	char *prog; /// FILE: COM or EXE to start
 //	char *args; /// FILEARGS: for FILE
-//	size_t arg_i; /// Argument length incrementor
 
+	//
 	// Pre-boot / CLI
+	//
 
-	while (--argc >= 1) {
-		++argv;
-
+	for (size_t argi = 1; argi < argc; ++argi) {
 		if (args == false) goto NO_ARGS;
 
-		if (*(*argv + 1) == '-') { // long arguments
-			char* a = *(argv) + 2;
+		if (argv[argi][1] == '-') { // long arguments
+			char* a = argv[argi] + 2;
 			if (strcmp(a, "help") == 0) {
 				help;
 				return 0;
@@ -105,12 +104,12 @@ int main(int argc, char **argv) {
 
 			printf("Unknown parameter: --%s\n", a);
 			return EDOS_INVALID_FUNCTION;
-		} else if (**argv == '-') { // short arguments
-			char* a = *argv;
+		} else if (argv[argi][0] == '-') { // short arguments
+			char* a = argv[argi];
 			while (*++a) {
 				switch (*a) {
 				case 'P': opt_sleep = !opt_sleep; break;
-				case 'N': arg_info = !arg_info; break;
+				case 'N': cliv = !cliv; break;
 				case 'v': ++LOGLEVEL; break;
 				case '-': args = !args; break;
 				case 'h': help; return 0;
@@ -122,13 +121,13 @@ int main(int argc, char **argv) {
 			continue;
 		}
 NO_ARGS:
-		if (cast(int)prog == 0)
-			prog = *argv;
+		if (cast(size_t)prog == 0)
+			prog = argv[argi];
 		//TODO: Else, append program arguments (strcmp)
 		//      Don't forget to null it after while loop and keep arg_i updated
 	}
 
-	if (cast(int)prog) {
+	if (cast(size_t)prog) {
 		if (os_pexist(prog) == 0) {
 			puts("E: File not found");
 			return EDOS_FILE_NOT_FOUND;
@@ -153,12 +152,12 @@ NO_ARGS:
 	// Welcome to DD/86
 	//
 
-	CPU.cpuinit;	// vcpu, watch
+	CPU.cpuinit;	// vcpu
 	con_init;	// os.term
 	vdos_init;	// vdos, screen
 	Clear;
 
-	if (arg_info) {
+	if (cliv) {
 		v_printf(
 			"Starting DD/86...\n\n"~
 			"Ver "~APP_VERSION~" "~__DATE__~"\n"~
@@ -183,7 +182,7 @@ NO_ARGS:
 
 	screen_draw;
 
-	if (cast(int)prog) {
+	if (cast(size_t)prog) {
 		vdos_load(prog);
 		vcpu_run;
 		screen_draw; // ensures last frame is drawn
