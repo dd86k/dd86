@@ -5,7 +5,7 @@ import vdos.video;
 
 unittest {
 	con_init;
-	vcpu_init;
+	CPU.cpuinit;
 	vdos_init;
 
 	Clear;

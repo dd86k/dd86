@@ -8,7 +8,7 @@ import core.stdc.string : memcpy;
 import test_utils;
 
 unittest {
-    vcpu_init;
+    CPU.cpuinit;
     vdos_init;
     section("Benchmark");
 

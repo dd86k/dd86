@@ -5,7 +5,7 @@ import vdos.os;
 unittest {
 	section("Utilities");
 
-	vcpu_init;
+	CPU.cpuinit;
 	vdos_init;
 
 	test("MemString");

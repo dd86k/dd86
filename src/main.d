@@ -5,7 +5,7 @@ module main;
 
 import core.stdc.string : strcmp;
 import ddc : puts, printf, fputs, stderr, stdout;
-import vcpu.core : vcpu_init, vcpu_run, opt_sleep;
+import vcpu.core : CPU, vcpu_run, opt_sleep;
 import vdos.os : LOGO, SYSTEM, vdos_init;
 import vdos.shell : vdos_shell;
 import vdos.ecodes;
@@ -153,7 +153,7 @@ NO_ARGS:
 	// Welcome to DD/86
 	//
 
-	vcpu_init;	// vcpu, watch
+	CPU.cpuinit;	// vcpu, watch
 	con_init;	// os.term
 	vdos_init;	// vdos, screen
 	Clear;

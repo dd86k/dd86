@@ -9,7 +9,7 @@ private enum RUNS = 60;
 
 unittest {
 	con_init;
-	vcpu_init;
+	CPU.cpuinit;
 	vdos_init;
 
 	Clear;

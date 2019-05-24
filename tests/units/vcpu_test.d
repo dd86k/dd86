@@ -2,7 +2,7 @@ import test_utils;
 import vcpu.core, vcpu.v16, vcpu.mm, vcpu.utils;
 
 unittest {
-	vcpu_init;
+	CPU.cpuinit;
 	CPU.CS = 0;
 	CPU.EIP = get_ip;
 
