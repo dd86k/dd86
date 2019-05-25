@@ -150,12 +150,12 @@ struct CPU_t {
 	uint PBDR;	/// Page Directory Base Register
 
 	align(FLAG_ALIGNMENT) ubyte // CR0
-	PE,	/// Bit 0, Protection Enable
-	MP,	/// Bit 1, Math Present
-	EM,	/// Bit 2, Emulation
-	TS,	/// Bit 3, Task Switched
-	ET,	/// Bit 4, Extension Type (for 387 DX math co-processor)
-	NE,	/// Bit 5, Numeric Error
+	PE,	/// Bit  0, Protection Enable
+	MP,	/// Bit  1, Math Present
+	EM,	/// Bit  2, Emulation
+	TS,	/// Bit  3, Task Switched
+	ET,	/// Bit  4, Extension Type (for 387 DX math co-processor)
+	NE,	/// Bit  5, Numeric Error
 	WP,	/// Bit 16, Write Protect
 	AM,	/// Bit 18, Alignement Mask
 	NW,	/// Bit 29, No Write-through
@@ -244,7 +244,7 @@ struct CPU_t {
 
 		push16 = Model == CPU_8086 ? &push16a : &push16b;
 
-		//TODO: Think of doing a loop with mixin strings
+		//TODO: Thinking of doing a loop with mixin strings
 
 		MODE_MAP[CPU_MODE_REAL] = &exec16;
 		REAL_MAP[0x00] = &v16_00;
@@ -517,15 +517,13 @@ struct CPU_t {
 		}
 
 		for (size_t i; i < 256; ++i) { // Sanity checker
-			assert(REAL_MAP[i]);
-		//	assert(PROT_MAP[i]);
+			assert(REAL_MAP[i], "REAL_MAP missed spot");
+		//	assert(PROT_MAP[i], "PROT_MAP missed spot");
 		}
 	}
 
 	/// Start the emulator at CS:IP (default: FFFF:0000h)
 	void run() {
-		import os.sleep;
-
 		//swatch_t watch = void;
 		//watch.initw;
 
@@ -566,7 +564,6 @@ struct CPU_t {
 	/**
 	 * Push a WORD value into stack. Adjusts SP properly according to CPU
 	 * Model.
-	 * Params: value = WORD value to PUSH
 	 */
 	__gshared extern (C)
 	void function(ushort) push16;
@@ -619,7 +616,7 @@ struct CPU_t {
 
 	/**
 	 * Set FLAG as BYTE.
-	 * Params: FLAG as byte
+	 * Params: flag = BYTE
 	 */
 	void FLAG(ubyte flag) {
 		CPU.SF = flag & MASK_SF;
@@ -643,7 +640,7 @@ struct CPU_t {
 	}
 
 	/// Set FLAGS
-	/// Params: WORD
+	/// Params: flag = WORD
 	void FLAGS(ushort flag) {
 		CPU.OF = (flag & MASK_OF) != 0;
 		CPU.DF = (flag & MASK_DF) != 0;

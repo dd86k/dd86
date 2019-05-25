@@ -155,10 +155,32 @@ uint mmfu32(uint addr) {
  * Params: pos = Starting position
  * Returns: String
  */
+deprecated("Use mmfstr(uint,size_t*=null)")
 char[] MemString(uint pos) {
 //TODO: Check overflows
 	return cast(char[])
 		MEMORY[pos..pos + strlen(cast(char*)MEMORY + pos)];
+}
+
+/**
+ * Fetch a string pointer from MEMORY. This function calculates the length of
+ * the memory string and limits its operation to 4096 characters or until it
+ * hits a null byte (zero). If a length (int*) pointer is provided, it will
+ * be updated.
+ * Params:
+ *   pos = Memory position in bytes
+ *   length = Length pointer
+ * Returns: String pointer. Never null
+ */
+const(char) *mmfstr(uint pos, int *length = null) {
+	int limit = 4096;
+	size_t strl;
+	char *p = cast(char*)(MEMORY + pos);
+	while (p[strl] && limit >= 0) {
+		++strl; --limit;
+	}
+	if (length) *length = cast(int)strl;
+	return p;
 }
 
 //

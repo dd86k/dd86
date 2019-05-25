@@ -4,7 +4,7 @@
 module vcpu.v16; // 8086
 
 import vcpu.core, vcpu.v32, vcpu.mm, vcpu.utils;
-import vdos.interrupts;
+import vdos.interrupts, vdos.io;
 import logger;
 
 extern (C):
@@ -2064,63 +2064,83 @@ void v16_E2() {	// E2h LOOP SHORT-LABEL
 	else CPU.EIP += 2;
 }
 
- void v16_E3() {	// E3 JCXZ SHORT-LABEL
+void v16_E3() {	// E3 JCXZ SHORT-LABEL
 	if (CPU.CX == 0) CPU.EIP += mmfi8_i;
 	else CPU.EIP += 2;
- }
- 
- void v16_E4() {	// E4h IN AL, IMM8
- }
- 
- void v16_E5() {	// E5h IN AX, IMM8
- }
- 
- void v16_E6() {	// E6h OUT IMM8, AL
- }
- 
- void v16_E7() {	// E7h OUT IMM8, AX
- }
- 
- void v16_E8() {	// E8h CALL NEAR-PROC
+}
+
+void v16_E4() {	// E4h IN AL, IMM8
+	int r = void;
+	io(IO_IN, mmfu8_i, IO_BYTE, &r);
+	CPU.AL = cast(ubyte)r;
+}
+
+void v16_E5() {	// E5h IN AX, IMM8
+	int r = void;
+	io(IO_IN, mmfu8_i, IO_WORD, &r);
+	CPU.AX = cast(ushort)r;
+}
+
+void v16_E6() {	// E6h OUT IMM8, AL
+	int r = CPU.AL;
+	io(IO_OUT, mmfu8_i, IO_BYTE, &r);
+}
+
+void v16_E7() {	// E7h OUT IMM8, AX
+	int r = CPU.AX;
+	io(IO_OUT, mmfu8_i, IO_WORD, &r);
+}
+
+void v16_E8() {	// E8h CALL NEAR-PROC
 	CPU.push16(CPU.IP);
 	CPU.EIP += mmfi16_i; // Direct within segment
- }
- 
- void v16_E9() {	// E9h JMP NEAR-LABEL
+}
+
+void v16_E9() {	// E9h JMP NEAR-LABEL
 	CPU.EIP += mmfi16_i + 3; // ±32 KB
- }
- 
- void v16_EA() {	// EAh JMP FAR-LABEL
+}
+
+void v16_EA() {	// EAh JMP FAR-LABEL
 	// Any segment, any fragment, 5 byte instruction.
 	// EAh (LO-CPU.IP) (HI-CPU.IP) (LO-CPU.CS) (HI-CPU.CS)
 	const ushort ip = mmfu16_i;
 	const ushort cs = mmfu16_i(2);
 	CPU.IP = ip;
 	CPU.CS = cs;
- }
- 
- void v16_EB() {	// EBh JMP SHORT-LABEL
+}
+
+void v16_EB() {	// EBh JMP SHORT-LABEL
 	CPU.EIP += mmfi8_i + 2; // ±128 B
- }
- 
- void v16_EC() {	// ECh IN AL, DX
- }
- 
- void v16_ED() {	// EDh IN AX, DX
- }
- 
- void v16_EE() {	// EEh OUT AL, DX
- }
- 
- void v16_EF() {	// EFh OUT AX, DX
- }
- 
- void v16_F0() {	// F0h LOCK (prefix)
+}
+
+void v16_EC() {	// ECh IN AL, DX
+	int r = void;
+	io(IO_IN, CPU.DX, IO_BYTE, &r);
+	CPU.AL = cast(ubyte)r;
+}
+
+void v16_ED() {	// EDh IN AX, DX
+	int r = void;
+	io(IO_IN, CPU.DX, IO_WORD, &r);
+	CPU.AX = cast(ushort)r;
+}
+
+void v16_EE() {	// EEh OUT AL, DX
+	int r = CPU.AL;
+	io(IO_IN, CPU.DX, IO_BYTE, &r);
+}
+
+void v16_EF() {	// EFh OUT AX, DX
+	int r = CPU.AX;
+	io(IO_IN, CPU.DX, IO_WORD, &r);
+}
+
+void v16_F0() {	// F0h LOCK (prefix)
 	CPU.Lock = 1;
 	++CPU.EIP;
- }
- 
- void v16_F2() {	// F2h REPNE/REPNZ
+}
+
+void v16_F2() {	// F2h REPNE/REPNZ
 	while (CPU.CX > 0) {
 		//TODO: Finish REPNE/REPNZ properly?
 		v16_A6;
@@ -2128,22 +2148,22 @@ void v16_E2() {	// E2h LOOP SHORT-LABEL
 		if (CPU.ZF == 0) break;
 	}
 	++CPU.EIP;
- }
- 
- void v16_F3() {	// F3h REP/REPE/REPNZ
- }
- 
- void v16_F4() {	// F4h HLT
+}
+
+void v16_F3() {	// F3h REP/REPE/REPNZ
+}
+
+void v16_F4() {	// F4h HLT
 	RLEVEL = 0;
 	++CPU.EIP;
- }
- 
- void v16_F5() {	// F5h CMCCMC
+}
+
+void v16_F5() {	// F5h CMC
 	CPU.CF = !CPU.CF;
 	++CPU.EIP;
- }
- 
- void v16_F6() {	// F6h GRP3 R/M8, IMM8
+}
+
+void v16_F6() {	// F6h GRP3 R/M8, IMM8
 	const ubyte rm = mmfu8_i;
 	const ubyte im = mmfu8_i(1);
 	const int addr = mmrm16(rm);
@@ -2189,9 +2209,9 @@ void v16_E2() {	// E2h LOOP SHORT-LABEL
 		v16_illegal;
 	}
 	CPU.EIP += 3;
- }
- 
- void v16_F7() {	// F7h GRP3 R/M16, IMM16
+}
+
+void v16_F7() {	// F7h GRP3 R/M16, IMM16
 	const ubyte rm = mmfu8_i; // Get ModR/M byte
 	ushort im = mmfu16_i(1);
 	int addr = mmrm16(rm, 1);

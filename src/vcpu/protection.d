@@ -10,7 +10,7 @@ import vcpu.core : MEMORY;
 
 extern (C):
 
-
+/// Global Descriptor Table pointer to MEMORY
 __gshared SegDesc_t *GDT;
 
 //
@@ -28,8 +28,8 @@ __gshared SegDesc_t *GDT;
  * on its type, may use the base 15:0 field for either a segment selector
  * (interrupt game or trap gate) or the TSS segment selector for a Task Gate.
  *
- * ```
- * Bits
+ * ---
+ * Bits   Description
  * 63:56  Base 32:24
  *    55  Granularity bit (G)
  *    54  Default operation size (D/B). Set: 32-bit operations; Unset: 16-bit
@@ -43,11 +43,12 @@ __gshared SegDesc_t *GDT;
  * 39:32  Base 23:16
  * 31:16  Base 15:0
  *  15:0  Segment limit 15:0
- * ```
+ * ---
  *
- * This structure is used for GDT, LDT, IDT, TSS, DSD, CSD, SSD descriptor tables.
+ * This structure is used for GDT, LDT, IDT, TSS, DSD, CSD, SSD descriptor
+ * tables.
  */
-struct SegDesc_t {
+struct SegDesc_t { align(1):
 	union {
 		uint low_dword;
 		struct {
@@ -77,9 +78,9 @@ SegDesc_t *p_segdesc(uint loc) {
 // * Paging features
 //
 
-struct Page {
-	uint size;
-	ubyte *data;
+struct Page { align(1):
+	uint size; /// 
+	ubyte *data; /// 
 }
 
 //
@@ -87,14 +88,14 @@ struct Page {
 //
 
 /// 16-bit Task Segment
-struct TaskSeg16_t {
+struct TaskSeg16_t { align(1):
 	ushort prev_task, SP0, SS0, SP1, SS1, SP2, SS2,
 		IP, FLAG, AX, CX, DX, BX, SP, BP, SI, DI, ES, CS, SS, DS, LDT;
 }
 static assert(TaskSeg16_t.sizeof == 44);
 
 /// 32-bit Task Segment
-struct TaskSeg32_t {
+struct TaskSeg32_t { align(1):
 	ushort prev_task, res;
 	uint ESP0;
 	ushort SS0, res0;
@@ -108,12 +109,13 @@ struct TaskSeg32_t {
 }
 static assert(TaskSeg32_t.sizeof == 104);
 
+pragma(inline, true):
+
 /**
  * Get a 16-bit task segment from MEMORY location to ease parsing and reading.
  * Params: loc = Memory location
  * Returns: 16-bit Task Segment structure pointer from MEMORY
  */
-pragma(inline, true)
 TaskSeg16_t *p_taskseg16(uint loc) {
 	return cast(TaskSeg16_t*)(MEMORY + loc);
 }
@@ -123,7 +125,6 @@ TaskSeg16_t *p_taskseg16(uint loc) {
  * Params: loc = Memory location
  * Returns: 32-bit Task Segment structure pointer from MEMORY
  */
-pragma(inline, true)
 TaskSeg32_t *p_taskseg32(uint loc) {
 	return cast(TaskSeg32_t*)(MEMORY + loc);
 }
