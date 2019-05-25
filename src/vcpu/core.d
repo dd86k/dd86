@@ -11,7 +11,6 @@ import appconfig : INIT_MEM, FLAG_ALIGNMENT;
 
 extern (C):
 
-
 // Current CPU. So far only 8086 and 80486 are supported
 enum : ubyte {
 	CPU_8086,
@@ -104,6 +103,13 @@ private enum : uint {
 }
 
 /// CPU structure
+///
+/// The reason behind using distinct memory address locations (more variables)
+/// over a property that fetches particuliar bits (e.g. using a byte for PE
+/// flag over masking an int) is simply for performance reasons while the
+/// latter would be suited for more extreme low-memory setups, which is not
+/// needed here. These internal variables are accessed more often than the
+/// registers, especially checking a flag per CPU cycle.
 struct CPU_t {
 	union {
 		uint EIP; ushort IP;
@@ -141,7 +147,7 @@ struct CPU_t {
 	uint DR0, DR1, DR2, DR3, DR4, DR5, DR6, DR7;
 	// CR0 and CR3 are function properties, and CR1 is never used
 	uint CR2; /// Holds Page-Fault Linear Address
-	uint CR3_PBDR;
+	uint PBDR;	/// Page Directory Base Register
 
 	align(FLAG_ALIGNMENT) ubyte // CR0
 	PE,	/// Bit 0, Protection Enable
@@ -178,7 +184,7 @@ struct CPU_t {
 		//TODO: CR3
 	}
 
-	// EFLAG
+	// EFLAGS
 	align(FLAG_ALIGNMENT) ubyte
 	CF,	/// Bit  0, Carry Flag
 	PF,	/// Bit  2, Parity Flag
@@ -221,8 +227,9 @@ struct CPU_t {
 	/// CPU model: 8086, 80486, etc.
 	ubyte Model;
 
-	//TODO: step(ubyte  = 1, ushort l = 0)
-	
+	//TODO: step(ubyte step = 1, ushort latency = 0)
+	//      or do it separately
+
 	//
 	// General
 	//
@@ -236,6 +243,8 @@ struct CPU_t {
 		CS = 0xFFFF;
 
 		push16 = Model == CPU_8086 ? &push16a : &push16b;
+
+		//TODO: Think of doing a loop with mixin strings
 
 		MODE_MAP[CPU_MODE_REAL] = &exec16;
 		REAL_MAP[0x00] = &v16_00;
@@ -508,17 +517,46 @@ struct CPU_t {
 		}
 
 		for (size_t i; i < 256; ++i) { // Sanity checker
-			import core.stdc.stdio : printf;
-			import core.stdc.stdlib : exit;
-			if (REAL_MAP[i] == null) {
-				printf("Assert: REAL_MAP[%02Xh] is NULL!\n", i);
-				exit(1);
-			}
-			/*if (PROT_MAP[i] == null) {
-				printf("Assert: PROT_MAP[%02Xh] is NULL!\n", i);
-				exit(1);
-			}*/
+			assert(REAL_MAP[i]);
+		//	assert(PROT_MAP[i]);
 		}
+	}
+
+	/// Start the emulator at CS:IP (default: FFFF:0000h)
+	void run() {
+		import os.sleep;
+
+		//swatch_t watch = void;
+		//watch.initw;
+
+		while (RLEVEL > 0) {
+			CPU.EIP = get_ip;
+			const ubyte op = MEMORY[CPU.EIP];
+			MODE_MAP[CPU.Mode](op);
+		}
+	}
+
+	//
+	// CPU utilities
+	//
+
+	/// Processor RESET function.
+	/// Does not empty queue bus, since it does not have one.
+	void reset() {
+		Mode = CPU_MODE_REAL;
+		Segment = SEG_NONE;
+
+		OF = DF = IF = TF = SF =
+		ZF = AF = PF = CF = 0;
+		CS = 0xFFFF;
+		EIP = DS = SS = ES = 0;
+	}
+
+	/// Resets the entire vcpu. Does not refer to the RESET instruction!
+	/// This sets all registers to 0. Segment is set to SEG_NONE, and Mode is set
+	/// to CPU_MODE_REAL. Useful in unittesting.
+	void fullreset() {
+		CPU = CPU_t();
 	}
 
 	//
@@ -554,7 +592,7 @@ struct CPU_t {
 
 	/**
 	 * Pop a DWORD value from stack.
-	 * Returns: WORD value
+	 * Returns: DWORD value
 	 */
 	uint pop32() {
 		const uint addr = address(CPU.SS, CPU.SP);
@@ -566,10 +604,10 @@ struct CPU_t {
 	@property:
 
 	/**
-	 * Get CPU.FLAG as WORD.
-	 * Returns: CPU.FLAG as byte
+	 * Get FLAG as BYTE.
+	 * Returns: FLAG as byte
 	 */
-	ubyte FLAGB() {
+	ubyte FLAG() {
 		ubyte b = 2; // bit 1 always set
 		if (CPU.SF) b |= MASK_SF;
 		if (CPU.ZF) b |= MASK_ZF;
@@ -579,9 +617,11 @@ struct CPU_t {
 		return b;
 	}
 
-	/// Set CPU.FLAG as BYTE.
-	/// Params: flag = CPU.FLAG byte
-	void FLAGB(ubyte flag) {
+	/**
+	 * Set FLAG as BYTE.
+	 * Params: FLAG as byte
+	 */
+	void FLAG(ubyte flag) {
 		CPU.SF = flag & MASK_SF;
 		CPU.ZF = flag & MASK_ZF;
 		CPU.AF = flag & MASK_AF;
@@ -590,11 +630,11 @@ struct CPU_t {
 	}
 
 	/**
-	 * Get CPU.FLAG as WORD.
-	 * Returns: CPU.FLAG (WORD)
+	 * Get FLAGS
+	 * Returns: WORD
 	 */
-	ushort FLAG() {
-		ushort b = CPU.FLAGB;
+	ushort FLAGS() {
+		ushort b = CPU.FLAG;
 		if (CPU.OF) b |= MASK_OF;
 		if (CPU.DF) b |= MASK_DF;
 		if (CPU.IF) b |= MASK_IF;
@@ -602,35 +642,37 @@ struct CPU_t {
 		return b;
 	}
 
-	/// Set CPU.FLAG as WORD.
-	/// Params: flag = CPU.FLAG word
-	void FLAG(ushort flag) {
+	/// Set FLAGS
+	/// Params: WORD
+	void FLAGS(ushort flag) {
 		CPU.OF = (flag & MASK_OF) != 0;
 		CPU.DF = (flag & MASK_DF) != 0;
 		CPU.IF = (flag & MASK_IF) != 0;
 		CPU.TF = (flag & MASK_TF) != 0;
 		CPU.IOPL = (flag & MASK_IOPL) >> 12;
 		CPU.NT = (flag & MASK_NT) != 0;
-		CPU.FLAGB = cast(ubyte)flag;
+		CPU.FLAG = cast(ubyte)flag;
 	}
 
 	/**
-	 * Get ECPU.FLAG as DWORD.
-	 * Returns: ECPU.FLAG (DWORD)
+	 * Get EFLAGS as DWORD
+	 * Returns: DWORD
 	 */
-	uint EFLAG() {
-		uint b = CPU.FLAG;
+	uint EFLAGS() {
+		uint b = CPU.FLAGS;
 		if (CPU.RF) b |= MASK_RF;
 		if (CPU.VM) b |= MASK_VM;
 		return b;
 	}
 
-	/// Set ECPU.FLAG as DWORD.
-	/// Params: flag = ECPU.FLAG dword
-	void EFLAG(uint flag) {
+	/**
+	 * Set EFLAGS as DWORD
+	 * Params: flag = DWORD
+	 */
+	void EFLAGS(uint flag) {
 		CPU.RF = (flag & MASK_RF) != 0;
 		CPU.VM = (flag & MASK_VM) != 0;
-		CPU.FLAG = cast(ushort)flag;
+		CPU.FLAGS = cast(ushort)flag;
 	}
 }
 
@@ -662,58 +704,15 @@ __gshared void function() [256]REAL_MAP;
 /// Protected-mode instructions function table
 __gshared void function() [256]PROT_MAP;
 
-/// Start the emulator at CS:IP (default: FFFF:0000h)
-void vcpu_run() {
-	import os.sleep;
-
-	//swatch_t watch = void;
-	//watch.initw;
-
-	const bool sleep = opt_sleep;
-	
-	while (RLEVEL > 0) {
-		CPU.EIP = get_ip;
-		const ubyte op = MEMORY[CPU.EIP];
-		MODE_MAP[CPU.Mode](op);
-		
-		if (sleep) {
-			
-		}
-	}
-}
-
-//
-// CPU utilities
-//
-
-/// Processor RESET function
-private void RESET() {
-	CPU.Mode = CPU_MODE_REAL;
-	CPU.Segment = SEG_NONE;
-
-	CPU.OF = CPU.DF = CPU.IF = CPU.TF = CPU.SF =
-	CPU.ZF = CPU.AF = CPU.PF = CPU.CF = 0;
-	CPU.CS = 0xFFFF;
-	CPU.EIP = CPU.DS = CPU.SS = CPU.ES = 0;
-	// Empty Queue Bus
-}
-
-/// Resets the entire vcpu. Does not refer to the RESET instruction!
-/// This sets all registers to 0. Segment is set to SEG_NONE, and Mode is set
-/// to CPU_MODE_REAL. Useful in unittesting.
-void fullreset() {
-	CPU = CPU_t();
-}
-
 private:
 
 // 8086
-private void push16a(ushort value) {
+void push16a(ushort value) {
 	CPU.SP -= 2;
 	mmiu16(value, address(CPU.SS, CPU.SP));
 }
 // 8086+
-private void push16b(ushort value) {
+void push16b(ushort value) {
 	mmiu16(value, address(CPU.SS, CPU.SP));
 	CPU.SP -= 2;
 }

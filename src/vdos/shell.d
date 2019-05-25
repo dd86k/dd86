@@ -1,17 +1,19 @@
 /**
- * shell: Virtual shell
+ * Virtual embedded interactive shell
  */
 module vdos.shell;
 
 import ddc;
 import core.stdc.string : strcmp, strlen, memcpy, strncpy;
-import vcpu.core : MEMORY, vcpu_run, CPU, MEMORYSIZE, opt_sleep;
+import vcpu.core : CPU, MEMORY, MEMORYSIZE, opt_sleep;
 import vdos.loader : vdos_load;
 import vdos.video;
 import vdos.os;
 import vdos.interrupts : INT;
 import vdos.ecodes : PANIC_MANUAL;
 import os.io, logger, appconfig;
+
+extern (C):
 
 enum : int { // Shell errors
 	/// Command not found
@@ -24,9 +26,8 @@ enum : int { // Shell errors
 
 /**
  * Enter virtual shell (vDOS), assuming all modules have been initiated.
- * Uses memory location 1200h for input buffer
+ * Uses memory location __MM_SHL_DATA for input buffer
  */
-extern (C)
 void vdos_shell() {
 	/// Internal input buffer
 	char *inbuf = cast(char*)(MEMORY + __MM_SHL_DATA);
@@ -64,7 +65,6 @@ SHL_S:
  * Note: This function may return negative, non-DOS-related, error codes. See
  * ESHEL_* enumeration values.
  */
-extern (C)
 int vdos_command(const(char) *command) {
 	char **argv = // argument vector, sizeof(char *)
 		cast(char**)(MEMORY + __MM_SHL_DATA + __SHL_BUFSIZE + 1);
@@ -87,7 +87,7 @@ int vdos_command(const(char) *command) {
 		switch (ext) {
 		case COM_L, EXE_L:
 			vdos_load(*argv);
-			vcpu_run;
+			CPU.run;
 			return 0;
 		default: return ESHL_COMMAND_NOT_FOUND;
 		}
@@ -100,20 +100,22 @@ int vdos_command(const(char) *command) {
 		*(appext + 1) = 0;
 		if (os_pexist(cast(char*)appname)) {
 			vdos_load(cast(char*)appname);
-			vcpu_run;
+			CPU.run;
 			return 0;
 		}
 		*appext = EXE_L;
 		if (os_pexist(cast(char*)appname)) {
 			vdos_load(cast(char*)appname);
-			vcpu_run;
+			CPU.run;
 			return 0;
 		}
 	}
 
 	lowercase(*argv); // Done after for case-sensitive systems
 
-	// ** INTERNAL COMMANDS **
+	//
+	// Internal commands
+	//
 
 	// C
 
@@ -153,18 +155,19 @@ int vdos_command(const(char) *command) {
 	if (strcmp(*argv, "date") == 0) {
 		CPU.AH = 0x2A;
 		INT(0x21);
-		v_put("It is currently ");
+		const(char) *s = void;
 		switch (CPU.AL) {
-		case 0, 7: v_put("Sunday"); break;
-		case 1: v_put("Monday"); break;
-		case 2: v_put("Tuesday"); break;
-		case 3: v_put("Wednesday"); break;
-		case 4: v_put("Thursday"); break;
-		case 5: v_put("Friday"); break;
-		case 6: v_put("Saturday"); break;
-		default:
+		case 0, 7: s = "Sunday"; break;
+		case 1: s = "Monday"; break;
+		case 2: s = "Tuesday"; break;
+		case 3: s = "Wednesday"; break;
+		case 4: s = "Thursday"; break;
+		case 5: s = "Friday"; break;
+		case 6: s = "Saturday"; break;
+		default: s = "?";
 		}
-		v_printf(" %d-%02d-%02d\n", CPU.CX, CPU.DH, CPU.DL);
+		v_printf("It is currently %s %d-%02d-%02d\n",
+			s, CPU.CX, CPU.DH, CPU.DL);
 		return 0;
 	}
 
@@ -174,10 +177,8 @@ int vdos_command(const(char) *command) {
 		if (argc == 1) {
 			v_putln("ECHO is on");
 		} else {
-			for (int i = 1; i < argc; ++i) {
-				v_put(cast(immutable)argv[i]);
-				v_put(" ");
-			}
+			for (size_t i = 1; i < argc; ++i)
+				v_printf("%s ", argv[i]);
 			v_putln;
 		}
 		return 0;
@@ -277,7 +278,9 @@ MEM_HELP:		v_putln(
 		return 0;
 	}
 
-	// ? -- debugging
+	//
+	// Debugging commands
+	//
 
 	if (strcmp(*argv, "??") == 0) {
 		v_putln(
@@ -303,7 +306,7 @@ MEM_HELP:		v_putln(
 		return 0;
 	}
 	if (strcmp(*argv, "?run") == 0) {
-		vcpu_run;
+		CPU.run;
 		return 0;
 	}
 	if (strcmp(*argv, "?v") == 0) {
@@ -379,7 +382,6 @@ MEM_HELP:		v_putln(
  *   len = Buffer size (maximum length)
  * Returns: String length
  */
-extern (C)
 int vdos_readline(char *buf, int len) {
 	import vdos.structs : CURSOR;
 	import os.term : Key, KeyInfo, ReadKey;
@@ -394,26 +396,25 @@ READ_S:
 	const KeyInfo k = ReadKey;
 	switch (k.keyCode) {
 	case Key.Backspace:
-		if (s) {
-			if (i == 0) break;
+		if (s == 0) break;
+		if (i == 0) break;
 
-			--i;
-			char *p = buf + i;
-			videochar *vc = v + i;
+		--i;
+		char *p = buf + i;
+		videochar *vc = v + i;
 
-			if (i == s) {
-				*p = 0;
-				vc.ascii = 0;
-			} else {
-				uint l = s - i + 1;
-				while (--l > 0) {
-					*p = *(p + 1);
-					vc.ascii = (vc + 1).ascii;
-					++p; ++vc;
-				}
+		if (i == s) {
+			*p = 0;
+			vc.ascii = 0;
+		} else {
+			uint l = s - i + 1;
+			while (--l > 0) {
+				*p = *(p + 1);
+				vc.ascii = (vc + 1).ascii;
+				++p; ++vc;
 			}
-			--s;
 		}
+		--s;
 		break;
 	case Key.LeftArrow:
 		if (i > 0) --i;
@@ -427,7 +428,7 @@ READ_S:
 	case Key.Enter:
 		buf[s] = '\n';
 		buf[s + 1] = 0;
-		v_putln;
+		v_putln; // \n
 		return s + 2;
 	case Key.Home:
 		i = 0;
@@ -475,7 +476,6 @@ READ_S:
 	goto READ_S;
 }
 
-
 /**
  * CLI argument splitter, supports argument quoting.
  * This function inserts null-terminators.
@@ -486,14 +486,12 @@ READ_S:
  * Returns: argument count
  * Notes: Original function by Nuke928. Modified by dd86k.
  */
-extern (C)
 int sargs(const char *t, char **argv) {
 	int j, a;
 	char* mloc = cast(char*)MEMORY + 0x1400;
 
 	const size_t sl = strlen(t);
-
-	for (int i = 0; i <= sl; ++i) {
+	for (size_t i; i <= sl; ++i) {
 		if (t[i] == 0 || t[i] == ' ' || t[i] == '\n') {
 			argv[a] = mloc;
 			mloc += i - j + 1;
@@ -502,9 +500,9 @@ int sargs(const char *t, char **argv) {
 			while (t[i + 1] == ' ') ++i;
 			j = i + 1;
 			++a;
-		} else if (t[i] == '\"') {
+		} else if (t[i] == '"') {
 			j = ++i;
-			while (t[i] != '\"' && t[i] != 0) ++i;
+			while (t[i] != '"' && t[i] != 0) ++i;
 			if (t[i] == 0) continue;
 			argv[a] = mloc;
 			mloc += i - j + 1;
@@ -523,11 +521,13 @@ int sargs(const char *t, char **argv) {
  * Lowercase an ASCIZ string. Must be null-terminated.
  * Params: c = String pointer
  */
-extern (C)
 void lowercase(char *c) {
-	while (*c) {
-		if (*c >= 'A' && *c <= 'Z')
-			*c = cast(char)(*c + 32);
-		++c;
-	}
+	int q = void;
+LCASE:
+	q = *c;
+	if (q == 0) return;
+	if (q >= 'A' && q <= 'Z')
+		*c = cast(char)(q + 32);
+	++c;
+	goto LCASE;
 }

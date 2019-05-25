@@ -1818,22 +1818,22 @@ void v32_9B() {	// 9Bh WAIT
 }
 
 void v32_9C() {	// 9Ch PUSHF
-	CPU.push16(CPU.FLAG);
+	CPU.push16(CPU.FLAGS);
 	++CPU.EIP;
 }
 
 void v32_9D() {	// 9Dh POPF
-	CPU.FLAG = CPU.pop16;
+	CPU.FLAGS = CPU.pop16;
 	++CPU.EIP;
 }
 
 void v32_9E() {	// 9Eh SAHF (Save AH to Flags)
-	CPU.FLAGB = CPU.AH;
+	CPU.FLAG = CPU.AH;
 	++CPU.EIP;
 }
 
 void v32_9F() {	// 9Fh LAHF (Load AH from Flags)
-	CPU.AH = CPU.FLAGB;
+	CPU.AH = CPU.FLAG;
 	++CPU.EIP;
 }
 
@@ -2110,7 +2110,7 @@ void v32_CE() {	// CEh INTO
 void v32_CF() {	// CFh IRET
 	CPU.IP = CPU.pop16;
 	CPU.CS = CPU.pop16;
-	CPU.FLAG = CPU.pop16;
+	CPU.FLAGS = CPU.pop16;
 	++CPU.EIP;
 }
 

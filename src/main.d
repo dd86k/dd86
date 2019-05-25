@@ -5,7 +5,7 @@ module main;
 
 import core.stdc.string : strcmp;
 import ddc : puts, printf, fputs, stderr, stdout;
-import vcpu.core : CPU, vcpu_run, opt_sleep;
+import vcpu.core : CPU, opt_sleep;
 import vdos.os : LOGO, SYSTEM, vdos_init;
 import vdos.shell : vdos_shell;
 import vdos.ecodes;
@@ -160,7 +160,7 @@ NO_ARGS:
 	if (cliv) {
 		v_printf(
 			"Starting DD/86...\n\n"~
-			"Ver "~APP_VERSION~" "~__DATE__~"\n"~
+			"Ver "~APP_VERSION~" ("~__TIMESTAMP__~")\n"~
 			"Processor: Intel 8086\n"~
 			"Memory: %dK OK\n\n",
 			SYSTEM.memsize
@@ -184,7 +184,7 @@ NO_ARGS:
 
 	if (cast(size_t)prog) {
 		vdos_load(prog);
-		vcpu_run;
+		CPU.run;
 		screen_draw; // ensures last frame is drawn
 	} else vdos_shell;
 

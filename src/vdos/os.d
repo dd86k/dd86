@@ -80,7 +80,7 @@ void print_regs() {
 	if (CPU.PF) v_putln("PF ");
 	if (CPU.CF) v_putln("CF ");
 	//TODO: Print rest of flags
-	v_printf("(%Xh)\n", CPU.FLAG);
+	v_printf("(%Xh)\n", CPU.FLAGS);
 }
 
 extern (C)

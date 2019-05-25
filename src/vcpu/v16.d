@@ -1550,22 +1550,22 @@ void v16_9B() {	// 9Bh WAIT
 }
 
 void v16_9C() {	// 9Ch PUSHF
-	CPU.push16(CPU.FLAG);
+	CPU.push16(CPU.FLAGS);
 	++CPU.EIP;
 }
 
 void v16_9D() {	// 9Dh POPF
-	CPU.FLAG = CPU.pop16;
+	CPU.FLAGS = CPU.pop16;
 	++CPU.EIP;
 }
 
 void v16_9E() {	// 9Eh SAHF (Save AH to Flags)
-	CPU.FLAGB = CPU.AH;
+	CPU.FLAG = CPU.AH;
 	++CPU.EIP;
 }
 
 void v16_9F() {	// 9Fh LAHF (Load AH from Flags)
-	CPU.AH = CPU.FLAGB;
+	CPU.AH = CPU.FLAG;
 	++CPU.EIP;
 }
 
@@ -1842,7 +1842,7 @@ void v16_CE() {	// CEh INTO
 void v16_CF() {	// CFh IRET
 	CPU.IP = CPU.pop16;
 	CPU.CS = CPU.pop16;
-	CPU.FLAG = CPU.pop16;
+	CPU.FLAGS = CPU.pop16;
 	++CPU.EIP;
 }
 
