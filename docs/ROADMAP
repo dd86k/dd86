@@ -13,8 +13,8 @@ Current phase
 **********
 
 - CPU
-8086      [||||||||||||        ] 60%  Most of it works fine
-80486     [                    ] 0%   Just started on it
+8086      [|||||||||||||       ] 65%  Most of it works fine
+80486     [|                   ] 5%   Just started on it
 
 - VIDEO
 TEXT      [||||||||||          ] 50%  Basics works with CP437
@@ -22,7 +22,7 @@ GRAPHICS  [                    ] 0%   Planned
 
 - DOS
 FILE I/O  [                    ] 0%   Planned feature
-EXEC      [||||                ] 20%  Can load COM files; Needs a lot of setup
+EXEC      [|||||               ] 25%  Can load simple COM files
 SHELL     [||||||||            ] 40%  A good amount of internal commands are present
 MEM EXT   [                    ] 0%   Planned feature
 LOCALE    [                    ] 0%   Planned feature
@@ -31,8 +31,8 @@ SERVICES  [||||||              ] 30%  A few working MS-DOS/DOS services
 
 - HARDWARE
 KEYBOARD  [||||||||||          ] 50%  Basics works, missing translation function
-MOUSE     [                    ] 0%   Planned feature
-CONSOLE   [                    ] 0%   Planned feature
+MOUSE     [                    ] 0%   Planned feature (PS/2)
+CONSOLE   [                    ] 0%   Planned feature (Serial)
 PRINTER   [                    ] 0%   Planned feature
 CD-ROM    [                    ] 0%   Planned feature
 TCP       [                    ] 0%   Planned feature
