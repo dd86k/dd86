@@ -29,7 +29,7 @@ enum : ubyte {
  *   width = Data width (1, 2, or 4 bytes wide)
  *   data = Tranmission data
  */
-void io(ubyte op, ushort port, ubyte width, int *data) {
+void io(ubyte op, ushort port, ubyte width, void *data) {
 	switch (port) {
 	//
 	// Monochrome Display Adapter (MDA)

@@ -1,15 +1,14 @@
 /**
- * v32: Protected-mode instructions
+ * Protected-mode instructions.
  */
 module vcpu.v32; // 80386/80486+
 
 import vcpu.core, vcpu.mm;
 import vcpu.v16 : exec16;
-import vcpu.utils, vdos.interrupts;
+import vcpu.protection, vcpu.utils, vdos.interrupts;
 import logger;
 
 extern (C):
-
 
 pragma(inline, true)
 void exec32(ubyte op) {
@@ -22,6 +21,7 @@ void exec32(ubyte op) {
  * Note: This function is temporary until function table
  * Params: op = opcode
  */
+//uncomment when ready: deprecated("Use exec32(ubyte)")
 void v32(ubyte op) {
 	switch (op) {
 	case 0x00: // ADD
@@ -36,10 +36,7 @@ void v32(ubyte op) {
 	}
 }
 
-//TODO: 32-bit EXTENSION CURRENT INSTRUCTION: 02h
-//TODO: ACCESS CHECKING CURRENT INSTRUCTION: 00h
-
-void v32_00() {	// 00h ADD R/M8, REG8
+void v32_00() {	//TODO: 00h ADD R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -59,7 +56,7 @@ void v32_00() {	// 00h ADD R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v32_01() {	// 01h ADD R/M32, REG32
+void v32_01() {	//TODO: 01h ADD R/M32, REG32
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm32(rm, 1);
 	long r = mmfu32(addr);
@@ -79,7 +76,7 @@ void v32_01() {	// 01h ADD R/M32, REG32
 	CPU.EIP += 2;
 }
 
-void v32_02() {	// 02h ADD REG8, R/M8
+void v32_02() {	//TODO: 02h ADD REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -98,7 +95,7 @@ void v32_02() {	// 02h ADD REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v32_03() {	// 03h ADD REG16, R/M16
+void v32_03() {	//TODO: 03h ADD REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -117,31 +114,31 @@ void v32_03() {	// 03h ADD REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v32_04() {	// 04h ADD AL, IMM8
+void v32_04() {	//TODO: 04h ADD AL, IMM8
 	const int r = CPU.AL + mmfu8_i;
 	cpuf8_1(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
-void v32_05() {	// 05h ADD AX, IMM16
+void v32_05() {	//TODO: 05h ADD AX, IMM16
 	const int r = CPU.AX + mmfu16_i;
 	cpuf16_1(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 2;
 }
 
-void v32_06() {	// 06h PUSH ES
+void v32_06() {	//TODO: 06h PUSH ES
 	CPU.push16(CPU.ES);
 	++CPU.EIP;
 }
 
-void v32_07() {	// 07h POP ES
+void v32_07() {	//TODO: 07h POP ES
 	CPU.ES = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_08() {	// 08h OR R/M8, REG8
+void v32_08() {	//TODO: 08h OR R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -161,7 +158,7 @@ void v32_08() {	// 08h OR R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v32_09() {	// 09h OR R/M16, REG16
+void v32_09() {	//TODO: 09h OR R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -181,7 +178,7 @@ void v32_09() {	// 09h OR R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v32_0A() {	// 0Ah OR REG8, R/M8
+void v32_0A() {	//TODO: 0Ah OR REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -200,7 +197,7 @@ void v32_0A() {	// 0Ah OR REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v32_0B() {	// 0Bh OR REG16, R/M16
+void v32_0B() {	//TODO: 0Bh OR REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -219,265 +216,265 @@ void v32_0B() {	// 0Bh OR REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v32_0C() {	// 0Ch OR AL, IMM8
+void v32_0C() {	//TODO: 0Ch OR AL, IMM8
 	const int r = CPU.AL | mmfu8_i;
 	cpuf8_3(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
-void v32_0D() {	// 0Dh OR AX, IMM16
+void v32_0D() {	//TODO: 0Dh OR AX, IMM16
 	const int r = CPU.AX | mmfu16_i;
 	cpuf16_3(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
 
-void v32_0E() {	// 0Eh PUSH CS
+void v32_0E() {	//TODO: 0Eh PUSH CS
 	CPU.push16(CPU.CS);
 	++CPU.EIP;
 }
 
-void v32_0F() {	// 0Fh Two-byte escape
+void v32_0F() {	//TODO: 0Fh Two-byte escape
 	switch (MEMORY[++CPU.EIP]) {
-	case 0x00: // GRP6
+	case 0x00: //TODO: GRP6
 	
 		break;
-	case 0x01: // GRP7
+	case 0x01: //TODO: GRP7
 	
 		break;
-	case 0x02: // LAR REG32, R/M16
+	case 0x02: //TODO: LAR REG32, R/M16
 	
 		break;
-	case 0x03: // LSL REG32, R/M16
+	case 0x03: //TODO: LSL REG32, R/M16
 	
 		break;
-	case 0x06: // CLTS
+	case 0x06: //TODO: CLTS
 		
 		break;
-	case 0x08: // INVD
+	case 0x08: //TODO: INVD
 	
 		break;
-	case 0x09: // WBINVD
+	case 0x09: //TODO: WBINVD
 	
 		break;
-	case 0x20: // MOV CR*, REG32
+	case 0x20: //TODO: MOV CR*, REG32
 	
 		break;
-	case 0x21: // MOV DR*, REG32
+	case 0x21: //TODO: MOV DR*, REG32
 	
 		break;
-	case 0x22: // MOV REG32, CR*
+	case 0x22: //TODO: MOV REG32, CR*
 	
 		break;
-	case 0x23: // MOV REG32, DR*
+	case 0x23: //TODO: MOV REG32, DR*
 	
 		break;
-	case 0x24: // MOV TR*, REG32
+	case 0x24: //TODO: MOV TR*, REG32
 	
 		break;
-	case 0x26: // MOV REG32, TR*
+	case 0x26: //TODO: MOV REG32, TR*
 	
 		break;
-	case 0x80: // JO IMM32
+	case 0x80: //TODO: JO IMM32
 	
 		break;
-	case 0x81: // JNO IMM32
+	case 0x81: //TODO: JNO IMM32
 	
 		break;
-	case 0x82: // JB IMM32
+	case 0x82: //TODO: JB IMM32
 	
 		break;
-	case 0x83: // JNB IMM32
+	case 0x83: //TODO: JNB IMM32
 	
 		break;
-	case 0x84: // JZ IMM32
+	case 0x84: //TODO: JZ IMM32
 	
 		break;
-	case 0x85: // JNZ IMM32
+	case 0x85: //TODO: JNZ IMM32
 	
 		break;
-	case 0x86: // JBE IMM32
+	case 0x86: //TODO: JBE IMM32
 	
 		break;
-	case 0x87: // JNBE IMM32
+	case 0x87: //TODO: JNBE IMM32
 	
 		break;
-	case 0x88: // JS IMM32
+	case 0x88: //TODO: JS IMM32
 	
 		break;
-	case 0x89: // JNO IMM32
+	case 0x89: //TODO: JNO IMM32
 	
 		break;
-	case 0x8A: // JP IMM32
+	case 0x8A: //TODO: JP IMM32
 	
 		break;
-	case 0x8B: // JNP IMM32
+	case 0x8B: //TODO: JNP IMM32
 	
 		break;
-	case 0x8C: // JL IMM32
+	case 0x8C: //TODO: JL IMM32
 	
 		break;
-	case 0x8D: // JNL IMM32
+	case 0x8D: //TODO: JNL IMM32
 	
 		break;
-	case 0x8E: // JLE IMM32
+	case 0x8E: //TODO: JLE IMM32
 	
 		break;
-	case 0x8F: // JNLE IMM32
+	case 0x8F: //TODO: JNLE IMM32
 	
 		break;
-	case 0x90: // SETO IMM32
+	case 0x90: //TODO: SETO IMM32
 	
 		break;
-	case 0x91: // SETNO IMM32
+	case 0x91: //TODO: SETNO IMM32
 	
 		break;
-	case 0x92: // SETB IMM32
+	case 0x92: //TODO: SETB IMM32
 	
 		break;
-	case 0x93: // SETNB IMM32
+	case 0x93: //TODO: SETNB IMM32
 	
 		break;
-	case 0x94: // SETZ IMM32
+	case 0x94: //TODO: SETZ IMM32
 	
 		break;
-	case 0x95: // SETNZ IMM32
+	case 0x95: //TODO: SETNZ IMM32
 	
 		break;
-	case 0x96: // SETBE IMM32
+	case 0x96: //TODO: SETBE IMM32
 	
 		break;
-	case 0x97: // SETNBE IMM32
+	case 0x97: //TODO: SETNBE IMM32
 	
 		break;
-	case 0x98: // SETS IMM32
+	case 0x98: //TODO: SETS IMM32
 	
 		break;
-	case 0x99: // SETNO IMM32
+	case 0x99: //TODO: SETNO IMM32
 	
 		break;
-	case 0x9A: // SETP IMM32
+	case 0x9A: //TODO: SETP IMM32
 	
 		break;
-	case 0x9B: // SETNP IMM32
+	case 0x9B: //TODO: SETNP IMM32
 	
 		break;
-	case 0x9C: // SETL IMM32
+	case 0x9C: //TODO: SETL IMM32
 	
 		break;
-	case 0x9D: // SETNL IMM32
+	case 0x9D: //TODO: SETNL IMM32
 	
 		break;
-	case 0x9E: // SETLE IMM32
+	case 0x9E: //TODO: SETLE IMM32
 	
 		break;
-	case 0x9F: // SETNLE IMM32
+	case 0x9F: //TODO: SETNLE IMM32
 	
 		break;
-	case 0xA0: // PUSH FS
+	case 0xA0: //TODO: PUSH FS
 	
 		break;
-	case 0xA1: // POP FS
+	case 0xA1: //TODO: POP FS
 	
 		break;
-	case 0xA3: // BT R/M32, REG32
+	case 0xA3: //TODO: BT R/M32, REG32
 	
 		break;
-	case 0xA4: // SHLD R/M32, IMM32
+	case 0xA4: //TODO: SHLD R/M32, IMM32
 	
 		break;
-	case 0xA5: // SHLD R/M32, CR*
+	case 0xA5: //TODO: SHLD R/M32, CR*
 	
 		break;
-	case 0xA6: // CMPXCHG R/M8, REG8
+	case 0xA6: //TODO: CMPXCHG R/M8, REG8
 	
 		break;
-	case 0xA7: // CMPXCHG REG32, R/M32
+	case 0xA7: //TODO: CMPXCHG REG32, R/M32
 	
 		break;
-	case 0xA8: // PUSH GS
+	case 0xA8: //TODO: PUSH GS
 	
 		break;
-	case 0xA9: // POP GS
+	case 0xA9: //TODO: POP GS
 	
 		break;
-	case 0xAB: // BTS R/M32, REG32
+	case 0xAB: //TODO: BTS R/M32, REG32
 	
 		break;
-	case 0xAC: // SHRD R/M32, IMM32
+	case 0xAC: //TODO: SHRD R/M32, IMM32
 	
 		break;
-	case 0xAD: // SHRD R/M32, CR*
+	case 0xAD: //TODO: SHRD R/M32, CR*
 	
 		break;
-	case 0xAF: // IMUL REG32, R/M32
+	case 0xAF: //TODO: IMUL REG32, R/M32
 	
 		break;
-	case 0xB2: // LSS MEM32/48
+	case 0xB2: //TODO: LSS MEM32/48
 	
 		break;
-	case 0xB3: // BTR R/M32, REG32
+	case 0xB3: //TODO: BTR R/M32, REG32
 	
 		break;
-	case 0xB4: // LFS MEM32/48
+	case 0xB4: //TODO: LFS MEM32/48
 	
 		break;
-	case 0xB5: // LGS MEM32/48
+	case 0xB5: //TODO: LGS MEM32/48
 	
 		break;
-	case 0xB6: // MOVZX REG32, R/M8
+	case 0xB6: //TODO: MOVZX REG32, R/M8
 	
 		break;
-	case 0xB7: // MOVZX REG32, R/M16
+	case 0xB7: //TODO: MOVZX REG32, R/M16
 	
 		break;
-	case 0xBA: // GRP8 R/M32, IMM8
+	case 0xBA: //TODO: GRP8 R/M32, IMM8
 	
 		break;
-	case 0xBB: // BTC R/M32, REG32
+	case 0xBB: //TODO: BTC R/M32, REG32
 	
 		break;
-	case 0xBC: // BSF REG32, R/M32
+	case 0xBC: //TODO: BSF REG32, R/M32
 	
 		break;
-	case 0xBD: // BSR REG32, R/M32
+	case 0xBD: //TODO: BSR REG32, R/M32
 	
 		break;
-	case 0xBE: // MOVSX REG32, R/M8
+	case 0xBE: //TODO: MOVSX REG32, R/M8
 	
 		break;
-	case 0xBF: // MOVSX REG32, R/M16
+	case 0xBF: //TODO: MOVSX REG32, R/M16
 	
 		break;
-	case 0xC0: // XADD R/M8, REG8
+	case 0xC0: //TODO: XADD R/M8, REG8
 	
 		break;
-	case 0xC1: // XADD R/M32, REG32
+	case 0xC1: //TODO: XADD R/M32, REG32
 	
 		break;
-	case 0xC8: // BSWAP EAX
+	case 0xC8: //TODO: BSWAP EAX
 	
 		break;
-	case 0xC9: // BSWAP ECX
+	case 0xC9: //TODO: BSWAP ECX
 	
 		break;
-	case 0xCA: // BSWAP EDX
+	case 0xCA: //TODO: BSWAP EDX
 	
 		break;
-	case 0xCB: // BSWAP EBX
+	case 0xCB: //TODO: BSWAP EBX
 	
 		break;
-	case 0xCC: // BSWAP ESP
+	case 0xCC: //TODO: BSWAP ESP
 	
 		break;
-	case 0xCD: // BSWAP EBP
+	case 0xCD: //TODO: BSWAP EBP
 	
 		break;
-	case 0xCE: // BSWAP ESI
+	case 0xCE: //TODO: BSWAP ESI
 	
 		break;
-	case 0xCF: // BSWAP EDI
+	case 0xCF: //TODO: BSWAP EDI
 	
 		break;
 	default:
@@ -485,7 +482,7 @@ void v32_0F() {	// 0Fh Two-byte escape
 	}
 }
 
-void v32_10() {	// 10h ADC R/M8, REG8
+void v32_10() {	//TODO: 10h ADC R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -506,7 +503,7 @@ void v32_10() {	// 10h ADC R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v32_11() {	// 11h ADC R/M16, REG16
+void v32_11() {	//TODO: 11h ADC R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -527,7 +524,7 @@ void v32_11() {	// 11h ADC R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v32_12() {	// 12h ADC REG8, R/M8
+void v32_12() {	//TODO: 12h ADC REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -547,7 +544,7 @@ void v32_12() {	// 12h ADC REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v32_13() {	// 13h ADC REG16, R/M16
+void v32_13() {	//TODO: 13h ADC REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -567,7 +564,7 @@ void v32_13() {	// 13h ADC REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v32_14() {	// 14h ADC AL, IMM8
+void v32_14() {	//TODO: 14h ADC AL, IMM8
 	int r = CPU.AL + mmfu8_i;
 	cpuf8_1(r);
 	if (CPU.CF) ++r;
@@ -575,7 +572,7 @@ void v32_14() {	// 14h ADC AL, IMM8
 	CPU.EIP += 2;
 }
 
-void v32_15() {	// 15h ADC AX, IMM16
+void v32_15() {	//TODO: 15h ADC AX, IMM16
 	int r = CPU.AX + mmfu16_i;
 	cpuf16_1(r);
 	if (CPU.CF) ++r;
@@ -583,17 +580,17 @@ void v32_15() {	// 15h ADC AX, IMM16
 	CPU.EIP += 3;
 }
 
-void v32_16() {	// 16h PUSH SS
+void v32_16() {	//TODO: 16h PUSH SS
 	CPU.push16(CPU.SS);
 	++CPU.EIP;
 }
 
-void v32_17() {	// 17h POP SS
+void v32_17() {	//TODO: 17h POP SS
 	CPU.SS = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_18() {	// 18h SBB R/M8, REG8
+void v32_18() {	//TODO: 18h SBB R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -614,7 +611,7 @@ void v32_18() {	// 18h SBB R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v32_19() {	// 19h SBB R/M16, REG16
+void v32_19() {	//TODO: 19h SBB R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -635,7 +632,7 @@ void v32_19() {	// 19h SBB R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v32_1A() {	// 1Ah SBB REG8, R/M8
+void v32_1A() {	//TODO: 1Ah SBB REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -655,7 +652,7 @@ void v32_1A() {	// 1Ah SBB REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v32_1B() {	// 1Bh SBB REG16, R/M16
+void v32_1B() {	//TODO: 1Bh SBB REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -675,7 +672,7 @@ void v32_1B() {	// 1Bh SBB REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v32_1C() {	// 1Ch SBB AL, IMM8
+void v32_1C() {	//TODO: 1Ch SBB AL, IMM8
 	int r = CPU.AL - mmfu8_i;
 	if (CPU.CF) --r;
 	cpuf8_3(r);
@@ -683,7 +680,7 @@ void v32_1C() {	// 1Ch SBB AL, IMM8
 	CPU.EIP += 2;
 }
 
-void v32_1D() {	// 1Dh SBB AX, IMM16
+void v32_1D() {	//TODO: 1Dh SBB AX, IMM16
 	int r = CPU.AX - mmfu16_i;
 	if (CPU.CF) --r;
 	cpuf16_3(r);
@@ -691,17 +688,17 @@ void v32_1D() {	// 1Dh SBB AX, IMM16
 	CPU.EIP += 3;
 }
 
-void v32_1E() {	// 1Eh PUSH DS
+void v32_1E() {	//TODO: 1Eh PUSH DS
 	CPU.push16(CPU.DS);
 	++CPU.EIP;
 }
 
-void v32_1F() {	// 1Fh POP DS
+void v32_1F() {	//TODO: 1Fh POP DS
 	CPU.DS = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_20() {	// 20h AND R/M8, REG8
+void v32_20() {	//TODO: 20h AND R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -721,7 +718,7 @@ void v32_20() {	// 20h AND R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v32_21() {	// 21h AND R/M16, REG16
+void v32_21() {	//TODO: 21h AND R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -741,7 +738,7 @@ void v32_21() {	// 21h AND R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v32_22() {	// 22h AND REG8, R/M8
+void v32_22() {	//TODO: 22h AND REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -760,7 +757,7 @@ void v32_22() {	// 22h AND REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v32_23() {	// 23h AND REG16, R/M16
+void v32_23() {	//TODO: 23h AND REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -779,26 +776,26 @@ void v32_23() {	// 23h AND REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v32_24() {	// 24h AND AL, IMM8
+void v32_24() {	//TODO: 24h AND AL, IMM8
 	const int r = CPU.AL & mmfu8_i;
 	cpuf8_3(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
-void v32_25() {	// 25h AND AX, IMM16
+void v32_25() {	//TODO: 25h AND AX, IMM16
 	const int r = CPU.AX & mmfu16_i;
 	cpuf16_3(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
 
-void v32_26() {	// 26h ES: (Segment override prefix)
+void v32_26() {	//TODO: 26h ES: (Segment override prefix)
 	CPU.Segment = SEG_ES;
 	++CPU.EIP;
 }
 
-void v32_27() {	// 27h DAA
+void v32_27() {	//TODO: 27h DAA
 	int r = CPU.AL;
 
 	if (((CPU.AL & 0xF) > 9) || CPU.AF) {
@@ -828,7 +825,7 @@ void v32_27() {	// 27h DAA
 	++CPU.EIP;
 }
 
-void v32_28() {	// 28h SUB R/M8, REG8
+void v32_28() {	//TODO: 28h SUB R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -848,7 +845,7 @@ void v32_28() {	// 28h SUB R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v32_29() {	// 29h SUB R/M16, REG16
+void v32_29() {	//TODO: 29h SUB R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -868,7 +865,7 @@ void v32_29() {	// 29h SUB R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v32_2A() {	// 2Ah SUB REG8, R/M8
+void v32_2A() {	//TODO: 2Ah SUB REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -887,7 +884,7 @@ void v32_2A() {	// 2Ah SUB REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v32_2B() {	// 2Bh SUB REG16, R/M16
+void v32_2B() {	//TODO: 2Bh SUB REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -906,26 +903,26 @@ void v32_2B() {	// 2Bh SUB REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v32_2C() {	// 2Ch SUB AL, IMM8
+void v32_2C() {	//TODO: 2Ch SUB AL, IMM8
 	const int r = CPU.AL - mmfu8_i;
 	cpuf8_1(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
-void v32_2D() {	// 2Dh SUB AX, IMM16
+void v32_2D() {	//TODO: 2Dh SUB AX, IMM16
 	const int r = CPU.AX - mmfu16_i;
 	cpuf16_1(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
 
-void v32_2E() {	// 2Eh CS:
+void v32_2E() {	//TODO: 2Eh CS:
 	CPU.Segment = SEG_CS;
 	++CPU.EIP;
 }
 
-void v32_2F() {	// 2Fh DAS
+void v32_2F() {	//TODO: 2Fh DAS
 	const ubyte oldAL = CPU.AL;
 	const ubyte oldCF = CPU.CF;
 	CPU.CF = 0;
@@ -944,7 +941,7 @@ void v32_2F() {	// 2Fh DAS
 	++CPU.EIP;
 }
 
-void v32_30() {	// 30h XOR R/M8, REG8
+void v32_30() {	//TODO: 30h XOR R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -964,7 +961,7 @@ void v32_30() {	// 30h XOR R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v32_31() {	// 31h XOR R/M16, REG16
+void v32_31() {	//TODO: 31h XOR R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -984,7 +981,7 @@ void v32_31() {	// 31h XOR R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v32_32() {	// 32h XOR REG8, R/M8
+void v32_32() {	//TODO: 32h XOR REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -1003,7 +1000,7 @@ void v32_32() {	// 32h XOR REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v32_33() {	// 33h XOR REG16, R/M16
+void v32_33() {	//TODO: 33h XOR REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -1022,26 +1019,26 @@ void v32_33() {	// 33h XOR REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v32_34() {	// 34h XOR AL, IMM8
+void v32_34() {	//TODO: 34h XOR AL, IMM8
 	const int r = CPU.AL ^ mmfu8_i;
 	cpuf8_3(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.EIP += 2;
 }
 
-void v32_35() {	// 35h XOR AX, IMM16
+void v32_35() {	//TODO: 35h XOR AX, IMM16
 	const int r = CPU.AX ^ mmfu16_i;
 	cpuf16_3(r);
 	CPU.AX = cast(ushort)r;
 	CPU.EIP += 3;
 }
 
-void v32_36() {	// 36h SS:
+void v32_36() {	//TODO: 36h SS:
 	CPU.Segment = SEG_SS;
 	++CPU.EIP;
 }
 
-void v32_37() {	// 37h AAA
+void v32_37() {	//TODO: 37h AAA
 	if (((CPU.AL & 0xF) > 9) || CPU.AF) {
 		CPU.AX += 0x106;
 		CPU.AF = CPU.CF = 1;
@@ -1050,7 +1047,7 @@ void v32_37() {	// 37h AAA
 	++CPU.EIP;
 }
 
-void v32_38() {	// 38h CMP R/M8, REG8
+void v32_38() {	//TODO: 38h CMP R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -1069,7 +1066,7 @@ void v32_38() {	// 38h CMP R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v32_39() {	// 39h CMP R/M16, REG16
+void v32_39() {	//TODO: 39h CMP R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -1088,7 +1085,7 @@ void v32_39() {	// 39h CMP R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v32_3A() {	// 3Ah CMP REG8, R/M8
+void v32_3A() {	//TODO: 3Ah CMP REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -1107,7 +1104,7 @@ void v32_3A() {	// 3Ah CMP REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v32_3B() {	// 3Bh CMP REG16, R/M16
+void v32_3B() {	//TODO: 3Bh CMP REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
@@ -1126,22 +1123,22 @@ void v32_3B() {	// 3Bh CMP REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v32_3C() {	// 3Ch CMP AL, IMM8
+void v32_3C() {	//TODO: 3Ch CMP AL, IMM8
 	cpuf8_1(CPU.AL - mmfu8_i);
 	CPU.EIP += 2;
 }
 
-void v32_3D() {	// 3Dh CMP AX, IMM16
+void v32_3D() {	//TODO: 3Dh CMP AX, IMM16
 	cpuf16_1(CPU.AX - mmfu16_i);
 	CPU.EIP += 3;
 }
 
-void v32_3E() {	// 3Eh DS:
+void v32_3E() {	//TODO: 3Eh DS:
 	CPU.Segment = SEG_DS;
 	++CPU.EIP;
 }
 
-void v32_3F() {	// 3Fh AAS
+void v32_3F() {	//TODO: 3Fh AAS
 	if (((CPU.AL & 0xF) > 9) || CPU.AF) {
 		CPU.AX -= 6;
 		CPU.AH -= 1;
@@ -1153,294 +1150,294 @@ void v32_3F() {	// 3Fh AAS
 	++CPU.EIP;
 }
 
-void v32_40() {	// 40h INC AX
+void v32_40() {	//TODO: 40h INC AX
 	const int r = CPU.AX + 1;
 	cpuf16_2(r);
 	CPU.AX = cast(ubyte)r;
 	++CPU.EIP;
 }
 
-void v32_41() {	// 41h INC CX
+void v32_41() {	//TODO: 41h INC CX
 	const int r = CPU.CX + 1;
 	cpuf16_2(r);
 	CPU.CX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_42() {	// 42h INC DX
+void v32_42() {	//TODO: 42h INC DX
 	const int r = CPU.DX + 1;
 	cpuf16_2(r);
 	CPU.DX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_43() {	// 43h INC BX
+void v32_43() {	//TODO: 43h INC BX
 	const int r = CPU.BX + 1;
 	cpuf16_2(r);
 	CPU.BX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_44() {	// 44h INC SP
+void v32_44() {	//TODO: 44h INC SP
 	const int r = CPU.SP + 1;
 	cpuf16_2(r);
 	CPU.SP = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_45() {	// 45h INC BP
+void v32_45() {	//TODO: 45h INC BP
 	const int r = CPU.BP + 1;
 	cpuf16_2(r);
 	CPU.BP = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_46() {	// 46h INC SI
+void v32_46() {	//TODO: 46h INC SI
 	const int r = CPU.SI + 1;
 	cpuf16_2(r);
 	CPU.SI = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_47() {	// 47h INC DI
+void v32_47() {	//TODO: 47h INC DI
 	const int r = CPU.DI + 1;
 	cpuf16_2(r);
 	CPU.DI = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_48() {	// 48h DEC AX
+void v32_48() {	//TODO: 48h DEC AX
 	const int r = CPU.AX - 1;
 	cpuf16_2(r);
 	CPU.AX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_49() {	// 49h DEC CX
+void v32_49() {	//TODO: 49h DEC CX
 	const int r = CPU.CX - 1;
 	cpuf16_2(r);
 	CPU.CX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_4A() {	// 4Ah DEC DX
+void v32_4A() {	//TODO: 4Ah DEC DX
 	const int r = CPU.DX - 1;
 	cpuf16_2(r);
 	CPU.DX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_4B() {	// 4Bh DEC BX
+void v32_4B() {	//TODO: 4Bh DEC BX
 	const int r = CPU.BX - 1;
 	cpuf16_2(r);
 	CPU.BX = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_4C() {	// 4Ch DEC SP
+void v32_4C() {	//TODO: 4Ch DEC SP
 	const int r = CPU.SP - 1;
 	cpuf16_2(r);
 	CPU.SP = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_4D() {	// 4Dh DEC BP
+void v32_4D() {	//TODO: 4Dh DEC BP
 	const int r = CPU.BP - 1;
 	cpuf16_2(r);
 	CPU.BP = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_4E() {	// 4Eh DEC SI
+void v32_4E() {	//TODO: 4Eh DEC SI
 	const int r = CPU.SI - 1;
 	cpuf16_2(r);
 	CPU.SI = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_4F() {	// 4Fh DEC DI
+void v32_4F() {	//TODO: 4Fh DEC DI
 	const int r = CPU.DI - 1;
 	cpuf16_2(r);
 	CPU.DI = cast(ushort)r;
 	++CPU.EIP;
 }
 
-void v32_50() {	// 50h PUSH AX
+void v32_50() {	//TODO: 50h PUSH AX
 	CPU.push16(CPU.AX);
 	++CPU.EIP;
 }
 
-void v32_51() {	// 51h PUSH CX
+void v32_51() {	//TODO: 51h PUSH CX
 	CPU.push16(CPU.CX);
 	++CPU.EIP;
 }
 
-void v32_52() {	// 52h PUSH DX
+void v32_52() {	//TODO: 52h PUSH DX
 	CPU.push16(CPU.DX);
 	++CPU.EIP;
 }
 
-void v32_53() {	// 53h PUSH BX
+void v32_53() {	//TODO: 53h PUSH BX
 	CPU.push16(CPU.BX);
 	++CPU.EIP;
 }
 
-void v32_54() {	// 54h PUSH SP
+void v32_54() {	//TODO: 54h PUSH SP
 	CPU.push16(CPU.SP);
 	++CPU.EIP;
 }
 
-void v32_55() {	// 55h PUSH BP
+void v32_55() {	//TODO: 55h PUSH BP
 	CPU.push16(CPU.BP);
 	++CPU.EIP;
 }
 
-void v32_56() {	// 56h PUSH SI
+void v32_56() {	//TODO: 56h PUSH SI
 	CPU.push16(CPU.SI);
 	++CPU.EIP;
 }
 
-void v32_57() {	// 57h PUSH DI
+void v32_57() {	//TODO: 57h PUSH DI
 	CPU.push16(CPU.DI);
 	++CPU.EIP;
 }
 
-void v32_58() {	// 58h POP AX
+void v32_58() {	//TODO: 58h POP AX
 	CPU.AX = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_59() {	// 59h POP CX
+void v32_59() {	//TODO: 59h POP CX
 	CPU.CX = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_5A() {	// 5Ah POP DX
+void v32_5A() {	//TODO: 5Ah POP DX
 	CPU.DX = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_5B() {	// 5Bh POP BX
+void v32_5B() {	//TODO: 5Bh POP BX
 	CPU.BX = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_5C() {	// 5Ch POP SP
+void v32_5C() {	//TODO: 5Ch POP SP
 	CPU.SP = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_5D() {	// 5Dh POP BP
+void v32_5D() {	//TODO: 5Dh POP BP
 	CPU.BP = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_5E() {	// 5Eh POP SI
+void v32_5E() {	//TODO: 5Eh POP SI
 	CPU.SI = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_5F() {	// 5Fh POP DI
+void v32_5F() {	//TODO: 5Fh POP DI
 	CPU.DI = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_66() {	// 66h OPERAND OVERRIDE
+void v32_66() {	//TODO: 66h OPERAND OVERRIDE
 	//TODO: CHECK ACCESS
 	exec16(MEMORY[CPU.EIP]);
 	++CPU.EIP;
 }
 
-void v32_67() {	// 67h ADDRESS OVERRIDE
+void v32_67() {	//TODO: 67h ADDRESS OVERRIDE
 	//TODO: CPU.AddressPrefix
 	++CPU.EIP;
 }
 
-void v32_70() {	// 70h JO SHORT-LABEL
+void v32_70() {	//TODO: 70h JO SHORT-LABEL
 	CPU.EIP += CPU.OF ? mmfi8_i + 2 : 2;
 }
 
-void v32_71() {	// 71h JNO SHORT-LABEL
+void v32_71() {	//TODO: 71h JNO SHORT-LABEL
 	CPU.EIP += CPU.OF ? 2 : mmfi8_i + 2;
 }
 
-void v32_72() {	// 72h JB/JNAE/JC SHORT-LABEL
+void v32_72() {	//TODO: 72h JB/JNAE/JC SHORT-LABEL
 	CPU.EIP += CPU.CF ? mmfi8_i + 2 : 2;
 }
 
-void v32_73() {	// 73h JNB/JAE/JNC SHORT-LABEL
+void v32_73() {	//TODO: 73h JNB/JAE/JNC SHORT-LABEL
 	CPU.EIP += CPU.CF ? 2 : mmfi8_i + 2;
 }
 
-void v32_74() {	// 74h JE/NZ SHORT-LABEL
+void v32_74() {	//TODO: 74h JE/NZ SHORT-LABEL
 	CPU.EIP += CPU.ZF ? mmfi8_i + 2 : 2;
 }
 
-void v32_75() {	// 75h JNE/JNZ SHORT-LABEL
+void v32_75() {	//TODO: 75h JNE/JNZ SHORT-LABEL
 	CPU.EIP += CPU.ZF ? 2 : mmfi8_i + 2;
 }
 
-void v32_76() {	// 76h JBE/JNA SHORT-LABEL
+void v32_76() {	//TODO: 76h JBE/JNA SHORT-LABEL
 	CPU.EIP += (CPU.CF || CPU.ZF) ? mmfi8_i + 2 : 2;
 }
 
-void v32_77() {	// 77h JNBE/JA SHORT-LABEL
+void v32_77() {	//TODO: 77h JNBE/JA SHORT-LABEL
 	CPU.EIP += CPU.CF == 0 && CPU.ZF == 0 ? mmfi8_i + 2 : 2;
 }
 
-void v32_78() {	// 78h JS SHORT-LABEL
+void v32_78() {	//TODO: 78h JS SHORT-LABEL
 	CPU.EIP += CPU.SF ? mmfi8_i + 2 : 2;
 }
 
-void v32_79() {	// 79h JNS SHORT-LABEL
+void v32_79() {	//TODO: 79h JNS SHORT-LABEL
 	CPU.EIP += CPU.SF ? 2 : mmfi8_i + 2;
 }
 
-void v32_7A() {	// 7Ah JP/JPE SHORT-LABEL
+void v32_7A() {	//TODO: 7Ah JP/JPE SHORT-LABEL
 	CPU.EIP += CPU.PF ? mmfi8_i + 2 : 2;
 }
 
-void v32_7B() {	// 7Bh JNP/JPO SHORT-LABEL
+void v32_7B() {	//TODO: 7Bh JNP/JPO SHORT-LABEL
 	CPU.EIP += CPU.PF ? 2 : mmfi8_i + 2;
 }
 
-void v32_7C() {	// 7Ch JL/JNGE SHORT-LABEL
+void v32_7C() {	//TODO: 7Ch JL/JNGE SHORT-LABEL
 	CPU.EIP += CPU.SF != CPU.OF ? mmfi8_i + 2 : 2;
 }
 
-void v32_7D() {	// 7Dh JNL/JGE SHORT-LABEL
+void v32_7D() {	//TODO: 7Dh JNL/JGE SHORT-LABEL
 	CPU.EIP += CPU.SF == CPU.OF ? mmfi8_i + 2 : 2;
 }
 
-void v32_7E() {	// 7Eh JLE/JNG SHORT-LABEL
+void v32_7E() {	//TODO: 7Eh JLE/JNG SHORT-LABEL
 	CPU.EIP += CPU.SF != CPU.OF || CPU.ZF ? mmfi8_i + 2 : 2;
 }
 
-void v32_7F() {	// 7Fh JNLE/JG SHORT-LABEL
+void v32_7F() {	//TODO: 7Fh JNLE/JG SHORT-LABEL
 	CPU.EIP += CPU.SF == CPU.OF && CPU.ZF == 0 ? mmfi8_i + 2 : 2;
 }
 
-void v32_80() {	// 80h GRP1 R/M8, IMM8
-	const ubyte rm = mmfu8_i; // Get ModR/M byte
+void v32_80() {	//TODO: 80h GRP1 R/M8, IMM8
+	const ubyte rm = mmfu8_i; //TODO: Get ModR/M byte
 	const ushort im = mmfu8_i(1);
 	const int addr = mmrm16(rm);
 	int r = mmfu8(addr);
-	switch (rm & RM_REG) { // REG
-	case RM_REG_000: // 000 - ADD
+	switch (rm & RM_REG) { //TODO: REG
+	case RM_REG_000: //TODO: 000 - ADD
 		r += im; mmiu16(r, addr); break;
-	case RM_REG_001: // 001 - OR
+	case RM_REG_001: //TODO: 001 - OR
 		r |= im; mmiu16(r, addr); break;
-	case RM_REG_010: // 010 - ADC
+	case RM_REG_010: //TODO: 010 - ADC
 		r += im; if (CPU.CF) ++r; mmiu16(r, addr); break;
-	case RM_REG_011: // 011 - SBB
+	case RM_REG_011: //TODO: 011 - SBB
 		r -= im; if (CPU.CF) --r; mmiu16(r, addr); break;
-	case RM_REG_100: // 100 - AND
+	case RM_REG_100: //TODO: 100 - AND
 		r &= im; mmiu16(r, addr); break;
-	case RM_REG_101: // 101 - SUB
+	case RM_REG_101: //TODO: 101 - SUB
 		r -= im; mmiu16(r, addr); break;
-	case RM_REG_110: // 110 - XOR
+	case RM_REG_110: //TODO: 110 - XOR
 		r ^= im; mmiu16(r, addr); break;
-	case RM_REG_111: // 111 - CMP
+	case RM_REG_111: //TODO: 111 - CMP
 		r -= im; break;
 	default:
 		log_info("Invalid ModR/M from GRP1_8");
@@ -1450,27 +1447,27 @@ void v32_80() {	// 80h GRP1 R/M8, IMM8
 	CPU.EIP += 3;
 }
 
-void v32_81() {	// 81h GRP1 R/M16, IMM16
-	const ubyte rm = mmfu8_i; // Get ModR/M byte
+void v32_81() {	//TODO: 81h GRP1 R/M16, IMM16
+	const ubyte rm = mmfu8_i; //TODO: Get ModR/M byte
 	const ushort im = mmfu16_i(1);
 	const int addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
-	switch (rm & RM_REG) { // REG
-	case RM_REG_000: // 000 - ADD
+	switch (rm & RM_REG) { //TODO: REG
+	case RM_REG_000: //TODO: 000 - ADD
 		r += im; mmiu16(r, addr); break;
-	case RM_REG_001: // 001 - OR
+	case RM_REG_001: //TODO: 001 - OR
 		r |= im; mmiu16(r, addr); break;
-	case RM_REG_010: // 010 - ADC
+	case RM_REG_010: //TODO: 010 - ADC
 		r += im; if (CPU.CF) ++r; mmiu16(r, addr); break;
-	case RM_REG_011: // 011 - SBB
+	case RM_REG_011: //TODO: 011 - SBB
 		r -= im; if (CPU.CF) --r; mmiu16(r, addr); break;
-	case RM_REG_100: // 100 - AND
+	case RM_REG_100: //TODO: 100 - AND
 		r &= im; mmiu16(r, addr); break;
-	case RM_REG_101: // 101 - SUB
+	case RM_REG_101: //TODO: 101 - SUB
 		r -= im; mmiu16(r, addr); break;
-	case RM_REG_110: // 110 - XOR
+	case RM_REG_110: //TODO: 110 - XOR
 		r ^= im; mmiu16(r, addr); break;
-	case RM_REG_111: // 111 - CMP
+	case RM_REG_111: //TODO: 111 - CMP
 		r -= im;  break;
 	default:
 		log_info("Invalid ModR/M from GRP1_16");
@@ -1480,21 +1477,21 @@ void v32_81() {	// 81h GRP1 R/M16, IMM16
 	CPU.EIP += 4;
 }
 
-void v32_82() {	// 82h GRP2 R/M8, IMM8
-	const ubyte rm = mmfu8_i; // Get ModR/M byte
+void v32_82() {	//TODO: 82h GRP2 R/M8, IMM8
+	const ubyte rm = mmfu8_i; //TODO: Get ModR/M byte
 	const ushort im = mmfu8_i(1);
 	const int addr = mmrm16(rm);
 	int r = mmfu8(addr);
-	switch (rm & RM_REG) { // ModRM REG
-	case RM_REG_000: // 000 - ADD
+	switch (rm & RM_REG) { //TODO: ModRM REG
+	case RM_REG_000: //TODO: 000 - ADD
 		r += im; mmiu8(r, addr); break;
-	case RM_REG_010: // 010 - ADC
+	case RM_REG_010: //TODO: 010 - ADC
 		r += im; if (CPU.CF) ++r; mmiu8(r, addr); break;
-	case RM_REG_011: // 011 - SBB
+	case RM_REG_011: //TODO: 011 - SBB
 		r -= im; if (CPU.CF) --r; mmiu8(r, addr); break;
-	case RM_REG_101: // 101 - SUB
+	case RM_REG_101: //TODO: 101 - SUB
 		r -= im; mmiu8(r, addr); break;
-	case RM_REG_111: // 111 - CMP
+	case RM_REG_111: //TODO: 111 - CMP
 		r -= im; break;
 	default:
 		log_info("Invalid ModR/M for GRP2_8");
@@ -1504,23 +1501,23 @@ void v32_82() {	// 82h GRP2 R/M8, IMM8
 	CPU.EIP += 3;
 }
 
-void v32_83() {	// 83h GRP2 R/M16, IMM8
-	const ubyte rm = mmfu8_i; // Get ModR/M byte
+void v32_83() {	//TODO: 83h GRP2 R/M16, IMM8
+	const ubyte rm = mmfu8_i; //TODO: Get ModR/M byte
 	const ushort im = mmfu8_i(1);
 	const int addr = mmrm16(rm, 1);
 	int r = mmfu8(addr);
-	switch (rm & RM_REG) { // ModRM REG
-	case RM_REG_000: // 000 - ADD
+	switch (rm & RM_REG) { //TODO: ModRM REG
+	case RM_REG_000: //TODO: 000 - ADD
 		r += im; mmiu16(r, addr); break;
-	case RM_REG_010: // 010 - ADC
+	case RM_REG_010: //TODO: 010 - ADC
 		r += im; if (CPU.CF) ++r; mmiu16(r, addr);
 		break;
-	case RM_REG_011: // 011 - SBB
+	case RM_REG_011: //TODO: 011 - SBB
 		r -= im; if (CPU.CF) --r; mmiu16(r, addr);
 		break;
-	case RM_REG_101: // 101 - SUB
+	case RM_REG_101: //TODO: 101 - SUB
 		r -= im; mmiu16(r, addr); break;
-	case RM_REG_111: // 111 - CMP
+	case RM_REG_111: //TODO: 111 - CMP
 		r -= im; break;
 	default:
 		log_info("Invalid ModR/M for GRP2_16");
@@ -1530,7 +1527,7 @@ void v32_83() {	// 83h GRP2 R/M16, IMM8
 	CPU.EIP += 3;
 }
 
-void v32_84() {	// 84h TEST R/M8, REG8
+void v32_84() {	//TODO: 84h TEST R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	const int n = mmfu8(mmrm16(rm));
 	int r = void;
@@ -1549,7 +1546,7 @@ void v32_84() {	// 84h TEST R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v32_85() {	// 85h TEST R/M16, REG16
+void v32_85() {	//TODO: 85h TEST R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	const int n = mmfu16(mmrm16(rm, 1));
 	int r = void;
@@ -1568,13 +1565,13 @@ void v32_85() {	// 85h TEST R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v32_86() {	// 86h XCHG REG8, R/M8
+void v32_86() {	//TODO: 86h XCHG REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm);
 	const ubyte s = mmfu8(addr);
-	// temp <- REG
-	// REG  <- MEM
-	// MEM  <- temp
+	//TODO: temp <- REG
+	//TODO: REG  <- MEM
+	//TODO: MEM  <- temp
 	ubyte r = void;
 	switch (rm & RM_REG) {
 	case RM_REG_000: r = CPU.AL; CPU.AL = s; break;
@@ -1591,12 +1588,12 @@ void v32_86() {	// 86h XCHG REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v32_87() {	// 87h XCHG REG16, R/M16
+void v32_87() {	//TODO: 87h XCHG REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm, 1);
-	// temp <- REG
-	// REG  <- MEM
-	// MEM  <- temp
+	//TODO: temp <- REG
+	//TODO: REG  <- MEM
+	//TODO: MEM  <- temp
 	ushort r = void; const ushort s = mmfu16(addr);
 	switch (rm & RM_REG) {
 	case RM_REG_000: r = CPU.AX; CPU.AX = s; break;
@@ -1613,7 +1610,7 @@ void v32_87() {	// 87h XCHG REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v32_88() {	// 88h MOV R/M8, REG8
+void v32_88() {	//TODO: 88h MOV R/M8, REG8
 	const ubyte rm = mmfu8_i;
 	int addr = mmrm16(rm);
 	switch (rm & RM_REG) {
@@ -1630,7 +1627,7 @@ void v32_88() {	// 88h MOV R/M8, REG8
 	CPU.EIP += 2;
 }
 
-void v32_89() {	// 89h MOV R/M16, REG16
+void v32_89() {	//TODO: 89h MOV R/M16, REG16
 	const ubyte rm = mmfu8_i;
 	int addr = mmrm16(rm, 1);
 	switch (rm & RM_REG) {
@@ -1647,7 +1644,7 @@ void v32_89() {	// 89h MOV R/M16, REG16
 	CPU.EIP += 2;
 }
 
-void v32_8A() {	// 8Ah MOV REG8, R/M8
+void v32_8A() {	//TODO: 8Ah MOV REG8, R/M8
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm);
 	const ubyte r = mmfu8(addr);
@@ -1665,7 +1662,7 @@ void v32_8A() {	// 8Ah MOV REG8, R/M8
 	CPU.EIP += 2;
 }
 
-void v32_8B() {	// 8Bh MOV REG16, R/M16
+void v32_8B() {	//TODO: 8Bh MOV REG16, R/M16
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm, 1);
 	const ushort r = mmfu16(addr);
@@ -1683,23 +1680,23 @@ void v32_8B() {	// 8Bh MOV REG16, R/M16
 	CPU.EIP += 2;
 }
 
-void v32_8C() {	// 8Ch MOV R/M16, SEGREG
-	// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
+void v32_8C() {	//TODO: 8Ch MOV R/M16, SEGREG
+	//TODO: MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 	const byte rm = mmfu8_i;
 	const int addr = mmrm16(rm, 1);
-	switch (rm & RM_REG) { // if REG[3] is clear, trip to default
+	switch (rm & RM_REG) { //TODO: if REG[3] is clear, trip to default
 	case RM_REG_100: mmiu16(CPU.ES, addr); break;
 	case RM_REG_101: mmiu16(CPU.CS, addr); break;
 	case RM_REG_110: mmiu16(CPU.SS, addr); break;
 	case RM_REG_111: mmiu16(CPU.DS, addr); break;
-	default: // when bit 6 is clear (REG[3])
+	default: //TODO: when bit 6 is clear (REG[3])
 		log_info("Invalid ModR/M for SEGREG->RM");
 		v32_illegal;
 	}
 	CPU.EIP += 2;
 }
 
-void v32_8D() {	// 8Dh LEA REG16, MEM16
+void v32_8D() {	//TODO: 8Dh LEA REG16, MEM16
 	const ubyte rm = mmfu8_i;
 	const ushort addr = cast(ushort)mmrm16(rm, 1);
 	switch (rm & RM_REG) {
@@ -1711,13 +1708,13 @@ void v32_8D() {	// 8Dh LEA REG16, MEM16
 	case RM_REG_101: CPU.SP = addr; break;
 	case RM_REG_110: CPU.SI = addr; break;
 	case RM_REG_111: CPU.DI = addr; break;
-	default: // Never happens
+	default: //TODO: Never happens
 	}
 	CPU.EIP += 2;
 }
 
-void v32_8E() {	// 8Eh MOV SEGREG, R/M16
-	// MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
+void v32_8E() {	//TODO: 8Eh MOV SEGREG, R/M16
+	//TODO: MOD 1SR R/M (SR: 00=ES, 01=CS, 10=SS, 11=DS)
 	const byte rm = mmfu8_i;
 	const ushort addr = mmfu16(mmrm16(rm, 1));
 	switch (rm & RM_REG) {
@@ -1725,16 +1722,16 @@ void v32_8E() {	// 8Eh MOV SEGREG, R/M16
 	case RM_REG_101: CPU.CS = addr; break;
 	case RM_REG_110: CPU.SS = addr; break;
 	case RM_REG_111: CPU.DS = addr; break;
-	default: // when bit 5 is clear (REG[3])
+	default: //TODO: when bit 5 is clear (REG[3])
 		log_info("Invalid ModR/M for SEGREG<-RM");
 		v32_illegal;
 	}
 	CPU.EIP += 2;
 }
 
-void v32_8F() {	// 8Fh POP R/M16
+void v32_8F() {	//TODO: 8Fh POP R/M16
 	const ubyte rm = mmfu8_i;
-	if (rm & RM_REG) { // REG must be 000
+	if (rm & RM_REG) { //TODO: REG must be 000
 		log_info("Invalid ModR/M for POP R/M16");
 		v32_illegal;
 	}
@@ -1742,128 +1739,128 @@ void v32_8F() {	// 8Fh POP R/M16
 	CPU.EIP += 2;
 }
 
-void v32_90() {	// 90h NOP (aka XCHG AX, AX)
+void v32_90() {	//TODO: 90h NOP (aka XCHG AX, AX)
 	++CPU.EIP;
 }
 
-void v32_91() {	// 91h XCHG AX, CX
+void v32_91() {	//TODO: 91h XCHG AX, CX
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.CX;
 	CPU.CX = r;
 	++CPU.EIP;
 }
 
-void v32_92() {	// 92h XCHG AX, DX
+void v32_92() {	//TODO: 92h XCHG AX, DX
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.DX;
 	CPU.DX = r;
 	++CPU.EIP;
 }
 
-void v32_93() {	// 93h XCHG AX, BX
+void v32_93() {	//TODO: 93h XCHG AX, BX
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.BX;
 	CPU.BX = r;
 	++CPU.EIP;
 }
 
-void v32_94() {	// 94h XCHG AX, SP
+void v32_94() {	//TODO: 94h XCHG AX, SP
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.SP;
 	CPU.SP = r;
 	++CPU.EIP;
 }
 
-void v32_95() {	// 95h XCHG AX, BP
+void v32_95() {	//TODO: 95h XCHG AX, BP
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.BP;
 	CPU.BP = r;
 	++CPU.EIP;
 }
 
-void v32_96() {	// 96h XCHG AX, SI
+void v32_96() {	//TODO: 96h XCHG AX, SI
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.SI;
 	CPU.SI = r;
 	++CPU.EIP;
 }
 
-void v32_97() {	// 97h XCHG AX, DI
+void v32_97() {	//TODO: 97h XCHG AX, DI
 	const ushort r = CPU.AX;
 	CPU.AX = CPU.DI;
 	CPU.DI = r;
 	++CPU.EIP;
 }
 
-void v32_98() {	// 98h CBW
+void v32_98() {	//TODO: 98h CBW
 	CPU.AH = CPU.AL & 0x80 ? 0xFF : 0;
 	++CPU.EIP;
 }
 
-void v32_99() {	// 99h CWD
+void v32_99() {	//TODO: 99h CWD
 	CPU.DX = CPU.AX & 0x8000 ? 0xFFFF : 0;
 	++CPU.EIP;
 }
 
-void v32_9A() {	// 9Ah CALL FAR_PROC
+void v32_9A() {	//TODO: 9Ah CALL FAR_PROC
 	CPU.push16(CPU.CS);
 	CPU.push16(CPU.IP);
 	CPU.CS = mmfu16_i;
 	CPU.IP = mmfu16_i(2);
 }
 
-void v32_9B() {	// 9Bh WAIT
+void v32_9B() {	//TODO: 9Bh WAIT
 	//TODO: WAIT
 	++CPU.EIP;
 }
 
-void v32_9C() {	// 9Ch PUSHF
+void v32_9C() {	//TODO: 9Ch PUSHF
 	CPU.push16(CPU.FLAGS);
 	++CPU.EIP;
 }
 
-void v32_9D() {	// 9Dh POPF
+void v32_9D() {	//TODO: 9Dh POPF
 	CPU.FLAGS = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_9E() {	// 9Eh SAHF (Save AH to Flags)
+void v32_9E() {	//TODO: 9Eh SAHF (Save AH to Flags)
 	CPU.FLAG = CPU.AH;
 	++CPU.EIP;
 }
 
-void v32_9F() {	// 9Fh LAHF (Load AH from Flags)
+void v32_9F() {	//TODO: 9Fh LAHF (Load AH from Flags)
 	CPU.AH = CPU.FLAG;
 	++CPU.EIP;
 }
 
-void v32_A0() {	// A0h MOV AL, MEM8
+void v32_A0() {	//TODO: A0h MOV AL, MEM8
 	CPU.AL = mmfu8(mmfu16_i);
 	CPU.EIP += 2;
 }
 
-void v32_A1() {	// A1h MOV AX, MEM16
+void v32_A1() {	//TODO: A1h MOV AX, MEM16
 	CPU.AX = mmfu16(mmfu16_i);
 	CPU.EIP += 3;
 }
 
-void v32_A2() {	// A2h MOV MEM8, AL
+void v32_A2() {	//TODO: A2h MOV MEM8, AL
 	mmiu8(CPU.AL, mmfu16_i);
 	CPU.EIP += 2;
 }
 
-void v32_A3() {	// A3h MOV MEM16, AX
+void v32_A3() {	//TODO: A3h MOV MEM16, AX
 	mmiu16(CPU.AX, mmfu16_i);
 	CPU.EIP += 3;
 }
 
-void v32_A4() {	// A4h MOVS DEST-STR8, SRC-STR8
+void v32_A4() {	//TODO: A4h MOVS DEST-STR8, SRC-STR8
 }
 
-void v32_A5() {	// A5h MOVS DEST-STR16, SRC-STR16
+void v32_A5() {	//TODO: A5h MOVS DEST-STR16, SRC-STR16
 }
 
-void v32_A6() {	// A6h CMPS DEST-STR8, SRC-STR8
+void v32_A6() {	//TODO: A6h CMPS DEST-STR8, SRC-STR8
 	cpuf8_1(
 		mmfu8(address(CPU.DS, CPU.SI)) -
 		mmfu8(address(CPU.ES, CPU.DI))
@@ -1877,7 +1874,7 @@ void v32_A6() {	// A6h CMPS DEST-STR8, SRC-STR8
 	}
 }
 
-void v32_A7() {	// A7h CMPSW DEST-STR16, SRC-STR16
+void v32_A7() {	//TODO: A7h CMPSW DEST-STR16, SRC-STR16
 	cpuf16_1(
 		mmfu16(address(CPU.DS, CPU.SI)) - mmfu16(address(CPU.ES, CPU.DI))
 	);
@@ -1890,143 +1887,143 @@ void v32_A7() {	// A7h CMPSW DEST-STR16, SRC-STR16
 	}
 }
 
-void v32_A8() {	// A8h TEST AL, IMM8
+void v32_A8() {	//TODO: A8h TEST AL, IMM8
 	cpuf8_3(CPU.AL & mmfu8_i);
 	CPU.EIP += 2;
 }
 
-void v32_A9() {	// A9h TEST AX, IMM16
+void v32_A9() {	//TODO: A9h TEST AX, IMM16
 	cpuf16_3(CPU.AX & mmfu16_i);
 	CPU.EIP += 3;
 }
 
-void v32_AA() {	// AAh STOS DEST-STR8
+void v32_AA() {	//TODO: AAh STOS DEST-STR8
 	mmiu8(CPU.AL, address(CPU.ES, CPU.DI));
 	if (CPU.DF) --CPU.DI; else ++CPU.DI;
 	++CPU.EIP;
 }
 
-void v32_AB() {	// ABh STOS DEST-STR16
+void v32_AB() {	//TODO: ABh STOS DEST-STR16
 	mmiu16(CPU.AX, address(CPU.ES, CPU.DI));
 	if (CPU.DF) CPU.DI -= 2; else CPU.DI += 2;
 	++CPU.EIP;
 }
 
-void v32_AC() {	// ACh LODS SRC-STR8
+void v32_AC() {	//TODO: ACh LODS SRC-STR8
 	CPU.AL = mmfu8(address(CPU.DS, CPU.SI));
 	if (CPU.DF) --CPU.SI; else ++CPU.SI;
 	++CPU.EIP;
 }
 
-void v32_AD() {	// ADh LODS SRC-STR16
+void v32_AD() {	//TODO: ADh LODS SRC-STR16
 	CPU.AX = mmfu16(address(CPU.DS, CPU.SI));
 	if (CPU.DF) CPU.SI -= 2; else CPU.SI += 2;
 	++CPU.EIP;
 }
 
-void v32_AE() {	// AEh SCAS DEST-STR8
+void v32_AE() {	//TODO: AEh SCAS DEST-STR8
 	cpuf8_1(CPU.AL - mmfu8(address(CPU.ES, CPU.DI)));
 	if (CPU.DF) --CPU.DI; else ++CPU.DI;
 	++CPU.EIP;
 }
 
-void v32_AF() {	// AFh SCAS DEST-STR16
+void v32_AF() {	//TODO: AFh SCAS DEST-STR16
 	cpuf16_1(CPU.AX - mmfu16(address(CPU.ES, CPU.DI)));
 	if (CPU.DF) CPU.DI -= 2; else CPU.DI += 2;
 	++CPU.EIP;
 }
 
-void v32_B0() {	// B0h MOV AL, IMM8
+void v32_B0() {	//TODO: B0h MOV AL, IMM8
 	CPU.AL = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v32_B1() {	// B1h MOV CL, IMM8
+void v32_B1() {	//TODO: B1h MOV CL, IMM8
 	CPU.CL = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v32_B2() {	// B2h MOV DL, IMM8
+void v32_B2() {	//TODO: B2h MOV DL, IMM8
 	CPU.DL = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v32_B3() {	// B3h MOV BL, IMM8
+void v32_B3() {	//TODO: B3h MOV BL, IMM8
 	CPU.BL = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v32_B4() {	// B4h MOV AH, IMM8
+void v32_B4() {	//TODO: B4h MOV AH, IMM8
 	CPU.AH = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v32_B5() {	// B5h MOV CH, IMM8
+void v32_B5() {	//TODO: B5h MOV CH, IMM8
 	CPU.CH = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v32_B6() {	// B6h MOV DH, IMM8  
+void v32_B6() {	//TODO: B6h MOV DH, IMM8  
 	CPU.DH = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v32_B7() {	// B7h MOV BH, IMM8
+void v32_B7() {	//TODO: B7h MOV BH, IMM8
 	CPU.BH = mmfu8_i;
 	CPU.EIP += 2;
 }
 
-void v32_B8() {	// B8h MOV AX, IMM16
+void v32_B8() {	//TODO: B8h MOV AX, IMM16
 	CPU.AX = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v32_B9() {	// B9h MOV CX, IMM16
+void v32_B9() {	//TODO: B9h MOV CX, IMM16
 	CPU.CX = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v32_BA() {	// BAh MOV DX, IMM16
+void v32_BA() {	//TODO: BAh MOV DX, IMM16
 	CPU.DX = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v32_BB() {	// BBh MOV BX, IMM16
+void v32_BB() {	//TODO: BBh MOV BX, IMM16
 	CPU.BX = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v32_BC() {	// BCh MOV SP, IMM16
+void v32_BC() {	//TODO: BCh MOV SP, IMM16
 	CPU.SP = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v32_BD() {	// BDh MOV BP, IMM16
+void v32_BD() {	//TODO: BDh MOV BP, IMM16
 	CPU.BP = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v32_BE() {	// BEh MOV SI, IMM16
+void v32_BE() {	//TODO: BEh MOV SI, IMM16
 	CPU.SI = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v32_BF() {	// BFh MOV DI, IMM16
+void v32_BF() {	//TODO: BFh MOV DI, IMM16
 	CPU.DI = mmfu16_i;
 	CPU.EIP += 3;
 }
 
-void v32_C2() {	// C2 RET IMM16 (NEAR)
+void v32_C2() {	//TODO: C2 RET IMM16 (NEAR)
 	const ushort sp = mmfi16_i;
 	CPU.IP = CPU.pop16;
 	CPU.SP += sp;
 }
 
-void v32_C3() {	// C3h RET (NEAR)
+void v32_C3() {	//TODO: C3h RET (NEAR)
 	CPU.IP = CPU.pop16;
 }
 
-void v32_C4() {	// C4h LES REG16, MEM16
+void v32_C4() {	//TODO: C4h LES REG16, MEM16
 	const ubyte rm = mmfu8_i;
 	const ushort r = mmfu16(mmrm16(rm, 1));
 	CPU.Segment = SEG_ES;
@@ -2044,7 +2041,7 @@ void v32_C4() {	// C4h LES REG16, MEM16
 	CPU.EIP += 2;
 }
 
-void v32_C5() {	// C5h LDS REG16, MEM16
+void v32_C5() {	//TODO: C5h LDS REG16, MEM16
 	const ubyte rm = mmfu8_i;
 	const ushort r = mmfu16(mmrm16(rm, 1));
 	CPU.Segment = SEG_DS;
@@ -2062,78 +2059,78 @@ void v32_C5() {	// C5h LDS REG16, MEM16
 	CPU.EIP += 2;
 }
 
-void v32_C6() {	// C6h MOV MEM8, IMM8
+void v32_C6() {	//TODO: C6h MOV MEM8, IMM8
 	const ubyte rm = mmfu8_i;
-	if (rm & RM_REG) { // No register operation allowed
+	if (rm & RM_REG) { //TODO: No register operation allowed
 		log_info("Invalid ModR/M for MOV MEM8");
 		v32_illegal;
 	}
 	mmiu8(mmfu8_i(1), mmrm16(rm));
 }
 
-void v32_C7() {	// C7h MOV MEM16, IMM16
+void v32_C7() {	//TODO: C7h MOV MEM16, IMM16
 	const ubyte rm = mmfu8_i;
-	if (rm & RM_REG) { // No register operation allowed
+	if (rm & RM_REG) { //TODO: No register operation allowed
 		log_info("Invalid ModR/M for MOV MEM16");
 		v32_illegal;
 	}
 	mmiu16(mmfu16_i(1), mmrm16(rm, 1));
 }
 
-void v32_CA() {	// CAh RET IMM16 (FAR)
+void v32_CA() {	//TODO: CAh RET IMM16 (FAR)
 	const uint addr = CPU.EIP + 1;
 	CPU.IP = CPU.pop16;
 	CPU.CS = CPU.pop16;
 	CPU.SP += mmfi16(addr);
 }
 
-void v32_CB() {	// CBh RET (FAR)
+void v32_CB() {	//TODO: CBh RET (FAR)
 	CPU.IP = CPU.pop16;
 	CPU.CS = CPU.pop16;
 }
 
-void v32_CC() {	// CCh INT 3
+void v32_CC() {	//TODO: CCh INT 3
 	INT(3);
 	++CPU.EIP;
 }
 
-void v32_CD() {	// CDh INT IMM8
+void v32_CD() {	//TODO: CDh INT IMM8
 	INT(mmfu8_i);
 	CPU.EIP += 2;
 }
 
-void v32_CE() {	// CEh INTO
+void v32_CE() {	//TODO: CEh INTO
 	if (CPU.CF) INT(4);
 	++CPU.EIP;
 }
 
-void v32_CF() {	// CFh IRET
+void v32_CF() {	//TODO: CFh IRET
 	CPU.IP = CPU.pop16;
 	CPU.CS = CPU.pop16;
 	CPU.FLAGS = CPU.pop16;
 	++CPU.EIP;
 }
 
-void v32_D0() {	// D0h GRP2 R/M8, 1
+void v32_D0() {	//TODO: D0h GRP2 R/M8, 1
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm);
 	int r = mmfu8(addr);
 	switch (rm & RM_REG) {
-	case RM_REG_000: // 000 - ROL
+	case RM_REG_000: //TODO: 000 - ROL
 		r <<= 1; if (r & 0x100) { r |= 1; CPU.OF = 1; } break;
-	case RM_REG_001: // 001 - ROR
+	case RM_REG_001: //TODO: 001 - ROR
 		if (r & 1) { r |= 0x100; CPU.OF = 1; } r >>= 1; break;
-	case RM_REG_010: // 010 - RCL
+	case RM_REG_010: //TODO: 010 - RCL
 		r <<= 1; if (r & 0x200) { r |= 1; CPU.OF = 1; } break;
-	case RM_REG_011: // 011 - RCR
+	case RM_REG_011: //TODO: 011 - RCR
 		if (r & 1) { r |= 0x200; CPU.OF = 1; } r >>= 1; break;
-	case RM_REG_100: // 100 - SAL/SHL
+	case RM_REG_100: //TODO: 100 - SAL/SHL
 		r <<= 1; cpuf8_1(r); break;
-	case RM_REG_101: // 101 - SHR
+	case RM_REG_101: //TODO: 101 - SHR
 		r >>= 1; cpuf8_1(r); break;
-	case RM_REG_111: // 111 - SAR
+	case RM_REG_111: //TODO: 111 - SAR
 		if (r & 0x80) r |= 0x100; r >>= 1; cpuf8_1(r); break;
-	default: // 110
+	default: //TODO: 110
 		log_info("Invalid ModR/M for GRP2 R/M8, 1");
 		v32_illegal;
 	}
@@ -2141,26 +2138,26 @@ void v32_D0() {	// D0h GRP2 R/M8, 1
 	CPU.EIP += 2;
 }
 
-void v32_D1() {	// D1h GRP2 R/M16, 1
+void v32_D1() {	//TODO: D1h GRP2 R/M16, 1
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
 	switch (rm & RM_REG) {
-	case RM_REG_000: // 000 - ROL
+	case RM_REG_000: //TODO: 000 - ROL
 		r <<= 1; if (r & 0x1_0000) { r |= 1; CPU.OF = 1; } break;
-	case RM_REG_001: // 001 - ROR
+	case RM_REG_001: //TODO: 001 - ROR
 		if (r & 1) { r |= 0x1_0000; CPU.OF = 1; } r >>= 1; break;
-	case RM_REG_010: // 010 - RCL
+	case RM_REG_010: //TODO: 010 - RCL
 		r <<= 1; if (r & 0x2_0000) { r |= 1; CPU.OF = 1; } break;
-	case RM_REG_011: // 011 - RCR
+	case RM_REG_011: //TODO: 011 - RCR
 		if (r & 1) { r |= 0x2_0000; CPU.OF = 1; } r >>= 1; break;
-	case RM_REG_100: // 100 - SAL/SHL
+	case RM_REG_100: //TODO: 100 - SAL/SHL
 		r <<= 1; cpuf16_1(r); break;
-	case RM_REG_101: // 101 - SHR
+	case RM_REG_101: //TODO: 101 - SHR
 		r >>= 1; cpuf16_1(r); break;
-	case RM_REG_111: // 111 - SAR
+	case RM_REG_111: //TODO: 111 - SAR
 		if (r & 0x8000) r |= 0x1_0000; r >>= 1; cpuf16_1(r); break;
-	default: // 110
+	default: //TODO: 110
 		log_info("Invalid ModR/M for GRP2 R/M16, 1");
 		v32_illegal;
 	}
@@ -2168,30 +2165,30 @@ void v32_D1() {	// D1h GRP2 R/M16, 1
 	CPU.EIP += 2;
 }
 
-void v32_D2() {	// D2h GRP2 R/M8, CL
-	// The 8086 does not mask the rotation count.
+void v32_D2() {	//TODO: D2h GRP2 R/M8, CL
+	//TODO: The 8086 does not mask the rotation count.
 	/*const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm);
 	switch (rm & RM_REG) {
-	case RM_REG_000: // 000 - ROL
+	case RM_REG_000: //TODO: 000 - ROL
 
 		break;
-	case RM_REG_001: // 001 - ROR
+	case RM_REG_001: //TODO: 001 - ROR
 
 		break;
-	case RM_REG_010: // 010 - RCL
+	case RM_REG_010: //TODO: 010 - RCL
 
 		break;
-	case RM_REG_011: // 011 - RCR
+	case RM_REG_011: //TODO: 011 - RCR
 
 		break;
-	case RM_REG_100: // 100 - SAL/SHL
+	case RM_REG_100: //TODO: 100 - SAL/SHL
 
 		break;
-	case RM_REG_101: // 101 - SHR
+	case RM_REG_101: //TODO: 101 - SHR
 
 		break;
-	case RM_REG_111: // 111 - SAR
+	case RM_REG_111: //TODO: 111 - SAR
 
 		break;
 	default:
@@ -2201,30 +2198,30 @@ void v32_D2() {	// D2h GRP2 R/M8, CL
 	CPU.EIP += 2;
 }
 
-void v32_D3() {	// D3h GRP2 R/M16, CL
-	// The 8086 does not mask the rotation count.
+void v32_D3() {	//TODO: D3h GRP2 R/M16, CL
+	//TODO: The 8086 does not mask the rotation count.
 	/*const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm, 1);
 	switch (rm & RM_REG) {
-	case RM_REG_000: // 000 - ROL
+	case RM_REG_000: //TODO: 000 - ROL
 
 		break;
-	case RM_REG_001: // 001 - ROR
+	case RM_REG_001: //TODO: 001 - ROR
 
 		break;
-	case RM_REG_010: // 010 - RCL
+	case RM_REG_010: //TODO: 010 - RCL
 
 		break;
-	case RM_REG_011: // 011 - RCR
+	case RM_REG_011: //TODO: 011 - RCR
 
 		break;
-	case RM_REG_100: // 100 - SAL/SHL
+	case RM_REG_100: //TODO: 100 - SAL/SHL
 
 		break;
-	case RM_REG_101: // 101 - SHR
+	case RM_REG_101: //TODO: 101 - SHR
 
 		break;
-	case RM_REG_111: // 111 - SAR
+	case RM_REG_111: //TODO: 111 - SAR
 
 		break;
 	default:
@@ -2234,7 +2231,7 @@ void v32_D3() {	// D3h GRP2 R/M16, CL
 	CPU.EIP += 2;
 }
 
-void v32_D4() {	// D4h AAM
+void v32_D4() {	//TODO: D4h AAM
 	const int r = CPU.AL % 0xA;
 	cpuf8_5(r);
 	CPU.AL = cast(ubyte)r;
@@ -2242,7 +2239,7 @@ void v32_D4() {	// D4h AAM
 	++CPU.EIP;
 }
 
-void v32_D5() {	// D5h AAD
+void v32_D5() {	//TODO: D5h AAD
 	const int r = CPU.AL + (CPU.AH * 0xA);
 	cpuf8_5(r);
 	CPU.AL = cast(ubyte)r;
@@ -2250,86 +2247,86 @@ void v32_D5() {	// D5h AAD
 	++CPU.EIP;
 }
 
-void v32_D7() {	// D7h XLAT SOURCE-TABLE
+void v32_D7() {	//TODO: D7h XLAT SOURCE-TABLE
 	CPU.AL = mmfu8(address(CPU.DS, CPU.BX) + cast(byte)CPU.AL);
 	++CPU.EIP;
 }
 
-void v32_E0() {	// E0h LOOPNE/LOOPNZ SHORT-LABEL
+void v32_E0() {	//TODO: E0h LOOPNE/LOOPNZ SHORT-LABEL
 	--CPU.CX;
 	if (CPU.CX && CPU.ZF == 0) CPU.EIP += mmfi8_i;
 	else CPU.EIP += 2;
 }
 
-void v32_E1() {	// E1h LOOPE/LOOPZ SHORT-LABEL
+void v32_E1() {	//TODO: E1h LOOPE/LOOPZ SHORT-LABEL
 	--CPU.CX;
 	if (CPU.CX && CPU.ZF) CPU.EIP += mmfi8_i;
 	else CPU.EIP += 2;
 }
 
-void v32_E2() {	// E2h LOOP SHORT-LABEL
+void v32_E2() {	//TODO: E2h LOOP SHORT-LABEL
 	--CPU.CX;
 	if (CPU.CX) CPU.EIP += mmfi8_i;
 	else CPU.EIP += 2;
 }
 
- void v32_E3() {	// E3 JCXZ SHORT-LABEL
+ void v32_E3() {	//TODO: E3 JCXZ SHORT-LABEL
 	if (CPU.CX == 0) CPU.EIP += mmfi8_i;
 	else CPU.EIP += 2;
  }
  
- void v32_E4() {	// E4h IN AL, IMM8
+ void v32_E4() {	//TODO: E4h IN AL, IMM8
  }
  
- void v32_E5() {	// E5h IN AX, IMM8
+ void v32_E5() {	//TODO: E5h IN AX, IMM8
  }
  
- void v32_E6() {	// E6h OUT IMM8, AL
+ void v32_E6() {	//TODO: E6h OUT IMM8, AL
  }
  
- void v32_E7() {	// E7h OUT IMM8, AX
+ void v32_E7() {	//TODO: E7h OUT IMM8, AX
  }
  
- void v32_E8() {	// E8h CALL NEAR-PROC
+ void v32_E8() {	//TODO: E8h CALL NEAR-PROC
 	CPU.push16(CPU.IP);
-	CPU.EIP += mmfi16_i; // Direct within segment
+	CPU.EIP += mmfi16_i; //TODO: Direct within segment
  }
  
- void v32_E9() {	// E9h JMP NEAR-LABEL
-	CPU.EIP += mmfi16_i + 3; // ±32 KB
+ void v32_E9() {	//TODO: E9h JMP NEAR-LABEL
+	CPU.EIP += mmfi16_i + 3; //TODO: ±32 KB
  }
  
- void v32_EA() {	// EAh JMP FAR-LABEL
-	// Any segment, any fragment, 5 byte instruction.
-	// EAh (LO-CPU.IP) (HI-CPU.IP) (LO-CPU.CS) (HI-CPU.CS)
+ void v32_EA() {	//TODO: EAh JMP FAR-LABEL
+	//TODO: Any segment, any fragment, 5 byte instruction.
+	//TODO: EAh (LO-CPU.IP) (HI-CPU.IP) (LO-CPU.CS) (HI-CPU.CS)
 	const ushort ip = mmfu16_i;
 	const ushort cs = mmfu16_i(2);
 	CPU.IP = ip;
 	CPU.CS = cs;
  }
  
- void v32_EB() {	// EBh JMP SHORT-LABEL
-	CPU.EIP += mmfi8_i + 2; // ±128 B
+ void v32_EB() {	//TODO: EBh JMP SHORT-LABEL
+	CPU.EIP += mmfi8_i + 2; //TODO: ±128 B
  }
  
- void v32_EC() {	// ECh IN AL, DX
+ void v32_EC() {	//TODO: ECh IN AL, DX
  }
  
- void v32_ED() {	// EDh IN AX, DX
+ void v32_ED() {	//TODO: EDh IN AX, DX
  }
  
- void v32_EE() {	// EEh OUT AL, DX
+ void v32_EE() {	//TODO: EEh OUT AL, DX
  }
  
- void v32_EF() {	// EFh OUT AX, DX
+ void v32_EF() {	//TODO: EFh OUT AX, DX
  }
  
- void v32_F0() {	// F0h LOCK (prefix)
+ void v32_F0() {	//TODO: F0h LOCK (prefix)
 	//CPU.Lock = 1;
 	++CPU.EIP;
  }
  
- void v32_F2() {	// F2h REPNE/REPNZ
+ void v32_F2() {	//TODO: F2h REPNE/REPNZ
 	while (CPU.CX > 0) {
 		//TODO: Finish REPNE/REPNZ properly?
 		v32_A6;
@@ -2339,54 +2336,55 @@ void v32_E2() {	// E2h LOOP SHORT-LABEL
 	++CPU.EIP;
  }
  
- void v32_F3() {	// F3h REP/REPE/REPNZ
+ void v32_F3() {	//TODO: F3h REP/REPE/REPNZ
+	//TODO: REAL F3h REP/REPE/REPNZ
  }
  
- void v32_F4() {	// F4h HLT
+ void v32_F4() {	//TODO: F4h HLT
 	RLEVEL = 0;
 	++CPU.EIP;
  }
  
- void v32_F5() {	// F5h CMCCMC
+ void v32_F5() {	//TODO: F5h CMCCMC
 	CPU.CF = !CPU.CF;
 	++CPU.EIP;
  }
  
- void v32_F6() {	// F6h GRP3 R/M8, IMM8
+ void v32_F6() {	//TODO: F6h GRP3 R/M8, IMM8
 	const ubyte rm = mmfu8_i;
 	const ubyte im = mmfu8_i(1);
 	const int addr = mmrm16(rm);
 	int r = void;
 	switch (rm & RM_REG) {
-	case RM_REG_000: // 000 - TEST
+	case RM_REG_000: //TODO: 000 - TEST
 		cpuf8_1(im & mmfu8(addr)); break;
-	case RM_REG_010: // 010 - NOT
+	case RM_REG_010: //TODO: 010 - NOT
 		mmiu8(~mmfu8(addr), addr); break;
-	case RM_REG_011: // 011 - NEG
+	case RM_REG_011: //TODO: 011 - NEG
 		import core.stdc.stdio : printf;
 		r = cast(ubyte)-mmfi8(addr);
 		cpuf8_1(r);
 		CPU.CF = cast(ubyte)r;
 		mmiu8(r, addr);
 		break;
-	case RM_REG_100: // 100 - MUL
+	case RM_REG_100: //TODO: 100 - MUL
 		r = im * mmfu8(addr);
 		cpuf8_4(r);
 		mmiu8(r, addr);
 		break;
-	case RM_REG_101: // 101 - IMUL
+	case RM_REG_101: //TODO: 101 - IMUL
 		r = cast(ubyte)(cast(byte)im * mmfi8(addr));
 		cpuf8_4(r);
 		mmiu8(r, addr);
 		break;
-	case RM_REG_110: // 110 - DIV
+	case RM_REG_110: //TODO: 110 - DIV
 	//TODO: Check if im == 0 (#DE), DIV
 		const ubyte d = mmfu8(addr);
 		r = CPU.AX / d;
 		CPU.AH = cast(ubyte)(CPU.AX % d);
 		CPU.AL = cast(ubyte)(r);
 		break;
-	case RM_REG_111: // 111 - IDIV
+	case RM_REG_111: //TODO: 111 - IDIV
 	//TODO: Check if im == 0 (#DE), IDIV
 		const byte d = mmfi8(addr);
 		r = cast(short)CPU.AX / d;
@@ -2400,38 +2398,38 @@ void v32_E2() {	// E2h LOOP SHORT-LABEL
 	CPU.EIP += 3;
  }
  
- void v32_F7() {	// F7 GRP3 R/M16, IMM16
-	const ubyte rm = mmfu8_i; // Get ModR/M byte
+ void v32_F7() {	//TODO: F7 GRP3 R/M16, IMM16
+	const ubyte rm = mmfu8_i; //TODO: Get ModR/M byte
 	ushort im = mmfu16_i(1);
 	int addr = mmrm16(rm, 1);
 	int r = void;
 	switch (rm & RM_REG) {
-	case RM_REG_000: // 000 - TEST
+	case RM_REG_000: //TODO: 000 - TEST
 		cpuf16_1(im & mmfu16(addr)); break;
-	case RM_REG_010: // 010 - NOT
+	case RM_REG_010: //TODO: 010 - NOT
 		mmiu16(~im, addr); break;
-	case RM_REG_011: // 011 - NEG
+	case RM_REG_011: //TODO: 011 - NEG
 		r = -mmfi16(addr);
 		cpuf16_1(r);
 		CPU.CF = cast(ubyte)r;
 		mmiu16(r, addr);
 		break;
-	case RM_REG_100: // 100 - MUL
+	case RM_REG_100: //TODO: 100 - MUL
 		r = im * mmfu16(addr);
 		cpuf16_4(r);
 		mmiu16(r, addr);
 		break;
-	case RM_REG_101: // 101 - IMUL
+	case RM_REG_101: //TODO: 101 - IMUL
 		r = im * mmfi16(addr);
 		cpuf16_4(r);
 		mmiu16(r, addr);
 		break;
-	case RM_REG_110: // 110 - DIV
+	case RM_REG_110: //TODO: 110 - DIV
 		r = im / mmfu16(addr);
 		cpuf16_4(r);
 		mmiu16(r, addr);
 		break;
-	case RM_REG_111: // 111 - IDIV
+	case RM_REG_111: //TODO: 111 - IDIV
 		r = im / mmfi16(addr);
 		cpuf16_4(r);
 		mmiu16(r, addr);
@@ -2443,45 +2441,45 @@ void v32_E2() {	// E2h LOOP SHORT-LABEL
 	CPU.EIP += 4;
 }
 
-void v32_F8() {	// F8h CLC
+void v32_F8() {	//TODO: F8h CLC
 	CPU.CF = 0;
 	++CPU.EIP;
 }
 
-void v32_F9() {	// F9h STC
+void v32_F9() {	//TODO: F9h STC
 	CPU.CF = 1;
 	++CPU.EIP;
 }
 
-void v32_FA() {	// FAh CLI
+void v32_FA() {	//TODO: FAh CLI
 	CPU.IF = 0;
 	++CPU.EIP;
 }
 
-void v32_FB() {	// FBh STI
+void v32_FB() {	//TODO: FBh STI
 	CPU.IF = 1;
 	++CPU.EIP;
 }
 
-void v32_FC() {	// FCh CLD
+void v32_FC() {	//TODO: FCh CLD
 	CPU.DF = 0;
 	++CPU.EIP;
 }
 
-void v32_FD() {	// FDh STD
+void v32_FD() {	//TODO: FDh STD
 	CPU.DF = 1;
 	++CPU.EIP;
 }
 
-void v32_FE() {	// FEh GRP4 R/M8
+void v32_FE() {	//TODO: FEh GRP4 R/M8
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm);
 	int r = mmfu8(addr);
 	switch (rm & RM_REG) {
-	case RM_REG_000: // 000 - INC
+	case RM_REG_000: //TODO: 000 - INC
 		++r;
 		break;
-	case RM_REG_001: // 001 - DEC
+	case RM_REG_001: //TODO: 001 - DEC
 		--r;
 		break;
 	default:
@@ -2493,40 +2491,40 @@ void v32_FE() {	// FEh GRP4 R/M8
 	CPU.EIP += 2;
 }
 
-void v32_FF() {	// FFh GRP5 R/M16
+void v32_FF() {	//TODO: FFh GRP5 R/M16
 	const ubyte rm = mmfu8_i;
 	const uint addr = mmrm16(rm, 1);
 	int r = mmfu16(addr);
 	switch (rm & RM_REG) {
-	case RM_REG_000: // 000 - INC
+	case RM_REG_000: //TODO: 000 - INC
 		++r;
 		cpuf16_2(r);
 		mmiu16(r, addr);
 		CPU.EIP += 2;
 		return;
-	case RM_REG_001: // 001 - DEC
+	case RM_REG_001: //TODO: 001 - DEC
 		--r;
 		cpuf16_2(r);
 		mmiu16(r, addr);
 		CPU.EIP += 2;
 		break;
-	case RM_REG_010: // 010 - CALL R/M16 (near) -- Indirect within segment
+	case RM_REG_010: //TODO: 010 - CALL R/M16 (near) -- Indirect within segment
 		CPU.push16(CPU.IP);
 		CPU.IP = cast(ushort)r;
 		break;
-	case RM_REG_011: // 011 - CALL MEM16 (far) -- Indirect outside segment
+	case RM_REG_011: //TODO: 011 - CALL MEM16 (far) -- Indirect outside segment
 		ushort nip = cast(ushort)address(mmfu16(addr + 2), r);
 		CPU.push16(CPU.CS);
 		CPU.push16(CPU.IP);
 		CPU.IP = nip;
 		break;
-	case RM_REG_100: // 100 - JMP R/M16 (near) -- Indirect within segment
+	case RM_REG_100: //TODO: 100 - JMP R/M16 (near) -- Indirect within segment
 		CPU.IP = cast(ushort)(r + 2);
 		break;
-	case RM_REG_101: // 101 - JMP MEM16 (far) -- Indirect outside segment
+	case RM_REG_101: //TODO: 101 - JMP MEM16 (far) -- Indirect outside segment
 		CPU.IP = cast(ushort)address(mmfu16(addr), r + 2);
 		break;
-	case RM_REG_110: // 110 - PUSH MEM16
+	case RM_REG_110: //TODO: 110 - PUSH MEM16
 		CPU.push16(mmfu16(address(mmfu16(addr + 2), r)));
 		CPU.EIP += 2;
 		break;
@@ -2536,7 +2534,7 @@ void v32_FF() {	// FFh GRP5 R/M16
 	}
 }
 
-void v32_illegal() {	// Illegal instruction
+void v32_illegal() {	//TODO: Illegal instruction
 	log_info("INVALID OPERATION CODE");
 	//TODO: Raise vector on illegal op
 }

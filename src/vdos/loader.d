@@ -17,7 +17,6 @@ import vdos.video : v_printf, v_putln;
 
 extern (C):
 
-
 /// MZ file magic
 private enum MZ_MAGIC = 0x5A4D;
 private enum ZM_MAGIC = 0x4D5A;

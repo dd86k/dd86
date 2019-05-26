@@ -6,7 +6,8 @@
 module vdos.interrupts;
 
 import ddc;
-import vcpu.core, vcpu.utils, vdos.os, vdos.ecodes;
+import vcpu.core, vdos.os, vdos.ecodes;
+import vcpu.utils : address;
 import vdos.loader : vdos_load;
 import vdos.structs : CURSOR;
 import vdos.video : v_printf, v_put_s, v_putc;
@@ -15,6 +16,26 @@ import vcpu.mm : MemString;
 
 extern (C):
 
+void __int_enter() { // REAL-MODE
+	//const inum = code << 2;
+	/*IF (inum + 3 > IDT limit)
+		#GP
+	IF stack not large enough for a 6-byte return information
+		#SS*/
+	CPU.push16(CPU.FLAGS);
+	CPU.IF = CPU.TF = 0;
+	CPU.push16(CPU.CS);
+	CPU.push16(CPU.IP);
+	//CS ← IDT[inum].selector;
+	//IP ← IDT[inum].offset;
+}
+
+void __int_exit() { // REAL-MODE
+	CPU.IP = CPU.pop16;
+	CPU.CS = CPU.pop16;
+	CPU.IF = CPU.TF = 1;
+	CPU.FLAGS = CPU.pop16;
+}
 
 /// Raise and handle interrupt. This includes pre and post phases for interrupt
 /// phases.

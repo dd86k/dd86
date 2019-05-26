@@ -1,7 +1,5 @@
 /**
- * utils: Processor utilities
- *
- * Flag handling, bswap utils, and interrupt utils
+ * Processor utilities: Flag handling, bswap
  */
 module vcpu.utils;
 
@@ -284,33 +282,6 @@ ushort bswap16(ushort n) {
 uint bswap32(uint n) {
 	return (n >> 24) | (n & 0xFF_0000) >> 8 |
 		(n & 0xFF00) << 8 | (n << 24);
-}
-
-//
-// Interrupt helpers
-//
-
-pragma(inline):
-
-void __int_enter() { // REAL-MODE
-	//const inum = code << 2;
-	/*IF (inum + 3 > IDT limit)
-		#GP
-	IF stack not large enough for a 6-byte return information
-		#SS*/
-	CPU.push16(CPU.FLAGS);
-	CPU.IF = CPU.TF = 0;
-	CPU.push16(CPU.CS);
-	CPU.push16(CPU.IP);
-	//CS ← IDT[inum].selector;
-	//IP ← IDT[inum].offset;
-}
-
-void __int_exit() { // REAL-MODE
-	CPU.IP = CPU.pop16;
-	CPU.CS = CPU.pop16;
-	CPU.IF = CPU.TF = 1;
-	CPU.FLAGS = CPU.pop16;
 }
 
 pragma(inline, true):

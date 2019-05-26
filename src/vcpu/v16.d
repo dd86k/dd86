@@ -1544,8 +1544,7 @@ void v16_9A() {	// 9Ah CALL FAR_PROC
 	CPU.IP = mmfu16_i(2);
 }
 
-void v16_9B() {	// 9Bh WAIT
-	//TODO: WAIT
+void v16_9B() {	//TODO: 9Bh WAIT
 	++CPU.EIP;
 }
 
@@ -1611,7 +1610,8 @@ void v16_A6() {	// A6h CMPS DEST-STR8, SRC-STR8
 
 void v16_A7() {	// A7h CMPSW DEST-STR16, SRC-STR16
 	cpuf16_1(
-		mmfu16(address(CPU.DS, CPU.SI)) - mmfu16(address(CPU.ES, CPU.DI))
+		mmfu16(address(CPU.DS, CPU.SI)) -
+		mmfu16(address(CPU.ES, CPU.DI))
 	);
 	if (CPU.DF) {
 		CPU.DI -= 2;
@@ -1914,7 +1914,8 @@ void v16_D1() {	// D1h GRP2 R/M16, 1
 		r >>= 1;
 		break;
 	case RM_REG_010: // 010 - RCL
-		r <<= 1; if (r & 0x2_0000) {
+		r <<= 1;
+		if (r & 0x2_0000) {
 			r |= 1; CPU.OF = 1;
 		}
 		break;
@@ -1945,7 +1946,7 @@ void v16_D1() {	// D1h GRP2 R/M16, 1
 	CPU.EIP += 2;
 }
 
-void v16_D2() {	// D2h GRP2 R/M8, CL
+void v16_D2() {	//TODO: D2h GRP2 R/M8, CL
 	const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm);
 	int r = mmfu8(addr);
@@ -1992,7 +1993,7 @@ NOP:
 	CPU.EIP += 2;
 }
 
-void v16_D3() {	// D3h GRP2 R/M16, CL
+void v16_D3() {	//TODO: D3h GRP2 R/M16, CL
 	// The 8086 does not mask the rotation count.
 	/*const ubyte rm = mmfu8_i;
 	const int addr = mmrm16(rm, 1);
@@ -2142,7 +2143,6 @@ void v16_F0() {	// F0h LOCK (prefix)
 
 void v16_F2() {	// F2h REPNE/REPNZ
 	while (CPU.CX > 0) {
-		//TODO: Finish REPNE/REPNZ properly?
 		v16_A6;
 		--CPU.CX;
 		if (CPU.ZF == 0) break;
@@ -2150,7 +2150,7 @@ void v16_F2() {	// F2h REPNE/REPNZ
 	++CPU.EIP;
 }
 
-void v16_F3() {	// F3h REP/REPE/REPNZ
+void v16_F3() {	//TODO: F3h REP/REPE/REPNZ
 }
 
 void v16_F4() {	// F4h HLT
