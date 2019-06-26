@@ -20,7 +20,7 @@ unittest {
 	test("INT 1Ah  AH=00h");
 	CPU.AH = 0;
 	INT(0x1A);
-	writefln("assuming OK (CS=%04X DX=%04X -- %d)", CPU.CS, CPU.DX, (CPU.CS << 16) | CPU.DX);
+	writefln("assuming OK (CS=%04X DX=%04X -- %u)", CPU.CS, CPU.DX, (CPU.CS << 16) | CPU.DX);
 
 	/*
 	 * MS-DOS Services
@@ -41,14 +41,14 @@ unittest {
 	case 6: write("Saturday"); break;
 	default: assert(0);
 	}
-	writefln(" %d-%02d-%02d", CPU.CX, CPU.DH, CPU.DL);
+	writefln(" %u-%02d-%02d", CPU.CX, CPU.DH, CPU.DL);
 
 	// GET TIME
 
 	test("INT 21h  AX=2C00h");
 	CPU.AH = 0x2C;
 	INT(0x21);
-	writefln("%02d:%02d:%02d.%d", CPU.CH, CPU.CL, CPU.DH, CPU.DL);
+	writefln("%02u:%02u:%02u.%u", CPU.CH, CPU.CL, CPU.DH, CPU.DL);
 
 	// GET VERSION
 

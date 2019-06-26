@@ -9,7 +9,7 @@ import core.stdc.stdlib : malloc, free;
 import vcpu.core, vcpu.utils;
 import vcpu.mm : mmfu16, mmiu16;
 import vdos.os : MinorVersion, MajorVersion;
-import vdos.structs : mz_hdr_t, MZ_HDR_SIZE, mz_reloc_t, PSP_t;
+import vdos.structs : mz_hdr_t, mz_reloc_t, dos_psp_t;
 import vdos.ecodes;
 import logger;
 import ddc : NULL_CHAR;
@@ -54,7 +54,7 @@ int vdos_load(const(char) *path) {
 		CPU.AL = EDOS_BAD_FORMAT; //TODO: Verify return value if 0 size is checked
 		return EDOS_BAD_FORMAT;
 	}
-	if (fsize <= MZ_HDR_SIZE) goto FILE_COM;
+	if (fsize <= mz_hdr_t.sizeof) goto FILE_COM;
 
 	fread(&mzh, 2, 1, f); // e_magic is at 0 anyway
 
@@ -63,7 +63,7 @@ int vdos_load(const(char) *path) {
 		log_info("LOAD MZ");
 
 		// ** Header is read for initial register values
-		fread(&mzh, mzh.sizeof, 1, f); // read rest
+		fread(&mzh, mzh.sizeof - 2, 1, f); // read rest minus signature
 		CPU.IP = mzh.e_ip;
 		//CPU.EIP = get_ip;
 
@@ -83,10 +83,10 @@ int vdos_load(const(char) *path) {
 			csize -= PAGE - mzh.e_cblp;
 
 		debug {
-			v_printf("RELOC TABLE: %d -- %d B\n", mzh.e_lfarlc, mz_reloc_t.sizeof * mzh.e_crlc);
-			v_printf("STURCT STRUCT SIZE: %d\n", mzh.sizeof);
-			v_printf("EXE HEADER SIZE: %d\n", hsize);
-			v_printf("CODE: %d -- %d B\n", cbase, csize);
+			v_printf("RELOC TABLE: %u -- %u B\n", mzh.e_lfarlc, mz_reloc_t.sizeof * mzh.e_crlc);
+			v_printf("STURCT STRUCT SIZE: %u\n", mzh.sizeof);
+			v_printf("EXE HEADER SIZE: %u\n", hsize);
+			v_printf("CODE: %u -- %u B\n", cbase, csize);
 			v_printf("CPU.CS: %4Xh -- e_cs: %4Xh\n", CPU.CS, mzh.e_cs);
 			v_printf("CPU.IP: %4Xh -- e_ip: %4Xh\n", CPU.IP, mzh.e_ip);
 			v_printf("CPU.SS: %4Xh -- e_ss: %4Xh\n", CPU.SS, mzh.e_ss);
@@ -106,7 +106,7 @@ int vdos_load(const(char) *path) {
 			 * 5. Write the word (sum) back to address
 			 */
 			if (LOGLEVEL)
-				v_printf("[INFO] Relocation(s): %d\n", mzh.e_crlc);
+				v_printf("[INFO] Relocation(s): %u\n", mzh.e_crlc);
 
 			const int rs = mzh.e_crlc * mz_reloc_t.sizeof; // table size
 			mz_reloc_t *rp = cast(mz_reloc_t*)(MEMORY + 0x1300); // table pointer
@@ -161,7 +161,7 @@ FILE_COM:
 		CPU.IP = 0x100;
 
 		fseek(f, 0, SEEK_SET);
-		fread(MEMORY + get_ip, fsize, 1, f);
+		fread(MEMORY + get_ip, fsize - 2, 1, f);
 
 		MakePSP;
 		CPU.AL = 0;
@@ -180,7 +180,7 @@ FILE_COM:
  */
 extern (C) private
 int MakePSP(const(char) *path = NULL_CHAR) { //TODO: Consider passing a structure
-	PSP_t *psp = cast(PSP_t*)(MEMORY + get_ip - 0x100);
+	dos_psp_t *psp = cast(dos_psp_t*)(MEMORY + get_ip - 0x100);
 
 	psp.minorversion = MinorVersion;
 	psp.majorversion = MajorVersion;

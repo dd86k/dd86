@@ -58,6 +58,5 @@ unittest {
 	r_multiple = sw.peek;
 
 	SetPos(0, 26);
-	writefln("one draw: %s", r_once);
-	writefln("%d draws: %s", RUNS, r_multiple);
+	writefln("one draw: %s\n%u draws: %s", r_once, RUNS, r_multiple);
 }

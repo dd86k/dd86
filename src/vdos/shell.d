@@ -166,7 +166,7 @@ int vdos_command(const(char) *command) {
 		case 6: s = "Saturday"; break;
 		default: s = "?";
 		}
-		v_printf("It is currently %s %d-%02d-%02d\n",
+		v_printf("It is currently %s %u-%02d-%02d\n",
 			s, CPU.CX, CPU.DH, CPU.DL);
 		return 0;
 	}
@@ -271,7 +271,7 @@ MEM_HELP:		v_putln(
 	if (strcmp(*argv, "ver") == 0) {
 		v_printf(
 			"DD/86 v"~APP_VERSION~
-			", reporting MS-DOS v%d.%d (compiled: %d.%d)\n",
+			", reporting MS-DOS v%u.%u (compiled: %u.%u)\n",
 			MajorVersion, MinorVersion,
 			DOS_MAJOR_VERSION, DOS_MINOR_VERSION
 		);
@@ -487,12 +487,15 @@ READ_S:
  * Notes: Original function by Nuke928. Modified by dd86k.
  */
 int sargs(const char *t, char **argv) {
-	int j, a;
-	char* mloc = cast(char*)MEMORY + 0x1400;
+	size_t j;
+	int a;
 
+	char* mloc = cast(char*)MEMORY + 0x1400;
 	const size_t sl = strlen(t);
+
 	for (size_t i; i <= sl; ++i) {
-		if (t[i] == 0 || t[i] == ' ' || t[i] == '\n') {
+		const char c = t[i];
+		if (c == 0 || c == ' ' || c == '\n') {
 			argv[a] = mloc;
 			mloc += i - j + 1;
 			strncpy(argv[a], t + j, i - j);
@@ -500,10 +503,10 @@ int sargs(const char *t, char **argv) {
 			while (t[i + 1] == ' ') ++i;
 			j = i + 1;
 			++a;
-		} else if (t[i] == '"') {
+		} else if (c == '"') {
 			j = ++i;
-			while (t[i] != '"' && t[i] != 0) ++i;
-			if (t[i] == 0) continue;
+			while (c != '"' && c != 0) ++i;
+			if (c == 0) continue;
 			argv[a] = mloc;
 			mloc += i - j + 1;
 			strncpy(argv[a], t + j, i - j);

@@ -135,7 +135,7 @@ NO_ARGS:
 	}
 
 	if (LOGLEVEL > LogLevel.Debug) {
-		printf("E: Unknown log level: %d\n", LOGLEVEL);
+		printf("E: Unknown log level: %u\n", LOGLEVEL);
 		return EDOS_INVALID_FUNCTION;
 	}
 
@@ -161,8 +161,7 @@ NO_ARGS:
 		v_printf(
 			"Starting DD/86...\n\n"~
 			"Ver "~APP_VERSION~" ("~__TIMESTAMP__~")\n"~
-			"Processor: Intel 8086\n"~
-			"Memory: %dK OK\n\n",
+			"Intel 8086, %uK OK\n\n",
 			SYSTEM.memsize
 		);
 

@@ -145,7 +145,7 @@ void SetPos(int x, int y) {
 		COORD c = { cast(SHORT)x, cast(SHORT)y };
 		SetConsoleCursorPosition(hOut, c);
 	} else version (Posix) { // 1-based
-		printf("\033[%d;%dH", y + 1, x + 1);
+		printf("\033[u;%uH", y + 1, x + 1);
 	}
 }
 

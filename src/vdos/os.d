@@ -5,7 +5,7 @@ module vdos.os;
 
 import ddc;
 import vcpu.core, vcpu.utils, vdos.ecodes, vdos.interrupts;
-import vdos.structs : SYSTEM_t, DOS_t, CURSOR;
+import vdos.structs : SYSTEM_t, dos_dev_t, CURSOR;
 import vdos.video;
 import logger;
 import appconfig : __MM_SYS_DOS, INIT_MEM;
@@ -39,7 +39,7 @@ __gshared ubyte
 
 // Live structures mapped to virtual memory (MEMORY)
 
-__gshared DOS_t *DOS = void;
+__gshared dos_dev_t *DOS = void;
 __gshared SYSTEM_t *SYSTEM = void;
 
 extern (C)
@@ -52,7 +52,7 @@ void vdos_init() {
 	SYSTEM.screen_row = 25;
 	SYSTEM.screen_col = 80;
 
-	DOS = cast(DOS_t*)(MEMORY + __MM_SYS_DOS);
+	DOS = cast(dos_dev_t*)(MEMORY + __MM_SYS_DOS);
 
 	screen_init;
 }
@@ -98,7 +98,7 @@ void panic(ushort code,
 	v_printf(
 		"\n\n\n\n"~
 		"A fatal exception occured, which DD/86 couldn't recover.\n\n"~
-		"STOP: %4Xh (%s L%d)\nEXEC:\n",
+		"STOP: %4Xh (%s L%u)\nEXEC:\n",
 		code, name, line
 	);
 	int i = RANGE;

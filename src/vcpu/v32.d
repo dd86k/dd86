@@ -12,28 +12,7 @@ extern (C):
 
 pragma(inline, true)
 void exec32(ubyte op) {
-	v32(op);
-	//PROT_MAP[op]();
-}
-
-/**
- * Execute an instruction in 32-bit PROTECTED mode
- * Note: This function is temporary until function table
- * Params: op = opcode
- */
-//uncomment when ready: deprecated("Use exec32(ubyte)")
-void v32(ubyte op) {
-	switch (op) {
-	case 0x00: // ADD
-		
-		break;
-	case 0x66: // OPCODE PREFIX
-		++CPU.EIP;
-		exec16(MEMORY[CPU.EIP]);
-		break;
-	default: //TODO: illegal op exec32
-
-	}
+	PROT_MAP[op]();
 }
 
 void v32_00() {	//TODO: 00h ADD R/M8, REG8
@@ -236,7 +215,9 @@ void v32_0E() {	//TODO: 0Eh PUSH CS
 }
 
 void v32_0F() {	//TODO: 0Fh Two-byte escape
-	switch (MEMORY[++CPU.EIP]) {
+	++CPU.EIP;
+	//TODO: check memory bound
+	switch (MEMORY[CPU.EIP]) {
 	case 0x00: //TODO: GRP6
 	
 		break;
@@ -249,8 +230,81 @@ void v32_0F() {	//TODO: 0Fh Two-byte escape
 	case 0x03: //TODO: LSL REG32, R/M16
 	
 		break;
+	case 0x05: // LOADALL (i286), undocumented
+		//TODO: #GP on != CPU_MDOEL_286
+		//CPU.MSW = mmfu16(0x806); // Machine Status Word
+		//CPU.TR = mmfu16(0x816); // Task Register
+		CPU.FLAG = mmfu16(0x818);
+		CPU.IP = mmfu16(0x81A);
+		//CPU.LDTR = mmfu16(0x81C); // Local Descriptor Table Register
+		CPU.DS = mmfu16(0x81E); // segments
+		CPU.SS = mmfu16(0x820);
+		CPU.CS = mmfu16(0x822);
+		CPU.ES = mmfu16(0x824);
+		CPU.DI = mmfu16(0x826); // index/pointer
+		CPU.SI = mmfu16(0x828);
+		CPU.BP = mmfu16(0x82A);
+		CPU.SP = mmfu16(0x82C);
+		CPU.BX = mmfu16(0x82E); // generic
+		CPU.DX = mmfu16(0x830);
+		CPU.CX = mmfu16(0x832);
+		CPU.AX = mmfu16(0x834);
+		//CPU. = mmfu16(0x836); // es // seg. desc.
+		//CPU. = mmfu32(0x838);
+		//CPU. = mmfu16(0x83C); // cs
+		//CPU. = mmfu32(0x83E);
+		//CPU. = mmfu16(0x842); // ss
+		//CPU. = mmfu32(0x844);
+		//CPU. = mmfu16(0x848); // ds
+		//CPU. = mmfu32(0x84C);
+		//CPU. = mmfu16(0x84E); // gpt // seg. desc.
+		//CPU. = mmfu32(0x850);
+		//CPU. = mmfu16(0x854); // ldt
+		//CPU. = mmfu32(0x856);
+		//CPU. = mmfu16(0x85A); // idt
+		//CPU. = mmfu32(0x85C);
+		//CPU. = mmfu16(0x860); // tss
+		//CPU. = mmfu32(0x862);
+		++CPU.EIP;
+		break;
 	case 0x06: //TODO: CLTS
 		
+		break;
+	case 0x07: // LOADALL (i386), undocumented
+		//TODO: #GP on != CPU_MDOEL_386
+		const uint ad = address(ES, EDI); //OP: uint* from MEMORY
+		CPU.CR0 = mmfu32(ad);
+		CPU.EFLAGS = mmfu32(ad + 4);
+		CPU.EIP = mmfu32(ad + 8);
+		CPU.EDI = mmfu32(ad + 0xC);
+		CPU.ESI = mmfu32(ad + 0x10);
+		CPU.EBP = mmfu32(ad + 0x14);
+		CPU.ESP = mmfu32(ad + 0x18);
+		CPU.EBX = mmfu32(ad + 0x1C);
+		CPU.EDX = mmfu32(ad + 0x20);
+		CPU.ECX = mmfu32(ad + 0x24);
+		CPU.EAX = mmfu32(ad + 0x28);
+		CPU.DR6 = mmfu32(ad + 0x2C);
+		CPU.DR7 = mmfu32(ad + 0x30);
+		//CPU.TR = mmfu32(ad + 0x34); // Task Register / State Selector
+		//CPU.LDTR = mmfu32(ad + 0x38); // Local Descriptor Table Register
+		CPU.GS = mmfu16(ad + 0x3C);
+		CPU.FS = mmfu16(ad + 0x3E);
+		CPU.DS = mmfu16(ad + 0x44);
+		CPU.SS = mmfu16(ad + 0x48);
+		CPU.CS = mmfu16(ad + 0x4C);
+		CPU.ES = mmfu16(ad + 0x50);
+		//CPU.TSS = 12B desc
+		//CPU.IDT = 12B desc
+		//CPU.GDT = 12B desc
+		//CPU.LDT = 12B desc
+		//CPU.GS = 12B desc
+		//CPU.FS = 12B desc
+		//CPU.DS = 12B desc
+		//CPU.SS = 12B desc
+		//CPU.CS = 12B desc
+		//CPU.ES = 12B desc
+		++CPU.EIP;
 		break;
 	case 0x08: //TODO: INVD
 	

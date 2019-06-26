@@ -22,7 +22,7 @@ enum
  * DOS Structures
  */
 
-struct PSP_t { align(1):
+struct dos_psp_t { align(1):
 	ushort cpm_exit;	/// CP/M Exit (INT 20h) pointer
 	ushort first_seg;	/// First segment location pointer
 	ubyte reserved1;	// likely to pad with cpm_comp
@@ -40,7 +40,9 @@ struct PSP_t { align(1):
 	uint reserved2;
 	union {
 		ushort dosversion;	/// DOS version
-		ubyte majorversion, minorversion;
+		struct {
+			ubyte majorversion, minorversion;
+		}
 	}
 	ubyte [14]reserved3;
 	ubyte [3]dos_far;	/// DOS far call (instructions)
@@ -51,7 +53,7 @@ struct PSP_t { align(1):
 	ubyte cmd_length;	/// Number of bytes on the command-line
 	ubyte [127]cmd;	/// Command-line, terminates with CR character (Dh)
 }
-static assert(PSP_t.sizeof == 256);
+static assert(dos_psp_t.sizeof == 256);
 
 /// MS-DOS EXE header structure
 struct mz_hdr_t { align(1):
@@ -69,10 +71,9 @@ struct mz_hdr_t { align(1):
 	ushort e_cs;	/// Initial (relative) CS value
 	ushort e_lfarlc;	/// File address (byte offset) of relocation table
 	ushort e_ovno;	/// Overlay number
-//	ushort[ERESWDS] e_res;	/// Reserved words
-//	uint   e_lfanew;	/// File address of new exe header
+	ushort[ERESWDS] e_res;	/// Reserved words
+	uint   e_lfanew;	/// File address of new exe header
 }
-enum MZ_HDR_SIZE = mz_hdr_t.sizeof + (ERESWDS * 2);
 
 /// MS_DOS EXE Relocation structure
 struct mz_reloc_t { align(1): // For AL=03h
@@ -80,14 +81,14 @@ struct mz_reloc_t { align(1): // For AL=03h
 	ushort segment;	/// Segment of relocation
 }
 
-struct DOS_t { align(1):
+/// DOS device structure
+struct dos_dev_t { align(1):
 	ushort dev_clock;	/// CLOCK$ device driver, far call
 	ushort dev_console;	/// CON device driver, far call
 	ushort dev_printer;	/// LPT device driver, far call
 	ushort dev_aux;	/// auxiliery device driver, far call
 	ushort dev_block;	/// Disk device driver, far call
-	char [15]HOSTNAME;	/// Network NetBIOS HOSTNAME
-	private ubyte _pad0;
+	char [16]HOSTNAME;	/// Network NetBIOS HOSTNAME (15c) +1 byte padding
 	ubyte ERRORLEVEL;
 }
 
