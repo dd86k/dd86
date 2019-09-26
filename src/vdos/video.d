@@ -224,71 +224,71 @@ void video_init() {
  * (Posix) Uses write(2) to STDOUT_FILENO
  */
 void video_update() {
-version (Windows) {
-	const uint sc = SYSTEM.screen_col * SYSTEM.screen_row; /// screen size
-	for (size_t i; i < sc; ++i) {
-		//ibuf[i].UnicodeChar = vctable[VIDEO[i].ascii];
-		ibuf[i].AsciiChar = VIDEO[i].ascii;
-		ibuf[i].Attributes = VIDEO[i].attribute;
-	}
-	WriteConsoleOutputA(hOut, ibuf, ibufsize, bufcoord, &ibufout);
-	//WriteConsoleOutputW(hOut, ibuf, ibufsize, bufcoord, &ibufout);
-}
-version (Posix) {
-	ushort lasthash;
-	ushort newhash;
-	const uint w = SYSTEM.screen_col; /// width
-	const uint h = SYSTEM.screen_row; /// height
+	version (Windows) {
+		const uint sc = SYSTEM.screen_col * SYSTEM.screen_row; /// screen size
+		for (size_t i; i < sc; ++i) {
+			//ibuf[i].UnicodeChar = vctable[VIDEO[i].ascii];
+			ibuf[i].AsciiChar = VIDEO[i].ascii;
+			ibuf[i].Attributes = VIDEO[i].attribute;
+		}
+		WriteConsoleOutputA(hOut, ibuf, ibufsize, bufcoord, &ibufout);
+		//WriteConsoleOutputW(hOut, ibuf, ibufsize, bufcoord, &ibufout);
+	} // version Windows
+	version (Posix) {
+		ushort lasthash;
+		ushort newhash;
+		const uint w = SYSTEM.screen_col; /// width
+		const uint h = SYSTEM.screen_row; /// height
 
-	write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
-	ushort lfg = 0xFFFF; /// last foreground color
-	ushort lbg = 0xFFFF; /// last background color
-	size_t bi; /// buffer index
-	for (size_t i, x, sc = w * h; sc; ++i, --sc) {
-		videochar v = VIDEO[i];
-		const ubyte a = v.attribute;
-		ubyte cfg = a & 15;
-		ubyte cbg = a >> 4;
-		if (cfg != lfg) {
-			*fg = vatable[cfg];
-			*cast(ulong*)(str + bi) = *cast(ulong*)fg_s;
-			*cast(ushort*)(str + bi + 8) = *cast(ushort*)(fg_s + 8);
-			lfg = cfg;
-			bi += 10;
+		write(STDOUT_FILENO, cast(char*)"\033[0;0H", 6); // cursor at 0,0
+		ushort lfg = 0xFFFF; /// last foreground color
+		ushort lbg = 0xFFFF; /// last background color
+		size_t bi; /// buffer index
+		for (size_t i, x, sc = w * h; sc; ++i, --sc) {
+			videochar v = VIDEO[i];
+			const ubyte a = v.attribute;
+			ubyte cfg = a & 15;
+			ubyte cbg = a >> 4;
+			if (cfg != lfg) {
+				*fg = vatable[cfg];
+				*cast(ulong*)(str + bi) = *cast(ulong*)fg_s;
+				*cast(ushort*)(str + bi + 8) = *cast(ushort*)(fg_s + 8);
+				lfg = cfg;
+				bi += 10;
+			}
+			if (cbg != lbg) {
+				*bg = vatable[cbg];
+				*cast(ulong*)(str + bi) = *cast(ulong*)bg_s;
+				*cast(ushort*)(str + bi + 8) = *cast(ushort*)(bg_s + 8);
+				lbg = cbg;
+				bi += 10;
+			}
+			const uint c = vctable[v.ascii];
+			if (c < 128) { // +1
+				str[bi] = cast(ubyte)c;
+				++bi;
+			} else if (c > 0xFFFF) { // +3
+				*cast(uint*)(str + bi) = c;
+				bi += 3;
+			} else { // +2
+				*cast(ushort*)(str + bi) = cast(ushort)c;
+				bi += 2;
+			}
+			++x;
+			newhash ^= v.WORD;
+			if (x == w) {
+				*(str + bi) = '\n';
+				if (sc <= 1) break;
+				x = 0;
+				++bi;
+			}
 		}
-		if (cbg != lbg) {
-			*bg = vatable[cbg];
-			*cast(ulong*)(str + bi) = *cast(ulong*)bg_s;
-			*cast(ushort*)(str + bi + 8) = *cast(ushort*)(bg_s + 8);
-			lbg = cbg;
-			bi += 10;
-		}
-		const uint c = vctable[v.ascii];
-		if (c < 128) { // +1
-			str[bi] = cast(ubyte)c;
-			++bi;
-		} else if (c > 0xFFFF) { // +3
-			*cast(uint*)(str + bi) = c;
-			bi += 3;
-		} else { // +2
-			*cast(ushort*)(str + bi) = cast(ushort)c;
-			bi += 2;
-		}
-		++x;
-		newhash ^= v.WORD;
-		if (x == w) {
-			*(str + bi) = '\n';
-			if (sc <= 1) break;
-			x = 0;
-			++bi;
-		}
-	}
 
-	if (lasthash != newhash) // I/O is expensive!
-		write(STDOUT_FILENO, str, bi);
+		if (lasthash != newhash) // I/O is expensive!
+			write(STDOUT_FILENO, str, bi);
 
-	lasthash = newhash;
-}
+		lasthash = newhash;
+	} // version Posix
 }
 
 /// Clear virtual video RAM, resets every cells to white/black with null
@@ -312,19 +312,6 @@ void video_put(const(char) *s) {
 }
 
 /**
- * Output a string, raw in video memory.
- * This function affects the virtual system cursor position.
- * Equivalent to fputs(s, stdout).
- * Params:
- *   s = String
- *   size = String length
- */
-void video_write(const(char) *s, uint size) {
-	for (size_t i; i < size && s[i] != 0; ++i)
-		video_putc(s[i]);
-}
-
-/**
  * Output a string with a newline, raw in video memory. If there is no strings,
  * this function outputs only a newline.
  * This function affects the virtual system cursor position.
@@ -335,6 +322,19 @@ void video_write(const(char) *s, uint size) {
 void video_puts(const(char) *s = null) {
 	if (s) video_put(s);
 	video_putc('\n');
+}
+
+/**
+ * Output a string, raw in video memory.
+ * This function affects the virtual system cursor position.
+ * Equivalent to fputs(s, stdout).
+ * Params:
+ *   s = String
+ *   size = String length
+ */
+void video_write(const(char) *s, uint size) {
+	for (size_t i; i < size && s[i] != 0; ++i)
+		video_putc(s[i]);
 }
 
 /**

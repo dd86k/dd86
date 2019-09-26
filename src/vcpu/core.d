@@ -244,8 +244,6 @@ struct CPU_t {
 
 		push16 = Model == CPU_8086 ? &push16a : &push16b;
 
-		//TODO: Thinking of doing a loop with mixin strings
-
 		MODE_MAP[CPU_MODE_REAL] = &exec16;
 		REAL_MAP[0x00] = &v16_00;
 		REAL_MAP[0x01] = &v16_01;

@@ -109,7 +109,6 @@ void con_clear() {
  * Get current window size
  * Params: ws = Pointer to a WindowSize structure
  */
-extern (C)
 void con_wsize(WindowSize *ws) {
 	version (Windows) {
 		CONSOLE_SCREEN_BUFFER_INFO c = void;

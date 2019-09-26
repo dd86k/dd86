@@ -160,11 +160,11 @@ void INT(ubyte code) {
 		case 0: // Get system time by number of clock ticks since midnight
 			OSTime t = void;
 			os_time(t);
-			const uint c = cast(uint)(cast(float)(
-				(t.hour * 60 * 60) +
-				(t.minute * 60) +
-				t.second
-			) * BIOS_TICK);
+			float bt = cast(float)t.second;
+			bt += cast(float)t.minute * 60f;
+			bt += cast(float)t.hour * 3600f;
+			bt /= BIOS_TICK;
+			const uint c = cast(uint)bt;
 			CPU.CS = c >> 16;
 			CPU.DX = cast(ushort)c;
 			break;
@@ -209,6 +209,7 @@ void INT(ubyte code) {
 
 			break;
 		case 9: { // Write string to stdout
+			//TODO: Use mmstr
 			char *p = cast(char *)(MEMORY + address(CPU.DS, CPU.DX));
 			ushort l;
 			while (p[l] != '$' && l < 255) ++l;

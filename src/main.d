@@ -139,21 +139,23 @@ NO_ARGS:
 		return EDOS_INVALID_FUNCTION;
 	}
 
-	//TODO: Read settings here
-
-	WindowSize s = void;
-	con_wsize(&s);
-	if (s.Width < 80 || s.Height < 25) {
-		puts("Terminal should be at least 80x25 characters");
-		return 1;
-	}
-
 	//
 	// Welcome to DD/86
 	//
 
-	CPU.cpuinit;	// vcpu
 	con_init;	// os.term
+
+	WindowSize s = void;
+	con_wsize(&s);
+	if (s.Width < 80 || s.Height < 25) {
+		printf("Terminal should be at least 80x25 characters, got %ux%u\n",
+			s.Width, s.Height);
+		return 1;
+	}
+
+	//TODO: Read settings here
+
+	CPU.cpuinit;	// vcpu
 	vdos_init;	// vdos, screen
 	con_clear;
 

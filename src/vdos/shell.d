@@ -123,9 +123,9 @@ int vdos_command(const(char) *command) {
 		if (argc > 1) {
 			if (strcmp(argv[1], "/?") == 0) {
 				video_puts(
-					"Display or set current working directory\n"~
-					"  CD or CHDIR [FOLDER]\n\n"~
-					"By default, CD will display the current working directory"
+				"Display or set current working directory\n"~
+				"  CD or CHDIR [FOLDER]\n\n"~
+				"By default, CD will display the current working directory"
 				);
 			} else {
 				if (os_pisdir(*(argv + 1))) {
@@ -177,10 +177,9 @@ int vdos_command(const(char) *command) {
 		if (argc == 1) {
 			video_puts("ECHO is on");
 		} else {
-			/*for (size_t i = 1; i < argc; ++i)
+			for (size_t i = 1; i < argc; ++i)
 				video_printf("%s ", argv[i]);
-			video_puts;*/
-			video_puts(command);
+			video_puts;
 		}
 		return 0;
 	}
