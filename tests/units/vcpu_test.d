@@ -142,18 +142,18 @@ unittest {
 	CPU.EIP = 0x100;
 
 	test("EFLAGS/FLAGS");
-	CPU.FLAG = 0xFFFF;
+	CPU.FLAGS = 0xFFFF;
 	assert(CPU.SF); assert(CPU.ZF); assert(CPU.AF);
 	assert(CPU.PF); assert(CPU.CF); assert(CPU.OF);
 	assert(CPU.DF); assert(CPU.IF); assert(CPU.TF);
-	assert(CPU.FLAGB == 0xD7);
-	assert(CPU.FLAG == 0xFD7);
-	CPU.FLAG = 0;
+	assert(CPU.FLAG == 0xD7);
+	assert(CPU.FLAGS == 0xFD7);
+	CPU.FLAGS = 0;
 	assert(CPU.SF == 0); assert(CPU.ZF == 0); assert(CPU.AF == 0);
 	assert(CPU.PF == 0); assert(CPU.CF == 0); assert(CPU.OF == 0);
 	assert(CPU.DF == 0); assert(CPU.IF == 0); assert(CPU.TF == 0);
-	assert(CPU.FLAGB == 2); assert(CPU.FLAG == 2);
-	//TODO: ECPU.FLAGS
+	assert(CPU.FLAGS == 2);
+	//TODO: CPU.EFLAGS
 	OK;
 
 	section("ModR/M");

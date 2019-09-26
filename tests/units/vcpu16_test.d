@@ -606,7 +606,7 @@ unittest {
 
 	// INC
 
-	fullreset; CPU.CS = 0;
+	CPU.fullreset; CPU.CS = 0;
 	test("40h  INC AX");
 	exec16(0x40); assert(CPU.AX == 1);
 	OK;
@@ -1469,7 +1469,7 @@ unittest {
 
 	test("9Ch  PUSHF");
 	exec16(0x9C);
-	assert(mmfu16(address(CPU.SS, CPU.SP)) == CPU.FLAG);
+	assert(mmfu16(address(CPU.SS, CPU.SP)) == CPU.FLAGS);
 	OK;
 
 	// POPF
@@ -1477,7 +1477,7 @@ unittest {
 	test("9Dh  POPF");
 	CPU.BX = CPU.FLAG;
 	exec16(0x9D); // Popped!
-	assert(CPU.BX == CPU.FLAG);
+	assert(CPU.BX == CPU.FLAGS);
 	OK;
 
 	// SAHF
@@ -1485,15 +1485,15 @@ unittest {
 	test("9Eh  SAHF");
 	CPU.AH = 1;
 	exec16(0x9E);
-	assert(CPU.FLAGB == 3);
+	assert(CPU.FLAG == 3);
 	OK;
 
 	// LAHF
 
 	test("9Fh  LAHF");
-	CPU.FLAGB = 7; // 111
+	CPU.FLAG = 7; // 111
 	exec16(0x9F);
-	assert(CPU.FLAGB == 7); // 101
+	assert(CPU.FLAG == 7); // 101
 	OK;
 
 	// MOV AL, MEM8
