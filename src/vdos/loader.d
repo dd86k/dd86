@@ -13,7 +13,7 @@ import vdos.structs : mz_hdr_t, mz_reloc_t, dos_psp_t;
 import vdos.ecodes;
 import logger;
 import ddc : NULL_CHAR;
-import vdos.video : v_printf, v_putln;
+import vdos.video : video_printf, video_puts;
 
 extern (C):
 
@@ -83,14 +83,14 @@ int vdos_load(const(char) *path) {
 			csize -= PAGE - mzh.e_cblp;
 
 		debug {
-			v_printf("RELOC TABLE: %u -- %u B\n", mzh.e_lfarlc, mz_reloc_t.sizeof * mzh.e_crlc);
-			v_printf("STURCT STRUCT SIZE: %u\n", mzh.sizeof);
-			v_printf("EXE HEADER SIZE: %u\n", hsize);
-			v_printf("CODE: %u -- %u B\n", cbase, csize);
-			v_printf("CPU.CS: %4Xh -- e_cs: %4Xh\n", CPU.CS, mzh.e_cs);
-			v_printf("CPU.IP: %4Xh -- e_ip: %4Xh\n", CPU.IP, mzh.e_ip);
-			v_printf("CPU.SS: %4Xh -- e_ss: %4Xh\n", CPU.SS, mzh.e_ss);
-			v_printf("CPU.SP: %4Xh -- e_sp: %4Xh\n", CPU.SP, mzh.e_sp);
+			video_printf("RELOC TABLE: %u -- %u B\n", mzh.e_lfarlc, mz_reloc_t.sizeof * mzh.e_crlc);
+			video_printf("STURCT STRUCT SIZE: %u\n", mzh.sizeof);
+			video_printf("EXE HEADER SIZE: %u\n", hsize);
+			video_printf("CODE: %u -- %u B\n", cbase, csize);
+			video_printf("CPU.CS: %4Xh -- e_cs: %4Xh\n", CPU.CS, mzh.e_cs);
+			video_printf("CPU.IP: %4Xh -- e_ip: %4Xh\n", CPU.IP, mzh.e_ip);
+			video_printf("CPU.SS: %4Xh -- e_ss: %4Xh\n", CPU.SS, mzh.e_ss);
+			video_printf("CPU.SP: %4Xh -- e_sp: %4Xh\n", CPU.SP, mzh.e_sp);
 		}
 
 		fseek(f, cbase, SEEK_SET); // Seek to start of first code segment
@@ -106,7 +106,7 @@ int vdos_load(const(char) *path) {
 			 * 5. Write the word (sum) back to address
 			 */
 			if (LOGLEVEL)
-				v_printf("[INFO] Relocation(s): %u\n", mzh.e_crlc);
+				video_printf("[INFO] Relocation(s): %u\n", mzh.e_crlc);
 
 			const int rs = mzh.e_crlc * mz_reloc_t.sizeof; // table size
 			mz_reloc_t *rp = cast(mz_reloc_t*)(MEMORY + 0x1300); // table pointer
@@ -114,12 +114,12 @@ int vdos_load(const(char) *path) {
 			fseek(f, mzh.e_lfarlc, SEEK_SET); // 1.
 			fread(rp, rs, 1, f); // Read whole relocation table
 
-			debug v_putln(" #    seg: off -> loadseg");
+			debug video_puts(" #    seg: off -> loadseg");
 			int i;
 			do {
 				const int addr = address(rp.segment, rp.offset); // 2.
 				const ushort loadseg = mmfu16(addr); /// 3. Load segment
-				debug v_printf("%2d   %04X:%04X -> cs:%04X+CPU.CS:%04X = %04X\n",
+				debug video_printf("%2d   %04X:%04X -> cs:%04X+CPU.CS:%04X = %04X\n",
 					i, rp.segment, rp.offset, mzh.e_cs, CPU.CS, loadseg
 				);
 				mmiu16(mzh.e_cs + loadseg, addr); // 4. & 5.

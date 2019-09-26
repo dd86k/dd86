@@ -10,7 +10,7 @@ import vcpu.core, vdos.os, vdos.ecodes;
 import vcpu.utils : address;
 import vdos.loader : vdos_load;
 import vdos.structs : CURSOR;
-import vdos.video : v_printf, v_put_s, v_putc;
+import vdos.video;
 import os.io : OSTime, os_time, OSDate, os_date, os_pexist;
 import vcpu.mm : MemString;
 
@@ -41,7 +41,7 @@ void __int_exit() { // REAL-MODE
 /// phases.
 /// Params: code = Interrupt byte
 void INT(ubyte code) {
-	debug v_printf("[dbug] INTERRUPT: %02Xh\n", code);
+	debug video_printf("[dbug] INTERRUPT: %02Xh\n", code);
 
 	__int_enter;
 
@@ -189,7 +189,7 @@ void INT(ubyte code) {
 			break;
 		case 2: // Write character to stdout
 			CPU.AL = CPU.DL;
-			v_putc(CPU.AL);
+			video_putc(CPU.AL);
 			break;
 		case 5: // Write character to printer
 
@@ -199,7 +199,7 @@ void INT(ubyte code) {
 
 			} else { // output
 				CPU.AL = CPU.DL;
-				v_putc(CPU.AL);
+				video_putc(CPU.AL);
 			}
 			break;
 		case 7: // Read character directly from stdin without echo
@@ -212,7 +212,7 @@ void INT(ubyte code) {
 			char *p = cast(char *)(MEMORY + address(CPU.DS, CPU.DX));
 			ushort l;
 			while (p[l] != '$' && l < 255) ++l;
-			v_put_s(p, l);
+			video_write(p, l);
 
 			CPU.AL = 0x24;
 			break;
@@ -371,7 +371,7 @@ void INT(ubyte code) {
 
 		break;
 	case 0x29: // FAST CONSOLE OUTPUT
-		v_putc(CPU.AL);
+		video_putc(CPU.AL);
 		break;
 	default:
 		//TODO: Handle incorrect interrupt vector

@@ -5,11 +5,10 @@ module os.term;
 
 import ddc : putchar, getchar, fputs, stdout;
 
-
-
-
 private import core.stdc.stdio : printf;
 private alias sys = core.stdc.stdlib.system;
+
+extern (C):
 
 version (Windows) {
 	private import core.sys.windows.windows;
@@ -36,12 +35,11 @@ version (Posix) {
  *******************************************************************/
 
 /// Initiate os.term
-extern (C)
 void con_init() {
 	version (Windows) {
 		hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 		hIn  = GetStdHandle(STD_INPUT_HANDLE);
-		SetPos(0, 0);
+		con_pos(0, 0);
 	}
 	version (Posix) {
 		tcgetattr(STDIN_FILENO, &old_tio);
@@ -53,20 +51,20 @@ void con_init() {
 	}
 }
 
-/*******************************************************************
- * Colors
- *******************************************************************/
+//
+// Color management
+//
 
-extern (C)
-void InvertColor() {
+void con_color_invert() {
 	version (Windows)
 		SetConsoleTextAttribute(hOut, COMMON_LVB_REVERSE_VIDEO | defaultColor);
 	version (Posix)
 		printf("\033[7m");
 }
 
-extern (C)
-void ResetColor() {
+
+
+void con_color_reset() {
 	version (Windows)
 		SetConsoleTextAttribute(hOut, defaultColor);
 	version (Posix)
@@ -78,8 +76,7 @@ void ResetColor() {
  *******************************************************************/
 
 /// Clear screen
-extern (C)
-void Clear() {
+void con_clear() {
 	version (Windows) {
 		CONSOLE_SCREEN_BUFFER_INFO csbi = void;
 		COORD c; // 0, 0
@@ -91,10 +88,10 @@ void Clear() {
 		DWORD num = void; // kind of ala .NET
 		FillConsoleOutputCharacterA(hOut, ' ', size, c, &num);
 		FillConsoleOutputAttribute(hOut, csbi.wAttributes, size, c, &num);
-		SetPos(0, 0);
+		con_pos(0, 0);
 	} else version (Posix) {
 		WindowSize ws = void;
-		GetWinSize(&ws);
+		con_wsize(&ws);
 		const int size = ws.Height * ws.Width;
 		//TODO: write 'default' attribute character
 		printf("\033[0;0H%*s\033[0;0H", size, cast(char*)"");
@@ -113,7 +110,7 @@ void Clear() {
  * Params: ws = Pointer to a WindowSize structure
  */
 extern (C)
-void GetWinSize(WindowSize *ws) {
+void con_wsize(WindowSize *ws) {
 	version (Windows) {
 		CONSOLE_SCREEN_BUFFER_INFO c = void;
 		GetConsoleScreenBufferInfo(hOut, &c);
@@ -139,8 +136,7 @@ void GetWinSize(WindowSize *ws) {
  *   x = X position (horizontal)
  *   y = Y position (vertical)
  */
-extern (C)
-void SetPos(int x, int y) {
+void con_pos(int x, int y) {
 	version (Windows) { // 0-based
 		COORD c = { cast(SHORT)x, cast(SHORT)y };
 		SetConsoleCursorPosition(hOut, c);
@@ -149,8 +145,7 @@ void SetPos(int x, int y) {
 	}
 }
 
-extern (C)
-void ResetPos() {
+void con_reset_pos() {
 	version (Windows) { // 0-based
 		COORD c = { 0, 0 };
 		SetConsoleCursorPosition(hOut, c);
@@ -158,38 +153,6 @@ void ResetPos() {
 		fputs("\033[0;0H", stdout);
 	}
 }
-
-/*@property ushort CursorLeft()
-{
-	version (Windows)
-	{
-
-
-		return 0;
-	}
-	else version (Posix)
-	{
-
-
-		return 0;
-	}
-}
-
-@property ushort CursorTop()
-{
-	version (Windows)
-	{
-
-
-		return 0;
-	}
-	else version (Posix)
-	{
-
-
-		return 0;
-	}
-}*/
 
 /*******************************************************************
  * Input
@@ -199,7 +162,6 @@ void ResetPos() {
  * Read a single character.
  * Returns: A KeyInfo structure.
  */
-extern (C)
 KeyInfo ReadKey() {
 	KeyInfo k;
 	version (Windows) { // Sort of is like .NET's ReadKey
@@ -277,59 +239,6 @@ _READKEY_END:
 	} // version Posix
 	return k;
 }
-/*
-RawEvent ReadGlobal()
-{
-	version (Windows)
-	{
-		RawEvent r;
-
-		INPUT_RECORD ir;
-		DWORD num = 0;
-		if (ReadConsoleInput(hIn, &ir, 1, &num))
-		{
-			r.Type = cast(EventType)ir.EventType;
-
-			if (ir.KeyEvent.bKeyDown)
-			{
-				DWORD state = ir.KeyEvent.dwControlKeyState;
-				r.Key.alt   = (state & ALT_PRESSED)   != 0;
-				r.Key.ctrl  = (state & CTRL_PRESSED)  != 0;
-				r.Key.shift = (state & SHIFT_PRESSED) != 0;
-				r.Key.keyChar  = ir.KeyEvent.AsciiChar;
-				r.Key.keyCode  = ir.KeyEvent.wVirtualKeyCode;
-				r.Key.scanCode = ir.KeyEvent.wVirtualScanCode;
-			}
-
-			r.Mouse.Location.X = cast(ushort)ir.MouseEvent.dwMousePosition.X;
-			r.Mouse.Location.Y = cast(ushort)ir.MouseEvent.dwMousePosition.Y;
-			r.Mouse.Buttons = cast(ushort)ir.MouseEvent.dwButtonState;
-			r.Mouse.State = cast(ushort)ir.MouseEvent.dwControlKeyState;
-			r.Mouse.Type = cast(ushort)ir.MouseEvent.dwEventFlags;
-
-			r.Size.Width = ir.WindowBufferSizeEvent.dwSize.X;
-			r.Size.Height = ir.WindowBufferSizeEvent.dwSize.Y;
-		}
-
-		return r;
-	}
-	else version (Posix)
-	{ //TODO: RawEvent (Posix)
-		RawEvent r;
-
-		return r;
-	}
-}
-*/
-
-/*******************************************************************
- * Handlers
- *******************************************************************/
-
-/*void SetCtrlHandler(void function() f)
-{ //TODO: Ctrl handler
-
-}*/
 
 /*******************************************************************
  * Emunerations

@@ -62,7 +62,7 @@ unittest {
 
 	v_put("AC");
 	v_putn("ID");
-	v_printf("TES%c\n", 'T');
+	vdos_printf("TES%c\n", 'T');
 
 	screen_logo; // print logo
 

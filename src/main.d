@@ -12,7 +12,7 @@ import vdos.ecodes;
 import vdos.loader : vdos_load;
 import vdos.video;
 import logger;
-import os.term : con_init, Clear, SetPos, WindowSize, GetWinSize;
+import os.term : con_init, con_clear, con_pos, WindowSize, con_wsize;
 import os.io : os_pexist;
 import appconfig : APP_VERSION, PLATFORM, BUILD_TYPE, C_RUNTIME;
 
@@ -26,8 +26,8 @@ enum COPYRIGHT = "Copyright (c) 2017-2019 dd86k\n\n";
 void _version() {
 	import d = std.compiler;
 	printf(
-	"DD/86-"~PLATFORM~" v"~APP_VERSION~"-"~BUILD_TYPE~" ("~__TIMESTAMP__~")\n"~
-	"Homepage: <https://git.dd86k.space/dd86k/dd86>\n"~
+	"dd86-"~PLATFORM~" v"~APP_VERSION~"-"~BUILD_TYPE~" ("~__TIMESTAMP__~")\n"~
+	"Homepage: <https://github,com/dd86k/dd86>\n"~
 	"License: MIT <https://opensource.org/licenses/MIT>\n"~
 	"Compiler: "~__VENDOR__~" v%u.%03u\n"~
 	"Runtime: "~C_RUNTIME~"\n",
@@ -76,7 +76,7 @@ void license() {
 
 int main(int argc, char **argv) {
 	bool args = true;
-	ubyte cliv = 1; /// CLI startup messages
+	ubyte opt_smsg = 1; /// CLI startup messages
 	char *prog; /// FILE: COM or EXE to start
 //	char *args; /// FILEARGS: for FILE
 
@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
 			while (*++a) {
 				switch (*a) {
 				case 'P': opt_sleep = !opt_sleep; break;
-				case 'N': cliv = !cliv; break;
+				case 'N': opt_smsg = !opt_smsg; break;
 				case 'v': ++LOGLEVEL; break;
 				case '-': args = !args; break;
 				case 'h': help; return 0;
@@ -142,9 +142,9 @@ NO_ARGS:
 	//TODO: Read settings here
 
 	WindowSize s = void;
-	GetWinSize(&s);
+	con_wsize(&s);
 	if (s.Width < 80 || s.Height < 25) {
-		puts("Terminal should be at least 80 by 25 characters");
+		puts("Terminal should be at least 80x25 characters");
 		return 1;
 	}
 
@@ -155,10 +155,10 @@ NO_ARGS:
 	CPU.cpuinit;	// vcpu
 	con_init;	// os.term
 	vdos_init;	// vdos, screen
-	Clear;
+	con_clear;
 
-	if (cliv) {
-		v_printf(
+	if (opt_smsg) {
+		video_printf(
 			"Starting DD/86...\n\n"~
 			"Ver "~APP_VERSION~" ("~__TIMESTAMP__~")\n"~
 			"Intel 8086, %uK OK\n\n",
@@ -179,15 +179,15 @@ NO_ARGS:
 			log_info("MAX_PERF");
 	}
 
-	screen_draw;
+	video_update;
 
 	if (cast(size_t)prog) {
 		vdos_load(prog);
 		CPU.run;
-		screen_draw; // ensures last frame is drawn
+		video_update; // ensures last frame is drawn
 	} else vdos_shell;
 
-	SetPos(0, 25);
+	con_pos(0, 25);
 
 	return 0;
 }

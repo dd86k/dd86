@@ -10,14 +10,14 @@ import vdos.video;
 import logger;
 import appconfig : __MM_SYS_DOS, INIT_MEM;
 
+__gshared:
 extern (C):
-
 
 /// Project logo, fancy!
 enum LOGO =
 	`_______ _______     ___ ______   ______`~"\n"~
 	`|  __  \|  __  \   /  //  __  \ / ____/`~"\n"~
-	`| |  \ || |  \ |  /  / \ \__/ //  __ \`~"\n"~
+	`| |  \ || |  \ |  /  / \ \__/ //  __ \ `~"\n"~
 	`| |__/ || |__/ | /  /  / /__\ \| \__\ \`~"\n"~
 	`|______/|______//__/   \______/\______/`~"\n";
 
@@ -30,19 +30,18 @@ enum
 	DOS_MAJOR_VERSION = 5, /// Default major DOS version
 	DOS_MINOR_VERSION = 0; /// Default minor DOS version
 
-/// BIOS tick frequency multiplier per second (18.2 times/sec)
+/// BIOS tick/second ratio (18.2 times/sec)
 enum float BIOS_TICK = 1 / 18.2f;
 
-__gshared ubyte
+ubyte
 	MajorVersion = DOS_MAJOR_VERSION, /// Alterable major version
 	MinorVersion = DOS_MINOR_VERSION; /// Alterable minor version
 
 // Live structures mapped to virtual memory (MEMORY)
 
-__gshared dos_dev_t *DOS = void;
-__gshared SYSTEM_t *SYSTEM = void;
+dos_dev_t *DOS = void;
+SYSTEM_t *SYSTEM = void;
 
-extern (C)
 void vdos_init() {
 	// Setting a memory pointer as ubyte* (as vdos_settings*) is not
 	// supported in CTFE, so it's done in run-time instead
@@ -54,12 +53,11 @@ void vdos_init() {
 
 	DOS = cast(dos_dev_t*)(MEMORY + __MM_SYS_DOS);
 
-	screen_init;
+	video_init;
 }
 
-extern (C)
-void print_regs() {
-	v_printf(
+void vdos_print_regs() {
+	video_printf(
 		"EIP=%08X  IP=%04X  (%08X)\n"~
 		"EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X\n"~
 		"ESP=%08X  EBP=%08X  ESI=%08X  EDI=%08X\n"~
@@ -69,33 +67,31 @@ void print_regs() {
 		CPU.ESP, CPU.EBP, CPU.ESI, CPU.EDI,
 		CPU.CS, CPU.DS, CPU.ES, CPU.FS, CPU.GS, CPU.SS
 	);
-	v_put("EFLAG=");
-	if (CPU.OF) v_putln("OF ");
-	if (CPU.DF) v_putln("DF ");
-	if (CPU.IF) v_putln("IF ");
-	if (CPU.TF) v_putln("TF ");
-	if (CPU.SF) v_putln("SF ");
-	if (CPU.ZF) v_putln("ZF ");
-	if (CPU.AF) v_putln("AF ");
-	if (CPU.PF) v_putln("PF ");
-	if (CPU.CF) v_putln("CF ");
+	video_put("EFLAG=");
+	if (CPU.OF) video_put("OF ");
+	if (CPU.DF) video_put("DF ");
+	if (CPU.IF) video_put("IF ");
+	if (CPU.TF) video_put("TF ");
+	if (CPU.SF) video_put("SF ");
+	if (CPU.ZF) video_put("ZF ");
+	if (CPU.AF) video_put("AF ");
+	if (CPU.PF) video_put("PF ");
+	if (CPU.CF) video_put("CF ");
 	//TODO: Print rest of flags
-	v_printf("(%Xh)\n", CPU.FLAGS);
+	video_printf("(%Xh)\n", CPU.FLAGS);
 }
 
-extern (C)
-void print_stack() {
-	v_putln("print_stack::Not implemented");
+void vdos_print_stack() {
+	video_puts("print_stack::Not implemented");
 }
 
-extern (C)
-void panic(ushort code,
+void vdos_panic(ushort code,
 	const(char) *name = cast(const(char)*)__MODULE__,
 	int line = __LINE__) {
 	import core.stdc.stdlib : exit;
 
 	enum RANGE = 26, TARGET = (RANGE / 2) - 1;
-	v_printf(
+	video_printf(
 		"\n\n\n\n"~
 		"A fatal exception occured, which DD/86 couldn't recover.\n\n"~
 		"STOP: %4Xh (%s L%u)\nEXEC:\n",
@@ -104,12 +100,12 @@ void panic(ushort code,
 	int i = RANGE;
 	ubyte *p = MEMORY + CPU.EIP - TARGET;
 	while (--i)
-		v_printf(i == TARGET ? " >%02X<" : " %02X", *p++);
-	v_put("\n--\n");
-	print_regs;
+		video_printf(i == TARGET ? " >%02X<" : " %02X", *p++);
+	video_put("\n--\n");
+	vdos_print_regs;
 	/*printf("--\n"); Temporary commented until print_stack is implemented
 	print_stack;*/
 
-	screen_draw;
+	video_update;
 	//gracefulexit(code)
 }

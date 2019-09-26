@@ -4,10 +4,10 @@
 module logger;
 
 import vdos.ecodes : PANIC_UNKNOWN;
-import vdos.video : v_printf;
+import vdos.video : video_printf;
 
+__gshared:
 extern (C):
-
 
 enum LogLevel : ubyte {
 	Silence = 0,	/// Complete silence
@@ -20,44 +20,44 @@ enum LogLevel : ubyte {
 
 /// Verbosity level
 debug
-public __gshared ubyte LOGLEVEL = LogLevel.Debug;
+public ubyte LOGLEVEL = LogLevel.Debug;
 else
-public __gshared ubyte LOGLEVEL = LogLevel.Silence;
+public ubyte LOGLEVEL = LogLevel.Silence;
 
 //TODO: Figure out template to avoid re-typing debug everytime
 debug void _debug(const(char) *msg) {
-	v_printf("[DBUG] %s\n", msg);
+	video_printf("[DBUG] %s\n", msg);
 }
 debug void logexec(ushort seg, ushort ip, ubyte op) {
-	v_printf("[ VM ] %04X:%04X  %02Xh\n", seg, ip, op);
+	video_printf("[ VM ] %04X:%04X  %02Xh\n", seg, ip, op);
 }
 
 /// Log an informational message
 /// Params: msg = Message
 void log_info(const(char) *msg) {
 	if (LOGLEVEL < LogLevel.Info) return;
-	v_printf("[INFO] %s\n", msg);
+	video_printf("[INFO] %s\n", msg);
 }
 
 /// Log a warning message
 /// Params: msg = Message
 void log_warm(const(char) *msg) {
 	if (LOGLEVEL < LogLevel.Warning) return;
-	v_printf("[WARN] %s\n", msg);
+	video_printf("[WARN] %s\n", msg);
 }
 
 /// Log an error
 /// Params: msg = Message
 void log_error(const(char) *msg) {
 	if (LOGLEVEL < LogLevel.Error) return;
-	v_printf("[ERR ] %s\n", msg);
+	video_printf("[ERR ] %s\n", msg);
 }
 
 void log_crit(const(char) *msg, ushort code = PANIC_UNKNOWN) {
 	import core.stdc.stdlib : exit;
-	import vdos.os : panic;
+	import vdos.os : vdos_panic;
 	//if (LOGLEVEL >= LogLevel.Critical)
-	v_printf("[!!!!] %s\n", msg);
-	panic(code);
+	video_printf("[!!!!] %s\n", msg);
+	vdos_panic(code);
 	exit(code);
 }

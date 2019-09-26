@@ -34,22 +34,22 @@ void vdos_shell() {
 SHL_S:
 	//TODO: Print $PROMPT
 	if (os_gcwd(inbuf))
-		v_printf("\n%s%% ", inbuf);
-	else // just-in-case
-		v_put("\n% ");
+		video_printf("\n%s%% ", inbuf);
+	else // In case of failure
+		video_put("\n% ");
 
-	v_updatecur; // update cursor pos
-	screen_draw;
+	video_updatecur; // update cursor pos
+	video_update;
 
 	vdos_readline(inbuf, __SHL_BUFSIZE);
 	if (*inbuf == '\n') goto SHL_S; // Nothing to process
 
 	switch (vdos_command(inbuf)) {
 	case ESHL_COMMAND_NOT_FOUND:
-		v_putln("Bad command or file name");
+		video_puts("Bad command or file name");
 		goto SHL_S;
 	case ESHL_GENERIC_ERROR:
-		v_putln("Something went wrong");
+		video_puts("Something went wrong");
 		goto SHL_S;
 	case ESHL_EXIT:
 		//TODO: Proper application exit
@@ -122,7 +122,7 @@ int vdos_command(const(char) *command) {
 	if (strcmp(*argv, "cd") == 0 || strcmp(*argv, "chdir") == 0) {
 		if (argc > 1) {
 			if (strcmp(argv[1], "/?") == 0) {
-				v_putln(
+				video_puts(
 					"Display or set current working directory\n"~
 					"  CD or CHDIR [FOLDER]\n\n"~
 					"By default, CD will display the current working directory"
@@ -131,20 +131,20 @@ int vdos_command(const(char) *command) {
 				if (os_pisdir(*(argv + 1))) {
 					os_scwd(*(argv + 1));
 				} else {
-					v_putln("Directory not found or entry is not a directory");
+					video_puts("Directory not found or entry is not a directory");
 				}
 			}
 		} else {
 			if (os_gcwd(cast(char*)command))
-				v_putln(command);
+				video_puts(command);
 			else
-				v_putln("Error getting current directory");
+				video_puts("Error getting current directory");
 			return 2;
 		}
 		return 0;
 	}
 	if (strcmp(*argv, "cls") == 0) {
-		screen_clear;
+		video_clear;
 		SYSTEM.cursor[SYSTEM.screen_page].row = 0;
 		SYSTEM.cursor[SYSTEM.screen_page].col = 0;
 		return 0;
@@ -155,19 +155,19 @@ int vdos_command(const(char) *command) {
 	if (strcmp(*argv, "date") == 0) {
 		CPU.AH = 0x2A;
 		INT(0x21);
-		const(char) *s = void;
+		const(char) *dow = void;
 		switch (CPU.AL) {
-		case 0, 7: s = "Sunday"; break;
-		case 1: s = "Monday"; break;
-		case 2: s = "Tuesday"; break;
-		case 3: s = "Wednesday"; break;
-		case 4: s = "Thursday"; break;
-		case 5: s = "Friday"; break;
-		case 6: s = "Saturday"; break;
-		default: s = "?";
+		case 0,7: dow = "Sunday"; break;
+		case 1:   dow = "Monday"; break;
+		case 2:   dow = "Tuesday"; break;
+		case 3:   dow = "Wednesday"; break;
+		case 4:   dow = "Thursday"; break;
+		case 5:   dow = "Friday"; break;
+		case 6:   dow = "Saturday"; break;
+		default:  dow = "?";
 		}
-		v_printf("It is currently %s %u-%02d-%02d\n",
-			s, CPU.CX, CPU.DH, CPU.DL);
+		video_printf("It is currently %s %u-%02d-%02d\n",
+			dow, CPU.CX, CPU.DH, CPU.DL);
 		return 0;
 	}
 
@@ -175,11 +175,12 @@ int vdos_command(const(char) *command) {
 
 	if (strcmp(*argv, "echo") == 0) {
 		if (argc == 1) {
-			v_putln("ECHO is on");
+			video_puts("ECHO is on");
 		} else {
-			for (size_t i = 1; i < argc; ++i)
-				v_printf("%s ", argv[i]);
-			v_putln;
+			/*for (size_t i = 1; i < argc; ++i)
+				video_printf("%s ", argv[i]);
+			video_puts;*/
+			video_puts(command);
 		}
 		return 0;
 	}
@@ -188,7 +189,7 @@ int vdos_command(const(char) *command) {
 	// H
 
 	if (strcmp(*argv, "help") == 0) {
-		v_putln(
+		video_puts(
 			"Internal commands available\n\n"~
 			"CD .......... Change working directory\n"~
 			"CLS ......... Clear screen\n"~
@@ -224,7 +225,7 @@ int vdos_command(const(char) *command) {
 						++nzt;
 				}
 			}
-			v_printf(
+			video_printf(
 				"Memory Type             Zero +   NZero =   Total\n" ~
 				"-------------------  -------   -------   -------\n" ~
 				"Conventional         %6dK   %6dK   %6dK\n" ~
@@ -237,11 +238,11 @@ int vdos_command(const(char) *command) {
 			);
 			return 0;
 		} else if (strcmp(argv[1], "/debug") == 0) {
-			v_putln("Not implemented");
+			video_puts("Not implemented");
 		} else if (strcmp(argv[1], "/free") == 0) {
-			v_putln("Not implemented");
+			video_puts("Not implemented");
 		} else if (strcmp(argv[1], "/?") == 0) {
-MEM_HELP:		v_putln(
+MEM_HELP:		video_puts(
 				"Display memory statistics\n"~
 				"MEM [OPTIONS]\n\n"~
 				"OPTIONS\n"~
@@ -252,7 +253,7 @@ MEM_HELP:		v_putln(
 			);
 			return 0;
 		}
-		v_putln("Not implemented. Only /stats is implemented");
+		video_puts("Not implemented. Only /stats is implemented");
 		return 0;
 	}
 
@@ -261,7 +262,7 @@ MEM_HELP:		v_putln(
 	if (strcmp(*argv, "time") == 0) {
 		CPU.AH = 0x2C;
 		INT(0x21);
-		v_printf("It is currently %02d:%02d:%02d.%02d\n",
+		video_printf("It is currently %02d:%02d:%02d.%02d\n",
 			CPU.CH, CPU.CL, CPU.DH, CPU.DL);
 		return 0;
 	}
@@ -269,7 +270,7 @@ MEM_HELP:		v_putln(
 	// V
 
 	if (strcmp(*argv, "ver") == 0) {
-		v_printf(
+		video_printf(
 			"DD/86 v"~APP_VERSION~
 			", reporting MS-DOS v%u.%u (compiled: %u.%u)\n",
 			MajorVersion, MinorVersion,
@@ -283,7 +284,7 @@ MEM_HELP:		v_putln(
 	//
 
 	if (strcmp(*argv, "??") == 0) {
-		v_putln(
+		video_puts(
 `?load FILE  Load an executable FILE into memory
 ?p          Toggle performance mode
 ?panic      Manually panic
@@ -301,8 +302,8 @@ MEM_HELP:		v_putln(
 				CPU.CS = 0; CPU.IP = 0x100; // Temporary
 				vdos_load(argv[1]);
 			} else
-				v_putln("File not found");
-		} else v_putln("Executable required");
+				video_puts("File not found");
+		} else video_puts("Executable required");
 		return 0;
 	}
 	if (strcmp(*argv, "?run") == 0) {
@@ -310,65 +311,67 @@ MEM_HELP:		v_putln(
 		return 0;
 	}
 	if (strcmp(*argv, "?v") == 0) {
-		v_printf("LOGLEVEL set to ");
+		const(char) *e = void;
 		if (argc >= 2) {
 			switch (argv[1][0]) {
 			case '0', 's':
 				LOGLEVEL = LogLevel.Debug;
-				v_putln("DEBUG");
+				e = "DEBUG";
 				break;
 			case '1', 'c':
 				LOGLEVEL = LogLevel.Fatal;
-				v_putln("CRTICAL");
+				e = "CRTICAL";
 				break;
 			case '2', 'e':
 				LOGLEVEL = LogLevel.Error;
-				v_putln("ERRORS");
+				e = "ERROR";
 				break;
 			case '3', 'w':
 				LOGLEVEL = LogLevel.Warning;
-				v_putln("WARNINGS");
+				e = "WARNING";
 				break;
 			case '4', 'i':
 				LOGLEVEL = LogLevel.Info;
-				v_putln("INFORMAL");
+				e = "INFORMAL";
 				break;
 			case '5', 'd':
 				LOGLEVEL = LogLevel.Debug;
-				v_putln("DEBUG");
+				e = "DEBUG";
 				break;
 			default:
-				v_putln("Invalid log level");
+				e = "(invalid), input was invalid";
 			} // switch
+			video_puts(e);
 		} else if (LOGLEVEL) {
 			LOGLEVEL = LogLevel.Silence;
-			v_putln("SILENCE");
+			e = "SILENCE";
 		} else {
 			debug {
 				LOGLEVEL = LogLevel.Debug;
-				v_putln("DEBUG");
+				e = "DEBUG";
 			} else {
 				LOGLEVEL = LogLevel.Info;
-				v_putln("INFO");
+				e = "INFO";
 			}
 		}
+		video_printf("LOGLEVEL set to %s\n", e);
 		return 0;
 	}
 	if (strcmp(*argv, "?p") == 0) {
 		opt_sleep = !opt_sleep;
-		v_printf("CPU SLEEP mode: %s\n", opt_sleep ? "ON" : cast(char*)"OFF");
+		video_printf("CPU SLEEP mode: %s\n", opt_sleep ? "ON" : cast(char*)"OFF");
 		return 0;
 	}
 	if (strcmp(*argv, "?r") == 0) {
-		print_regs;
+		vdos_print_regs;
 		return 0;
 	}
 	if (strcmp(*argv, "?s") == 0) {
-		print_stack;
+		vdos_print_stack;
 		return 0;
 	}
 	if (strcmp(*argv, "?panic") == 0) {
-		panic(PANIC_MANUAL);
+		vdos_panic(PANIC_MANUAL);
 		return 0;
 	}
 
@@ -428,7 +431,7 @@ READ_S:
 	case Key.Enter:
 		buf[s] = '\n';
 		buf[s + 1] = 0;
-		v_putln; // \n
+		video_puts; // newline, mimics Enter key
 		return s + 2;
 	case Key.Home:
 		i = 0;
@@ -471,8 +474,8 @@ READ_S:
 	}
 	c.col = cast(ubyte)xi;
 	c.row = cast(ubyte)yi;
-	v_updatecur; // update to host
-	screen_draw;
+	video_updatecur; // update to host
+	video_update;
 	goto READ_S;
 }
 

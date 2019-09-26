@@ -12,6 +12,7 @@ import core.stdc.stdlib : malloc;
 import vcpu.core : MEMORY;
 import vdos.os : SYSTEM;
 
+__gshared:
 extern (C):
 
 private enum __EGA_ADDRESS = 0xA_0000;
@@ -20,7 +21,7 @@ private enum __VGA_ADDRESS = 0xB_8000;
 enum __VIDEO_ADDRESS = __VGA_ADDRESS; /// Default video address
 enum MAX_STR = 2048; /// maximum string length to print
 
-__gshared videochar *VIDEO = void;	/// video buffer
+videochar *VIDEO = void;	/// video buffer
 
 // VGA reference: http://www.brackeen.com/vga/basics.html
 // Unicode reference: https://unicode-table.com
@@ -31,12 +32,12 @@ version (Windows) {
 		COORD, SMALL_RECT, CHAR_INFO, SetConsoleOutputCP;
 	import os.term : hOut;
 
-	private __gshared CHAR_INFO *ibuf = void;	/// Intermediate buffer
-	private __gshared COORD ibufsize = void;
-	private __gshared SMALL_RECT ibufout = void;
-	private __gshared COORD bufcoord;	// inits to 0,0
+	private CHAR_INFO *ibuf = void;	/// Intermediate buffer
+	private COORD ibufsize = void;
+	private SMALL_RECT ibufout = void;
+	private COORD bufcoord;	// inits to 0,0
 	// disabled until W variant is needed...
-	/*__gshared ushort [256]vctable = [
+	/*ushort [256]vctable = [
 		/// cp437-utf16-le default character translation table
 		0x0020, 0x3A26, 0x3B26, 0x6526, 0x6626, 0x6326, 0x6026, 0x2220,
 		0xD825, 0xCB25, 0xD925, 0x4226, 0x4026, 0x6A26, 0x6B26, 0x3C26,
@@ -98,7 +99,7 @@ version (Posix) {
 	// better to have this 4 bytes wide.
 	// The table can also be put into a file and read at run-time.
 	/// cp437-utf8-le default character translation table
-	__gshared uint [256]vctable = [
+	uint [256]vctable = [
 		0x000020, 0xBA98E2, 0xBB98E2, 0xA599E2, 0xA699E2, 0xA399E2, 0xA099E2, 0x9897E2,
 		0x8B97E2, 0x9997E2, 0x8299E2, 0x8099E2, 0xAA99E2, 0xAB99E2, 0xBC98E2, 0xBA96E2,
 		// 16 (offset)
@@ -149,19 +150,19 @@ version (Posix) {
 	];
 	// ascii-encoded characters, terminal can accept a leading zero
 	// see https://i.stack.imgur.com/KTSQa.png for reference
-	__gshared ushort [16]vatable = [ /// xterm-256 attribute translation table
+	ushort [16]vatable = [ /// xterm-256 attribute translation table
 		// black, blue, green, cyan, red, magenta, brown, lightgray
 		0x3030, 0x3430, 0x3230, 0x3630, 0x3130, 0x3530, 0x3330, 0x3730,
 		// dark gray, ^blue, ^green, ^cyan, ^red, ^magenta, yellow, white
 		0x3830, 0x3231, 0x3031, 0x3431, 0x3930, 0x3331, 0x3131, 0x3531
 	];
-	__gshared ubyte *fg_s = /// fg string -- "\033[38;5;00m"
+	ubyte *fg_s = /// fg string -- "\033[38;5;00m"
 		[ 0x1b, 0x5b, 0x33, 0x38, 0x3b, 0x35, 0x3b, 0x00, 0x00, 0x6d ];
-	__gshared ubyte *bg_s = /// bg string -- "\033[48;5;00m"
+	ubyte *bg_s = /// bg string -- "\033[48;5;00m"
 		[ 0x1b, 0x5b, 0x34, 0x38, 0x3b, 0x35, 0x3b, 0x00, 0x00, 0x6d ];
-	__gshared ushort *fg = void; /// Foreground color string pointer
-	__gshared ushort *bg = void; /// Background color string pointer
-	__gshared char *str = void; /// Screen stdout buffer
+	ushort *fg = void; /// Foreground color string pointer
+	ushort *bg = void; /// Background color string pointer
+	char *str = void; /// Screen stdout buffer
 }
 
 /// Video adapter character (EGA, CGA, VGA)
@@ -185,11 +186,11 @@ static assert(videochar.sizeof == 2);
  * Initiates screen, including intermediate buffer.
  * Usually called by vdos.
  */
-void screen_init() {
+void video_init() {
 	import core.stdc.string : memset;
 	VIDEO = cast(videochar*)(MEMORY + __VIDEO_ADDRESS);
 
-	screen_clear;
+	video_clear;
 
 	version (Windows) {
 		import core.sys.windows.windows : SetConsoleMode, SetConsoleOutputCP;
@@ -222,7 +223,7 @@ void screen_init() {
  * (Windows) Uses WriteConsoleOutputA
  * (Posix) Uses write(2) to STDOUT_FILENO
  */
-void screen_draw() {
+void video_update() {
 version (Windows) {
 	const uint sc = SYSTEM.screen_col * SYSTEM.screen_row; /// screen size
 	for (size_t i; i < sc; ++i) {
@@ -234,7 +235,7 @@ version (Windows) {
 	//WriteConsoleOutputW(hOut, ibuf, ibufsize, bufcoord, &ibufout);
 }
 version (Posix) {
-	__gshared ushort lasthash;
+	ushort lasthash;
 	ushort newhash;
 	const uint w = SYSTEM.screen_col; /// width
 	const uint h = SYSTEM.screen_row; /// height
@@ -292,7 +293,7 @@ version (Posix) {
 
 /// Clear virtual video RAM, resets every cells to white/black with null
 /// character
-void screen_clear() {
+void video_clear() {
 	const int t = (SYSTEM.screen_row * SYSTEM.screen_col) / 2;
 	uint *v = cast(uint*)VIDEO;
 	for (size_t i; i < t; ++i) v[i] = 0x0700_0700;
@@ -305,9 +306,9 @@ void screen_clear() {
  * Params:
  *   s = String, null-terminated
  */
-void v_put(const(char) *s) {
+void video_put(const(char) *s) {
 	for (size_t i; s[i] != 0 && i < MAX_STR; ++i)
-		v_putc(s[i]);
+		video_putc(s[i]);
 }
 
 /**
@@ -318,9 +319,9 @@ void v_put(const(char) *s) {
  *   s = String
  *   size = String length
  */
-void v_put_s(const(char) *s, uint size) {
+void video_write(const(char) *s, uint size) {
 	for (size_t i; i < size && s[i] != 0; ++i)
-		v_putc(s[i]);
+		video_putc(s[i]);
 }
 
 /**
@@ -331,9 +332,9 @@ void v_put_s(const(char) *s, uint size) {
  * Params:
  *   s = String (optional)
  */
-void v_putln(const(char) *s = null) {
-	if (s) v_put(s);
-	v_putc('\n');
+void video_puts(const(char) *s = null) {
+	if (s) video_put(s);
+	video_putc('\n');
 }
 
 /**
@@ -343,7 +344,7 @@ void v_putln(const(char) *s = null) {
  * Params:
  *   c = Character
  */
-void v_putc(char c) {
+void video_putc(char c) {
 	import vdos.structs : CURSOR;
 
 	CURSOR *cur = &SYSTEM.cursor[SYSTEM.screen_page];
@@ -360,7 +361,7 @@ void v_putc(char c) {
 	}
 	if (cur.row >= SYSTEM.screen_row) {
 		--cur.row;
-		v_scroll;
+		video_scroll;
 	}
 	VIDEO[pos].ascii = c;
 	return;
@@ -375,25 +376,25 @@ CONTROL_CHAR:
 		}
 		if (cur.row >= SYSTEM.screen_row) {
 			--cur.row;
-			v_scroll;
+			video_scroll;
 		}
 		return;
 	case '\n':
 		cur.col = 0;
 		if (cur.row + 1 >= SYSTEM.screen_row)
-			v_scroll;
+			video_scroll;
 		else
 			++cur.row;
 		return;
 	case '\t':
-		v_put_s("        ", 8);
+		video_write("        ", 8);
 		break;
 	//case 27: // ESC codes
 	default: // non-printable/usable
 	}
 }
 
-void v_printf(const(char) *f, ...) {
+void video_printf(const(char) *f, ...) {
 	import ddc : vsnprintf, va_list, va_start, puts;
 
 	va_list args = void;
@@ -403,12 +404,12 @@ void v_printf(const(char) *f, ...) {
 	uint c = vsnprintf(cast(char*)b, 512, f, args);
 
 	if (c > 0)
-		v_put_s(cast(char *)b, c);
+		video_write(cast(char *)b, c);
 }
 
 /// Scroll screen once, does not redraw screen
 /// Note: This function goes one line overboard video memory
-void v_scroll() {
+void video_scroll() {
 	uint sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
 	videochar *d = cast(videochar*)VIDEO; /// destination
 	videochar *s = d + sc; /// source
@@ -425,9 +426,9 @@ void v_scroll() {
 }
 
 /// Update cursor positions on host machine using current screen page
-void v_updatecur() {
+void video_updatecur() {
 	import vdos.structs : CURSOR;
-	import os.term : SetPos;
+	import os.term : con_pos;
 	const CURSOR w = SYSTEM.cursor[SYSTEM.screen_page];
-	SetPos(w.col, w.row);
+	con_pos(w.col, w.row);
 }

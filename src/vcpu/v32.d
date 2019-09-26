@@ -234,7 +234,7 @@ void v32_0F() {	//TODO: 0Fh Two-byte escape
 		//TODO: #GP on != CPU_MDOEL_286
 		//CPU.MSW = mmfu16(0x806); // Machine Status Word
 		//CPU.TR = mmfu16(0x816); // Task Register
-		CPU.FLAG = mmfu16(0x818);
+		CPU.FLAGS = mmfu16(0x818);
 		CPU.IP = mmfu16(0x81A);
 		//CPU.LDTR = mmfu16(0x81C); // Local Descriptor Table Register
 		CPU.DS = mmfu16(0x81E); // segments
@@ -272,7 +272,7 @@ void v32_0F() {	//TODO: 0Fh Two-byte escape
 		break;
 	case 0x07: // LOADALL (i386), undocumented
 		//TODO: #GP on != CPU_MDOEL_386
-		const uint ad = address(ES, EDI); //OP: uint* from MEMORY
+		const uint ad = address(CPU.ES, CPU.EDI); //OP: uint* from MEMORY
 		CPU.CR0 = mmfu32(ad);
 		CPU.EFLAGS = mmfu32(ad + 4);
 		CPU.EIP = mmfu32(ad + 8);
