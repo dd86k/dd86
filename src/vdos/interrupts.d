@@ -103,10 +103,12 @@ void INT(ubyte code) {
 
 			break;
 		case 0x02: // Set cursor position
-			SYSTEM.screen_page = CPU.BL > 8 ? 0 : CPU.BH;
+			/*SYSTEM.screen_page = CPU.BL > 8 ? 0 : CPU.BH;
 			CURSOR* c = &SYSTEM.cursor[SYSTEM.screen_page];
 			c.row = CPU.DH; //TODO: Check against system rows/columns current size
-			c.col = CPU.DL;
+			c.col = CPU.DL;*/
+			video_curpos(CPU.DL, CPU.DH, CPU.BL > 8 ? 0 : CPU.BH);
+			video_updatecur;
 			break;
 		case 0x03: // Get cursor position and size
 			const CURSOR c = SYSTEM.cursor[SYSTEM.screen_page];

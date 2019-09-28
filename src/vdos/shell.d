@@ -382,9 +382,11 @@ MEM_HELP:		video_puts(
  * Params:
  *   buf = Buffer
  *   len = Buffer size (maximum length)
- * Returns: String length
+ * Returns: String length in characters
  */
 int vdos_readline(char *buf, int len) {
+	//TODO: Properly use video_* functions: video_putc, video_curpos
+	//      while still maintaining an input buffer
 	import vdos.structs : CURSOR;
 	import os.term : Key, KeyInfo, ReadKey;
 
@@ -503,7 +505,7 @@ int sargs(const char *t, char **argv) {
 			mloc += i - j + 1;
 			strncpy(argv[a], t + j, i - j);
 			argv[a][i - j] = 0;
-			while (t[i + 1] == ' ') ++i;
+			while (t[i + 1] == ' ' || t[i + 1] == '\t') ++i;
 			j = i + 1;
 			++a;
 		} else if (c == '"') {
@@ -514,7 +516,7 @@ int sargs(const char *t, char **argv) {
 			mloc += i - j + 1;
 			strncpy(argv[a], t + j, i - j);
 			argv[a][i - j] = 0;
-			while(t[i + 1] == ' ') ++i;
+			while(t[i + 1] == ' ' || t[i + 1] == '\t') ++i;
 			j = ++i;
 			++a;
 		}

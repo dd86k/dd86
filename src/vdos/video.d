@@ -364,20 +364,7 @@ void video_putc(char c) {
 	CURSOR *cur = &SYSTEM.cursor[SYSTEM.screen_page];
 	uint pos = void; // character position
 
-	if (c < 0x20) { // control character
-		// Normal character
-		pos = (cur.row * SYSTEM.screen_col) + cur.col;
-		++cur.col;
-		if (cur.col >= SYSTEM.screen_col) {
-			cur.col = 0;
-			++cur.row;
-		}
-		if (cur.row >= SYSTEM.screen_row) {
-			--cur.row;
-			video_scroll;
-		}
-		VIDEO[pos].ascii = c;
-	} else {
+	if (c < 0x20) { // Control character
 		switch (c) {
 		case 0: // '\0'
 			++cur.col;
@@ -399,10 +386,23 @@ void video_putc(char c) {
 			return;
 		case '\t':
 			video_write("        ", 8);
+//			cur.row += 8;
 			break;
 		//case 27: // ESC codes
 		default: // non-printable/usable
 		}
+	} else { // Normal character
+		pos = (cur.row * SYSTEM.screen_col) + cur.col;
+		++cur.col;
+		if (cur.col >= SYSTEM.screen_col) {
+			cur.col = 0;
+			++cur.row;
+		}
+		if (cur.row >= SYSTEM.screen_row) {
+			--cur.row;
+			video_scroll;
+		}
+		VIDEO[pos].ascii = c;
 	}
 }
 
@@ -420,13 +420,14 @@ void video_printf(const(char) *f, ...) {
 }
 
 /// Scroll screen once, does not redraw screen
-/// Note: This function goes one line overboard video memory
+/// WARNING: This function goes one line overboard video memory
 void video_scroll() {
 	uint sc = SYSTEM.screen_row * SYSTEM.screen_col; /// screen size
 	videochar *d = cast(videochar*)VIDEO; /// destination
 	videochar *s = d + sc; /// source
 
-	videochar tp;
+	videochar tp = void;
+	tp.ascii = 0;
 	tp.attribute = VIDEO[sc - 1].attribute;
 	for (size_t i; i < SYSTEM.screen_col; ++i)
 		s[i].WORD = tp.WORD;
@@ -441,6 +442,21 @@ void video_scroll() {
 void video_updatecur() {
 	import vdos.structs : CURSOR;
 	import os.term : con_pos;
-	const CURSOR w = SYSTEM.cursor[SYSTEM.screen_page];
+	const CURSOR *w = &SYSTEM.cursor[SYSTEM.screen_page];
 	con_pos(w.col, w.row);
+}
+
+/**
+ * Set virtual system cursor position and update SYSTEM variables.
+ * Params:
+ *   x = Column (x) position
+ *   y = Row (y) position
+ *   page = Page selector (default=0)
+ */
+void video_curpos(ubyte x, ubyte y, ubyte page = 0) {
+	import vdos.structs : CURSOR;
+	SYSTEM.screen_page = page > 8 ? 0 : page;
+	CURSOR* c = &SYSTEM.cursor[SYSTEM.screen_page];
+	c.col = x;
+	c.row = y;
 }

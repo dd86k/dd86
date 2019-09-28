@@ -95,7 +95,10 @@ void vdos_print_stack() {
  * Stops emulation, screen updates, and prints the fatal error code with
  * some extra error codes. This should only be used in the more
  * extreme situations.
- * Params: code = Error code
+ * Params:
+ *   code = Error code
+ *   name = Module name (default=__MODULE__)
+ *   line = Caller line (default=__LINE__)
  */
 void vdos_panic(ushort code,
 	const(char) *name = cast(const(char)*)__MODULE__,
