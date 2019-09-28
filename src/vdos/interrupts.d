@@ -6,13 +6,13 @@
 module vdos.interrupts;
 
 import ddc;
-import vcpu.core, vdos.os, vdos.ecodes;
+import vcpu.core, vdos.os, err;
 import vcpu.utils : address;
 import vdos.loader : vdos_load;
 import vdos.structs : CURSOR;
 import vdos.video;
 import os.io : OSTime, os_time, OSDate, os_date, os_pexist;
-import vcpu.mm : MemString;
+import vcpu.mm : mmfstr;
 
 extern (C):
 
@@ -325,9 +325,15 @@ void INT(ubyte code) {
 		case 0x4B: { // Load/execute program
 			switch (CPU.AL) {
 			case 0: // Load and execute the program.
-				char[] p = MemString(address(CPU.DS, CPU.DX));
-				if (os_pexist(cast(char*)p)) {
-					vdos_load(cast(char*)p);
+				const(char) *p = mmfstr(address(CPU.DS, CPU.DX));
+				if (p == null) {
+					//TODO: INT(#GP)
+					CPU.AX = EDOS_FILE_NOT_FOUND;
+					CPU.CF = 1;
+					break;
+				}
+				if (p && os_pexist(p)) {
+					vdos_load(p);
 					CPU.CF = 0;
 				} else {
 					CPU.AX = EDOS_FILE_NOT_FOUND;

@@ -7,8 +7,8 @@ import core.stdc.string : strcmp;
 import ddc : puts, printf, fputs, stderr, stdout;
 import vcpu.core : CPU, opt_sleep;
 import vdos.os : LOGO, SYSTEM, vdos_init;
-import vdos.shell : vdos_shell;
-import vdos.ecodes;
+import vdos.shell : shell_start;
+import err;
 import vdos.loader : vdos_load;
 import vdos.video;
 import logger;
@@ -187,7 +187,7 @@ NO_ARGS:
 		vdos_load(prog);
 		CPU.run;
 		video_update; // ensures last frame is drawn
-	} else vdos_shell;
+	} else shell_start;
 
 	con_pos(0, 25);
 

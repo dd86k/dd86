@@ -18,10 +18,11 @@ enum
 	FS_ATTR_ARCHIVE = 32,
 	FS_ATTR_SHAREABLE = 128;
 
-/*
- * DOS Structures
- */
+//
+// DOS Structures
+//
 
+/// EXEC PSP structure
 struct dos_psp_t { align(1):
 	ushort cpm_exit;	/// CP/M Exit (INT 20h) pointer
 	ushort first_seg;	/// First segment location pointer
@@ -88,8 +89,8 @@ struct dos_dev_t { align(1):
 	ushort dev_printer;	/// LPT device driver, far call
 	ushort dev_aux;	/// auxiliery device driver, far call
 	ushort dev_block;	/// Disk device driver, far call
-	char [16]HOSTNAME;	/// Network NetBIOS HOSTNAME (15c) +1 byte padding
-	ubyte ERRORLEVEL;
+	char [15]HOSTNAME;	/// Network NetBIOS HOSTNAME
+	ubyte ERRORLEVEL;	/// Last system error level
 }
 
 /// Cursor position structure
@@ -98,6 +99,7 @@ struct CURSOR { align(1):
 	ubyte row;	/// Upper 0-based vertical cursor position
 }
 
+/// IVT entry
 struct __ivt { align(1):
 	union {
 		uint value;
@@ -200,6 +202,7 @@ struct SYSTEM_t { align(1):
 	ubyte [16]nmi_scancode_buf;
 	ushort clock_counter_conv;
 	ubyte [16]app_comm_area;	/// Intra-Applications Communications Area
+	ubyte [33]unknown;
 	// 500h
 	ubyte print_scr_status;
 	ubyte [3]basic;
@@ -216,4 +219,4 @@ struct SYSTEM_t { align(1):
 }
 static assert(SYSTEM_t.COM1.offsetof == 0x400);
 static assert(SYSTEM_t.kb_buf_off_start.offsetof == 0x480);
-//static assert(SYSTEM_t.print_scr_status.offsetof == 0x500);
+static assert(SYSTEM_t.print_scr_status.offsetof == 0x500);

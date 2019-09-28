@@ -1,5 +1,6 @@
 import test_utils;
 import vcpu.core, vcpu.v16, vcpu.mm, vcpu.utils;
+import std.stdio;
 
 unittest {
 	CPU.cpuinit;
@@ -173,22 +174,38 @@ unittest {
 	assert(mmrm16(0b111) == 0x30);
 	// MOD=01
 	assert(mmrm16(0b01_000_000) == 0xA0);
+	--CPU.EIP;
 	assert(mmrm16(0b01_000_001) == 0xA0);
+	--CPU.EIP;
 	assert(mmrm16(0b01_000_010) == 0xA0);
+	--CPU.EIP;
 	assert(mmrm16(0b01_000_011) == 0xA0);
+	--CPU.EIP;
 	assert(mmrm16(0b01_000_100) == 0x70);
+	--CPU.EIP;
 	assert(mmrm16(0b01_000_101) == 0x70);
+	--CPU.EIP;
 	assert(mmrm16(0b01_000_110) == 0x50);
+	--CPU.EIP;
 	assert(mmrm16(0b01_000_111) == 0x50);
+	--CPU.EIP;
 	// MOD=10
 	assert(mmrm16(0b10_000_000) == 0x10A0);
+	CPU.EIP -= 2;
 	assert(mmrm16(0b10_000_001) == 0x10A0);
+	CPU.EIP -= 2;
 	assert(mmrm16(0b10_000_010) == 0x10A0);
+	CPU.EIP -= 2;
 	assert(mmrm16(0b10_000_011) == 0x10A0);
+	CPU.EIP -= 2;
 	assert(mmrm16(0b10_000_100) == 0x1070);
+	CPU.EIP -= 2;
 	assert(mmrm16(0b10_000_101) == 0x1070);
+	CPU.EIP -= 2;
 	assert(mmrm16(0b10_000_110) == 0x1050);
+	CPU.EIP -= 2;
 	assert(mmrm16(0b10_000_111) == 0x1050);
+	CPU.EIP -= 2;
 	// MOD=11
 	CPU.AX = 0x2040; CPU.CX = 0x2141;
 	CPU.DX = 0x2242; CPU.BX = 0x2343;

@@ -3,7 +3,7 @@
  */
 module logger;
 
-import vdos.ecodes : PANIC_UNKNOWN;
+import err : PANIC_UNKNOWN;
 import vdos.video : video_printf;
 
 __gshared:

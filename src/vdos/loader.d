@@ -10,7 +10,7 @@ import vcpu.core, vcpu.utils;
 import vcpu.mm : mmfu16, mmiu16;
 import vdos.os : MinorVersion, MajorVersion;
 import vdos.structs : mz_hdr_t, mz_reloc_t, dos_psp_t;
-import vdos.ecodes;
+import err;
 import logger;
 import ddc : NULL_CHAR;
 import vdos.video : video_printf, video_puts;

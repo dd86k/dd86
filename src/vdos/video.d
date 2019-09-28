@@ -184,7 +184,7 @@ static assert(videochar.sizeof == 2);
 
 /**
  * Initiates screen, including intermediate buffer.
- * Usually called by vdos.
+ * Usually called by vdos_init.
  */
 void video_init() {
 	import core.stdc.string : memset;
@@ -219,6 +219,20 @@ void video_init() {
 }
 
 /**
+ * Translate character to printable when possible
+ * Params: c = Character
+ * Returns: Printable character
+ */
+private
+char video_char(ubyte c) {
+	//TODO: Check with either CP437 or current CP
+	if (c < 0x20)
+		return ' ';
+	else
+		return c;
+}
+
+/**
  * Draw a frame from the video adapter memory region.
  * (Windows) Uses WriteConsoleOutputA
  * (Posix) Uses write(2) to STDOUT_FILENO
@@ -228,11 +242,11 @@ void video_update() {
 		const uint sc = SYSTEM.screen_col * SYSTEM.screen_row; /// screen size
 		for (size_t i; i < sc; ++i) {
 			//ibuf[i].UnicodeChar = vctable[VIDEO[i].ascii];
-			ibuf[i].AsciiChar = VIDEO[i].ascii;
+			ibuf[i].AsciiChar = video_char(VIDEO[i].ascii);
 			ibuf[i].Attributes = VIDEO[i].attribute;
 		}
-		WriteConsoleOutputA(hOut, ibuf, ibufsize, bufcoord, &ibufout);
 		//WriteConsoleOutputW(hOut, ibuf, ibufsize, bufcoord, &ibufout);
+		WriteConsoleOutputA(hOut, ibuf, ibufsize, bufcoord, &ibufout);
 	} // version Windows
 	version (Posix) {
 		ushort lasthash;
@@ -333,7 +347,7 @@ void video_puts(const(char) *s = null) {
  *   size = String length
  */
 void video_write(const(char) *s, uint size) {
-	for (size_t i; i < size && s[i] != 0; ++i)
+	for (size_t i; i < size; ++i)
 		video_putc(s[i]);
 }
 
@@ -350,25 +364,9 @@ void video_putc(char c) {
 	CURSOR *cur = &SYSTEM.cursor[SYSTEM.screen_page];
 	uint pos = void; // character position
 
-	if (c < 32) goto CONTROL_CHAR; // ASCII
-
-	// Normal character
-	pos = (cur.row * SYSTEM.screen_col) + cur.col;
-	++cur.col;
-	if (cur.col >= SYSTEM.screen_col) {
-		cur.col = 0;
-		++cur.row;
-	}
-	if (cur.row >= SYSTEM.screen_row) {
-		--cur.row;
-		video_scroll;
-	}
-	VIDEO[pos].ascii = c;
-	return;
-
-CONTROL_CHAR:
-	switch (c) {
-	case 0: // '\0'
+	if (c < 0x20) { // control character
+		// Normal character
+		pos = (cur.row * SYSTEM.screen_col) + cur.col;
 		++cur.col;
 		if (cur.col >= SYSTEM.screen_col) {
 			cur.col = 0;
@@ -378,19 +376,33 @@ CONTROL_CHAR:
 			--cur.row;
 			video_scroll;
 		}
-		return;
-	case '\n':
-		cur.col = 0;
-		if (cur.row + 1 >= SYSTEM.screen_row)
-			video_scroll;
-		else
-			++cur.row;
-		return;
-	case '\t':
-		video_write("        ", 8);
-		break;
-	//case 27: // ESC codes
-	default: // non-printable/usable
+		VIDEO[pos].ascii = c;
+	} else {
+		switch (c) {
+		case 0: // '\0'
+			++cur.col;
+			if (cur.col >= SYSTEM.screen_col) {
+				cur.col = 0;
+				++cur.row;
+			}
+			if (cur.row >= SYSTEM.screen_row) {
+				--cur.row;
+				video_scroll;
+			}
+			return;
+		case '\n':
+			cur.col = 0;
+			if (cur.row + 1 >= SYSTEM.screen_row)
+				video_scroll;
+			else
+				++cur.row;
+			return;
+		case '\t':
+			video_write("        ", 8);
+			break;
+		//case 27: // ESC codes
+		default: // non-printable/usable
+		}
 	}
 }
 

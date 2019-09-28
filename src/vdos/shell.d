@@ -10,7 +10,7 @@ import vdos.loader : vdos_load;
 import vdos.video;
 import vdos.os;
 import vdos.interrupts : INT;
-import vdos.ecodes : PANIC_MANUAL;
+import err : PANIC_MANUAL;
 import os.io, logger, appconfig;
 
 extern (C):
@@ -28,7 +28,7 @@ enum : int { // Shell errors
  * Enter virtual shell (vDOS), assuming all modules have been initiated.
  * Uses memory location __MM_SHL_DATA for input buffer
  */
-void vdos_shell() {
+void shell_start() {
 	/// Internal input buffer
 	char *inbuf = cast(char*)(MEMORY + __MM_SHL_DATA);
 SHL_S:
@@ -44,7 +44,7 @@ SHL_S:
 	vdos_readline(inbuf, __SHL_BUFSIZE);
 	if (*inbuf == '\n') goto SHL_S; // Nothing to process
 
-	switch (vdos_command(inbuf)) {
+	switch (shell_command(inbuf)) {
 	case ESHL_COMMAND_NOT_FOUND:
 		video_puts("Bad command or file name");
 		goto SHL_S;
@@ -65,7 +65,7 @@ SHL_S:
  * Note: This function may return negative, non-DOS-related, error codes. See
  * ESHEL_* enumeration values.
  */
-int vdos_command(const(char) *command) {
+int shell_command(const(char) *command) {
 	char **argv = // argument vector, sizeof(char *)
 		cast(char**)(MEMORY + __MM_SHL_DATA + __SHL_BUFSIZE + 1);
 	const int argc = sargs(command, argv); /// argument count
@@ -488,6 +488,7 @@ READ_S:
  * Returns: argument count
  * Notes: Original function by Nuke928. Modified by dd86k.
  */
+private
 int sargs(const char *t, char **argv) {
 	size_t j;
 	int a;

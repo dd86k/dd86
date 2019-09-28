@@ -4,7 +4,7 @@
 module vdos.os;
 
 import ddc;
-import vcpu.core, vcpu.utils, vdos.ecodes, vdos.interrupts;
+import vcpu.core, vcpu.utils, err, vdos.interrupts;
 import vdos.structs : SYSTEM_t, dos_dev_t, CURSOR;
 import vdos.video;
 import logger;
@@ -39,8 +39,8 @@ ubyte
 
 // Live structures mapped to virtual memory (MEMORY)
 
-dos_dev_t *DOS = void;
-SYSTEM_t *SYSTEM = void;
+dos_dev_t *DOS = void;	/// DOS devices
+SYSTEM_t *SYSTEM = void;	/// System (IBM PC) and DOS variables
 
 void vdos_init() {
 	// Setting a memory pointer as ubyte* (as vdos_settings*) is not
@@ -56,6 +56,9 @@ void vdos_init() {
 	video_init;
 }
 
+/**
+ * Print CPU registers
+ */
 void vdos_print_regs() {
 	video_printf(
 		"EIP=%08X  IP=%04X  (%08X)\n"~
@@ -81,10 +84,19 @@ void vdos_print_regs() {
 	video_printf("(%Xh)\n", CPU.FLAGS);
 }
 
+/**
+ *
+ */
 void vdos_print_stack() {
 	video_puts("print_stack::Not implemented");
 }
 
+/**
+ * Stops emulation, screen updates, and prints the fatal error code with
+ * some extra error codes. This should only be used in the more
+ * extreme situations.
+ * Params: code = Error code
+ */
 void vdos_panic(ushort code,
 	const(char) *name = cast(const(char)*)__MODULE__,
 	int line = __LINE__) {
@@ -93,8 +105,11 @@ void vdos_panic(ushort code,
 	enum RANGE = 26, TARGET = (RANGE / 2) - 1;
 	video_printf(
 		"\n\n\n\n"~
-		"A fatal exception occured, which DD/86 couldn't recover.\n\n"~
-		"STOP: %4Xh (%s L%u)\nEXEC:\n",
+		"+-------+\n"~
+		"| FATAL |\n"~
+		"+-------+\n"~
+		"A fatal exception occured.\n\n"~
+		"STOP: %4Xh (%s:L%u)\nEXEC:\n",
 		code, name, line
 	);
 	int i = RANGE;
