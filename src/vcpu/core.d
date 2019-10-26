@@ -7,7 +7,7 @@ module vcpu.core;
 
 import logger : log_info;
 import vcpu.v16, vcpu.v32, vcpu.mm, vcpu.utils;
-import appconfig : INIT_MEM, FLAG_ALIGNMENT;
+import config : INIT_MEM, FLAG_ALIGNMENT;
 
 extern (C):
 
@@ -112,35 +112,44 @@ private enum : uint {
 /// registers, especially checking a flag per CPU cycle.
 struct CPU_t {
 	union {
-		uint EIP; ushort IP;
+		uint EIP;	/// Extended Instruction Pointer
+		ushort IP;	/// Instruction Pointer
 	}
 	union {
-		uint EAX; ushort AX;
+		uint EAX;	/// Extended Accumulator Register
+		ushort AX;	/// Accumulator
 		struct { ubyte AL, AH; }
 	}
 	union {
-		uint EBX; ushort BX;
+		uint EBX;	/// Extended Base Register
+		ushort BX;	/// Base Register
 		struct { ubyte BL, BH; }
 	}
 	union {
-		uint ECX; ushort CX;
+		uint ECX;	/// Extended Count Register
+		ushort CX;	/// Count Register
 		struct { ubyte CL, CH; }
 	}
 	union {
-		uint EDX; ushort DX;
+		uint EDX;	/// Extended Data Register
+		ushort DX;	/// Data Register
 		struct { ubyte DL, DH; }
 	}
 	union {
-		uint ESI; ushort SI;
+		uint ESI;	/// Extended Source Index
+		ushort SI;	/// Source Index
 	}
 	union {
-		uint EDI; ushort DI;
+		uint EDI;	/// Extended Data Index
+		ushort DI;	/// Data Index
 	}
 	union {
-		uint EBP; ushort BP;
+		uint EBP;	/// Extended Base Pointer
+		ushort BP;	/// Base Pointer
 	}
 	union {
-		uint ESP; ushort SP;
+		uint ESP;	/// Extended Stack Pointer
+		ushort SP;	/// Stack Pointer
 	}
 	ushort CS, SS, DS, ES, FS, GS;
 	uint TR3, TR4, TR5, TR6, TR7;
@@ -221,8 +230,6 @@ struct CPU_t {
 	ubyte Prefix_Address;
 	/// LOCK prefix
 	ubyte Lock;
-	/// WAIT prefix
-	ubyte Wait;
 
 	/// CPU model: 8086, 80486, etc.
 	ubyte Model;
@@ -553,6 +560,26 @@ struct CPU_t {
 	/// to CPU_MODE_REAL. Useful in unittesting.
 	void fullreset() {
 		CPU = CPU_t();
+	}
+
+	/// WAIT suspends execution of instructions until the BUSY# pin is
+	/// inactive (high). The BUSY# pin is driven by the numeric processor
+	/// extension.
+	void wait() {
+		//TODO: WAIT
+	}
+
+	ushort getseg() {
+		switch (Segment) {
+		case SEG_NONE: return 0;
+		case SEG_CS: return CS;
+		case SEG_DS: return DS;
+		case SEG_ES: return ES;
+		case SEG_SS: return SS;
+		case SEG_GS: return GS;
+		case SEG_FS: return FS;		
+		default: assert(0, "Unknown segment type");
+		}
 	}
 
 	//

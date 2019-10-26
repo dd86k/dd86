@@ -1544,7 +1544,8 @@ void v16_9A() {	// 9Ah CALL FAR_PROC
 	CPU.IP = mmfu16_i(2);
 }
 
-void v16_9B() {	//TODO: 9Bh WAIT
+void v16_9B() {	// 9Bh WAIT
+	CPU.wait;
 	++CPU.EIP;
 }
 
@@ -1588,10 +1589,28 @@ void v16_A3() {	// A3h MOV MEM16, AX
 	CPU.EIP += 3;
 }
 
-void v16_A4() {	// TODO: A4h MOVS DEST-STR8, SRC-STR8
+void v16_A4() {	// A4h MOVS DEST-STR8, SRC-STR8
+	mmiu8(mmfu8(address(CPU.getseg, CPU.SI)),
+		address(CPU.ES, CPU.DI));
+	if (CPU.DF) {
+		--CPU.SI;
+		--CPU.DI;
+	} else {
+		++CPU.SI;
+		++CPU.DI;
+	}
 }
 
-void v16_A5() {	// TODO: A5h MOVS DEST-STR16, SRC-STR16
+void v16_A5() {	// A5h MOVS DEST-STR16, SRC-STR16
+	mmiu16(mmfu16(address(CPU.getseg, CPU.SI)),
+		address(CPU.ES, CPU.DI));
+	if (CPU.DF) {
+		--CPU.SI;
+		--CPU.DI;
+	} else {
+		++CPU.SI;
+		++CPU.DI;
+	}
 }
 
 void v16_A6() {	// A6h CMPS DEST-STR8, SRC-STR8
@@ -2060,14 +2079,11 @@ void v16_E1() {	// E1h LOOPE/LOOPZ SHORT-LABEL
 }
 
 void v16_E2() {	// E2h LOOP SHORT-LABEL
-	--CPU.CX;
-	if (CPU.CX) CPU.EIP += mmfi8_i;
-	else CPU.EIP += 2;
+	CPU.EIP += --CPU.CX ? mmfi8_i : 2;
 }
 
 void v16_E3() {	// E3 JCXZ SHORT-LABEL
-	if (CPU.CX == 0) CPU.EIP += mmfi8_i;
-	else CPU.EIP += 2;
+	CPU.EIP += CPU.CX ? 2 : mmfi8_i;
 }
 
 void v16_E4() {	// E4h IN AL, IMM8

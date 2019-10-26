@@ -8,7 +8,7 @@ import vcpu.core, vcpu.utils, err, vdos.interrupts;
 import vdos.structs : SYSTEM_t, dos_dev_t, CURSOR;
 import vdos.video;
 import logger;
-import appconfig : __MM_SYS_DOS, INIT_MEM;
+import config : __MM_SYS_DOS, INIT_MEM;
 
 __gshared:
 extern (C):

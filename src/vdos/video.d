@@ -184,7 +184,7 @@ static assert(videochar.sizeof == 2);
 
 /**
  * Initiates screen, including intermediate buffer.
- * Usually called by vdos_init.
+ * Called by vdos_init.
  */
 void video_init() {
 	import core.stdc.string : memset;
@@ -199,7 +199,9 @@ void video_init() {
 		SetConsoleMode(hOut, 0);
 		SetConsoleOutputCP(437); // default
 
-		ibuf = cast(CHAR_INFO*)malloc(CHAR_INFO.sizeof * (80 * 25));
+		// intermediate buffer
+		ibuf = cast(CHAR_INFO*)malloc(
+			CHAR_INFO.sizeof * (SYSTEM.screen_row * SYSTEM.screen_col));
 		ibufsize.X = 80;
 		ibufsize.Y = 25;
 		ibufout.Top = ibufout.Left = 0;
@@ -209,12 +211,13 @@ void video_init() {
 	version (Posix) {
 		fg = cast(ushort*)(fg_s + 7);
 		bg = cast(ushort*)(bg_s + 7);
+		// intermediate buffer
 		// 24 extra bytes for:
-		// 10 char fg
-		// 10 char bg
-		// 3 utf-8 char (worst-case)
-		// 1 newline
-		str = cast(char*)malloc(80 * 25 * 24);
+		// - 10 char fg
+		// - 10 char bg
+		// - 3 utf-8 char (worst-case)
+		// - 1 newline
+		str = cast(char*)malloc(SYSTEM.screen_row * SYSTEM.screen_col * 24);
 	}
 }
 

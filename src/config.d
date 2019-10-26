@@ -4,7 +4,7 @@
  *
  * Pragmas of type msg are only allowed here.
  */
-module appconfig;
+module config;
 
 import os.sleep : SLEEP_TIME;
 import vdos.os : DOS_MAJOR_VERSION, DOS_MINOR_VERSION;
@@ -22,8 +22,7 @@ private enum i486_FREQ = 16; // to 100
 //pragma(msg, "[CONFIG]\tIntel i486 = ", i486_FREQ, " MHz");
 //pragma(msg, "[CONFIG]\tvcpu sleeps every ", TSC_SLEEP, " instructions");
 
-/// Byte alignment for CPU flags. This includes EFLAG, CR0, and CR3 flags and
-/// will affect Test Registers and Debug Registers in the future.
+/// Byte alignment for CPU flags.
 enum FLAG_ALIGNMENT = 2;
 
 //

@@ -11,7 +11,7 @@ import vdos.video;
 import vdos.os;
 import vdos.interrupts : INT;
 import err : PANIC_MANUAL;
-import os.io, logger, appconfig;
+import os.io, logger, config;
 
 extern (C):
 

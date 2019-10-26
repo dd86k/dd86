@@ -14,7 +14,7 @@ import vdos.video;
 import logger;
 import os.term : con_init, con_clear, con_pos, WindowSize, con_wsize;
 import os.io : os_pexist;
-import appconfig : APP_VERSION, PLATFORM, BUILD_TYPE, C_RUNTIME;
+import config : APP_VERSION, PLATFORM, BUILD_TYPE, C_RUNTIME;
 
 private:
 extern (C):
@@ -29,8 +29,7 @@ void _version() {
 	"dd86-"~PLATFORM~" v"~APP_VERSION~"-"~BUILD_TYPE~" ("~__TIMESTAMP__~")\n"~
 	"Homepage: <https://github,com/dd86k/dd86>\n"~
 	"License: MIT <https://opensource.org/licenses/MIT>\n"~
-	"Compiler: "~__VENDOR__~" v%u.%03u\n"~
-	"Runtime: "~C_RUNTIME~"\n",
+	"Compiler: "~__VENDOR__~" v%u.%03u, crt: "~C_RUNTIME~"\n",
 	d.version_major, d.version_minor
 	);
 }
@@ -148,7 +147,7 @@ NO_ARGS:
 	WindowSize s = void;
 	con_wsize(&s);
 	if (s.Width < 80 || s.Height < 25) {
-		printf("Terminal should be at least 80x25 characters, got %ux%u\n",
+		printf("Terminal must be at least 80x25 characters, got %ux%u\n",
 			s.Width, s.Height);
 		return 1;
 	}
@@ -156,7 +155,8 @@ NO_ARGS:
 	//TODO: Read settings here
 
 	CPU.cpuinit;	// vcpu
-	vdos_init;	// vdos, screen
+	con_clear;
+	vdos_init;	// vdos + screen
 	con_clear;
 
 	if (opt_smsg) {
