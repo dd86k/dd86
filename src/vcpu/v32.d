@@ -215,9 +215,9 @@ void v32_0E() {	//TODO: 0Eh PUSH CS
 }
 
 void v32_0F() {	//TODO: 0Fh Two-byte escape
+	ubyte op = mmfu8_i(-1);
 	++CPU.EIP;
-	//TODO: check memory bound
-	switch (MEMORY[CPU.EIP]) {
+	switch (op) {
 	case 0x00: //TODO: GRP6
 	
 		break;
@@ -231,7 +231,7 @@ void v32_0F() {	//TODO: 0Fh Two-byte escape
 	
 		break;
 	case 0x05: // LOADALL (i286), undocumented
-		//TODO: #GP on != CPU_MDOEL_286
+		//TODO: #GP on != CPU_MODEL_286
 		//CPU.MSW = mmfu16(0x806); // Machine Status Word
 		//CPU.TR = mmfu16(0x816); // Task Register
 		CPU.FLAGS = mmfu16(0x818);
@@ -271,8 +271,8 @@ void v32_0F() {	//TODO: 0Fh Two-byte escape
 		
 		break;
 	case 0x07: // LOADALL (i386), undocumented
-		//TODO: #GP on != CPU_MDOEL_386
-		const uint ad = address(CPU.ES, CPU.EDI); //OP: uint* from MEMORY
+		//TODO: #GP on != CPU_MODEL_386
+		const uint ad = address(CPU.ES, CPU.EDI);
 		CPU.CR0 = mmfu32(ad);
 		CPU.EFLAGS = mmfu32(ad + 4);
 		CPU.EIP = mmfu32(ad + 8);
@@ -1398,7 +1398,7 @@ void v32_5F() {	//TODO: 5Fh POP DI
 
 void v32_66() {	//TODO: 66h OPERAND OVERRIDE
 	//TODO: CHECK ACCESS
-	exec16(MEMORY[CPU.EIP]);
+	exec16(MEM[CPU.EIP]);
 	++CPU.EIP;
 }
 
@@ -2395,7 +2395,7 @@ void v32_E2() {	//TODO: E2h LOOP SHORT-LABEL
  }
  
  void v32_F4() {	//TODO: F4h HLT
-	RLEVEL = 0;
+	CPU.level = 0;
 	++CPU.EIP;
  }
  

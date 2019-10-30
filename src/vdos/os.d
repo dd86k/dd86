@@ -45,13 +45,13 @@ SYSTEM_t *SYSTEM = void;	/// System (IBM PC) and DOS variables
 void vdos_init() {
 	// Setting a memory pointer as ubyte* (as vdos_settings*) is not
 	// supported in CTFE, so it's done in run-time instead
-	SYSTEM = cast(SYSTEM_t*)MEMORY;
+	SYSTEM = cast(SYSTEM_t*)MEM;
 	SYSTEM.memsize = INIT_MEM >> 10; // DIV 1024
 	SYSTEM.video_mode = 3;
 	SYSTEM.screen_row = 25;
 	SYSTEM.screen_col = 80;
 
-	DOS = cast(dos_dev_t*)(MEMORY + __MM_SYS_DOS);
+	DOS = cast(dos_dev_t*)(MEM + __MM_SYS_DOS);
 
 	video_init;
 }
@@ -116,7 +116,7 @@ void vdos_panic(ushort code,
 		code, name, line
 	);
 	int i = RANGE;
-	ubyte *p = MEMORY + CPU.EIP - TARGET;
+	ubyte *p = MEM + CPU.EIP - TARGET;
 	while (--i)
 		video_printf(i == TARGET ? " >%02X<" : " %02X", *p++);
 	video_put("\n--\n");

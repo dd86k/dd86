@@ -8,8 +8,11 @@
  * ||+------ Fetch (f), can also be Insert (i)
  * ++------- Memory Manager
  * ---
- * While functions require an asbolute memory location, immediate functions
+ * While functions require an asbolute memory location, immediate functions (_i)
  * may accept an optional memory offset from EIP + 1.
+ *
+ * Functions taking account of the virtual memory feature, these functions have
+ * the `mmv` prefix (e.g. `mmvfu32`).
  *
  * Functions to handle ModR/M and SIB bytes: `mmrm16`, `mmrm32`, `mmsib32`
  */
@@ -34,11 +37,11 @@ extern (C):
  *   addr = Memory address
  */
 void mmiu8(int op, int addr) {
-	if (addr >= MEMORYSIZE) {
+	if (addr >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return;
 	}
-	MEMORY[addr] = cast(ubyte)op;
+	MEM[addr] = cast(ubyte)op;
 	errno = E_MM_OK;
 }
 
@@ -49,11 +52,11 @@ void mmiu8(int op, int addr) {
  *   addr = Memory address
  */
 void mmiu16(int data, int addr) {
-	if (addr + 1 >= MEMORYSIZE) {
+	if (addr + 1 >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return;
 	}
-	*cast(ushort*)(MEMORY + addr) = cast(ushort)data;
+	*cast(ushort*)(MEM + addr) = cast(ushort)data;
 	errno = E_MM_OK;
 }
 
@@ -64,11 +67,11 @@ void mmiu16(int data, int addr) {
  *   addr = Memory address
  */
 void mmiu32(int op, int addr) {
-	if (addr + 3 >= MEMORYSIZE) {
+	if (addr + 3 >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return;
 	}
-	*cast(uint*)(MEMORY + addr) = op;
+	*cast(uint*)(MEM + addr) = op;
 	errno = E_MM_OK;
 }
 
@@ -80,11 +83,11 @@ void mmiu32(int op, int addr) {
  *   addr = Memory location
  */
 void mmiarr(void *ops, size_t size, size_t addr) {
-	if (addr + size >= MEMORYSIZE) {
+	if (addr + size >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return;
 	}
-	memcpy(MEMORY + addr, ops, size);
+	memcpy(MEM + addr, ops, size);
 	errno = E_MM_OK;
 }
 
@@ -96,11 +99,11 @@ void mmiarr(void *ops, size_t size, size_t addr) {
  */
 void mmistr(const(char) *data, size_t addr = CPU.EIP) {
 	//TODO: Check string size
-	if (addr >= MEMORYSIZE) {
+	if (addr >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return;
 	}
-	strcpy(cast(char*)(MEMORY + addr), data);
+	strcpy(cast(char*)(MEM + addr), data);
 	errno = E_MM_OK;
 }
 
@@ -112,11 +115,11 @@ void mmistr(const(char) *data, size_t addr = CPU.EIP) {
  */
 void mmiwstr(immutable(wchar)[] data, size_t addr = CPU.EIP) {
 	//TODO: Check string size
-	if (addr >= MEMORYSIZE) {
+	if (addr >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return;
 	}
-	wcscpy(cast(wchar_t*)(MEMORY + addr), cast(wchar_t*)data);
+	wcscpy(cast(wchar_t*)(MEM + addr), cast(wchar_t*)data);
 	errno = E_MM_OK;
 }
 
@@ -130,12 +133,12 @@ void mmiwstr(immutable(wchar)[] data, size_t addr = CPU.EIP) {
  * Returns: BYTE
  */
 ubyte mmfu8(uint addr) {
-	if (addr >= MEMORYSIZE) {
+	if (addr >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return 0;
 	}
 	errno = E_MM_OK;
-	return MEMORY[addr];
+	return MEM[addr];
 }
 
 /**
@@ -153,12 +156,12 @@ byte mmfi8(uint addr) {
  * Returns: WORD
  */
 ushort mmfu16(uint addr) {
-	if (addr + 1 >= MEMORYSIZE) {
+	if (addr + 1 >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return 0;
 	}
 	errno = E_MM_OK;
-	return *cast(ushort*)(MEMORY + addr);
+	return *cast(ushort*)(MEM + addr);
 }
 
 /**
@@ -177,12 +180,12 @@ short mmfi16(uint addr) {
  * Returns: DWORD
  */
 uint mmfu32(uint addr) {
-	if (addr + 3 >= MEMORYSIZE) {
+	if (addr + 3 >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return 0;
 	}
 	errno = E_MM_OK;
-	return *cast(uint*)(MEMORY + addr);
+	return *cast(uint*)(MEM + addr);
 }
 
 /**
@@ -197,16 +200,16 @@ uint mmfu32(uint addr) {
  */
 const(char) *mmfstr(uint addr, int *length = null) {
 	enum size_t STR_LIMIT = 65535;
-	if (addr >= MEMORYSIZE) {
+	if (addr >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return null;
 	}
 	size_t strl;
-	char *p = cast(char*)(MEMORY + addr);
+	char *p = cast(char*)(MEM + addr);
 	while (p[strl] && strl < STR_LIMIT) {
 		++strl;
 	}
-	if (addr + strl >= MEMORYSIZE) {
+	if (addr + strl >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return null;
 	}
@@ -226,12 +229,12 @@ const(char) *mmfstr(uint addr, int *length = null) {
  */
 ubyte mmfu8_i(int n = 0) {
 	size_t addr = CPU.EIP + 1 + n;
-	if (addr >= MEMORYSIZE) {
+	if (addr >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return 0;
 	}
 	errno = E_MM_OK;
-	return MEMORY[addr];
+	return MEM[addr];
 }
 
 /**
@@ -251,12 +254,12 @@ byte mmfi8_i(int n = 0) {
  */
 ushort mmfu16_i(int n = 0) {
 	size_t addr = CPU.EIP + 1 + n;
-	if (addr + 1>= MEMORYSIZE) {
+	if (addr + 1>= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return 0;
 	}
 	errno = E_MM_OK;
-	return *cast(ushort*)(MEMORY + addr);
+	return *cast(ushort*)(MEM + addr);
 }
 
 /**
@@ -276,12 +279,12 @@ short mmfi16_i(int n = 0) {
  */
 uint mmfu32_i(int n = 0) {
 	size_t addr = CPU.EIP + 1 + n;
-	if (addr + 3 >= MEMORYSIZE) {
+	if (addr + 3 >= MEMSIZE) {
 		errno = E_MM_OVRFLW;
 		return 0;
 	}
 	errno = E_MM_OK;
-	return *cast(uint*)(MEMORY + addr);
+	return *cast(uint*)(MEM + addr);
 }
 
 /**

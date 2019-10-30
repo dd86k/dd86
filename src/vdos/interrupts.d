@@ -179,12 +179,12 @@ void INT(ubyte code) {
 
 		break;
 	case 0x20: // Terminate program
-		--RLEVEL;
+		--CPU.level;
 		break;
 	case 0x21: // MS-DOS Services
 		switch (CPU.AH) {
 		case 0: // Terminal program
-			--RLEVEL;
+			--CPU.level;
 			break;
 		case 1: // Read character from stdin with echo
 			//CPU.AL = cast(ubyte)ReadKey.keyCode;
@@ -212,7 +212,7 @@ void INT(ubyte code) {
 			break;
 		case 9: { // Write string to stdout
 			//TODO: Use mmstr
-			char *p = cast(char *)(MEMORY + address(CPU.DS, CPU.DX));
+			char *p = cast(char *)(MEM + address(CPU.DS, CPU.DX));
 			ushort l;
 			while (p[l] != '$' && l < 255) ++l;
 			video_write(p, l);
@@ -358,10 +358,10 @@ void INT(ubyte code) {
 			break;
 		}
 		case 0x4C: // Terminate with return code
-			--RLEVEL;
-			DOS.ERRORLEVEL = CPU.AL;
+			--CPU.level;
+			DOS.errorlevel = CPU.AL;
 			break;
-		case 0x4D: // Get return code (ERRORLEVEL)
+		case 0x4D: // Get return code (ERROCPU.level)
 			
 			break;
 		case 0x54: // Get verify flag

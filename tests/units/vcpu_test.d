@@ -3,7 +3,7 @@ import vcpu.core, vcpu.v16, vcpu.mm, vcpu.utils;
 import std.stdio;
 
 unittest {
-	CPU.cpuinit;
+	vcpu_init;
 	CPU.CS = 0;
 	CPU.EIP = get_ip;
 
@@ -11,29 +11,29 @@ unittest {
 
 	test("mmiu8");
 	mmiu8(0xFF, CPU.EIP);
-	assert(MEMORY[CPU.EIP]     == 0xFF);
+	assert(MEM[CPU.EIP]     == 0xFF);
 	mmiu8(0x12, CPU.EIP + 2);
-	assert(MEMORY[CPU.EIP + 2] == 0x12);
+	assert(MEM[CPU.EIP + 2] == 0x12);
 	OK;
 
 	test("mmiu16");
 	mmiu16(0x100, CPU.EIP);
-	assert(MEMORY[CPU.EIP]     == 0);
-	assert(MEMORY[CPU.EIP + 1] == 1);
+	assert(MEM[CPU.EIP]     == 0);
+	assert(MEM[CPU.EIP + 1] == 1);
 	mmiu16(0xABCD, CPU.EIP);
-	assert(MEMORY[CPU.EIP]     == 0xCD);
-	assert(MEMORY[CPU.EIP + 1] == 0xAB);
+	assert(MEM[CPU.EIP]     == 0xCD);
+	assert(MEM[CPU.EIP + 1] == 0xAB);
 	mmiu16(0x5678, 4);
-	assert(MEMORY[4] == 0x78);
-	assert(MEMORY[5] == 0x56);
+	assert(MEM[4] == 0x78);
+	assert(MEM[5] == 0x56);
 	OK;
 
 	test("mmiu32");
 	mmiu32(0xAABBCCFF, CPU.EIP);
-	assert(MEMORY[CPU.EIP    ] == 0xFF);
-	assert(MEMORY[CPU.EIP + 1] == 0xCC);
-	assert(MEMORY[CPU.EIP + 2] == 0xBB);
-	assert(MEMORY[CPU.EIP + 3] == 0xAA);
+	assert(MEM[CPU.EIP    ] == 0xFF);
+	assert(MEM[CPU.EIP + 1] == 0xCC);
+	assert(MEM[CPU.EIP + 2] == 0xBB);
+	assert(MEM[CPU.EIP + 3] == 0xAA);
 	OK;
 
 	mmiu8(0xAC, CPU.EIP + 1);
@@ -83,23 +83,23 @@ unittest {
 
 	test("mmistr");
 	mmistr("AB$");
-	assert(MEMORY[CPU.EIP .. CPU.EIP + 3] == "AB$");
+	assert(MEM[CPU.EIP .. CPU.EIP + 3] == "AB$");
 	mmistr("QWERTY", CPU.EIP + 10);
-	assert(MEMORY[CPU.EIP + 10 .. CPU.EIP + 16] == "QWERTY");
+	assert(MEM[CPU.EIP + 10 .. CPU.EIP + 16] == "QWERTY");
 	OK;
 
 	test("mmiwstr");
 	mmiwstr("Hi!!"w);
-	assert(MEMORY[CPU.EIP     .. CPU.EIP + 1] == "H"w);
-	assert(MEMORY[CPU.EIP + 2 .. CPU.EIP + 3] == "i"w);
-	assert(MEMORY[CPU.EIP + 4 .. CPU.EIP + 5] == "!"w);
-	assert(MEMORY[CPU.EIP + 6 .. CPU.EIP + 7] == "!"w);
+	assert(MEM[CPU.EIP     .. CPU.EIP + 1] == "H"w);
+	assert(MEM[CPU.EIP + 2 .. CPU.EIP + 3] == "i"w);
+	assert(MEM[CPU.EIP + 4 .. CPU.EIP + 5] == "!"w);
+	assert(MEM[CPU.EIP + 6 .. CPU.EIP + 7] == "!"w);
 	OK;
 
 	test("mmiarr");
 	ubyte[2] ar = [ 0xAA, 0xBB ];
 	mmiarr(cast(ubyte*)ar, 2, CPU.EIP);
-	assert(MEMORY[CPU.EIP .. CPU.EIP + 2] == [ 0xAA, 0xBB ]);
+	assert(MEM[CPU.EIP .. CPU.EIP + 2] == [ 0xAA, 0xBB ]);
 	OK;
 
 	test("Registers");

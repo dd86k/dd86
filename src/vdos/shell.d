@@ -5,7 +5,7 @@ module vdos.shell;
 
 import ddc;
 import core.stdc.string : strcmp, strlen, memcpy, strncpy;
-import vcpu.core : CPU, MEMORY, MEMORYSIZE, opt_sleep;
+import vcpu.core : CPU, MEM, MEMSIZE, vcpu_run;
 import vdos.loader : vdos_load;
 import vdos.video;
 import vdos.os;
@@ -15,7 +15,7 @@ import os.io, logger, config;
 
 extern (C):
 
-enum : int { // Shell errors
+enum : short { // Shell errors
 	/// Command not found
 	ESHL_COMMAND_NOT_FOUND = -1,
 	/// Generic error (avoid to use)
@@ -30,7 +30,7 @@ enum : int { // Shell errors
  */
 void shell_start() {
 	/// Internal input buffer
-	char *inbuf = cast(char*)(MEMORY + __MM_SHL_DATA);
+	char *inbuf = cast(char*)(MEM + __MM_SHL_DATA);
 SHL_S:
 	//TODO: Print $PROMPT
 	if (os_gcwd(inbuf))
@@ -61,13 +61,13 @@ SHL_S:
 /**
  * Execute a command with its arguments, useful for scripting.
  * Params: command == Command string with arguments
- * Returns: Error code (ERRORLEVEL), see Note
+ * Returns: Error code (ERROCPU.level), see Note
  * Note: This function may return negative, non-DOS-related, error codes. See
  * ESHEL_* enumeration values.
  */
 int shell_command(const(char) *command) {
 	char **argv = // argument vector, sizeof(char *)
-		cast(char**)(MEMORY + __MM_SHL_DATA + __SHL_BUFSIZE + 1);
+		cast(char**)(MEM + __MM_SHL_DATA + __SHL_BUFSIZE + 1);
 	const int argc = sargs(command, argv); /// argument count
 
 	enum uint EXE_L = 0x6578652E; /// ".exe", LSB
@@ -87,7 +87,7 @@ int shell_command(const(char) *command) {
 		switch (ext) {
 		case COM_L, EXE_L:
 			vdos_load(*argv);
-			CPU.run;
+			vcpu_run;
 			return 0;
 		default: return ESHL_COMMAND_NOT_FOUND;
 		}
@@ -100,13 +100,13 @@ int shell_command(const(char) *command) {
 		*(appext + 1) = 0;
 		if (os_pexist(cast(char*)appname)) {
 			vdos_load(cast(char*)appname);
-			CPU.run;
+			vcpu_run;
 			return 0;
 		}
 		*appext = EXE_L;
 		if (os_pexist(cast(char*)appname)) {
 			vdos_load(cast(char*)appname);
-			CPU.run;
+			vcpu_run;
 			return 0;
 		}
 	}
@@ -209,7 +209,7 @@ int shell_command(const(char) *command) {
 		if (argc <= 1) goto MEM_HELP;
 
 		if (strcmp(argv[1], "/stats") == 0) {
-			const uint msize = MEMORYSIZE;
+			const uint msize = MEMSIZE;
 			const ubyte ext = msize > 0xA_0000; // extended?
 			const size_t ct = ext ? 0xA_0000 : msize; /// convential memsize
 			const size_t tt = msize - ct; /// total memsize excluding convential
@@ -217,7 +217,7 @@ int shell_command(const(char) *command) {
 			int nzt; /// Non-zero (total/excluded from conventional in some cases)
 			int nzc; /// Convential (<640K) non-zero
 			for (size_t i; i < msize; ++i) {
-				if (MEMORY[i]) {
+				if (MEM[i]) {
 					if (i < 0xA_0000)
 						++nzc;
 					else
@@ -306,7 +306,7 @@ MEM_HELP:		video_puts(
 		return 0;
 	}
 	if (strcmp(*argv, "?run") == 0) {
-		CPU.run;
+		vcpu_run;
 		return 0;
 	}
 	if (strcmp(*argv, "?v") == 0) {
@@ -357,8 +357,9 @@ MEM_HELP:		video_puts(
 		return 0;
 	}
 	if (strcmp(*argv, "?p") == 0) {
-		opt_sleep = !opt_sleep;
-		video_printf("CPU SLEEP mode: %s\n", opt_sleep ? "ON" : cast(char*)"OFF");
+		CPU.sleep = !CPU.sleep;
+		video_printf("CPU SLEEP mode: %s\n",
+			CPU.sleep ? "ON" : cast(char*)"OFF");
 		return 0;
 	}
 	if (strcmp(*argv, "?r") == 0) {
@@ -495,7 +496,7 @@ int sargs(const char *t, char **argv) {
 	size_t j;
 	int a;
 
-	char* mloc = cast(char*)MEMORY + 0x1400;
+	char* mloc = cast(char*)MEM + 0x1400;
 	const size_t sl = strlen(t);
 
 	for (size_t i; i <= sl; ++i) {

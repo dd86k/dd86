@@ -90,7 +90,7 @@ struct dos_dev_t { align(1):
 	ushort dev_aux;	/// auxiliery device driver, far call
 	ushort dev_block;	/// Disk device driver, far call
 	char [15]HOSTNAME;	/// Network NetBIOS HOSTNAME
-	ubyte ERRORLEVEL;	/// Last system error level
+	ubyte errorlevel;	/// Last system error level
 }
 
 /// Cursor position structure

@@ -1606,7 +1606,7 @@ unittest {
 	CPU.ES = 0x20; CPU.DI = 0x20;        
 	CPU.AL = 'Q';
 	exec16(0xAA);
-	assert(MEMORY[address(CPU.ES, CPU.DI - 1)] == 'Q');
+	assert(MEM[address(CPU.ES, CPU.DI - 1)] == 'Q');
 	OK;
 
 	test("ABh  STOSW");
@@ -1621,10 +1621,10 @@ unittest {
 	test("ACh  LODS"); // of dosh
 	CPU.AL = 0;
 	CPU.DS = 0xA0; CPU.SI = 0x200;
-	MEMORY[address(CPU.DS, CPU.SI)] = 'H';
+	MEM[address(CPU.DS, CPU.SI)] = 'H';
 	exec16(0xAC);
 	assert(CPU.AL == 'H');
-	MEMORY[address(CPU.DS, CPU.SI)] = 'e';
+	MEM[address(CPU.DS, CPU.SI)] = 'e';
 	exec16(0xAC);
 	assert(CPU.AL == 'e');
 	OK;

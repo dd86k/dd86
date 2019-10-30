@@ -15,12 +15,12 @@ import vdos.structs;
 //
 
 // in MHz
-private enum i8086_FREQ = 5; // to 10
-private enum i486_FREQ = 16; // to 100
+private enum float FREQ_i8086 = 5.0f; // to 10
+private enum float FREQ_i486 = 16.0f; // to 100
 
-//pragma(msg, "[CONFIG]\tIntel 8086 = ", i8086_FREQ, " MHz");
-//pragma(msg, "[CONFIG]\tIntel i486 = ", i486_FREQ, " MHz");
-//pragma(msg, "[CONFIG]\tvcpu sleeps every ", TSC_SLEEP, " instructions");
+//pragma(msg, "[CONFIG]\tIntel 8086 = ", FREQ_i8086, " MHz");
+//pragma(msg, "[CONFIG]\tIntel i486 = ", FREQ_i486, " MHz");
+//pragma(msg, "[CONFIG]\tvcpu sleeps every ", FREQ_SLEEP, " instructions");
 
 /// Byte alignment for CPU flags.
 enum FLAG_ALIGNMENT = 2;

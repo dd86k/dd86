@@ -1078,7 +1078,7 @@ void v16_5F() {	// 5Fh POP DI
 }
 
 void v16_66() {	// 66h OPERAND OVERRIDE
-	exec32(MEMORY[CPU.EIP]);
+	exec32(MEM[CPU.EIP]);
 	++CPU.EIP;
 }
 
@@ -1599,6 +1599,7 @@ void v16_A4() {	// A4h MOVS DEST-STR8, SRC-STR8
 		++CPU.SI;
 		++CPU.DI;
 	}
+	++CPU.EIP;
 }
 
 void v16_A5() {	// A5h MOVS DEST-STR16, SRC-STR16
@@ -1611,6 +1612,7 @@ void v16_A5() {	// A5h MOVS DEST-STR16, SRC-STR16
 		++CPU.SI;
 		++CPU.DI;
 	}
+	++CPU.EIP;
 }
 
 void v16_A6() {	// A6h CMPS DEST-STR8, SRC-STR8
@@ -1625,6 +1627,7 @@ void v16_A6() {	// A6h CMPS DEST-STR8, SRC-STR8
 		++CPU.DI;
 		++CPU.SI;
 	}
+	++CPU.EIP;
 }
 
 void v16_A7() {	// A7h CMPSW DEST-STR16, SRC-STR16
@@ -1639,6 +1642,7 @@ void v16_A7() {	// A7h CMPSW DEST-STR16, SRC-STR16
 		CPU.DI += 2;
 		CPU.SI += 2;
 	}
+	++CPU.EIP;
 }
 
 void v16_A8() {	// A8h TEST AL, IMM8
@@ -1965,37 +1969,35 @@ void v16_D1() {	// D1h GRP2 R/M16, 1
 	CPU.EIP += 2;
 }
 
-void v16_D2() {	//TODO: D2h GRP2 R/M8, CL
+void v16_D2() {	// D2h GRP2 R/M8, CL
 	const ubyte rm = mmfu8_i;
-	const int addr = mmrm16(rm);
-	int r = mmfu8(addr);
-	int m = void;
-	if (CPU.Model != CPU_8086) { // vm8086 still falls here
-		if (CPU.CL > 31) { // 5 bits
-			m = CPU.CL & 32;
-			CPU.CF = 1;
-		} else {
-			m = CPU.CL;
-		}
-	} else { // The 8086 does not mask the rotation count.
-		m = CPU.CL;
-	}
+	int c = CPU.CL;	/// Count
+	if (CPU.Model != CPU_8086) // vm8086 still falls here
+		c &= 31; // 5 bits
 
-	if (m == 0) goto NOP;
+	CPU.EIP += 2;
+	if (c == 0) return; // NOP IF COUNT = 0
+
+	const int addr = mmrm16(rm);
+	__mi32 r = cast(__mi32)mmfu8(addr);
 
 	switch (rm & RM_REG) {
 	case RM_REG_000: // 000 - ROL
-		r <<= m;
+		r <<= c;
 		if (r > 0xFF) {
-			r |= 1; CPU.OF = 1;
+			r |= r.u8[1]; CPU.OF = 1;
 		}
 		break;
 	case RM_REG_001: // 001 - ROR
-		
+		r.u8[1] = r.u8[0];
+		r >>= c;
+		if (r.u8[1] == 0) { //TODO: Check accuracy
+			CPU.OF = 1;
+		}
 		break;
-	case RM_REG_010: // 010 - RCL
+	case RM_REG_010: //TODO: 010 - RCL
 		break;
-	case RM_REG_011: // 011 - RCR
+	case RM_REG_011: //TODO: 011 - RCR
 		break;
 	case RM_REG_100: // 100 - SAL/SHL
 		break;
@@ -2008,41 +2010,49 @@ void v16_D2() {	//TODO: D2h GRP2 R/M8, CL
 		v16_illegal;
 	}
 	mmiu8(r, addr);
-NOP:
-	CPU.EIP += 2;
 }
 
-void v16_D3() {	//TODO: D3h GRP2 R/M16, CL
-	// The 8086 does not mask the rotation count.
-	/*const ubyte rm = mmfu8_i;
-	const int addr = mmrm16(rm, 1);
+void v16_D3() {	// D3h GRP2 R/M16, CL
+	const ubyte rm = mmfu8_i;
+	int c = CPU.CL;	/// Count
+	if (CPU.Model != CPU_8086) // vm8086 still falls here
+		c &= 31; // 5 bits
+
+	CPU.EIP += 2;
+	if (c == 0) return; // NOP IF COUNT = 0
+
+	const int addr = mmrm16(rm);
+	__mi32 r = cast(__mi32)mmfu16(addr);
+
 	switch (rm & RM_REG) {
 	case RM_REG_000: // 000 - ROL
-
+		r <<= c;
+		if (r > 0xFF) {
+			r |= r.u16[1]; CPU.OF = 1;
+		}
 		break;
 	case RM_REG_001: // 001 - ROR
-
+		r.u16[1] = r.u16[0];
+		r >>= c;
+		if (r.u16[1] == 0) { //TODO: Check accuracy
+			CPU.OF = 1;
+		}
 		break;
-	case RM_REG_010: // 010 - RCL
-
+	case RM_REG_010: //TODO: 010 - RCL
 		break;
-	case RM_REG_011: // 011 - RCR
-
+	case RM_REG_011: //TODO: 011 - RCR
 		break;
 	case RM_REG_100: // 100 - SAL/SHL
-
 		break;
 	case RM_REG_101: // 101 - SHR
-
 		break;
 	case RM_REG_111: // 111 - SAR
-
 		break;
 	default:
 		log_info("Invalid ModR/M for GRP2 R/M16, CL");
 		v16_illegal;
-	}*/
-	CPU.EIP += 2;
+	}
+	mmiu16(r, addr);
 }
 
 void v16_D4() {	// D4h AAM
@@ -2120,10 +2130,9 @@ void v16_E9() {	// E9h JMP NEAR-LABEL
 void v16_EA() {	// EAh JMP FAR-LABEL
 	// Any segment, any fragment, 5 byte instruction.
 	// EAh (LO-CPU.IP) (HI-CPU.IP) (LO-CPU.CS) (HI-CPU.CS)
-	const ushort ip = mmfu16_i;
-	const ushort cs = mmfu16_i(2);
-	CPU.IP = ip;
-	CPU.CS = cs;
+	const uint csip = mmfu32_i;
+	CPU.IP = cast(ushort)csip;
+	CPU.CS = csip >> 16;
 }
 
 void v16_EB() {	// EBh JMP SHORT-LABEL
@@ -2166,11 +2175,62 @@ void v16_F2() {	// F2h REPNE/REPNZ
 	++CPU.EIP;
 }
 
-void v16_F3() {	//TODO: F3h REP/REPE/REPNZ
+void v16_F3() {	// F3h REP/REPE/REPNZ
+	ushort c = CPU.CX;
+	const ubyte op = mmfi8_i; // next op
+
+	if (c == 0) {
+		++CPU.EIP;
+		return;
+	}
+
+	switch (op) { // None of these fetch from [E]IP
+	case 0xa4:
+		do { v16_A4(); --c; } while (c);
+		break;
+	case 0xa5:
+		do { v16_A5(); --c; } while (c);
+		break;
+	case 0xa6:
+		do { v16_A6(); --c; } while (c && CPU.ZF);
+		break;
+	case 0xa7:
+		do { v16_A7(); --c; } while (c && CPU.ZF);
+		break;
+	case 0xaa:
+		do { v16_AA(); --c; } while (c);
+		break;
+	case 0xab:
+		do { v16_AB(); --c; } while (c);
+		break;
+	case 0xac:
+		do { v16_AC(); --c; } while (c);
+		break;
+	case 0xad:
+		do { v16_AD(); --c; } while (c);
+		break;
+	case 0xae:
+		do { v16_AE(); --c; } while (c && CPU.ZF);
+		break;
+	case 0xaf:
+		do { v16_AF(); --c; } while (c && CPU.ZF);
+		break;
+	default:
+//		++CPU.EIP;
+		v16_illegal;
+		return;
+	}
+	CPU.CX = c;
+	CPU.Segment = SEG_NONE;
+/*	if (c) {
+		if (CPU.ZF && ((op & 6) != 6))
+			// TODO: IP gets "previous IP"
+	}*/
+	CPU.EIP -= (c - 1);
 }
 
 void v16_F4() {	// F4h HLT
-	RLEVEL = 0;
+	CPU.level = 0;
 	++CPU.EIP;
 }
 

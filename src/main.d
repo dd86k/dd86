@@ -5,7 +5,7 @@ module main;
 
 import core.stdc.string : strcmp;
 import ddc : puts, printf, fputs, stderr, stdout;
-import vcpu.core : CPU, opt_sleep;
+import vcpu.core;
 import vdos.os : LOGO, SYSTEM, vdos_init;
 import vdos.shell : shell_start;
 import err;
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
 			char* a = argv[argi];
 			while (*++a) {
 				switch (*a) {
-				case 'P': opt_sleep = !opt_sleep; break;
+				case 'P': CPU.sleep = !CPU.sleep; break;
 				case 'N': opt_smsg = !opt_smsg; break;
 				case 'v': ++LOGLEVEL; break;
 				case '-': args = !args; break;
@@ -154,7 +154,7 @@ NO_ARGS:
 
 	//TODO: Read settings here
 
-	CPU.cpuinit;	// vcpu
+	vcpu_init;	// vcpu
 	con_clear;
 	vdos_init;	// vdos + screen
 	con_clear;
@@ -177,7 +177,7 @@ NO_ARGS:
 
 		if (logl) log_info(logl);
 
-		if (opt_sleep == 0)
+		if (CPU.sleep == 0)
 			log_info("MAX_PERF");
 	}
 
@@ -185,7 +185,7 @@ NO_ARGS:
 
 	if (cast(size_t)prog) {
 		vdos_load(prog);
-		CPU.run;
+		vcpu_run;
 		video_update; // ensures last frame is drawn
 	} else shell_start;
 

@@ -8,8 +8,7 @@ module vdos.video;
 version (CRuntime_Glibc)
 	import core.stdc.stdarg : __va_list_tag;
 
-import core.stdc.stdlib : malloc;
-import vcpu.core : MEMORY;
+import vcpu.core : MEM;
 import vdos.os : SYSTEM;
 
 __gshared:
@@ -187,9 +186,9 @@ static assert(videochar.sizeof == 2);
  * Called by vdos_init.
  */
 void video_init() {
-	import core.stdc.string : memset;
-	VIDEO = cast(videochar*)(MEMORY + __VIDEO_ADDRESS);
+	import core.stdc.stdlib : malloc;
 
+	VIDEO = cast(videochar*)(MEM + __VIDEO_ADDRESS);
 	video_clear;
 
 	version (Windows) {

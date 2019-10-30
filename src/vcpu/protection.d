@@ -6,12 +6,13 @@
  */
 module vcpu.protection;
 
-import vcpu.core : MEMORY;
+import vcpu.core : MEM;
 
+__gshared:
 extern (C):
 
 /// Global Descriptor Table pointer to MEMORY
-__gshared SegDesc_t *GDT;
+SegDesc_t *GDT;
 
 //
 // * Protection features
@@ -71,7 +72,7 @@ static assert(SegDesc_t.sizeof == 8);
  */
 pragma(inline, true)
 SegDesc_t *p_segdesc(uint loc) {
-	return cast(SegDesc_t*)(MEMORY + loc);
+	return cast(SegDesc_t*)(MEM + loc);
 }
 
 //
@@ -117,7 +118,7 @@ pragma(inline, true):
  * Returns: 16-bit Task Segment structure pointer from MEMORY
  */
 TaskSeg16_t *p_taskseg16(uint loc) {
-	return cast(TaskSeg16_t*)(MEMORY + loc);
+	return cast(TaskSeg16_t*)(MEM + loc);
 }
 
 /**
@@ -126,5 +127,5 @@ TaskSeg16_t *p_taskseg16(uint loc) {
  * Returns: 32-bit Task Segment structure pointer from MEMORY
  */
 TaskSeg32_t *p_taskseg32(uint loc) {
-	return cast(TaskSeg32_t*)(MEMORY + loc);
+	return cast(TaskSeg32_t*)(MEM + loc);
 }

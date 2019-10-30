@@ -6,7 +6,7 @@ import core.stdc.string : strncmp;
 unittest {
 	section("Utilities");
 
-	CPU.cpuinit;
+	vcpu_init;
 	vdos_init;
 
 	test("mmfstr");

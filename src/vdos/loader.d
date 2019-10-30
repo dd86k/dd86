@@ -94,7 +94,7 @@ int vdos_load(const(char) *path) {
 		}
 
 		fseek(f, cbase, SEEK_SET); // Seek to start of first code segment
-		fread(MEMORY + get_ip, csize, 1, f); // read code segment to MEMORY[CS:IP/EIP]
+		fread(MEM + get_ip, csize, 1, f); // read code segment to MEMORY[CS:IP/EIP]
 
 		// ** Read relocation table and adjust far pointers in memory
 		if (mzh.e_crlc) {
@@ -109,7 +109,7 @@ int vdos_load(const(char) *path) {
 				video_printf("[INFO] Relocation(s): %u\n", mzh.e_crlc);
 
 			const int rs = mzh.e_crlc * mz_reloc_t.sizeof; // table size
-			mz_reloc_t *rp = cast(mz_reloc_t*)(MEMORY + 0x1300); // table pointer
+			mz_reloc_t *rp = cast(mz_reloc_t*)(MEM + 0x1300); // table pointer
 
 			fseek(f, mzh.e_lfarlc, SEEK_SET); // 1.
 			fread(rp, rs, 1, f); // Read whole relocation table
@@ -161,7 +161,7 @@ FILE_COM:
 		CPU.IP = 0x100;
 
 		fseek(f, 0, SEEK_SET);
-		fread(MEMORY + get_ip, fsize - 2, 1, f);
+		fread(MEM + get_ip, fsize - 2, 1, f);
 
 		MakePSP;
 		CPU.AL = 0;
@@ -180,7 +180,7 @@ FILE_COM:
  */
 extern (C) private
 int MakePSP(const(char) *path = NULL_CHAR) { //TODO: Consider passing a structure
-	dos_psp_t *psp = cast(dos_psp_t*)(MEMORY + get_ip - 0x100);
+	dos_psp_t *psp = cast(dos_psp_t*)(MEM + get_ip - 0x100);
 
 	psp.minorversion = MinorVersion;
 	psp.majorversion = MajorVersion;
