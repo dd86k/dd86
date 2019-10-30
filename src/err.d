@@ -89,19 +89,19 @@ uint errno;
  */
 const(char) *err_str() {
 	switch (errno) {
-		//
-		// DOS
-		//
-		case EDOS_SUCCESS:
-			return "success";
-		//
-		// MM
-		//
-		//
-		// Other
-		//
-		default:
-			return "(no description)";
+	//
+	// DOS
+	//
+	case EDOS_SUCCESS:
+		return "success";
+	//
+	// MM
+	//
+	//
+	// Other
+	//
+	default:
+		return "(no description)";
 	}
 }
 

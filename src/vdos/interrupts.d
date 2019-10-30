@@ -16,6 +16,66 @@ import vcpu.mm : mmfstr;
 
 extern (C):
 
+enum : ubyte {
+	// CPU interrupt numbers
+	INT_CPU_DE,	/// #DE: Divide Error Exception
+	INT_CPU_DB,	/// #DB: Debug Exception
+	INT_CPU_NMI,	/// Non-Maskable Interrupt
+	INT_CPU_BP,	/// #BP: Breakpoint Exception
+	INT_CPU_OF,	/// #OF: Overflow Exception
+	INT_CPU_BR,	/// #BR: Bound Range Exception
+	INT_CPU_UD,	/// #UD: Invalid Opcode
+	INT_CPU_NM,	/// #NM: Device Not Available Exception
+	INT_CPU_DF,	/// #DF: Double Fault Exception
+	INT_CPU_CPSO,	/// Co-processor Segment Overrun
+	INT_CPU_TS,	/// #TS: Invalid TSS Exception
+	INT_CPU_NP,	/// #NP: Missing Segment
+	INT_CPU_SS,	/// #SS: Stack Fault
+	INT_CPU_GP,	/// #GP: General Protection Exception
+	INT_CPU_PF,	/// #PF: Page Fault
+
+	// IBM interrupt numbers
+	INT_M_PRINT_SCRN = INT_CPU_BR,	/// IBM: Print Screen
+	INT_M_IRQ0 = INT_CPU_DF,	/// IBM: IRQ0 System Timer
+	INT_M_IRQ1 = INT_CPU_CPSO,	/// IBM: IRQ1 Keyboard Event
+	INT_M_IRQ3 = INT_CPU_NP,	/// IBM: IRQ3 Serial Comms (COM0)
+	INT_M_IRQ4 = INT_CPU_SS,	/// IBM: IRQ4 Serial Comms (COM1)
+	INT_M_IRQ5 = INT_CPU_GP,	/// IBM: IRQ5 Disk Interface
+	INT_M_IRQ6 = INT_CPU_PF,	/// IBM: IRQ6 Diskette Interface
+	INT_M_IRQ7 = 0x0F,	/// IBM: IRQ6 Printer Interface
+
+	// BIOS
+	INT_BIOS_VIDEO = 0x10,
+	INT_BIOS_EQUIP_CHECK,
+	INT_BIOS_MEMSIZE,
+	INT_BIOS_DISK,
+	INT_BIOS_COM,
+	INT_BIOS_KB,
+	INT_BIOS_PRINTER,
+	INT_BIOS_BOOTSTRAP = 0x19,
+	INT_BIOS_SYSTIME,
+	INT_BIOS_CTRL_ALT_DEL,
+	INT_BIOS_TIMER_TICK,
+	INT_BIOS_VIDEO_PARAMS,
+	INT_BIOS_DISKETTE_PARAMS,
+	INT_BIOS_VIDEO_CHARS,
+	INT_BIOS_DISK_PARAMS = 0x41
+
+	// DOS
+	INT_DOS_TERMINATE = 0x20,
+	INT_DOS_SERVICE,	/// MS-DOS Service
+	INT_DOS_TERMINATION_ADDRESS,
+	INT_DOS_CTRL_C_BREAK,
+	INT_DOS_CRIT_ERR,
+	INT_DOS_ABS_DISK_READ,
+	INT_DOS_ABS_DISK_WRITE,
+	INT_DOS_TSR,	/// Terminate and Stay Resident
+	INT_DOS_IDLE,	/// Idle interrupt
+	INT_DOS_CON_OUT,	/// "Fast" console output
+	INT_DOS_COMM = 0x2E,	/// Pass command to command interpreter
+	INT_DOS_MULTIPLEX,	/// DOS Multiplex Interrupt
+}
+
 void __int_enter() { // REAL-MODE
 	//const inum = code << 2;
 	/*IF (inum + 3 > IDT limit)
