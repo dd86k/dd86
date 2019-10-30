@@ -6,26 +6,26 @@ import vdos.os, vdos.interrupts;
 unittest {
 	section("DOS (MS-DOS, IBM PC)");
 
-	/*
-	 * Hardware (and/or BIOS)
-	 */
+	//
+	// Hardware (and/or BIOS)
+	//
 
 	// MEMORY SIZE
 
 	test("INT 12h");
 	INT(0x12);
 	assert(SYSTEM.memsize == CPU.AX);
-	writeln("OK  (", CPU.AX, " KB)");
+	writeln(CPU.AX, " KB");
 
 	test("INT 1Ah  AH=00h");
 	CPU.AH = 0;
 	INT(0x1A);
-	writefln("assuming OK (CS=%04X DX=%04X:  %u)",
+	writefln("CS=%04X DX=%04X: %u",
 		CPU.CS, CPU.DX, (CPU.CS << 16) | CPU.DX);
 
-	/*
-	 * MS-DOS Services
-	 */
+	//
+	// MS-DOS Services
+	//
 
 	// GET DATE
 

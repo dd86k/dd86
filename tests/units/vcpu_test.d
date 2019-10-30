@@ -7,16 +7,14 @@ unittest {
 	CPU.CS = 0;
 	CPU.EIP = get_ip;
 
-	section("Interpreter Utilities (vcpu.utils.d)");
+	section("Interpreter Utilities (vcpu_utils.d)");
 
-	test("mmiu8");
+	test("mm: insert");
 	mmiu8(0xFF, CPU.EIP);
 	assert(MEM[CPU.EIP]     == 0xFF);
 	mmiu8(0x12, CPU.EIP + 2);
 	assert(MEM[CPU.EIP + 2] == 0x12);
-	OK;
 
-	test("mmiu16");
 	mmiu16(0x100, CPU.EIP);
 	assert(MEM[CPU.EIP]     == 0);
 	assert(MEM[CPU.EIP + 1] == 1);
@@ -26,80 +24,44 @@ unittest {
 	mmiu16(0x5678, 4);
 	assert(MEM[4] == 0x78);
 	assert(MEM[5] == 0x56);
-	OK;
 
-	test("mmiu32");
 	mmiu32(0xAABBCCFF, CPU.EIP);
 	assert(MEM[CPU.EIP    ] == 0xFF);
 	assert(MEM[CPU.EIP + 1] == 0xCC);
 	assert(MEM[CPU.EIP + 2] == 0xBB);
 	assert(MEM[CPU.EIP + 3] == 0xAA);
-	OK;
 
-	mmiu8(0xAC, CPU.EIP + 1);
-
-	test("mmfu8");
-	assert(mmfu8(CPU.EIP + 1) == 0xAC);
-	OK;
-
-	test("mmfu8_i");
-	assert(mmfu8_i == 0xAC);
-	OK;
-
-	test("mmfi8");
-	assert(mmfi8(CPU.EIP + 1) == cast(byte)0xAC);
-	OK;
-
-	test("mmfi8_i");
-	assert(mmfi8_i == cast(byte)0xAC);
-	OK;
-
-	mmiu16(0xAAFF, CPU.EIP + 1);
-
-	test("mmfu16");
-	assert(mmfu16(CPU.EIP + 1) == 0xAAFF);
-	OK;
-
-	test("mmfi16");
-	assert(mmfi16(CPU.EIP + 1) == cast(short)0xAAFF);
-	OK;
-
-	test("mmfu16_i");
-	assert(mmfu16_i == 0xAAFF);
-	OK;
-
-	test("mmfi16_i");
-	assert(mmfi16_i == cast(short)0xAAFF);
-	OK;
-
-	test("mmfu32");
-	mmiu32(0xDCBA_FF00, CPU.EIP + 1);
-	assert(mmfu32(CPU.EIP + 1) == 0xDCBA_FF00);
-	OK;
-
-	/*test("__fu32_i");
-	assert(__fu32_i == 0xDCBA_FF00);
-	OK;*/
-
-	test("mmistr");
 	mmistr("AB$");
 	assert(MEM[CPU.EIP .. CPU.EIP + 3] == "AB$");
 	mmistr("QWERTY", CPU.EIP + 10);
 	assert(MEM[CPU.EIP + 10 .. CPU.EIP + 16] == "QWERTY");
-	OK;
 
-	test("mmiwstr");
 	mmiwstr("Hi!!"w);
 	assert(MEM[CPU.EIP     .. CPU.EIP + 1] == "H"w);
 	assert(MEM[CPU.EIP + 2 .. CPU.EIP + 3] == "i"w);
 	assert(MEM[CPU.EIP + 4 .. CPU.EIP + 5] == "!"w);
 	assert(MEM[CPU.EIP + 6 .. CPU.EIP + 7] == "!"w);
-	OK;
 
-	test("mmiarr");
 	ubyte[2] ar = [ 0xAA, 0xBB ];
 	mmiarr(cast(ubyte*)ar, 2, CPU.EIP);
 	assert(MEM[CPU.EIP .. CPU.EIP + 2] == [ 0xAA, 0xBB ]);
+	OK;
+
+	test("mm: fetch");
+	mmiu8(0xAC, CPU.EIP + 1);
+	assert(mmfu8(CPU.EIP + 1) == 0xAC);
+	assert(mmfu8_i == 0xAC);
+	assert(mmfi8(CPU.EIP + 1) == cast(byte)0xAC);
+	assert(mmfi8_i == cast(byte)0xAC);
+
+	mmiu16(0xAAFF, CPU.EIP + 1);
+	assert(mmfu16(CPU.EIP + 1) == 0xAAFF);
+	assert(mmfi16(CPU.EIP + 1) == cast(short)0xAAFF);
+	assert(mmfu16_i == 0xAAFF);
+	assert(mmfi16_i == cast(short)0xAAFF);
+	mmiu32(0xDCBA_FF00, CPU.EIP + 1);
+	assert(mmfu32(CPU.EIP + 1) == 0xDCBA_FF00);
+//	assert(__fu32_i == 0xDCBA_FF00);
 	OK;
 
 	test("Registers");
