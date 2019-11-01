@@ -6,13 +6,15 @@
 module vdos.interrupts;
 
 import ddc;
-import vcpu.core, vdos.os, err;
+import vcpu.core;
 import vcpu.utils : address;
-import vdos.loader : vdos_load;
-import vdos.structs : CURSOR;
+import vdos.os;
+import vdos.loader;
+import vdos.structs;
 import vdos.video;
-import os.io : OSTime, os_time, OSDate, os_date, os_pexist;
 import vcpu.mm : mmfstr;
+import os.io : OSTime, os_time, OSDate, os_date, os_pexist;
+import err;
 
 extern (C):
 
@@ -59,7 +61,7 @@ enum : ubyte {
 	INT_BIOS_VIDEO_PARAMS,
 	INT_BIOS_DISKETTE_PARAMS,
 	INT_BIOS_VIDEO_CHARS,
-	INT_BIOS_DISK_PARAMS = 0x41
+	INT_BIOS_DISK_PARAMS = 0x41,
 
 	// DOS
 	INT_DOS_TERMINATE = 0x20,
@@ -83,9 +85,9 @@ void __int_enter() { // REAL-MODE
 	IF stack not large enough for a 6-byte return information
 		#SS*/
 	CPU.push16(CPU.FLAGS);
-	CPU.IF = CPU.TF = 0;
 	CPU.push16(CPU.CS);
 	CPU.push16(CPU.IP);
+	CPU.IF = CPU.TF = CPU.RF = 0;
 	//CS ← IDT[inum].selector;
 	//IP ← IDT[inum].offset;
 }
@@ -93,8 +95,8 @@ void __int_enter() { // REAL-MODE
 void __int_exit() { // REAL-MODE
 	CPU.IP = CPU.pop16;
 	CPU.CS = CPU.pop16;
-	CPU.IF = CPU.TF = 1;
 	CPU.FLAGS = CPU.pop16;
+	CPU.IF = CPU.TF = CPU.RF = 1;
 }
 
 /// Raise and handle interrupt. This includes pre and post phases for interrupt

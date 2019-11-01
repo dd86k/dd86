@@ -13,7 +13,7 @@ Current phase
 **********
 
 - CPU
-8086      [|||||||||||||       ] 65%  Most of it works fine
+8086      [||||||||||||||      ] 70%  Most of it works fine
 80486     [|                   ] 5%   Just started on it
 
 - VIDEO

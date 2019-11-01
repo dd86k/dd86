@@ -102,11 +102,9 @@ struct CURSOR { align(1):
 /// IVT entry
 struct __ivt { align(1):
 	union {
-		uint value;
 		alias value this;
-		struct {
-			ushort offset, segment;
-		}
+		uint value;
+		struct { ushort offset, segment; }
 	}
 }
 static assert(__ivt.sizeof == 4, "IVT.sizeof != 4");

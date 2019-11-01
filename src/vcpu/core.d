@@ -187,8 +187,7 @@ struct CPU_t {
 		//TODO: CR3
 	}
 
-	// EFLAGS
-	align(FLAG_ALIGNMENT) ubyte
+	align(FLAG_ALIGNMENT) ubyte // EFLAGS
 	CF,	/// Bit  0, Carry Flag
 	PF,	/// Bit  2, Parity Flag
 	AF,	/// Bit  4, Auxiliary Flag (aka Half-carry Flag, Adjust Flag)
@@ -318,6 +317,7 @@ struct CPU_t {
 		FLAGS = cast(ushort)flag;
 	}
 }
+pragma(msg, "CPU_t.sizeof = ", CPU_t.sizeof, " bytes");
 
 /// Machine int "type" with type aliases to avoid using explicit pointer use.
 struct __mi32 { align(1):
@@ -628,9 +628,6 @@ void vcpu_init(ref CPU_t cpu = CPU) {
 /// Start the emulator at CS:IP (default: FFFF:0000h)
 /// Params: cpu = CPU reference (default: global CPU structure)
 void vcpu_run(ref CPU_t cpu = CPU) {
-	//swatch_t watch = void;
-	//watch.initw;
-
 	while (CPU.level > 0) {
 		cpu.EIP = get_ip;
 		const ubyte op = MEM[cpu.EIP];

@@ -29,18 +29,6 @@ void cpuf8_1(int r) {
 }
 
 /**
- * Handle result for BYTE
- * Affected: SF, ZF, PF
- * Undefined: OF, CF, AF
- * Params: r = Input number
- */
-void cpuf8_5(int r) {
-	ZF16(r);
-	SF8(r);
-	PF8(r);
-}
-
-/**
  * Handle result for GROUP2 (UNSIGNED BYTE)
  * Affected: OF, SF, ZF, AF, PF
  * Undefined: CF undefined
@@ -77,6 +65,18 @@ void cpuf8_3(int r) {
 void cpuf8_4(int r) {
 	OF8(r);
 	CF8(r);
+}
+
+/**
+ * Handle result for BYTE
+ * Affected: SF, ZF, PF
+ * Undefined: OF, CF, AF
+ * Params: r = Input number
+ */
+void cpuf8_5(int r) {
+	ZF16(r);
+	SF8(r);
+	PF8(r);
 }
 
 /**

@@ -2241,93 +2241,114 @@ void v16_F5() {	// F5h CMC
 
 void v16_F6() {	// F6h GRP3 R/M8, IMM8
 	const ubyte rm = mmfu8_i;
-	const ubyte im = mmfu8_i(1);
 	const int addr = mmrm16(rm);
+	const ubyte v = mmfu8(addr);
 	int r = void;
+	int ip = void;
 	switch (rm & RM_REG) {
 	case RM_REG_000: // 000 - TEST
-		cpuf8_1(im & mmfu8(addr)); break;
+		cpuf8_3(v & mmfu8_i(1));
+		ip = 3;
+		break;
 	case RM_REG_010: // 010 - NOT
-		mmiu8(~mmfu8(addr), addr); break;
+		CPU.CF = v != 0;
+		mmiu8(~v, addr);
+		ip = 2;
+		break;
 	case RM_REG_011: // 011 - NEG
-		import core.stdc.stdio : printf;
-		r = cast(ubyte)-mmfi8(addr);
-		cpuf8_1(r);
-		CPU.CF = cast(ubyte)r;
+		CPU.CF = v != 0;
+		r = cast(ubyte)-v;
+		OF8(r); SF8(r); ZF16(r); PF8(r);
 		mmiu8(r, addr);
+		ip = 2;
 		break;
 	case RM_REG_100: // 100 - MUL
-		r = im * mmfu8(addr);
-		cpuf8_4(r);
-		mmiu8(r, addr);
+		CPU.AX = cast(ushort)(CPU.AL * v);
+		CPU.CF = CPU.OF = CPU.AH;
+		ip = 2;
 		break;
 	case RM_REG_101: // 101 - IMUL
-		r = cast(ubyte)(cast(byte)im * mmfi8(addr));
-		cpuf8_4(r);
-		mmiu8(r, addr);
+		CPU.AX = cast(ushort)(CPU.AL * cast(byte)v);
+		CPU.CF = CPU.OF = CPU.AH;
+		ip = 2;
 		break;
 	case RM_REG_110: // 110 - DIV
-		if (im == 0) INT(0);
-		const ubyte d = mmfu8(addr);
-		r = CPU.AX / d;
-		CPU.AH = cast(ubyte)(CPU.AX % d);
-		CPU.AL = cast(ubyte)(r);
+		if (v == 0) INT(0);
+		CPU.AL = cast(ubyte)(CPU.AL / v);
+		CPU.AH = cast(ubyte)(CPU.AL % v);
+		ip = 2;
 		break;
 	case RM_REG_111: // 111 - IDIV
-		if (im == 0) INT(0);
-		const byte d = mmfi8(addr);
-		r = cast(short)CPU.AX / d;
-		CPU.AH = cast(ubyte)(cast(short)CPU.AX % d);
-		CPU.AL = cast(ubyte)r;
+		if (v == 0) INT(0);
+		CPU.AL = cast(ubyte)(CPU.AX / cast(byte)v);
+		CPU.AH = cast(ubyte)(CPU.AX % cast(byte)v);
+		ip = 2;
 		break;
 	default:
 		log_info("Invalid ModR/M on GRP3_8");
 		v16_illegal;
 	}
-	CPU.EIP += 3;
+	CPU.EIP += ip;
 }
 
 void v16_F7() {	// F7h GRP3 R/M16, IMM16
-	const ubyte rm = mmfu8_i; // Get ModR/M byte
-	ushort im = mmfu16_i(1);
-	int addr = mmrm16(rm, 1);
+	const ubyte rm = mmfu8_i;
+	const int addr = mmrm16(rm, 1);
+	const ushort v = mmfu16(addr);
 	int r = void;
+	int ip = void;
 	switch (rm & RM_REG) {
 	case RM_REG_000: // 000 - TEST
-		cpuf16_1(im & mmfu16(addr)); break;
+		cpuf16_3(v & mmfu16_i(1));
+		ip = 4;
+		break;
 	case RM_REG_010: // 010 - NOT
-		mmiu16(~im, addr); break;
+		CPU.CF = v != 0;
+		mmiu16(~v, addr);
+		ip = 2;
+		break;
 	case RM_REG_011: // 011 - NEG
-		r = -mmfi16(addr);
-		cpuf16_1(r);
-		CPU.CF = cast(ubyte)r;
+		CPU.CF = v != 0;
+		r = cast(ubyte)-v;
+		OF16(r); SF16(r); ZF16(r); PF16(r);
 		mmiu16(r, addr);
+		ip = 2;
 		break;
 	case RM_REG_100: // 100 - MUL
-		r = im * mmfu16(addr);
-		cpuf16_4(r);
-		mmiu16(r, addr);
+		__mi32 d = cast(__mi32)(CPU.AX * v);
+		CPU.DX = d.u16[1];
+		CPU.AX = d.u16[0];
+		CPU.CF = CPU.OF = CPU.DX != 0;
+		ip = 2;
 		break;
 	case RM_REG_101: // 101 - IMUL
-		r = im * mmfi16(addr);
-		cpuf16_4(r);
-		mmiu16(r, addr);
+		__mi32 d = cast(__mi32)(CPU.AX * cast(short)v);
+		CPU.DX = d.u16[1];
+		CPU.AX = d.u16[0];
+		CPU.CF = CPU.OF = CPU.DX != 0;
+		ip = 2;
 		break;
 	case RM_REG_110: // 110 - DIV
-		r = im / mmfu16(addr);
-		cpuf16_4(r);
-		mmiu16(r, addr);
+		if (v == 0) INT(0);
+		__mi32 d = void;
+		d.u16[1] = CPU.DX; d.u16[0] = CPU.AX;
+		CPU.AX = cast(ushort)(d / v);
+		CPU.DX = cast(ushort)(d % v);
+		ip = 2;
 		break;
 	case RM_REG_111: // 111 - IDIV
-		r = im / mmfi16(addr);
-		cpuf16_4(r);
-		mmiu16(r, addr);
+		if (v == 0) INT(0);
+		__mi32 d = void;
+		d.u16[1] = CPU.DX; d.u16[0] = CPU.AX;
+		CPU.AX = cast(ushort)(d / cast(short)v);
+		CPU.DX = cast(ushort)(d % cast(short)v);
+		ip = 2;
 		break;
 	default:
 		log_info("Invalid ModR/M on GRP3_8");
 		v16_illegal;
 	}
-	CPU.EIP += 4;
+	CPU.EIP += ip;
 }
 
 void v16_F8() {	// F8h CLC

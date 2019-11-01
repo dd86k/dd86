@@ -1971,6 +1971,9 @@ unittest {
 	test("F5h  CMC"); exec16(0xF5); assert(CPU.CF); OK;
 
 	// Group 3, 8-bit
+	
+	CPU.EIP = 0x300;
+	CPU.CS = 0x100;
 
 	test("F6h  GRP3 TEST");
 	CPU.AL = 130;
@@ -1995,36 +1998,40 @@ unittest {
 	assert(CPU.OF == 0);
 	OK;
 	test("F6h  GRP3 MUL");
-	mmiu8(0b11_100_000, CPU.EIP + 1);
-	mmiu8(2, CPU.EIP + 2);
-	mmiu8(4, CPU.AL);
+	CPU.BX = 0x400;
+	CPU.AL = 4;
+	mmiu8(0b00_100_111, CPU.EIP + 1);
+	mmiu8(4, CPU.BX);
 	exec16(0xF6);
-	assert(mmfu8(CPU.AL) == 8);
-	assert(CPU.ZF == 0);
+	assert(CPU.AX == 16);
+	assert(CPU.CF == 0);
+	assert(CPU.OF == 0);
 	OK;
 	test("F6h  GRP3 IMUL");
-	mmiu8(0b11_101_000, CPU.EIP + 1);
-	mmiu8(-2, CPU.EIP + 2);
-	mmiu8(4, CPU.AL);
+	CPU.BX = 0x400;
+	CPU.AL = 4;
+	mmiu8(0b00_101_111, CPU.EIP + 1);
+	mmiu8(0xFC, CPU.BX); // -4
 	exec16(0xF6);
-	assert(mmfu8(CPU.AL) == 0xF8); // -8 as BYTE
-	assert(CPU.ZF == 0);
+	assert(CPU.AX == 0xFFF0);
+	assert(CPU.CF);
+	assert(CPU.OF);
 	OK;
 	test("F6h  GRP3 DIV");
-	CPU.AX = 12;
-	mmiu8(0b11_110_000, CPU.EIP + 1);
-	mmiu8(8, CPU.AL);
+	CPU.AL = 8;
+	mmiu8(0b00_110_111, CPU.EIP + 1);
+	mmiu8(2, CPU.BX);
 	exec16(0xF6);
-	assert(CPU.AL == 1);
-	assert(CPU.AH == 4);
+	assert(CPU.AL == 4);
+	assert(CPU.AH == 0);
 	OK;
 	test("F6h  GRP3 IDIV");
-	CPU.AX = 0xFFF4; // -12
-	mmiu8(0b11_111_000, CPU.EIP + 1);
-	mmiu8(8, CPU.AL);
+	CPU.AL = 8;
+	mmiu8(0b00_111_111, CPU.EIP + 1);
+	mmiu8(0xFE, CPU.BX); // -2
 	exec16(0xF6);
-	assert(CPU.AL == 0xFF);
-	assert(CPU.AH == 0xFC);
+	assert(CPU.AL == 0xFC); // -4
+	assert(CPU.AH == 0);
 	OK;
 
 	// Group 3, 16-bit
