@@ -1961,11 +1961,29 @@ unittest {
 
 	// JMP
 
-	test("E9h  JMP (NEAR)"); TODO;
+	test("E9h  JMP (NEAR)");
+	CPU.IP = 0x200;
+	mmiu16(0x10, CPU.EIP + 1);
+	exec16(0xE9);
+	assert(CPU.IP == 0x213);
+	OK;
 
-	test("EAh  JMP (FAR)"); TODO;
+	test("EAh  JMP (FAR)");
+	CPU.CS = 0x200;
+	CPU.IP = 0x200;
+	mmiu16(0x300, CPU.EIP + 1);
+	mmiu16(0x400, CPU.EIP + 3);
+	exec16(0xEA);
+	assert(CPU.IP == 0x300);
+	assert(CPU.CS == 0x400);
+	OK;
 
-	test("EBh  JMP (SHORT)"); TODO;
+	test("EBh  JMP (SHORT)");
+	CPU.IP = 0x100;
+	mmiu8(0x20, CPU.EIP + 1);
+	exec16(0xEB);
+	assert(CPU.IP == 0x122);
+	OK;
 
 	// LOCK
 

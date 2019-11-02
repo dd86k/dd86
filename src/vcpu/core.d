@@ -317,7 +317,6 @@ struct CPU_t {
 		FLAGS = cast(ushort)flag;
 	}
 }
-pragma(msg, "CPU_t.sizeof = ", CPU_t.sizeof, " bytes");
 
 /// Machine int "type" with type aliases to avoid using explicit pointer use.
 struct __mi32 { align(1):
