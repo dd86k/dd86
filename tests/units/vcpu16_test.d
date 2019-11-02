@@ -542,7 +542,12 @@ unittest {
 
 	// DAS
 
-	test("2Fh  DAS"); TODO;
+	test("2Fh  DAS");
+	CPU.AL = 0xEE; CPU.BL = 0x47;
+	exec16(0x2F);
+	assert(CPU.AL == 0x88);
+	assert(CPU.BL == 0x47);
+	OK;
 
 	// XOR
 
@@ -1908,11 +1913,24 @@ unittest {
 
 	// AAM
 
-	test("D4h  AAM"); TODO;
+	test("D4h  AAM");
+	CPU.AL = 55;
+	mmiu8(10, CPU.EIP + 1);
+	exec16(0xD4);
+	assert(CPU.AH == 5);
+	assert(CPU.AL == 5);
+	OK;
 
 	// AAD
 
-	test("D5h  AAD"); TODO;
+	test("D5h  AAD");
+	CPU.AL = 0x55;
+	CPU.AH = 0xAA;
+	mmiu8(10, CPU.EIP + 1);
+	exec16(0xD5);
+	assert(CPU.AH == 0);
+	assert(CPU.AL == 0xF9);
+	OK;
 
 	// XLAT SOURCE-TABLE
 

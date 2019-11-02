@@ -2056,19 +2056,20 @@ void v16_D3() {	// D3h GRP2 R/M16, CL
 }
 
 void v16_D4() {	// D4h AAM
-	const int r = CPU.AL % 0xA;
-	cpuf8_5(r);
-	CPU.AL = cast(ubyte)r;
-	CPU.AH = cast(ubyte)(r / 0xA);
-	++CPU.EIP;
+	const ubyte v = mmfu8_i;
+	CPU.AH = cast(ubyte)(CPU.AL / v);
+	CPU.AL = cast(ubyte)(CPU.AL % v);
+	cpuf8_5(CPU.AL);
+	CPU.EIP += 2;
 }
 
 void v16_D5() {	// D5h AAD
-	const int r = CPU.AL + (CPU.AH * 0xA);
+	const ubyte v = mmfu8_i;
+	const int r = CPU.AL + (CPU.AH * v);
 	cpuf8_5(r);
 	CPU.AL = cast(ubyte)r;
 	CPU.AH = 0;
-	++CPU.EIP;
+	CPU.EIP += 2;
 }
 
 void v16_D7() {	// D7h XLAT SOURCE-TABLE
