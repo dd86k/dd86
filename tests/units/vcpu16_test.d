@@ -1862,9 +1862,7 @@ unittest {
 	// INT
 
 	test("CCh  INT 3"); TODO;
-
 	test("CDh  INT IMM8"); TODO;
-
 	test("CEh  INTO"); TODO;
 
 	// IRET
@@ -1873,8 +1871,20 @@ unittest {
 
 	// Group 2, R/M8, 1
 
-	test("D0h  GRP2 ROL R/M8, 1"); TODO;
-	test("D0h  GRP2 ROR R/M8, 1"); TODO;
+	test("D0h  GRP2 ROL R/M8, 1");
+	CPU.AL = 0x40;
+	mmiu8(0b11_000_000, CPU.EIP + 1);
+	mmiu8(0b1111_0000, CPU.AL);
+	exec16(0xD0);
+	assert(mmfu8(CPU.AL) == 0b1110_0001);
+	OK;
+	test("D0h  GRP2 ROR R/M8, 1");
+	CPU.AL = 0x40;
+	mmiu8(0b11_001_000, CPU.EIP + 1);
+	mmiu8(0b0000_1111, CPU.AL);
+	exec16(0xD0);
+	assert(mmfu8(CPU.AL) == 0b1000_0111);
+	OK;
 	test("D0h  GRP2 RCL R/M8, 1"); TODO;
 	test("D0h  GRP2 RCR R/M8, 1"); TODO;
 	test("D0h  GRP2 SAL/SHL R/M8, 1"); TODO;
@@ -1883,8 +1893,20 @@ unittest {
 
 	// Group 2, R/M16, 1
 
-	test("D1h  GRP2 ROL R/M16, 1"); TODO;
-	test("D1h  GRP2 ROR R/M16, 1"); TODO;
+	test("D1h  GRP2 ROL R/M16, 1");
+	CPU.AX = 0x400;
+	mmiu8(0b11_000_000, CPU.EIP + 1);
+	mmiu16(0x8000, CPU.AX);
+	exec16(0xD1);
+	assert(mmfu16(CPU.AX) == 1);
+	OK;
+	test("D1h  GRP2 ROR R/M16, 1");
+	CPU.AX = 0x400;
+	mmiu8(0b11_001_000, CPU.EIP + 1);
+	mmiu16(1, CPU.AX);
+	exec16(0xD1);
+	assert(mmfu16(CPU.AX) == 0x8000);
+	OK;
 	test("D1h  GRP2 RCL R/M16, 1"); TODO;
 	test("D1h  GRP2 RCR R/M16, 1"); TODO;
 	test("D1h  GRP2 SAL/SHL R/M16, 1"); TODO;
@@ -1946,9 +1968,7 @@ unittest {
 	// LOOP
 
 	test("E0h  LOOPNE/LOOPNZ"); TODO;
-
 	test("E1h  LOOPE/LOOPZ"); TODO;
-
 	test("E2h  LOOP"); TODO;
 
 	// JCXZ

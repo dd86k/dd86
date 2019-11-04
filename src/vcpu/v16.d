@@ -2021,7 +2021,7 @@ void v16_D3() {	// D3h GRP2 R/M16, CL
 	CPU.EIP += 2;
 	if (c == 0) return; // NOP IF COUNT = 0
 
-	const int addr = mmrm16(rm);
+	const int addr = mmrm16(rm, 1);
 	__mi32 r = cast(__mi32)mmfu16(addr);
 
 	switch (rm & RM_REG) {
