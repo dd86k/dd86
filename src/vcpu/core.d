@@ -6,7 +6,7 @@
 module vcpu.core;
 
 import logger : log_info;
-import vcpu.v16, vcpu.v32, vcpu.mm, vcpu.utils;
+import vcpu.exec, vcpu.mm, vcpu.utils;
 import config : INIT_MEM, FLAG_ALIGNMENT;
 
 extern (C):
@@ -322,9 +322,12 @@ struct CPU_t {
 struct __mi32 { align(1):
 	alias i32 this;
 	union {
-		uint u32 = void; int i32 = void;
-		ushort[2] u16 = void; short[2] i16 = void;
-		ubyte[4] u8 = void; byte[4] i8 = void;
+		uint u32;
+		int  i32;
+		ushort[2] u16;
+		short[2]  i16;
+		ubyte[4]  u8;
+		byte[4]   i8;
 	}
 }
 
@@ -333,14 +336,11 @@ public CPU_t CPU = void;
 ubyte *MEM = void; /// Memory bank
 int MEMSIZE = INIT_MEM; /// Memory size
 
-/// CPU Mode function table
-void function(ubyte) [4]MODE_MAP;
-/// Real-mode instructions function table
-void function() [256]REAL_MAP;
-/// Protected-mode instructions function table
-void function() [256]PROT_MAP;
+/// Instructions function table
+void function() [256]OPMAP;
 
 /// Initiate virtual CPU
+/// Params: cpu = CPU_t structure
 void vcpu_init(ref CPU_t cpu = CPU) {
 	import core.stdc.stdlib : realloc;
 	MEM = cast(ubyte*)realloc(MEM, INIT_MEM); // in case of re-init
@@ -348,279 +348,276 @@ void vcpu_init(ref CPU_t cpu = CPU) {
 
 	push16 = cpu.Model == CPU_8086 ? &push16a : &push16b;
 
-	MODE_MAP[CPU_MODE_REAL] = &exec16;
-	REAL_MAP[0x00] = &v16_00;
-	REAL_MAP[0x01] = &v16_01;
-	REAL_MAP[0x02] = &v16_02;
-	REAL_MAP[0x03] = &v16_03;
-	REAL_MAP[0x04] = &v16_04;
-	REAL_MAP[0x05] = &v16_05;
-	REAL_MAP[0x06] = &v16_06;
-	REAL_MAP[0x07] = &v16_07;
-	REAL_MAP[0x08] = &v16_08;
-	REAL_MAP[0x09] = &v16_09;
-	REAL_MAP[0x0A] = &v16_0A;
-	REAL_MAP[0x0B] = &v16_0B;
-	REAL_MAP[0x0C] = &v16_0C;
-	REAL_MAP[0x0D] = &v16_0D;
-	REAL_MAP[0x0E] = &v16_0E;
-	REAL_MAP[0x0F] = &v16_illegal;
-	REAL_MAP[0x10] = &v16_10;
-	REAL_MAP[0x11] = &v16_11;
-	REAL_MAP[0x12] = &v16_12;
-	REAL_MAP[0x13] = &v16_13;
-	REAL_MAP[0x14] = &v16_14;
-	REAL_MAP[0x15] = &v16_15;
-	REAL_MAP[0x16] = &v16_16;
-	REAL_MAP[0x17] = &v16_17;
-	REAL_MAP[0x18] = &v16_18;
-	REAL_MAP[0x19] = &v16_19;
-	REAL_MAP[0x1A] = &v16_1A;
-	REAL_MAP[0x1B] = &v16_1B;
-	REAL_MAP[0x1C] = &v16_1C;
-	REAL_MAP[0x1D] = &v16_1D;
-	REAL_MAP[0x1E] = &v16_1E;
-	REAL_MAP[0x1F] = &v16_1F;
-	REAL_MAP[0x20] = &v16_20;
-	REAL_MAP[0x21] = &v16_21;
-	REAL_MAP[0x22] = &v16_22;
-	REAL_MAP[0x23] = &v16_23;
-	REAL_MAP[0x24] = &v16_24;
-	REAL_MAP[0x25] = &v16_25;
-	REAL_MAP[0x26] = &v16_26;
-	REAL_MAP[0x27] = &v16_27;
-	REAL_MAP[0x28] = &v16_28;
-	REAL_MAP[0x29] = &v16_29;
-	REAL_MAP[0x2A] = &v16_2A;
-	REAL_MAP[0x2B] = &v16_2B;
-	REAL_MAP[0x2C] = &v16_2C;
-	REAL_MAP[0x2D] = &v16_2D;
-	REAL_MAP[0x2E] = &v16_2E;
-	REAL_MAP[0x2F] = &v16_2F;
-	REAL_MAP[0x30] = &v16_30;
-	REAL_MAP[0x31] = &v16_31;
-	REAL_MAP[0x32] = &v16_32;
-	REAL_MAP[0x33] = &v16_33;
-	REAL_MAP[0x34] = &v16_34;
-	REAL_MAP[0x35] = &v16_35;
-	REAL_MAP[0x36] = &v16_36;
-	REAL_MAP[0x37] = &v16_37;
-	REAL_MAP[0x38] = &v16_38;
-	REAL_MAP[0x39] = &v16_39;
-	REAL_MAP[0x3A] = &v16_3A;
-	REAL_MAP[0x3B] = &v16_3B;
-	REAL_MAP[0x3C] = &v16_3C;
-	REAL_MAP[0x3D] = &v16_3D;
-	REAL_MAP[0x3E] = &v16_3E;
-	REAL_MAP[0x3F] = &v16_3F;
-	REAL_MAP[0x40] = &v16_40;
-	REAL_MAP[0x41] = &v16_41;
-	REAL_MAP[0x42] = &v16_42;
-	REAL_MAP[0x43] = &v16_43;
-	REAL_MAP[0x44] = &v16_44;
-	REAL_MAP[0x45] = &v16_45;
-	REAL_MAP[0x46] = &v16_46;
-	REAL_MAP[0x47] = &v16_47;
-	REAL_MAP[0x48] = &v16_48;
-	REAL_MAP[0x49] = &v16_49;
-	REAL_MAP[0x4A] = &v16_4A;
-	REAL_MAP[0x4B] = &v16_4B;
-	REAL_MAP[0x4C] = &v16_4C;
-	REAL_MAP[0x4D] = &v16_4D;
-	REAL_MAP[0x4E] = &v16_4E;
-	REAL_MAP[0x4F] = &v16_4F;
-	REAL_MAP[0x50] = &v16_50;
-	REAL_MAP[0x51] = &v16_51;
-	REAL_MAP[0x52] = &v16_52;
-	REAL_MAP[0x53] = &v16_53;
-	REAL_MAP[0x54] = &v16_54;
-	REAL_MAP[0x55] = &v16_55;
-	REAL_MAP[0x56] = &v16_56;
-	REAL_MAP[0x57] = &v16_57;
-	REAL_MAP[0x58] = &v16_58;
-	REAL_MAP[0x59] = &v16_59;
-	REAL_MAP[0x5A] = &v16_5A;
-	REAL_MAP[0x5B] = &v16_5B;
-	REAL_MAP[0x5C] = &v16_5C;
-	REAL_MAP[0x5D] = &v16_5D;
-	REAL_MAP[0x5E] = &v16_5E;
-	REAL_MAP[0x5F] = &v16_5F;
-	REAL_MAP[0x70] = &v16_70;
-	REAL_MAP[0x71] = &v16_71;
-	REAL_MAP[0x72] = &v16_72;
-	REAL_MAP[0x73] = &v16_73;
-	REAL_MAP[0x74] = &v16_74;
-	REAL_MAP[0x75] = &v16_75;
-	REAL_MAP[0x76] = &v16_76;
-	REAL_MAP[0x77] = &v16_77;
-	REAL_MAP[0x78] = &v16_78;
-	REAL_MAP[0x79] = &v16_79;
-	REAL_MAP[0x7A] = &v16_7A;
-	REAL_MAP[0x7B] = &v16_7B;
-	REAL_MAP[0x7C] = &v16_7C;
-	REAL_MAP[0x7D] = &v16_7D;
-	REAL_MAP[0x7E] = &v16_7E;
-	REAL_MAP[0x7F] = &v16_7F;
-	REAL_MAP[0x80] = &v16_80;
-	REAL_MAP[0x81] = &v16_81;
-	REAL_MAP[0x82] = &v16_82;
-	REAL_MAP[0x83] = &v16_83;
-	REAL_MAP[0x84] = &v16_84;
-	REAL_MAP[0x85] = &v16_85;
-	REAL_MAP[0x86] = &v16_86;
-	REAL_MAP[0x87] = &v16_87;
-	REAL_MAP[0x88] = &v16_88;
-	REAL_MAP[0x89] = &v16_89;
-	REAL_MAP[0x8A] = &v16_8A;
-	REAL_MAP[0x8B] = &v16_8B;
-	REAL_MAP[0x8C] = &v16_8C;
-	REAL_MAP[0x8D] = &v16_8D;
-	REAL_MAP[0x8E] = &v16_8E;
-	REAL_MAP[0x8F] = &v16_8F;
-	REAL_MAP[0x90] = &v16_90;
-	REAL_MAP[0x91] = &v16_91;
-	REAL_MAP[0x92] = &v16_92;
-	REAL_MAP[0x93] = &v16_93;
-	REAL_MAP[0x94] = &v16_94;
-	REAL_MAP[0x95] = &v16_95;
-	REAL_MAP[0x96] = &v16_96;
-	REAL_MAP[0x97] = &v16_97;
-	REAL_MAP[0x98] = &v16_98;
-	REAL_MAP[0x99] = &v16_99;
-	REAL_MAP[0x9A] = &v16_9A;
-	REAL_MAP[0x9B] = &v16_9B;
-	REAL_MAP[0x9C] = &v16_9C;
-	REAL_MAP[0x9D] = &v16_9D;
-	REAL_MAP[0x9E] = &v16_9E;
-	REAL_MAP[0x9F] = &v16_9F;
-	REAL_MAP[0xA0] = &v16_A0;
-	REAL_MAP[0xA1] = &v16_A1;
-	REAL_MAP[0xA2] = &v16_A2;
-	REAL_MAP[0xA3] = &v16_A3;
-	REAL_MAP[0xA4] = &v16_A4;
-	REAL_MAP[0xA5] = &v16_A5;
-	REAL_MAP[0xA6] = &v16_A6;
-	REAL_MAP[0xA7] = &v16_A7;
-	REAL_MAP[0xA8] = &v16_A8;
-	REAL_MAP[0xA9] = &v16_A9;
-	REAL_MAP[0xAA] = &v16_AA;
-	REAL_MAP[0xAB] = &v16_AB;
-	REAL_MAP[0xAC] = &v16_AC;
-	REAL_MAP[0xAD] = &v16_AD;
-	REAL_MAP[0xAE] = &v16_AE;
-	REAL_MAP[0xAF] = &v16_AF;
-	REAL_MAP[0xB0] = &v16_B0;
-	REAL_MAP[0xB1] = &v16_B1;
-	REAL_MAP[0xB2] = &v16_B2;
-	REAL_MAP[0xB3] = &v16_B3;
-	REAL_MAP[0xB4] = &v16_B4;
-	REAL_MAP[0xB5] = &v16_B5;
-	REAL_MAP[0xB6] = &v16_B6;
-	REAL_MAP[0xB7] = &v16_B7;
-	REAL_MAP[0xB8] = &v16_B8;
-	REAL_MAP[0xB9] = &v16_B9;
-	REAL_MAP[0xBA] = &v16_BA;
-	REAL_MAP[0xBB] = &v16_BB;
-	REAL_MAP[0xBC] = &v16_BC;
-	REAL_MAP[0xBD] = &v16_BD;
-	REAL_MAP[0xBE] = &v16_BE;
-	REAL_MAP[0xBF] = &v16_BF;
-	REAL_MAP[0xC0] =
-	REAL_MAP[0xC1] = &v16_illegal;
-	REAL_MAP[0xC2] = &v16_C2;
-	REAL_MAP[0xC3] = &v16_C3;
-	REAL_MAP[0xC4] = &v16_C4;
-	REAL_MAP[0xC5] = &v16_C5;
-	REAL_MAP[0xC6] = &v16_C6;
-	REAL_MAP[0xC7] = &v16_C7;
-	REAL_MAP[0xC8] =
-	REAL_MAP[0xC9] = &v16_illegal;
-	REAL_MAP[0xCA] = &v16_CA;
-	REAL_MAP[0xCB] = &v16_CB;
-	REAL_MAP[0xCC] = &v16_CC;
-	REAL_MAP[0xCD] = &v16_CD;
-	REAL_MAP[0xCE] = &v16_CE;
-	REAL_MAP[0xCF] = &v16_CF;
-	REAL_MAP[0xD0] = &v16_D0;
-	REAL_MAP[0xD1] = &v16_D1;
-	REAL_MAP[0xD2] = &v16_D2;
-	REAL_MAP[0xD3] = &v16_D3;
-	REAL_MAP[0xD4] = &v16_D4;
-	REAL_MAP[0xD5] = &v16_D5;
-	REAL_MAP[0xD6] = &v16_illegal;
-	REAL_MAP[0xD7] = &v16_D7;
-	REAL_MAP[0xD8] =
-	REAL_MAP[0xD9] =
-	REAL_MAP[0xDA] =
-	REAL_MAP[0xDB] =
-	REAL_MAP[0xDC] =
-	REAL_MAP[0xDD] =
-	REAL_MAP[0xDE] =
-	REAL_MAP[0xDF] = &v16_illegal;
-	REAL_MAP[0xE0] = &v16_E0;
-	REAL_MAP[0xE1] = &v16_E1;
-	REAL_MAP[0xE2] = &v16_E2;
-	REAL_MAP[0xE3] = &v16_E3;
-	REAL_MAP[0xE4] = &v16_E4;
-	REAL_MAP[0xE5] = &v16_E5;
-	REAL_MAP[0xE6] = &v16_E6;
-	REAL_MAP[0xE7] = &v16_E7;
-	REAL_MAP[0xE8] = &v16_E8;
-	REAL_MAP[0xE9] = &v16_E9;
-	REAL_MAP[0xEA] = &v16_EA;
-	REAL_MAP[0xEB] = &v16_EB;
-	REAL_MAP[0xEC] = &v16_EC;
-	REAL_MAP[0xED] = &v16_ED;
-	REAL_MAP[0xEE] = &v16_EE;
-	REAL_MAP[0xEF] = &v16_EF;
-	REAL_MAP[0xF0] = &v16_F0;
-	REAL_MAP[0xF1] = &v16_illegal;
-	REAL_MAP[0xF2] = &v16_F2;
-	REAL_MAP[0xF3] = &v16_F3;
-	REAL_MAP[0xF4] = &v16_F4;
-	REAL_MAP[0xF5] = &v16_F5;
-	REAL_MAP[0xF6] = &v16_F6;
-	REAL_MAP[0xF7] = &v16_F7;
-	REAL_MAP[0xF8] = &v16_F8;
-	REAL_MAP[0xF9] = &v16_F9;
-	REAL_MAP[0xFA] = &v16_FA;
-	REAL_MAP[0xFB] = &v16_FB;
-	REAL_MAP[0xFC] = &v16_FC;
-	REAL_MAP[0xFD] = &v16_FD;
-	REAL_MAP[0xFE] = &v16_FE;
-	REAL_MAP[0xFF] = &v16_FF;
+	OPMAP[0x00] = &exec00;
+	OPMAP[0x01] = &exec01;
+	OPMAP[0x02] = &exec02;
+	OPMAP[0x03] = &exec03;
+	OPMAP[0x04] = &exec04;
+	OPMAP[0x05] = &exec05;
+	OPMAP[0x06] = &exec06;
+	OPMAP[0x07] = &exec07;
+	OPMAP[0x08] = &exec08;
+	OPMAP[0x09] = &exec09;
+	OPMAP[0x0A] = &exec0A;
+	OPMAP[0x0B] = &exec0B;
+	OPMAP[0x0C] = &exec0C;
+	OPMAP[0x0D] = &exec0D;
+	OPMAP[0x0E] = &exec0E;
+	OPMAP[0x10] = &exec10;
+	OPMAP[0x11] = &exec11;
+	OPMAP[0x12] = &exec12;
+	OPMAP[0x13] = &exec13;
+	OPMAP[0x14] = &exec14;
+	OPMAP[0x15] = &exec15;
+	OPMAP[0x16] = &exec16;
+	OPMAP[0x17] = &exec17;
+	OPMAP[0x18] = &exec18;
+	OPMAP[0x19] = &exec19;
+	OPMAP[0x1A] = &exec1A;
+	OPMAP[0x1B] = &exec1B;
+	OPMAP[0x1C] = &exec1C;
+	OPMAP[0x1D] = &exec1D;
+	OPMAP[0x1E] = &exec1E;
+	OPMAP[0x1F] = &exec1F;
+	OPMAP[0x20] = &exec20;
+	OPMAP[0x21] = &exec21;
+	OPMAP[0x22] = &exec22;
+	OPMAP[0x23] = &exec23;
+	OPMAP[0x24] = &exec24;
+	OPMAP[0x25] = &exec25;
+	OPMAP[0x26] = &exec26;
+	OPMAP[0x27] = &exec27;
+	OPMAP[0x28] = &exec28;
+	OPMAP[0x29] = &exec29;
+	OPMAP[0x2A] = &exec2A;
+	OPMAP[0x2B] = &exec2B;
+	OPMAP[0x2C] = &exec2C;
+	OPMAP[0x2D] = &exec2D;
+	OPMAP[0x2E] = &exec2E;
+	OPMAP[0x2F] = &exec2F;
+	OPMAP[0x30] = &exec30;
+	OPMAP[0x31] = &exec31;
+	OPMAP[0x32] = &exec32;
+	OPMAP[0x33] = &exec33;
+	OPMAP[0x34] = &exec34;
+	OPMAP[0x35] = &exec35;
+	OPMAP[0x36] = &exec36;
+	OPMAP[0x37] = &exec37;
+	OPMAP[0x38] = &exec38;
+	OPMAP[0x39] = &exec39;
+	OPMAP[0x3A] = &exec3A;
+	OPMAP[0x3B] = &exec3B;
+	OPMAP[0x3C] = &exec3C;
+	OPMAP[0x3D] = &exec3D;
+	OPMAP[0x3E] = &exec3E;
+	OPMAP[0x3F] = &exec3F;
+	OPMAP[0x40] = &exec40;
+	OPMAP[0x41] = &exec41;
+	OPMAP[0x42] = &exec42;
+	OPMAP[0x43] = &exec43;
+	OPMAP[0x44] = &exec44;
+	OPMAP[0x45] = &exec45;
+	OPMAP[0x46] = &exec46;
+	OPMAP[0x47] = &exec47;
+	OPMAP[0x48] = &exec48;
+	OPMAP[0x49] = &exec49;
+	OPMAP[0x4A] = &exec4A;
+	OPMAP[0x4B] = &exec4B;
+	OPMAP[0x4C] = &exec4C;
+	OPMAP[0x4D] = &exec4D;
+	OPMAP[0x4E] = &exec4E;
+	OPMAP[0x4F] = &exec4F;
+	OPMAP[0x50] = &exec50;
+	OPMAP[0x51] = &exec51;
+	OPMAP[0x52] = &exec52;
+	OPMAP[0x53] = &exec53;
+	OPMAP[0x54] = &exec54;
+	OPMAP[0x55] = &exec55;
+	OPMAP[0x56] = &exec56;
+	OPMAP[0x57] = &exec57;
+	OPMAP[0x58] = &exec58;
+	OPMAP[0x59] = &exec59;
+	OPMAP[0x5A] = &exec5A;
+	OPMAP[0x5B] = &exec5B;
+	OPMAP[0x5C] = &exec5C;
+	OPMAP[0x5D] = &exec5D;
+	OPMAP[0x5E] = &exec5E;
+	OPMAP[0x5F] = &exec5F;
+	OPMAP[0x70] = &exec70;
+	OPMAP[0x71] = &exec71;
+	OPMAP[0x72] = &exec72;
+	OPMAP[0x73] = &exec73;
+	OPMAP[0x74] = &exec74;
+	OPMAP[0x75] = &exec75;
+	OPMAP[0x76] = &exec76;
+	OPMAP[0x77] = &exec77;
+	OPMAP[0x78] = &exec78;
+	OPMAP[0x79] = &exec79;
+	OPMAP[0x7A] = &exec7A;
+	OPMAP[0x7B] = &exec7B;
+	OPMAP[0x7C] = &exec7C;
+	OPMAP[0x7D] = &exec7D;
+	OPMAP[0x7E] = &exec7E;
+	OPMAP[0x7F] = &exec7F;
+	OPMAP[0x80] = &exec80;
+	OPMAP[0x81] = &exec81;
+	OPMAP[0x82] = &exec82;
+	OPMAP[0x83] = &exec83;
+	OPMAP[0x84] = &exec84;
+	OPMAP[0x85] = &exec85;
+	OPMAP[0x86] = &exec86;
+	OPMAP[0x87] = &exec87;
+	OPMAP[0x88] = &exec88;
+	OPMAP[0x89] = &exec89;
+	OPMAP[0x8A] = &exec8A;
+	OPMAP[0x8B] = &exec8B;
+	OPMAP[0x8C] = &exec8C;
+	OPMAP[0x8D] = &exec8D;
+	OPMAP[0x8E] = &exec8E;
+	OPMAP[0x8F] = &exec8F;
+	OPMAP[0x90] = &exec90;
+	OPMAP[0x91] = &exec91;
+	OPMAP[0x92] = &exec92;
+	OPMAP[0x93] = &exec93;
+	OPMAP[0x94] = &exec94;
+	OPMAP[0x95] = &exec95;
+	OPMAP[0x96] = &exec96;
+	OPMAP[0x97] = &exec97;
+	OPMAP[0x98] = &exec98;
+	OPMAP[0x99] = &exec99;
+	OPMAP[0x9A] = &exec9A;
+	OPMAP[0x9B] = &exec9B;
+	OPMAP[0x9C] = &exec9C;
+	OPMAP[0x9D] = &exec9D;
+	OPMAP[0x9E] = &exec9E;
+	OPMAP[0x9F] = &exec9F;
+	OPMAP[0xA0] = &execA0;
+	OPMAP[0xA1] = &execA1;
+	OPMAP[0xA2] = &execA2;
+	OPMAP[0xA3] = &execA3;
+	OPMAP[0xA4] = &execA4;
+	OPMAP[0xA5] = &execA5;
+	OPMAP[0xA6] = &execA6;
+	OPMAP[0xA7] = &execA7;
+	OPMAP[0xA8] = &execA8;
+	OPMAP[0xA9] = &execA9;
+	OPMAP[0xAA] = &execAA;
+	OPMAP[0xAB] = &execAB;
+	OPMAP[0xAC] = &execAC;
+	OPMAP[0xAD] = &execAD;
+	OPMAP[0xAE] = &execAE;
+	OPMAP[0xAF] = &execAF;
+	OPMAP[0xB0] = &execB0;
+	OPMAP[0xB1] = &execB1;
+	OPMAP[0xB2] = &execB2;
+	OPMAP[0xB3] = &execB3;
+	OPMAP[0xB4] = &execB4;
+	OPMAP[0xB5] = &execB5;
+	OPMAP[0xB6] = &execB6;
+	OPMAP[0xB7] = &execB7;
+	OPMAP[0xB8] = &execB8;
+	OPMAP[0xB9] = &execB9;
+	OPMAP[0xBA] = &execBA;
+	OPMAP[0xBB] = &execBB;
+	OPMAP[0xBC] = &execBC;
+	OPMAP[0xBD] = &execBD;
+	OPMAP[0xBE] = &execBE;
+	OPMAP[0xBF] = &execBF;
+	OPMAP[0xC2] = &execC2;
+	OPMAP[0xC3] = &execC3;
+	OPMAP[0xC4] = &execC4;
+	OPMAP[0xC5] = &execC5;
+	OPMAP[0xC6] = &execC6;
+	OPMAP[0xC7] = &execC7;
+	OPMAP[0xCA] = &execCA;
+	OPMAP[0xCB] = &execCB;
+	OPMAP[0xCC] = &execCC;
+	OPMAP[0xCD] = &execCD;
+	OPMAP[0xCE] = &execCE;
+	OPMAP[0xCF] = &execCF;
+	OPMAP[0xD0] = &execD0;
+	OPMAP[0xD1] = &execD1;
+	OPMAP[0xD2] = &execD2;
+	OPMAP[0xD3] = &execD3;
+	OPMAP[0xD4] = &execD4;
+	OPMAP[0xD5] = &execD5;
+	OPMAP[0xD7] = &execD7;
+	OPMAP[0xE0] = &execE0;
+	OPMAP[0xE1] = &execE1;
+	OPMAP[0xE2] = &execE2;
+	OPMAP[0xE3] = &execE3;
+	OPMAP[0xE4] = &execE4;
+	OPMAP[0xE5] = &execE5;
+	OPMAP[0xE6] = &execE6;
+	OPMAP[0xE7] = &execE7;
+	OPMAP[0xE8] = &execE8;
+	OPMAP[0xE9] = &execE9;
+	OPMAP[0xEA] = &execEA;
+	OPMAP[0xEB] = &execEB;
+	OPMAP[0xEC] = &execEC;
+	OPMAP[0xED] = &execED;
+	OPMAP[0xEE] = &execEE;
+	OPMAP[0xEF] = &execEF;
+	OPMAP[0xF0] = &execF0;
+	OPMAP[0xF2] = &execF2;
+	OPMAP[0xF3] = &execF3;
+	OPMAP[0xF4] = &execF4;
+	OPMAP[0xF5] = &execF5;
+	OPMAP[0xF6] = &execF6;
+	OPMAP[0xF7] = &execF7;
+	OPMAP[0xF8] = &execF8;
+	OPMAP[0xF9] = &execF9;
+	OPMAP[0xFA] = &execFA;
+	OPMAP[0xFB] = &execFB;
+	OPMAP[0xFC] = &execFC;
+	OPMAP[0xFD] = &execFD;
+	OPMAP[0xFE] = &execFE;
+	OPMAP[0xFF] = &execFF;
+	OPMAP[0xD6] =
+	OPMAP[0xC8] =
+	OPMAP[0xC9] =
+	OPMAP[0x0F] =
+	OPMAP[0xC0] =
+	OPMAP[0xC1] =
+	OPMAP[0xD8] =
+	OPMAP[0xD9] =
+	OPMAP[0xDA] =
+	OPMAP[0xDB] =
+	OPMAP[0xDC] =
+	OPMAP[0xDD] =
+	OPMAP[0xDE] =
+	OPMAP[0xDF] =
+	OPMAP[0xF1] = &execill;
 	switch (cpu.Model) {
 	case CPU_8086:
 		// While it is possible to map a range, range sets rely on
 		// memset32/64 which DMD linkers will not find
 		for (size_t i = 0x60; i < 0x70; ++i)
-			REAL_MAP[i] = &v16_illegal;
+			OPMAP[i] = &execill;
 		break;
 	case CPU_80486:
-		MODE_MAP[CPU_MODE_PROTECTED] = &exec32;
-		REAL_MAP[0x60] =
-		REAL_MAP[0x61] =
-		REAL_MAP[0x62] =
-		REAL_MAP[0x63] =
-		REAL_MAP[0x64] =
-		REAL_MAP[0x65] = &v16_illegal;
-		REAL_MAP[0x66] = &v16_66;
-		REAL_MAP[0x67] = &v16_67;
-		REAL_MAP[0x68] =
-		REAL_MAP[0x69] =
-		REAL_MAP[0x6A] =
-		REAL_MAP[0x6B] =
-		REAL_MAP[0x6C] =
-		REAL_MAP[0x6D] =
-		REAL_MAP[0x6E] =
-		REAL_MAP[0x6F] = &v16_illegal;
+		OPMAP[0x60] =
+		OPMAP[0x61] =
+		OPMAP[0x62] =
+		OPMAP[0x63] =
+		OPMAP[0x64] =
+		OPMAP[0x65] =
+		OPMAP[0x68] =
+		OPMAP[0x69] =
+		OPMAP[0x6A] =
+		OPMAP[0x6B] =
+		OPMAP[0x6C] =
+		OPMAP[0x6D] =
+		OPMAP[0x6E] =
+		OPMAP[0x6F] = &execill;
+		OPMAP[0x66] = &exec66;
+		OPMAP[0x67] = &exec67;
 		break;
 	default:
 	}
 
 	for (size_t i; i < 256; ++i) { // Sanity checker
-		assert(REAL_MAP[i], "REAL_MAP missed spot");
-//		assert(PROT_MAP[i], "PROT_MAP missed spot");
+		assert(OPMAP[i], "REAL_MAP missed spot");
 	}
 }
 
@@ -630,7 +627,7 @@ void vcpu_run(ref CPU_t cpu = CPU) {
 	while (CPU.level > 0) {
 		cpu.EIP = get_ip;
 		const ubyte op = MEM[cpu.EIP];
-		MODE_MAP[cpu.Mode](op);
+		OPMAP[op]();
 	}
 }
 

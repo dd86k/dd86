@@ -1,5 +1,5 @@
 import test_utils;
-import vcpu.core, vcpu.v16, vcpu.mm, vcpu.utils;
+import vcpu.core, vcpu.exec, vcpu.mm, vcpu.utils;
 import std.stdio;
 
 unittest {

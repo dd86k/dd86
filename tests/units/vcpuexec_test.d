@@ -1,5 +1,5 @@
 import test_utils;
-import vcpu.core, vcpu.v16, vcpu.mm, vcpu.utils;
+import vcpu.core, vcpu.exec, vcpu.mm, vcpu.utils;
 
 unittest {
 	section("16-bit Instructions (8086)");
@@ -11,48 +11,48 @@ unittest {
 	CPU.AL = 12;
 	mmiu8(0b11_000_001, CPU.EIP + 1);
 	mmiu8(13, CPU.CL);
-	exec16(0x00);
+	execop(0x00);
 	assert(mmfu8(CPU.CL) == 25);
 	CPU.CL = 13;
 	CPU.AL = 0x20; // address
 	mmiu8(0b11_001_000, CPU.EIP + 1);
 	mmiu8(16, CPU.AL);
-	exec16(0x00);
+	execop(0x00);
 	assert(mmfu8(CPU.AL) == 29);
 	CPU.CL = 0x20; // address
 	CPU.DL = 12;
 	mmiu8(0b11_010_001, CPU.EIP + 1);
 	mmiu8(23, CPU.CL);
-	exec16(0x00);
+	execop(0x00);
 	assert(mmfu8(CPU.CL) == 35);
 	CPU.CL = 0x20; // address
 	CPU.BL = 12;
 	mmiu8(0b11_011_001, CPU.EIP + 1);
 	mmiu8(4, CPU.CL);
-	exec16(0x00);
+	execop(0x00);
 	assert(mmfu8(CPU.CL) == 16);
 	CPU.CL = 0x20; // address
 	CPU.AH = 12;
 	mmiu8(0b11_100_001, CPU.EIP + 1);
 	mmiu8(4, CPU.CL);
-	exec16(0x00);
+	execop(0x00);
 	assert(mmfu8(CPU.CL) == 16);
 	CPU.CX = 0x04_20; // address:20h
 	mmiu8(0b11_101_001, CPU.EIP + 1);
 	mmiu8(52, CPU.CL);
-	exec16(0x00);
+	execop(0x00);
 	assert(mmfu8(CPU.CL) == 56);
 	CPU.CL = 0x20; // address
 	CPU.DH = 12;
 	mmiu8(0b11_110_001, CPU.EIP + 1);
 	mmiu8(22, CPU.CL);
-	exec16(0x00);
+	execop(0x00);
 	assert(mmfu8(CPU.CL) == 34);
 	CPU.CL = 0x20; // address
 	CPU.BH = 56;
 	mmiu8(0b11_111_001, CPU.EIP + 1);
 	mmiu8(4, CPU.CL);
-	exec16(0x00);
+	execop(0x00);
 	assert(mmfu8(CPU.CL) == 60);
 	OK;
 
@@ -61,49 +61,49 @@ unittest {
 	CPU.AX = 22;
 	mmiu8(0b11_000_001, CPU.EIP + 1);
 	mmiu16(23, CPU.CX);
-	exec16(0x01);
+	execop(0x01);
 	assert(mmfu16(CPU.CX) == 45);
 	CPU.CX = 23;
 	CPU.AX = 0x200; // address
 	mmiu8(0b11_001_000, CPU.EIP + 1);
 	mmiu16(23, CPU.AX);
-	exec16(0x01);
+	execop(0x01);
 	assert(mmfu16(CPU.AX) == 46);
 	CPU.CX = 0x200; // address
 	CPU.DX = 24;
 	mmiu8(0b11_010_001, CPU.EIP + 1);
 	mmiu16(23, CPU.CX);
-	exec16(0x01);
+	execop(0x01);
 	assert(mmfu16(CPU.CX) == 47);
 	CPU.CX = 0x200; // address
 	CPU.BX = 25;
 	mmiu8(0b11_011_001, CPU.EIP + 1);
 	mmiu16(23, CPU.CX);
-	exec16(0x01);
+	execop(0x01);
 	assert(mmfu16(CPU.CX) == 48);
 	CPU.CX = 0x200; // address
 	CPU.SP = 26;
 	mmiu8(0b11_100_001, CPU.EIP + 1);
 	mmiu16(23, CPU.CX);
-	exec16(0x01);
+	execop(0x01);
 	assert(mmfu16(CPU.CX) == 49);
 	CPU.CX = 0x200; // address
 	CPU.BP = 27;
 	mmiu8(0b11_101_001, CPU.EIP + 1);
 	mmiu16(23, CPU.CX);
-	exec16(0x01);
+	execop(0x01);
 	assert(mmfu16(CPU.CX) == 50);
 	CPU.CX = 0x200; // address
 	CPU.SI = 28;
 	mmiu8(0b11_110_001, CPU.EIP + 1);
 	mmiu16(23, CPU.CX);
-	exec16(0x01);
+	execop(0x01);
 	assert(mmfu16(CPU.CX) == 51);
 	CPU.CX = 0x200; // address
 	CPU.DI = 29;
 	mmiu8(0b11_111_001, CPU.EIP + 1);
 	mmiu16(23, CPU.CX);
-	exec16(0x01);
+	execop(0x01);
 	assert(mmfu16(CPU.CX) == 52);
 	OK;
 	
@@ -112,48 +112,48 @@ unittest {
 	CPU.AL = 12;
 	mmiu8(0b11_000_001, CPU.EIP + 1);
 	mmiu8(13, CPU.CL);
-	exec16(0x02);
+	execop(0x02);
 	assert(CPU.AL == 25);
 	CPU.CL = 13;
 	CPU.AL = 0x20; // address
 	mmiu8(0b11_001_000, CPU.EIP + 1);
 	mmiu8(16, CPU.AL);
-	exec16(0x02);
+	execop(0x02);
 	assert(CPU.CL == 29);
 	CPU.CL = 0x20; // address
 	CPU.DL = 12;
 	mmiu8(0b11_010_001, CPU.EIP + 1);
 	mmiu8(23, CPU.CL);
-	exec16(0x02);
+	execop(0x02);
 	assert(CPU.DL == 35);
 	CPU.CL = 0x20; // address
 	CPU.BL = 12;
 	mmiu8(0b11_011_001, CPU.EIP + 1);
 	mmiu8(4, CPU.CL);
-	exec16(0x02);
+	execop(0x02);
 	assert(CPU.BL == 16);
 	CPU.CL = 0x20; // address
 	CPU.AH = 12;
 	mmiu8(0b11_100_001, CPU.EIP + 1);
 	mmiu8(4, CPU.CL);
-	exec16(0x02);
+	execop(0x02);
 	assert(CPU.AH == 16);
 	CPU.CX = 0x04_20; // address:20h
 	mmiu8(0b11_101_001, CPU.EIP + 1);
 	mmiu8(52, CPU.CL);
-	exec16(0x02);
+	execop(0x02);
 	assert(CPU.CH == 56);
 	CPU.CL = 0x20; // address
 	CPU.DH = 12;
 	mmiu8(0b11_110_001, CPU.EIP + 1);
 	mmiu8(22, CPU.CL);
-	exec16(0x02);
+	execop(0x02);
 	assert(CPU.DH == 34);
 	CPU.CL = 0x20; // address
 	CPU.BH = 56;
 	mmiu8(0b11_111_001, CPU.EIP + 1);
 	mmiu8(4, CPU.CL);
-	exec16(0x02);
+	execop(0x02);
 	assert(CPU.BH == 60);
 	OK;
 
@@ -162,7 +162,7 @@ unittest {
 	CPU.AX = 40;
 	mmiu16(280, CPU.CX);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x03);
+	execop(0x03);
 	assert(CPU.AX == 320);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -171,14 +171,14 @@ unittest {
 	test("04h  ADD AL, IMM8");
 	mmiu8(4, CPU.EIP + 1);
 	CPU.AL = 12;
-	exec16(0x04);
+	execop(0x04);
 	assert(CPU.AL == 16);
 	OK;
 
 	test("05h  ADD AX, IMM16");
 	mmiu16(4, CPU.EIP + 1);
 	CPU.AX = 1200;
-	exec16(0x05);
+	execop(0x05);
 	assert(CPU.AX == 1204);
 	OK;
 
@@ -186,7 +186,7 @@ unittest {
 
 	test("06h  PUSH ES");
 	CPU.ES = 189;
-	exec16(0x06);
+	execop(0x06);
 	assert(mmfu16(address(CPU.SS, CPU.SP)) == 189);
 	OK;
 
@@ -194,7 +194,7 @@ unittest {
 
 	test("07h  POP ES");
 	CPU.ES = 83;
-	exec16(0x07);
+	execop(0x07);
 	assert(CPU.ES == 189); // sanity check
 	OK;
 
@@ -205,7 +205,7 @@ unittest {
 	CPU.AL = 0b0101;
 	mmiu8(0b1010, CPU.CL);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x08);
+	execop(0x08);
 	assert(mmfu8(CPU.CL) == 0xF);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -218,7 +218,7 @@ unittest {
 	CPU.AX = 0xFF;
 	mmiu16(0xFF00, CPU.CX);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x09);
+	execop(0x09);
 	assert(mmfu16(CPU.CX) == 0xFFFF);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -231,7 +231,7 @@ unittest {
 	CPU.AL = 0xF;
 	mmiu8(0xF0, CPU.CL);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x0A);
+	execop(0x0A);
 	assert(CPU.AL == 0xFF);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -244,7 +244,7 @@ unittest {
 	CPU.AX = 0xFF;
 	mmiu16(0xFF00, CPU.CX);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x0B);
+	execop(0x0B);
 	assert(CPU.AX == 0xFFFF);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -255,7 +255,7 @@ unittest {
 	test("0Ch  OR AL, IMM8");
 	mmiu8(0xF0, CPU.EIP + 1);
 	CPU.AL = 0xF;
-	exec16(0x0C); // OR CPU.AL, 3
+	execop(0x0C); // OR CPU.AL, 3
 	assert(CPU.AL == 0xFF);
 	OK;
 
@@ -263,7 +263,7 @@ unittest {
 
 	test("0Dh  OR AX, IMM16");
 	mmiu16(0xFF00, CPU.EIP + 1);
-	exec16(0x0D); // OR CPU.AX, F0h
+	execop(0x0D); // OR CPU.AX, F0h
 	assert(CPU.AX == 0xFFFF);
 	OK;
 
@@ -271,7 +271,7 @@ unittest {
 
 	test("0Eh  PUSH CS");
 	CPU.CS = 318;
-	exec16(0x0E);
+	execop(0x0E);
 	assert(mmfu16(address(CPU.SS, CPU.SP)) == 318);
 	OK;
 
@@ -303,14 +303,14 @@ unittest {
 
 	test("16h  PUSH SS");
 	CPU.SS = 202;
-	exec16(0x16);
+	execop(0x16);
 	assert(mmfu16(address(CPU.SS, CPU.SP)) == 202);
 	OK;
 
 	// POP SS
 
 	test("17h  POP SS");
-	exec16(0x17);
+	execop(0x17);
 	assert(CPU.SS == 202);
 	OK;
 
@@ -342,7 +342,7 @@ unittest {
 
 	test("1Eh  PUSH DS");
 	CPU.DS = 444;
-	exec16(0x1E);
+	execop(0x1E);
 	assert(mmfu16(address(CPU.SS, CPU.SP)) == 444);
 	OK;
 
@@ -350,7 +350,7 @@ unittest {
 
 	test("1Fh  POP DS");
 	CPU.DS = 128;
-	exec16(0x1F);
+	execop(0x1F);
 	assert(CPU.DS == 444);
 	OK;
 
@@ -361,7 +361,7 @@ unittest {
 	CPU.AL = 0xF;
 	mmiu8(0b11, CPU.CL);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x20);
+	execop(0x20);
 	assert(mmfu8(CPU.CL) == 0b11);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -374,7 +374,7 @@ unittest {
 	CPU.AX = 0xFF;
 	mmiu16(0xFFFF, CPU.CX);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x21);
+	execop(0x21);
 	assert(mmfu16(CPU.CX) == 0xFF);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -387,7 +387,7 @@ unittest {
 	CPU.AL = 0xFF;
 	mmiu8(0xF, CPU.CL);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x22);
+	execop(0x22);
 	assert(CPU.AL == 0xF);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -400,7 +400,7 @@ unittest {
 	CPU.AX = 0xFFFF;
 	mmiu16(0xFF, CPU.CX);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x23);
+	execop(0x23);
 	assert(CPU.AX == 0xFF);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -411,7 +411,7 @@ unittest {
 	test("24h  AND AL, IMM8");
 	CPU.AL = 0xFF;
 	mmiu8(0xF, CPU.EIP + 1);
-	exec16(0x24);
+	execop(0x24);
 	assert(CPU.AL == 0xF);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -422,7 +422,7 @@ unittest {
 	test("25h  AND AX, IMM16");
 	CPU.AX = 0xFFFF;
 	mmiu16(0xFF, CPU.EIP + 1);
-	exec16(0x25);
+	execop(0x25);
 	assert(CPU.AX == 0xFF);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -431,7 +431,7 @@ unittest {
 	// ES:
 
 	test("26h  ES:");
-	exec16(0x26);
+	execop(0x26);
 	assert(CPU.Segment == SEG_ES);
 	OK;
 
@@ -442,7 +442,7 @@ unittest {
 	CPU.AF = 0;
 	CPU.CF = 0;
 	CPU.AL = 0xAE;
-	exec16(0x27);
+	execop(0x27);
 	assert(CPU.AL == 0x14);
 	assert(CPU.AF);
 	assert(CPU.PF);
@@ -452,7 +452,7 @@ unittest {
 	CPU.AF = 0;
 	CPU.CF = 0;
 	CPU.AL = 0x2E;
-	exec16(0x27);
+	execop(0x27);
 	assert(CPU.AL == 0x34);
 	assert(CPU.AF);
 	//assert(CPU.PF == 0);
@@ -468,7 +468,7 @@ unittest {
 	CPU.AL = 40;
 	mmiu8(70, CPU.CL);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x28);
+	execop(0x28);
 	assert(mmfu8(CPU.CL) == 30);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -481,7 +481,7 @@ unittest {
 	CPU.AX = 1000;
 	mmiu16(24000, CPU.CX);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x29);
+	execop(0x29);
 	assert(mmfu16(CPU.CX) == 23000);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -494,7 +494,7 @@ unittest {
 	CPU.AL = 200;
 	mmiu8(50, CPU.CL);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x2A);
+	execop(0x2A);
 	assert(CPU.AL == 150);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -507,7 +507,7 @@ unittest {
 	CPU.AX = 65000;
 	mmiu16(64000, CPU.CX);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x2B);
+	execop(0x2B);
 	assert(CPU.AX == 1000);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -518,7 +518,7 @@ unittest {
 	test("2Ch  SUB AL, IMM8");
 	mmiu8(21, CPU.EIP + 1);
 	CPU.AL = 21;
-	exec16(0x2C);
+	execop(0x2C);
 	assert(CPU.AL == 0);
 	assert(CPU.ZF);
 	OK;
@@ -528,7 +528,7 @@ unittest {
 	test("2Dh  SUB AX, IMM16");
 	CPU.AX = 2500;
 	mmiu16(2500, CPU.EIP + 1);
-	exec16(0x2D);
+	execop(0x2D);
 	assert(CPU.AX == 0);
 	assert(CPU.ZF);
 	OK;
@@ -536,7 +536,7 @@ unittest {
 	// CS:
 
 	test("2Eh  CS:");
-	exec16(0x2E);
+	execop(0x2E);
 	assert(CPU.Segment == SEG_CS);
 	OK;
 
@@ -544,7 +544,7 @@ unittest {
 
 	test("2Fh  DAS");
 	CPU.AL = 0xEE; CPU.BL = 0x47;
-	exec16(0x2F);
+	execop(0x2F);
 	assert(CPU.AL == 0x88);
 	assert(CPU.BL == 0x47);
 	OK;
@@ -556,7 +556,7 @@ unittest {
 	CPU.AL = 25;
 	mmiu8(50, CPU.CL);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x30);
+	execop(0x30);
 	assert(mmfu8(CPU.CL) == 43);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -567,7 +567,7 @@ unittest {
 	CPU.AX = 2500;
 	mmiu16(5000, CPU.CX);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x31);
+	execop(0x31);
 	assert(mmfu16(CPU.CX) == 6732);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -578,7 +578,7 @@ unittest {
 	CPU.AL = 100;
 	mmiu8(50, CPU.CL);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x32);
+	execop(0x32);
 	assert(CPU.AL == 86);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -589,7 +589,7 @@ unittest {
 	CPU.AX = 8086;
 	mmiu16(3770, CPU.CX);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x33);
+	execop(0x33);
 	assert(CPU.AX == 4396);
 	assert(CPU.OF == 0);
 	assert(CPU.ZF == 0);
@@ -598,14 +598,14 @@ unittest {
 	test("34h  XOR AL, IMM8");
 	mmiu8(5, CPU.EIP + 1);
 	CPU.AL = 0xF;
-	exec16(0x34); // XOR CPU.AL, 5
+	execop(0x34); // XOR CPU.AL, 5
 	assert(CPU.AL == 0xA);
 	OK;
 
 	test("35h  XOR AX, IMM16");
 	mmiu16(0xFF00, CPU.EIP + 1);
 	CPU.AX = 0xAAFF;
-	exec16(0x35); // XOR CPU.AX, FF00h
+	execop(0x35); // XOR CPU.AX, FF00h
 	assert(CPU.AX == 0x55FF);
 	OK;
 
@@ -613,62 +613,62 @@ unittest {
 
 	CPU.fullreset; CPU.CS = 0;
 	test("40h  INC AX");
-	exec16(0x40); assert(CPU.AX == 1);
+	execop(0x40); assert(CPU.AX == 1);
 	OK;
 	test("41h  INC CX");
-	exec16(0x41); assert(CPU.CX == 1);
+	execop(0x41); assert(CPU.CX == 1);
 	OK;
 	test("42h  INC DX");
-	exec16(0x42); assert(CPU.DX == 1);
+	execop(0x42); assert(CPU.DX == 1);
 	OK;
 	test("43h  INC BX");
-	exec16(0x43); assert(CPU.BX == 1);
+	execop(0x43); assert(CPU.BX == 1);
 	OK;
 	test("44h  INC SP");
-	exec16(0x44); assert(CPU.SP == 1);
+	execop(0x44); assert(CPU.SP == 1);
 	OK;
 	test("45h  INC BP");
-	exec16(0x45); assert(CPU.BP == 1);
+	execop(0x45); assert(CPU.BP == 1);
 	OK;
 	test("46h  INC SI");
-	exec16(0x46); assert(CPU.SI == 1);
+	execop(0x46); assert(CPU.SI == 1);
 	OK;
 	test("47h  INC SI");
-	exec16(0x47); assert(CPU.DI == 1);
+	execop(0x47); assert(CPU.DI == 1);
 	OK;
 	
 	// DEC
 
 	test("48h  DEC AX");
-	exec16(0x48);
+	execop(0x48);
 	assert(CPU.AX == 0);
 	OK;
 	test("49h  DEC CX");
-	exec16(0x49);
+	execop(0x49);
 	assert(CPU.CX == 0);
 	OK;
 	test("4Ah  DEC DX");
-	exec16(0x4A);
+	execop(0x4A);
 	assert(CPU.DX == 0);
 	OK;
 	test("4Bh  DEC BX");
-	exec16(0x4B);
+	execop(0x4B);
 	assert(CPU.BX == 0);
 	OK;
 	test("4Ch  DEC SP");
-	exec16(0x4C);
+	execop(0x4C);
 	assert(CPU.SP == 0);
 	OK;
 	test("4Dh  DEC BP");
-	exec16(0x4D);
+	execop(0x4D);
 	assert(CPU.BP == 0);
 	OK;
 	test("4Eh  DEC SI");
-	exec16(0x4E);
+	execop(0x4E);
 	assert(CPU.SI == 0);
 	OK;
 	test("4Fh  DEC DI");
-	exec16(0x4F);
+	execop(0x4F);
 	assert(CPU.DI == 0);
 	OK;
 
@@ -678,48 +678,48 @@ unittest {
 
 	test("50h  PUSH AX");
 	CPU.AX = 0xDAD;
-	exec16(0x50);
+	execop(0x50);
 	assert(CPU.AX == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	test("51h  PUSH CX");
 	CPU.CX = 0x4488;
-	exec16(0x51);
+	execop(0x51);
 	assert(CPU.CX == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	test("52h  PUSH DX");
 	CPU.DX = 0x4321;
-	exec16(0x52);
+	execop(0x52);
 	assert(CPU.DX == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	test("53h  PUSH BX");
 	CPU.BX = 0x1234;
-	exec16(0x53);
+	execop(0x53);
 	assert(CPU.BX == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	test("54h  PUSH SP");
-	exec16(0x54);
+	execop(0x54);
 	assert(CPU.SP == mmfu16(address(CPU.SS, CPU.SP)) - 2);
 	OK;
 
 	test("55h  PUSH BP");
 	CPU.BP = 0xFBAC;
-	exec16(0x55);
+	execop(0x55);
 	assert(CPU.BP == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	test("56h  PUSH SI");
 	CPU.SI = 0xF00F;
-	exec16(0x56);
+	execop(0x56);
 	assert(CPU.SI == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
 	test("57h  PUSH DI");
 	CPU.DI = 0xB0B;
-	exec16(0x57);
+	execop(0x57);
 	assert(CPU.DI == mmfu16(address(CPU.SS, CPU.SP)));
 	OK;
 
@@ -729,49 +729,49 @@ unittest {
 
 	test("58h  POP AX");
 	CPU.push16(0xFFAA);
-	exec16(0x58);
+	execop(0x58);
 	assert(CPU.AX == 0xFFAA);
 	OK;
 
 	test("59h  POP CX");
 	CPU.push16(0xFFAC);
-	exec16(0x59);
+	execop(0x59);
 	assert(CPU.CX == 0xFFAC);
 	OK;
 
 	test("5Ah  POP DX");
 	CPU.push16(0xFFAD);
-	exec16(0x5A);
+	execop(0x5A);
 	assert(CPU.DX == 0xFFAD);
 	OK;
 
 	test("5Bh  POP BX");
 	CPU.push16(0xFFAB);
-	exec16(0x5B);
+	execop(0x5B);
 	assert(CPU.BX == 0xFFAB);
 	OK;
 
 	test("5Ch  POP SP");
 	CPU.push16(0x1FAA);
-	exec16(0x5C);
+	execop(0x5C);
 	assert(CPU.SP == 0x1FAA);
 	OK;
 
 	test("5Dh  POP BX");
 	CPU.push16(0x2FAA);
-	exec16(0x5D);
+	execop(0x5D);
 	assert(CPU.BP == 0x2FAA);
 	OK;
 
 	test("5Eh  POP SI");
 	CPU.push16(0x3FAA);
-	exec16(0x5E);
+	execop(0x5E);
 	assert(CPU.SI == 0x3FAA);
 	OK;
 
 	test("5Fh  POP DI");
 	CPU.push16(0x4FAA);
-	exec16(0x5F);
+	execop(0x5F);
 	assert(CPU.DI == 0x4FAA);
 	OK;
 
@@ -780,12 +780,12 @@ unittest {
 	test("70h  JO");
 	CPU.IP = 0x100;
 	CPU.OF = 0;
-	exec16(0x70);
+	execop(0x70);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.OF = 1;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x70);
+	execop(0x70);
 	assert(CPU.IP == 0xEE);
 	OK;
 
@@ -793,59 +793,59 @@ unittest {
 	CPU.IP = 0x100;
 	CPU.OF = 0;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x71);
+	execop(0x71);
 	assert(CPU.IP == 0xEE);
 	CPU.IP = 0x100;
 	CPU.OF = 1;
-	exec16(0x71);
+	execop(0x71);
 	assert(CPU.IP == 0x102);
 	OK;
 
 	test("72h  JB/JNAE/JC");
 	CPU.IP = 0x100;
 	CPU.CF = 0;
-	exec16(0x72);
+	execop(0x72);
 	assert(CPU.IP == 0x102);
 	mmiu8(-20, CPU.EIP + 1);
 	CPU.IP = 0x100;
 	CPU.CF = 1;
-	exec16(0x72);
+	execop(0x72);
 	assert(CPU.IP == 0xEE);
 	OK;
 
 	test("73h  JNB/JAE/JNC");
 	CPU.IP = 0x100;
 	CPU.CF = 1;
-	exec16(0x73);
+	execop(0x73);
 	assert(CPU.IP == 0x102);
 	mmiu8(-20, CPU.EIP + 1);
 	CPU.IP = 0x100;
 	CPU.CF = 0;
-	exec16(0x73);
+	execop(0x73);
 	assert(CPU.IP == 0xEE);
 	OK;
 
 	test("74h  JE/JZ");
 	CPU.IP = 0x100;
 	CPU.ZF = 0;
-	exec16(0x74);
+	execop(0x74);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.ZF = 1;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x74);
+	execop(0x74);
 	assert(CPU.IP == 0xEE);
 	OK;
 
 	test("75h  JNE/JNZ");
 	CPU.IP = 0x100;
 	CPU.ZF = 1;
-	exec16(0x75);
+	execop(0x75);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.ZF = 0;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x75);
+	execop(0x75);
 	assert(CPU.IP == 0xEE);
 	OK;
 
@@ -853,13 +853,13 @@ unittest {
 	CPU.IP = 0x100;
 	CPU.CF = 0;
 	CPU.ZF = 0;
-	exec16(0x76);
+	execop(0x76);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.ZF = 0;
 	CPU.CF = 1;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x76);
+	execop(0x76);
 	assert(CPU.IP == 0xEE);
 	OK;
 
@@ -867,61 +867,61 @@ unittest {
 	CPU.IP = 0x100;
 	CPU.CF = 0;
 	CPU.ZF = 1;
-	exec16(0x77);
+	execop(0x77);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.ZF = 0;
 	CPU.CF = 0;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x77);
+	execop(0x77);
 	assert(CPU.IP == 0xEE);
 	OK;
 
 	test("78h  JS");
 	CPU.IP = 0x100;
 	CPU.SF = 0;
-	exec16(0x78);
+	execop(0x78);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.SF = 1;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x78);
+	execop(0x78);
 	assert(CPU.IP == 0xEE);
 	OK;
 
 	test("79h  JNS");
 	CPU.IP = 0x100;
 	CPU.SF = 1;
-	exec16(0x79);
+	execop(0x79);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.SF = 0;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x79);
+	execop(0x79);
 	assert(CPU.IP == 0xEE);
 	OK;
 
 	test("7Ah  JP/JPE");
 	CPU.IP = 0x100;
 	CPU.PF = 0;
-	exec16(0x7A);
+	execop(0x7A);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.PF = 1;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x7A);
+	execop(0x7A);
 	assert(CPU.IP == 0xEE);
 	OK;
 
 	test("7Bh  JNP/JPO");
 	CPU.IP = 0x100;
 	CPU.PF = 1;
-	exec16(0x7B);
+	execop(0x7B);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.PF = 0;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x7B);
+	execop(0x7B);
 	assert(CPU.IP == 0xEE);
 	OK;
 
@@ -929,13 +929,13 @@ unittest {
 	CPU.IP = 0x100;
 	CPU.SF = 1;
 	CPU.OF = 1;
-	exec16(0x7C);
+	execop(0x7C);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.SF = 0;
 	CPU.OF = 1;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x7C);
+	execop(0x7C);
 	assert(CPU.IP == 0xEE);
 	OK;
 
@@ -943,13 +943,13 @@ unittest {
 	CPU.IP = 0x100;
 	CPU.SF = 0;
 	CPU.OF = 1;
-	exec16(0x7D);
+	execop(0x7D);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.SF = 1;
 	CPU.OF = 1;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x7D);
+	execop(0x7D);
 	assert(CPU.IP == 0xEE);
 	OK;
 
@@ -958,14 +958,14 @@ unittest {
 	CPU.SF = 1;
 	CPU.OF = 1;
 	CPU.ZF = 0;
-	exec16(0x7E);
+	execop(0x7E);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.SF = 0;
 	CPU.OF = 0;
 	CPU.ZF = 1;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x7E);
+	execop(0x7E);
 	assert(CPU.IP == 0xEE);
 	OK;
 
@@ -974,14 +974,14 @@ unittest {
 	CPU.SF = 0;
 	CPU.OF = 1;
 	CPU.ZF = 0;
-	exec16(0x7F);
+	execop(0x7F);
 	assert(CPU.IP == 0x102);
 	CPU.IP = 0x100;
 	CPU.SF = 0;
 	CPU.OF = 0;
 	CPU.ZF = 0;
 	mmiu8(-20, CPU.EIP + 1);
-	exec16(0x7F);
+	execop(0x7F);
 	assert(CPU.IP == 0xEE);
 	OK;
 
@@ -992,7 +992,7 @@ unittest {
 	mmiu8(10, CPU.AL);
 	mmiu8(0b11_000_000, CPU.EIP+1);
 	mmiu8(20, CPU.EIP+2);
-	exec16(0x80);
+	execop(0x80);
 	assert(mmfu8(CPU.AL) == 30);
 	OK;
 	test("80h  GRP1 OR");
@@ -1000,7 +1000,7 @@ unittest {
 	mmiu8(0b1100_0011, CPU.AL);
 	mmiu8(0b11_001_000, CPU.EIP+1);
 	mmiu8(0b0011_0000, CPU.EIP+2);
-	exec16(0x80);
+	execop(0x80);
 	assert(mmfu8(CPU.AL) == 0b1111_0011);
 	OK;
 	test("80h  GRP1 ADC"); TODO;
@@ -1010,7 +1010,7 @@ unittest {
 	mmiu8(0b0011_0011, CPU.AL);
 	mmiu8(0b11_100_000, CPU.EIP+1);
 	mmiu8(0b0011_0000, CPU.EIP+2);
-	exec16(0x80);
+	execop(0x80);
 	assert(mmfu8(CPU.AL) == 0b0011_0000);
 	OK;
 	test("80h  GRP1 SUB/CMP");
@@ -1018,7 +1018,7 @@ unittest {
 	mmiu8(45, CPU.AL);
 	mmiu8(0b11_101_000, CPU.EIP+1);
 	mmiu8(20, CPU.EIP+2);
-	exec16(0x80);
+	execop(0x80);
 	assert(mmfu8(CPU.AL) == 25);
 	OK;
 	test("80h  GRP1 XOR");
@@ -1026,7 +1026,7 @@ unittest {
 	mmiu8(40, CPU.AL);
 	mmiu8(0b11_110_000, CPU.EIP+1);
 	mmiu8(20, CPU.EIP+2);
-	exec16(0x80);
+	execop(0x80);
 	assert(mmfu8(CPU.AL) == 60);
 	OK;
 
@@ -1035,7 +1035,7 @@ unittest {
 	mmiu16(40, CPU.AX);
 	mmiu8(0b11_000_000, CPU.EIP+1);
 	mmiu16(222, CPU.EIP+2);
-	exec16(0x81);
+	execop(0x81);
 	assert(mmfu16(CPU.AX) == 262);
 	OK;
 	test("81h  GRP1 OR");
@@ -1043,7 +1043,7 @@ unittest {
 	mmiu16(40, CPU.AX);
 	mmiu8(0b11_001_000, CPU.EIP+1);
 	mmiu16(222, CPU.EIP+2);
-	exec16(0x81);
+	execop(0x81);
 	assert(mmfu16(CPU.AX) == 254);
 	OK;
 	test("81h  GRP1 ADC"); TODO;
@@ -1053,7 +1053,7 @@ unittest {
 	mmiu16(40, CPU.AX);
 	mmiu8(0b11_100_000, CPU.EIP+1);
 	mmiu16(222, CPU.EIP+2);
-	exec16(0x81);
+	execop(0x81);
 	assert(mmfu16(CPU.AX) == 8);
 	OK;
 	test("81h  GRP1 SUB/CMP");
@@ -1061,7 +1061,7 @@ unittest {
 	mmiu16(222, CPU.AX);
 	mmiu8(0b11_101_000, CPU.EIP+1);
 	mmiu16(40, CPU.EIP+2);
-	exec16(0x81);
+	execop(0x81);
 	assert(mmfu16(CPU.AX) == 182);
 	OK;
 	test("81h  GRP1 XOR");
@@ -1069,7 +1069,7 @@ unittest {
 	mmiu16(222, CPU.AX);
 	mmiu8(0b11_110_000, CPU.EIP+1);
 	mmiu16(40, CPU.EIP+2);
-	exec16(0x81);
+	execop(0x81);
 	assert(mmfu16(CPU.AX) == 246);
 	OK;
 
@@ -1080,7 +1080,7 @@ unittest {
 	mmiu8(40, CPU.AL);
 	mmiu8(0b11_000_000, CPU.EIP+1);
 	mmiu8(20, CPU.EIP+2);
-	exec16(0x82);
+	execop(0x82);
 	assert(mmfu8(CPU.AL) == 60);
 	OK;
 	test("82h  GRP2 ADC"); TODO;
@@ -1090,7 +1090,7 @@ unittest {
 	mmiu8(40, CPU.AL);
 	mmiu8(0b11_101_000, CPU.EIP+1);
 	mmiu8(20, CPU.EIP+2);
-	exec16(0x82);
+	execop(0x82);
 	assert(mmfu8(CPU.AL) == 20);
 	OK;
 
@@ -1099,7 +1099,7 @@ unittest {
 	mmiu16(40, CPU.AX);
 	mmiu8(0b11_000_000, CPU.EIP+1);
 	mmiu16(20, CPU.EIP+2);
-	exec16(0x83);
+	execop(0x83);
 	assert(mmfu16(CPU.AX) == 60);
 	OK;
 	test("83h  GRP2 ADC"); TODO;
@@ -1109,7 +1109,7 @@ unittest {
 	mmiu16(40, CPU.AX);
 	mmiu8(0b11_101_000, CPU.EIP + 1);
 	mmiu16(25, CPU.EIP + 2);
-	exec16(0x83);
+	execop(0x83);
 	assert(mmfu16(CPU.AX) == 15);
 	OK;
 
@@ -1140,7 +1140,7 @@ unittest {
 	CPU.AL = 25;
 	mmiu8(50, CPU.CL);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x86);
+	execop(0x86);
 	assert(mmfu8(CPU.CL) == 25);
 	assert(CPU.AL == 50);
 	OK;
@@ -1150,7 +1150,7 @@ unittest {
 	CPU.AX = 1337;
 	mmiu16(666, CPU.CX);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x87);
+	execop(0x87);
 	assert(mmfu16(CPU.CX) == 1337);
 	assert(CPU.AX == 666);
 	OK;
@@ -1160,35 +1160,35 @@ unittest {
 	test("88h  MOV R/M8, REG8");
 	CPU.AL = 34;
 	mmiu8(0b11_000_000, CPU.EIP + 1);
-	exec16(0x88);
+	execop(0x88);
 	assert(mmfu8(CPU.AL) == 34);
 	CPU.CL = 77;
 	mmiu8(0b11_001_000, CPU.EIP + 1);
-	exec16(0x88);
+	execop(0x88);
 	assert(mmfu8(CPU.AL) == 77);
 	CPU.DL = 123;
 	mmiu8(0b11_010_000, CPU.EIP + 1);
-	exec16(0x88);
+	execop(0x88);
 	assert(mmfu8(CPU.AL) == 123);
 	CPU.BL = 231;
 	mmiu8(0b11_011_000, CPU.EIP + 1);
-	exec16(0x88);
+	execop(0x88);
 	assert(mmfu8(CPU.AL) == 231);
 	CPU.AH = 88;
 	mmiu8(0b11_100_000, CPU.EIP + 1);
-	exec16(0x88);
+	execop(0x88);
 	assert(mmfu8(CPU.AL) == 88);
 	CPU.CH = 32;
 	mmiu8(0b11_101_000, CPU.EIP + 1);
-	exec16(0x88);
+	execop(0x88);
 	assert(mmfu8(CPU.AL) == 32);
 	CPU.DH = 32;
 	mmiu8(0b11_110_000, CPU.EIP + 1);
-	exec16(0x88);
+	execop(0x88);
 	assert(mmfu8(CPU.AL) == 32);
 	CPU.BH = 42;
 	mmiu8(0b11_111_000, CPU.EIP + 1);
-	exec16(0x88);
+	execop(0x88);
 	assert(mmfu8(CPU.AL) == 42);
 	OK;
 
@@ -1197,35 +1197,35 @@ unittest {
 	test("89h  MOV R/M16, REG16");
 	CPU.AX = 344;
 	mmiu8(0b11_000_000, CPU.EIP + 1);
-	exec16(0x89);
+	execop(0x89);
 	assert(mmfu16(CPU.AX) == 344);
 	CPU.CX = 777;
 	mmiu8(0b11_001_000, CPU.EIP + 1);
-	exec16(0x89);
+	execop(0x89);
 	assert(mmfu16(CPU.AX) == 777);
 	CPU.DX = 1234;
 	mmiu8(0b11_010_000, CPU.EIP + 1);
-	exec16(0x89);
+	execop(0x89);
 	assert(mmfu16(CPU.AX) == 1234);
 	CPU.BX = 2311;
 	mmiu8(0b11_011_000, CPU.EIP + 1);
-	exec16(0x89);
+	execop(0x89);
 	assert(mmfu16(CPU.AX) == 2311);
 	CPU.SP = 8888;
 	mmiu8(0b11_100_000, CPU.EIP + 1);
-	exec16(0x89);
+	execop(0x89);
 	assert(mmfu16(CPU.AX) == 8888);
 	CPU.BP = 3200;
 	mmiu8(0b11_101_000, CPU.EIP + 1);
-	exec16(0x89);
+	execop(0x89);
 	assert(mmfu16(CPU.AX) == 3200);
 	CPU.SI = 3244;
 	mmiu8(0b11_110_000, CPU.EIP + 1);
-	exec16(0x89);
+	execop(0x89);
 	assert(mmfu16(CPU.AX) == 3244);
 	CPU.DI = 4212;
 	mmiu8(0b11_111_000, CPU.EIP + 1);
-	exec16(0x89);
+	execop(0x89);
 	assert(mmfu16(CPU.AX) == 4212);
 	OK;
 
@@ -1235,42 +1235,42 @@ unittest {
 	CPU.AL = 56;
 	mmiu8(CPU.AL, CPU.AL);
 	mmiu8(0b11_000_000, CPU.EIP + 1);
-	exec16(0x8A);
+	execop(0x8A);
 	assert(CPU.AL == 56);
 	CPU.CL = 152;
 	mmiu8(CPU.CL, CPU.AL);
 	mmiu8(0b11_001_000, CPU.EIP + 1);
-	exec16(0x8A);
+	execop(0x8A);
 	assert(CPU.CL == 152);
 	CPU.DL = 159;
 	mmiu8(CPU.DL, CPU.AL);
 	mmiu8(0b11_010_000, CPU.EIP + 1);
-	exec16(0x8A);
+	execop(0x8A);
 	assert(CPU.DL == 159);
 	CPU.BL = 129;
 	mmiu8(CPU.BL, CPU.AL);
 	mmiu8(0b11_011_000, CPU.EIP + 1);
-	exec16(0x8A);
+	execop(0x8A);
 	assert(CPU.BL == 129);
 	CPU.AH = 176;
 	mmiu8(CPU.AH, CPU.AL);
 	mmiu8(0b11_100_000, CPU.EIP + 1);
-	exec16(0x8A);
+	execop(0x8A);
 	assert(CPU.AH == 176);
 	CPU.CH = 166;
 	mmiu8(CPU.CH, CPU.AL);
 	mmiu8(0b11_101_000, CPU.EIP + 1);
-	exec16(0x8A);
+	execop(0x8A);
 	assert(CPU.CH == 166);
 	CPU.DH = 198;
 	mmiu8(CPU.DH, CPU.AL);
 	mmiu8(0b11_110_000, CPU.EIP + 1);
-	exec16(0x8A);
+	execop(0x8A);
 	assert(CPU.DH == 198);
 	CPU.BH = 111;
 	mmiu8(CPU.BH, CPU.AL);
 	mmiu8(0b11_111_000, CPU.EIP + 1);
-	exec16(0x8A);
+	execop(0x8A);
 	assert(CPU.BH == 111);
 	OK;
 
@@ -1280,42 +1280,42 @@ unittest {
 	CPU.AX = 5600;
 	mmiu16(CPU.AX, CPU.AX);
 	mmiu8(0b11_000_000, CPU.EIP + 1);
-	exec16(0x8B);
+	execop(0x8B);
 	assert(CPU.AX == 5600);
 	CPU.CX = 1520;
 	mmiu16(CPU.CX, CPU.AX);
 	mmiu8(0b11_001_000, CPU.EIP + 1);
-	exec16(0x8B);
+	execop(0x8B);
 	assert(CPU.CX == 1520);
 	CPU.DX = 1590;
 	mmiu16(CPU.DX, CPU.AX);
 	mmiu8(0b11_010_000, CPU.EIP + 1);
-	exec16(0x8B);
+	execop(0x8B);
 	assert(CPU.DX == 1590);
 	CPU.BX = 1290;
 	mmiu16(CPU.BX, CPU.AX);
 	mmiu8(0b11_011_000, CPU.EIP + 1);
-	exec16(0x8B);
+	execop(0x8B);
 	assert(CPU.BX == 1290);
 	CPU.SP = 1760;
 	mmiu16(CPU.SP, CPU.AX);
 	mmiu8(0b11_100_000, CPU.EIP + 1);
-	exec16(0x8B);
+	execop(0x8B);
 	assert(CPU.SP == 1760);
 	CPU.BP = 1660;
 	mmiu16(CPU.BP, CPU.AX);
 	mmiu8(0b11_101_000, CPU.EIP + 1);
-	exec16(0x8B);
+	execop(0x8B);
 	assert(CPU.BP == 1660);
 	CPU.SI = 1984;
 	mmiu16(CPU.SI, CPU.AX);
 	mmiu8(0b11_110_000, CPU.EIP + 1);
-	exec16(0x8B);
+	execop(0x8B);
 	assert(CPU.SI == 1984);
 	CPU.DI = 1110;
 	mmiu16(CPU.DI, CPU.AX);
 	mmiu8(0b11_111_000, CPU.EIP + 1);
-	exec16(0x8B);
+	execop(0x8B);
 	assert(CPU.DI == 1110);
 	OK;
 
@@ -1325,16 +1325,16 @@ unittest {
 	CPU.CS = 123; CPU.DS = 124; CPU.ES = 125; CPU.SS = 126;
 	CPU.AX = 0x4440; // address
 	mmiu8(0b11_101_000, CPU.EIP + 1);
-	exec16(0x8C);
+	execop(0x8C);
 	assert(mmfu16(CPU.AX) == CPU.CS);
 	mmiu8(0b11_111_000, CPU.EIP + 1);
-	exec16(0x8C);
+	execop(0x8C);
 	assert(mmfu16(CPU.AX) == CPU.DS);
 	mmiu8(0b11_100_000, CPU.EIP + 1);
-	exec16(0x8C);
+	execop(0x8C);
 	assert(mmfu16(CPU.AX) == CPU.ES);
 	mmiu8(0b11_110_000, CPU.EIP + 1);
-	exec16(0x8C);
+	execop(0x8C);
 	assert(mmfu16(CPU.AX) == CPU.SS);
 	OK;
 
@@ -1343,7 +1343,7 @@ unittest {
 	test("8Dh  LEA REG16, MEM16");
 	CPU.SI = 0xAAAA;
 	mmiu8(0b11_000_110, CPU.EIP + 1);
-	exec16(0x8D);
+	execop(0x8D);
 	assert(CPU.AX == CPU.SI);
 	OK;
 
@@ -1352,19 +1352,19 @@ unittest {
 	test("8Eh  MOV SEGREG, R/M16");
 	mmiu8(0b11_101_000, CPU.EIP + 1);
 	mmiu16(8922, CPU.AX);
-	exec16(0x8E);
+	execop(0x8E);
 	assert(CPU.CS == 8922);
 	mmiu8(0b11_111_000, CPU.EIP + 1);
 	mmiu16(4932, CPU.AX);
-	exec16(0x8E);
+	execop(0x8E);
 	assert(CPU.DS == 4932);
 	mmiu8(0b11_100_000, CPU.EIP + 1);
 	mmiu16(7632, CPU.AX);
-	exec16(0x8E);
+	execop(0x8E);
 	assert(CPU.ES == 7632);
 	mmiu8(0b11_110_000, CPU.EIP + 1);
 	mmiu16(9999, CPU.AX);
-	exec16(0x8E);
+	execop(0x8E);
 	assert(CPU.SS == 9999);
 	OK;
 
@@ -1374,7 +1374,7 @@ unittest {
 	CPU.CX = 0x4000;
 	CPU.push16(1234);
 	mmiu8(0b11_000_001, CPU.EIP + 1);
-	exec16(0x8F);
+	execop(0x8F);
 	assert(mmfu16(CPU.CX) == 1234);
 	OK;
 
@@ -1383,7 +1383,7 @@ unittest {
 	test("90h  NOP");
 	{ // Nevertheless, let's test the Program Counter
 		CPU.AX = cast(ushort)(CPU.IP + 1); // expected IP
-		exec16(0x90);
+		execop(0x90);
 		assert(CPU.AX == CPU.IP);
 	}
 	OK;
@@ -1391,7 +1391,7 @@ unittest {
 	test("91h  XCHG AX, CX");
 	CPU.AX = 0xFAB;
 	CPU.CX = 0xAABB;
-	exec16(0x91);
+	execop(0x91);
 	assert(CPU.AX == 0xAABB);
 	assert(CPU.CX == 0xFAB);
 	OK;
@@ -1399,7 +1399,7 @@ unittest {
 	test("92h  XCHG AX, DX");
 	CPU.AX = 0xFAB;
 	CPU.DX = 0xAABB;
-	exec16(0x92);
+	execop(0x92);
 	assert(CPU.AX == 0xAABB);
 	assert(CPU.DX == 0xFAB);
 	OK;
@@ -1407,7 +1407,7 @@ unittest {
 	test("93h  XCHG AX, BX");
 	CPU.AX = 0xFAB;
 	CPU.BX = 0xAABB;
-	exec16(0x93);
+	execop(0x93);
 	assert(CPU.AX == 0xAABB);
 	assert(CPU.BX == 0xFAB);
 	OK;
@@ -1415,7 +1415,7 @@ unittest {
 	test("94h  XCHG AX, SP");
 	CPU.AX = 0xFAB;
 	CPU.SP = 0xAABB;
-	exec16(0x94);
+	execop(0x94);
 	assert(CPU.AX == 0xAABB);
 	assert(CPU.SP == 0xFAB);
 	OK;
@@ -1423,7 +1423,7 @@ unittest {
 	test("95h  XCHG AX, BP");
 	CPU.AX = 0xFAB;
 	CPU.BP = 0xAABB;
-	exec16(0x95);
+	execop(0x95);
 	assert(CPU.AX == 0xAABB);
 	assert(CPU.BP == 0xFAB);
 	OK;
@@ -1431,7 +1431,7 @@ unittest {
 	test("96h  XCHG AX, SI");
 	CPU.AX = 0xFAB;
 	CPU.SI = 0xAABB;
-	exec16(0x96);
+	execop(0x96);
 	assert(CPU.AX == 0xAABB);
 	assert(CPU.SI == 0xFAB);
 	OK;
@@ -1439,7 +1439,7 @@ unittest {
 	test("97h  XCHG AX, DI");
 	CPU.AX = 0xFAB;
 	CPU.DI = 0xAABB;
-	exec16(0x97);
+	execop(0x97);
 	assert(CPU.AX == 0xAABB);
 	assert(CPU.DI == 0xFAB);
 	OK;
@@ -1448,10 +1448,10 @@ unittest {
 
 	test("98h  CBW");
 	CPU.AL = 0;
-	exec16(0x98);
+	execop(0x98);
 	assert(CPU.AH == 0);
 	CPU.AL = 0xFF;
-	exec16(0x98);
+	execop(0x98);
 	assert(CPU.AH == 0xFF);
 	OK;
 
@@ -1459,10 +1459,10 @@ unittest {
 
 	test("99h  CWD");
 	CPU.AX = 0;
-	exec16(0x99);
+	execop(0x99);
 	assert(CPU.DX == 0);
 	CPU.AX = 0xFFFF;
-	exec16(0x99);
+	execop(0x99);
 	assert(CPU.DX == 0xFFFF);
 	OK;
 
@@ -1473,7 +1473,7 @@ unittest {
 	// PUSHF
 
 	test("9Ch  PUSHF");
-	exec16(0x9C);
+	execop(0x9C);
 	assert(mmfu16(address(CPU.SS, CPU.SP)) == CPU.FLAGS);
 	OK;
 
@@ -1481,7 +1481,7 @@ unittest {
 
 	test("9Dh  POPF");
 	CPU.BX = CPU.FLAG;
-	exec16(0x9D); // Popped!
+	execop(0x9D); // Popped!
 	assert(CPU.BX == CPU.FLAGS);
 	OK;
 
@@ -1489,7 +1489,7 @@ unittest {
 
 	test("9Eh  SAHF");
 	CPU.AH = 1;
-	exec16(0x9E);
+	execop(0x9E);
 	assert(CPU.FLAG == 3);
 	OK;
 
@@ -1497,7 +1497,7 @@ unittest {
 
 	test("9Fh  LAHF");
 	CPU.FLAG = 7; // 111
-	exec16(0x9F);
+	execop(0x9F);
 	assert(CPU.FLAG == 7); // 101
 	OK;
 
@@ -1506,7 +1506,7 @@ unittest {
 	test("A0h  MOV AL, MEM8");
 	mmiu8(167, 0x8000);
 	mmiu16(0x8000, CPU.EIP + 1);
-	exec16(0xA0);
+	execop(0xA0);
 	assert(CPU.AL == 167);
 	OK;
 
@@ -1515,7 +1515,7 @@ unittest {
 	test("A1h  MOV AX, MEM16");
 	mmiu16(1670, 0x8000);
 	mmiu16(0x8000, CPU.EIP + 1);
-	exec16(0xA1);
+	execop(0xA1);
 	assert(CPU.AX == 1670);
 	OK;
 
@@ -1524,7 +1524,7 @@ unittest {
 	test("A2h  MOV MEM8, AL");
 	CPU.AL = 143;
 	mmiu16(0x4000, CPU.EIP + 1);
-	exec16(0xA2);
+	execop(0xA2);
 	assert(mmfu8(0x4000) == 143);
 	OK;
 
@@ -1533,7 +1533,7 @@ unittest {
 	test("A3h  MOV MEM16, AX");
 	CPU.AX = 1430;
 	mmiu16(0x4000, CPU.EIP + 1);
-	exec16(0xA3);
+	execop(0xA3);
 	assert(mmfu16(0x4000) == 1430);
 	OK;
 
@@ -1546,13 +1546,13 @@ unittest {
 	mmistr("HELL", get_ip);
 	CPU.CS = CPU.DS = 0xF00; CPU.SI = CPU.EIP = 0x110;
 	mmistr("HeLL", get_ip);
-	exec16(0xA6);
+	execop(0xA6);
 	assert(CPU.ZF);
-	exec16(0xA6);
+	execop(0xA6);
 	assert(!CPU.ZF);
-	exec16(0xA6);
+	execop(0xA6);
 	assert(CPU.ZF);
-	exec16(0xA6);
+	execop(0xA6);
 	assert(CPU.ZF);
 	OK;
 
@@ -1561,13 +1561,13 @@ unittest {
 	mmiwstr("HELL"w, get_ip);
 	CPU.CS = CPU.DS = 0xF00; CPU.SI = CPU.EIP = 0x110;
 	mmiwstr("HeLL"w, get_ip);
-	exec16(0xA7);
+	execop(0xA7);
 	assert(CPU.ZF);
-	exec16(0xA7);
+	execop(0xA7);
 	assert(!CPU.ZF);
-	exec16(0xA7);
+	execop(0xA7);
 	assert(CPU.ZF);
-	exec16(0xA7);
+	execop(0xA7);
 	assert(CPU.ZF);
 	OK;
 
@@ -1576,7 +1576,7 @@ unittest {
 	test("A8h  TEST AL, IMM8");
 	CPU.AL = 0b1100;
 	mmiu8(0b1100, CPU.EIP + 1);
-	exec16(0xA8);
+	execop(0xA8);
 	assert(CPU.PF);
 	assert(CPU.ZF == 0);
 	assert(CPU.SF == 0);
@@ -1584,7 +1584,7 @@ unittest {
 	assert(CPU.OF == 0);
 	CPU.AL = 0xF0;
 	mmiu8(0x0F, CPU.EIP + 1);
-	exec16(0xA8);
+	execop(0xA8);
 	assert(CPU.PF);
 	assert(CPU.ZF);
 	assert(CPU.SF == 0);
@@ -1597,7 +1597,7 @@ unittest {
 	test("A9h  TEST AX, IMM16");
 	CPU.AX = 0xAA00;
 	mmiu16(0xAA00, CPU.EIP + 1);
-	exec16(0xA9);
+	execop(0xA9);
 	assert(CPU.PF);
 	assert(CPU.ZF == 0);
 	assert(CPU.SF);
@@ -1610,14 +1610,14 @@ unittest {
 	test("AAh  STOS");
 	CPU.ES = 0x20; CPU.DI = 0x20;        
 	CPU.AL = 'Q';
-	exec16(0xAA);
+	execop(0xAA);
 	assert(MEM[address(CPU.ES, CPU.DI - 1)] == 'Q');
 	OK;
 
 	test("ABh  STOSW");
 	CPU.ES = 0x200; CPU.DI = 0x200;        
 	CPU.AX = 0xACDC;
-	exec16(0xAB);
+	execop(0xAB);
 	assert(mmfu16(address(CPU.ES, CPU.DI - 2)) == 0xACDC);
 	OK;
 
@@ -1627,10 +1627,10 @@ unittest {
 	CPU.AL = 0;
 	CPU.DS = 0xA0; CPU.SI = 0x200;
 	MEM[address(CPU.DS, CPU.SI)] = 'H';
-	exec16(0xAC);
+	execop(0xAC);
 	assert(CPU.AL == 'H');
 	MEM[address(CPU.DS, CPU.SI)] = 'e';
-	exec16(0xAC);
+	execop(0xAC);
 	assert(CPU.AL == 'e');
 	OK;
 
@@ -1638,10 +1638,10 @@ unittest {
 	CPU.AX = 0;
 	CPU.DS = 0x40; CPU.SI = 0x80;
 	mmiu16(0x48AA, address(CPU.DS, CPU.SI));
-	exec16(0xAD);
+	execop(0xAD);
 	assert(CPU.AX == 0x48AA);
 	mmiu16(0x65BB, address(CPU.DS, CPU.SI));
-	exec16(0xAD);
+	execop(0xAD);
 	assert(CPU.AX == 0x65BB);
 	OK;
 
@@ -1652,10 +1652,10 @@ unittest {
 	CPU.EIP = get_ip;
 	mmistr("Hello!");
 	CPU.AL = 'H';
-	exec16(0xAE);
+	execop(0xAE);
 	assert(CPU.ZF);
 	CPU.AL = '1';
-	exec16(0xAE);
+	execop(0xAE);
 	assert(!CPU.ZF);
 	OK;
 
@@ -1663,9 +1663,9 @@ unittest {
 	CPU.CS = 0x800; CPU.ES = 0x800; CPU.EIP = 0x30; CPU.DI = 0x30;
 	mmiu16(0xFE22, address(CPU.ES, CPU.DI));
 	CPU.AX = 0xFE22;
-	exec16(0xAF);
+	execop(0xAF);
 	assert(CPU.ZF);
-	exec16(0xAF);
+	execop(0xAF);
 	assert(!CPU.ZF);
 	OK;
 
@@ -1673,49 +1673,49 @@ unittest {
 
 	test("B0h  MOV AL, IMM8");
 	mmiu8(0x1, CPU.EIP + 1);
-	exec16(0xB0); // MOV AL, 1
+	execop(0xB0); // MOV AL, 1
 	assert(CPU.AL == 1);
 	OK;
 
 	test("B1h  MOV CL, IMM8");
 	mmiu8(0x2, CPU.EIP + 1);
-	exec16(0xB1); // MOV CL, 2
+	execop(0xB1); // MOV CL, 2
 	assert(CPU.CL == 2);
 	OK;
 
 	test("B2h  MOV DL, IMM8");
 	mmiu8(0x3, CPU.EIP + 1);
-	exec16(0xB2); // MOV DL, 3
+	execop(0xB2); // MOV DL, 3
 	assert(CPU.DL == 3);
 	OK;
 
 	test("B3h  MOV BL, IMM8");
 	mmiu8(0x4, CPU.EIP + 1);
-	exec16(0xB3); // MOV BL, 4
+	execop(0xB3); // MOV BL, 4
 	assert(CPU.BL == 4);
 	OK;
 
 	test("B4h  MOV AH, IMM8");
 	mmiu8(0x5, CPU.EIP + 1);
-	exec16(0xB4); // MOV AH, 5
+	execop(0xB4); // MOV AH, 5
 	assert(CPU.AH == 5);
 	OK;
 
 	test("B5h  MOV CH, IMM8");
 	mmiu8(0x6, CPU.EIP + 1);
-	exec16(0xB5); // MOV CH, 6
+	execop(0xB5); // MOV CH, 6
 	assert(CPU.CH == 6);
 	OK;
 
 	test("B6h  MOV DH, IMM8");
 	mmiu8(0x7, CPU.EIP + 1);
-	exec16(0xB6); // MOV DH, 7
+	execop(0xB6); // MOV DH, 7
 	assert(CPU.DH == 7);
 	OK;
 
 	test("B7h  MOV BH, IMM8");
 	mmiu8(0x8, CPU.EIP + 1);
-	exec16(0xB7); // MOV BH, 8
+	execop(0xB7); // MOV BH, 8
 	assert(CPU.BH == 8);
 	OK;
 
@@ -1723,49 +1723,49 @@ unittest {
 
 	test("B8h  MOV AX, IMM16");
 	mmiu16(0x1112, CPU.EIP + 1);
-	exec16(0xB8); // MOV AX, 1112h
+	execop(0xB8); // MOV AX, 1112h
 	assert(CPU.AX == 0x1112);
 	OK;
 
 	test("B9h  MOV CX, IMM16");
 	mmiu16(0x1113, CPU.EIP + 1);
-	exec16(0xB9); // MOV CX, 1113h
+	execop(0xB9); // MOV CX, 1113h
 	assert(CPU.CX == 0x1113);
 	OK;
 
 	test("BAh  MOV DX, IMM16");
 	mmiu16(0x1114, CPU.EIP + 1);
-	exec16(0xBA); // MOV DX, 1114h
+	execop(0xBA); // MOV DX, 1114h
 	assert(CPU.DX == 0x1114);
 	OK;
 
 	test("BBh  MOV BX, IMM16");
 	mmiu16(0x1115, CPU.EIP + 1);
-	exec16(0xBB); // MOV BX, 1115h
+	execop(0xBB); // MOV BX, 1115h
 	assert(CPU.BX == 0x1115);
 	OK;
 
 	test("BCh  MOV SP, IMM16");
 	mmiu16(0x1116, CPU.EIP + 1);
-	exec16(0xBC); // MOV SP, 1116h
+	execop(0xBC); // MOV SP, 1116h
 	assert(CPU.SP == 0x1116);
 	OK;
 
 	test("BDh  MOV BP, IMM16");
 	mmiu16(0x1117, CPU.EIP + 1);
-	exec16(0xBD); // MOV BP, 1117h
+	execop(0xBD); // MOV BP, 1117h
 	assert(CPU.BP == 0x1117);
 	OK;
 
 	test("BEh  MOV SI, IMM16");
 	mmiu16(0x1118, CPU.EIP + 1);
-	exec16(0xBE); // MOV SI, 1118h
+	execop(0xBE); // MOV SI, 1118h
 	assert(CPU.SI == 0x1118);
 	OK;
 
 	test("BFh  MOV DI, IMM16");
 	mmiu16(0x1119, CPU.EIP + 1);
-	exec16(0xBF); // MOV DI, 1119h
+	execop(0xBF); // MOV DI, 1119h
 	assert(CPU.DI == 0x1119);
 	OK;
 
@@ -1775,7 +1775,7 @@ unittest {
 	CPU.IP = 0x200;
 	CPU.push16(CPU.IP);
 	CPU.IP = 0x340;
-	exec16(0xC2);
+	execop(0xC2);
 	assert(CPU.IP == 0x200);
 	//TODO: Check SP
 	OK;
@@ -1784,7 +1784,7 @@ unittest {
 	CPU.IP = 0x200;
 	CPU.push16(CPU.IP);
 	CPU.IP = 0x340;
-	exec16(0xC3);
+	execop(0xC3);
 	assert(CPU.IP == 0x200);
 	OK;
 
@@ -1794,7 +1794,7 @@ unittest {
 	CPU.CX = 0x3000;
 	mmiu16(0x5000, CPU.CX);
 	mmiu8(0b11_111_001, CPU.EIP + 1);
-	exec16(0xC4);
+	execop(0xC4);
 	assert(CPU.DI == 0x5000);
 	assert(CPU.Segment == SEG_ES);
 	OK;
@@ -1805,7 +1805,7 @@ unittest {
 	CPU.CX = 0x4000;
 	mmiu16(0x6000, CPU.CX);
 	mmiu8(0b11_111_001, CPU.EIP + 1);
-	exec16(0xC5);
+	execop(0xC5);
 	assert(CPU.DI == 0x6000);
 	assert(CPU.Segment == SEG_DS);
 	OK;
@@ -1816,7 +1816,7 @@ unittest {
 	CPU.CL = 240;
 	mmiu8(0b11_000_001, CPU.EIP + 1);
 	mmiu8(24, CPU.EIP + 2);
-	exec16(0xC6);
+	execop(0xC6);
 	assert(mmfu8(CPU.CL) == 24);
 	OK;
 
@@ -1824,7 +1824,7 @@ unittest {
 	CPU.CX = 24000;
 	mmiu8(0b11_000_001, CPU.EIP + 1);
 	mmiu16(2400, CPU.EIP + 2);
-	exec16(0xC7);
+	execop(0xC7);
 	assert(mmfu16(CPU.CX) == 2400);
 	OK;
 
@@ -1841,7 +1841,7 @@ unittest {
 	CPU.EIP = get_ip;
 	CPU.BX = CPU.SP; // old SP
 	mmiu16(0x100, CPU.EIP + 1);
-	exec16(0xCA);
+	execop(0xCA);
 	assert(CPU.IP == 0x100);
 	assert(CPU.CS == 0x800);
 	assert(CPU.SP == 0x1100);
@@ -1854,7 +1854,7 @@ unittest {
 	CPU.push16(CPU.IP);
 	CPU.IP = 0x300;
 	CPU.CS = 0x500;
-	exec16(0xCB);
+	execop(0xCB);
 	assert(CPU.IP == 0x200);
 	assert(CPU.CS == 0x900);
 	OK;
@@ -1875,14 +1875,14 @@ unittest {
 	CPU.AL = 0x40;
 	mmiu8(0b11_000_000, CPU.EIP + 1);
 	mmiu8(0b1111_0000, CPU.AL);
-	exec16(0xD0);
+	execop(0xD0);
 	assert(mmfu8(CPU.AL) == 0b1110_0001);
 	OK;
 	test("D0h  GRP2 ROR R/M8, 1");
 	CPU.AL = 0x40;
 	mmiu8(0b11_001_000, CPU.EIP + 1);
 	mmiu8(0b0000_1111, CPU.AL);
-	exec16(0xD0);
+	execop(0xD0);
 	assert(mmfu8(CPU.AL) == 0b1000_0111);
 	OK;
 	test("D0h  GRP2 RCL R/M8, 1"); TODO;
@@ -1897,14 +1897,14 @@ unittest {
 	CPU.AX = 0x400;
 	mmiu8(0b11_000_000, CPU.EIP + 1);
 	mmiu16(0x8000, CPU.AX);
-	exec16(0xD1);
+	execop(0xD1);
 	assert(mmfu16(CPU.AX) == 1);
 	OK;
 	test("D1h  GRP2 ROR R/M16, 1");
 	CPU.AX = 0x400;
 	mmiu8(0b11_001_000, CPU.EIP + 1);
 	mmiu16(1, CPU.AX);
-	exec16(0xD1);
+	execop(0xD1);
 	assert(mmfu16(CPU.AX) == 0x8000);
 	OK;
 	test("D1h  GRP2 RCL R/M16, 1"); TODO;
@@ -1938,7 +1938,7 @@ unittest {
 	test("D4h  AAM");
 	CPU.AL = 55;
 	mmiu8(10, CPU.EIP + 1);
-	exec16(0xD4);
+	execop(0xD4);
 	assert(CPU.AH == 5);
 	assert(CPU.AL == 5);
 	OK;
@@ -1949,7 +1949,7 @@ unittest {
 	CPU.AL = 0x55;
 	CPU.AH = 0xAA;
 	mmiu8(10, CPU.EIP + 1);
-	exec16(0xD5);
+	execop(0xD5);
 	assert(CPU.AH == 0);
 	assert(CPU.AL == 0xF9);
 	OK;
@@ -1961,7 +1961,7 @@ unittest {
 	CPU.DS = 0x400;
 	CPU.BX = 0x20;
 	mmiu8(36, address(CPU.DS, CPU.BX) + CPU.AL);
-	exec16(0xD7);
+	execop(0xD7);
 	assert(CPU.AL == 36);
 	OK;
 
@@ -1984,7 +1984,7 @@ unittest {
 	test("E9h  JMP (NEAR)");
 	CPU.IP = 0x200;
 	mmiu16(0x10, CPU.EIP + 1);
-	exec16(0xE9);
+	execop(0xE9);
 	assert(CPU.IP == 0x213);
 	OK;
 
@@ -1993,7 +1993,7 @@ unittest {
 	CPU.IP = 0x200;
 	mmiu16(0x300, CPU.EIP + 1);
 	mmiu16(0x400, CPU.EIP + 3);
-	exec16(0xEA);
+	execop(0xEA);
 	assert(CPU.IP == 0x300);
 	assert(CPU.CS == 0x400);
 	OK;
@@ -2001,7 +2001,7 @@ unittest {
 	test("EBh  JMP (SHORT)");
 	CPU.IP = 0x100;
 	mmiu8(0x20, CPU.EIP + 1);
-	exec16(0xEB);
+	execop(0xEB);
 	assert(CPU.IP == 0x122);
 	OK;
 
@@ -2024,7 +2024,7 @@ unittest {
 	// CMC
 
 	CPU.CF = 0;
-	test("F5h  CMC"); exec16(0xF5); assert(CPU.CF); OK;
+	test("F5h  CMC"); execop(0xF5); assert(CPU.CF); OK;
 
 	// Group 3, 8-bit
 	
@@ -2036,19 +2036,19 @@ unittest {
 	mmiu8(0xAF, CPU.AL);
 	mmiu8(0b11_000_000, CPU.EIP + 1);
 	mmiu8(0xF, CPU.EIP + 2);
-	exec16(0xF6);
+	execop(0xF6);
 	assert(CPU.ZF == 0 && CPU.OF == 0);
 	OK;
 	test("F6h  GRP3 NOT");
 	mmiu8(0b11_010_000, CPU.EIP + 1);
 	mmiu8(0xF, CPU.AL);
-	exec16(0xF6);
+	execop(0xF6);
 	assert(mmfu8(CPU.AL) == 0xF0);
 	OK;
 	test("F6h  GRP3 NEG");
 	mmiu8(0b11_011_000, CPU.EIP + 1);
 	mmiu8(0xF, CPU.AL);
-	exec16(0xF6);
+	execop(0xF6);
 	assert(mmfu8(CPU.AL) == 0xF1);
 	assert(CPU.ZF == 0);
 	assert(CPU.OF == 0);
@@ -2058,7 +2058,7 @@ unittest {
 	CPU.AL = 4;
 	mmiu8(0b00_100_111, CPU.EIP + 1);
 	mmiu8(4, CPU.BX);
-	exec16(0xF6);
+	execop(0xF6);
 	assert(CPU.AX == 16);
 	assert(CPU.CF == 0);
 	assert(CPU.OF == 0);
@@ -2068,7 +2068,7 @@ unittest {
 	CPU.AL = 4;
 	mmiu8(0b00_101_111, CPU.EIP + 1);
 	mmiu8(0xFC, CPU.BX); // -4
-	exec16(0xF6);
+	execop(0xF6);
 	assert(CPU.AX == 0xFFF0);
 	assert(CPU.CF);
 	assert(CPU.OF);
@@ -2077,7 +2077,7 @@ unittest {
 	CPU.AL = 8;
 	mmiu8(0b00_110_111, CPU.EIP + 1);
 	mmiu8(2, CPU.BX);
-	exec16(0xF6);
+	execop(0xF6);
 	assert(CPU.AL == 4);
 	assert(CPU.AH == 0);
 	OK;
@@ -2085,7 +2085,7 @@ unittest {
 	CPU.AL = 8;
 	mmiu8(0b00_111_111, CPU.EIP + 1);
 	mmiu8(0xFE, CPU.BX); // -2
-	exec16(0xF6);
+	execop(0xF6);
 	assert(CPU.AL == 0xFC); // -4
 	assert(CPU.AH == 0);
 	OK;
@@ -2102,12 +2102,12 @@ unittest {
 
 	// Flags
 
-	test("F8h  CLC"); exec16(0xF8); assert(CPU.CF == 0); OK;
-	test("F9h  STC"); exec16(0xF9); assert(CPU.CF); OK;
-	test("FAh  CLI"); exec16(0xFA); assert(CPU.IF == 0); OK;
-	test("FBh  STI"); exec16(0xFB); assert(CPU.IF); OK;
-	test("FCh  CLD"); exec16(0xFC); assert(CPU.DF == 0); OK;
-	test("FDh  STD"); exec16(0xFD); assert(CPU.DF); OK;
+	test("F8h  CLC"); execop(0xF8); assert(CPU.CF == 0); OK;
+	test("F9h  STC"); execop(0xF9); assert(CPU.CF); OK;
+	test("FAh  CLI"); execop(0xFA); assert(CPU.IF == 0); OK;
+	test("FBh  STI"); execop(0xFB); assert(CPU.IF); OK;
+	test("FCh  CLD"); execop(0xFC); assert(CPU.DF == 0); OK;
+	test("FDh  STD"); execop(0xFD); assert(CPU.DF); OK;
 
 	// Group 4, 8-bit
 
