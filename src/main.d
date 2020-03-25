@@ -155,9 +155,8 @@ NO_ARGS:
 	//TODO: Read settings here
 
 	vcpu_init;	// vcpu
-	con_clear;
 	vdos_init;	// vdos + screen
-	con_clear;
+	video_init;
 
 	if (opt_smsg) {
 		video_printf(

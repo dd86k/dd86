@@ -81,14 +81,14 @@ enum : ushort {
 }
 
 /// Used by: vcpu.*, and os.* functions
-uint errno;
+uint vmerr;
 
 /**
  *
  * Returns: 
  */
 const(char) *err_str() {
-	switch (errno) {
+	switch (vmerr) {
 	//
 	// DOS
 	//

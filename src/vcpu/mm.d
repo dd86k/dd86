@@ -38,11 +38,11 @@ extern (C):
  */
 void mmiu8(int op, int addr) {
 	if (addr >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return;
 	}
 	MEM[addr] = cast(ubyte)op;
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 }
 
 /**
@@ -53,11 +53,11 @@ void mmiu8(int op, int addr) {
  */
 void mmiu16(int data, int addr) {
 	if (addr + 1 >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return;
 	}
 	*cast(ushort*)(MEM + addr) = cast(ushort)data;
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 }
 
 /**
@@ -68,11 +68,11 @@ void mmiu16(int data, int addr) {
  */
 void mmiu32(int op, int addr) {
 	if (addr + 3 >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return;
 	}
 	*cast(uint*)(MEM + addr) = op;
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 }
 
 /**
@@ -84,11 +84,11 @@ void mmiu32(int op, int addr) {
  */
 void mmiarr(void *ops, size_t size, size_t addr) {
 	if (addr + size >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return;
 	}
 	memcpy(MEM + addr, ops, size);
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 }
 
 /**
@@ -100,11 +100,11 @@ void mmiarr(void *ops, size_t size, size_t addr) {
 void mmistr(const(char) *data, size_t addr = CPU.EIP) {
 	//TODO: Check string size
 	if (addr >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return;
 	}
 	strcpy(cast(char*)(MEM + addr), data);
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 }
 
 /**
@@ -116,11 +116,18 @@ void mmistr(const(char) *data, size_t addr = CPU.EIP) {
 void mmiwstr(immutable(wchar)[] data, size_t addr = CPU.EIP) {
 	//TODO: Check string size
 	if (addr >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return;
 	}
+	//TODO: Replace wcscpy
+/*	ushort *m = cast(ushort*)(MEM + addr);
+	const(ushort) *d = cast(const(ushort)*)data.ptr;
+	do {
+		*m = *d;
+		++d;
+	} while (*d);*/
 	wcscpy(cast(wchar_t*)(MEM + addr), cast(wchar_t*)data);
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 }
 
 //
@@ -134,10 +141,10 @@ void mmiwstr(immutable(wchar)[] data, size_t addr = CPU.EIP) {
  */
 ubyte mmfu8(uint addr) {
 	if (addr >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return 0;
 	}
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 	return MEM[addr];
 }
 
@@ -157,10 +164,10 @@ byte mmfi8(uint addr) {
  */
 ushort mmfu16(uint addr) {
 	if (addr + 1 >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return 0;
 	}
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 	return *cast(ushort*)(MEM + addr);
 }
 
@@ -181,10 +188,10 @@ short mmfi16(uint addr) {
  */
 uint mmfu32(uint addr) {
 	if (addr + 3 >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return 0;
 	}
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 	return *cast(uint*)(MEM + addr);
 }
 
@@ -201,7 +208,7 @@ uint mmfu32(uint addr) {
 const(char) *mmfstr(uint addr, int *length = null) {
 	enum size_t STR_LIMIT = 65535;
 	if (addr >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return null;
 	}
 	size_t strl;
@@ -210,11 +217,11 @@ const(char) *mmfstr(uint addr, int *length = null) {
 		++strl;
 	}
 	if (addr + strl >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return null;
 	}
 	if (length) *length = cast(int)strl;
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 	return p;
 }
 
@@ -230,10 +237,10 @@ const(char) *mmfstr(uint addr, int *length = null) {
 ubyte mmfu8_i(int n = 0) {
 	size_t addr = CPU.EIP + 1 + n;
 	if (addr >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return 0;
 	}
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 	return MEM[addr];
 }
 
@@ -255,10 +262,10 @@ byte mmfi8_i(int n = 0) {
 ushort mmfu16_i(int n = 0) {
 	size_t addr = CPU.EIP + 1 + n;
 	if (addr + 1>= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return 0;
 	}
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 	return *cast(ushort*)(MEM + addr);
 }
 
@@ -280,10 +287,10 @@ short mmfi16_i(int n = 0) {
 uint mmfu32_i(int n = 0) {
 	size_t addr = CPU.EIP + 1 + n;
 	if (addr + 3 >= MEMSIZE) {
-		errno = E_MM_OVRFLW;
+		vmerr = E_MM_OVRFLW;
 		return 0;
 	}
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 	return *cast(uint*)(MEM + addr);
 }
 
@@ -387,7 +394,7 @@ uint mmrm16(ubyte rm, ubyte wide = 0) {
 	default:
 	}
 
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 	return r;
 }
 
@@ -473,6 +480,6 @@ uint mmrm32(ubyte rm, ubyte wide = 0) {
 	default:
 	}
 
-	errno = E_MM_OK;
+	vmerr = E_MM_OK;
 	return r;
 }

@@ -52,8 +52,6 @@ void vdos_init() {
 	SYSTEM.screen_col = 80;
 
 	DOS = cast(dos_dev_t*)(MEM + __MM_SYS_DOS);
-
-	video_init;
 }
 
 /**

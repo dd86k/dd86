@@ -28,7 +28,8 @@ videochar *VIDEO = void;	/// video buffer
 version (Windows) {
 	import core.sys.windows.wincon :
 		WriteConsoleOutputW, WriteConsoleOutputA,
-		COORD, SMALL_RECT, CHAR_INFO, SetConsoleOutputCP;
+		COORD, SMALL_RECT, CHAR_INFO;
+	import core.sys.windows.windows;
 	import os.term : hOut;
 
 	private CHAR_INFO *ibuf = void;	/// Intermediate buffer
@@ -204,8 +205,15 @@ void video_init() {
 		ibufsize.X = 80;
 		ibufsize.Y = 25;
 		ibufout.Top = ibufout.Left = 0;
-		ibufout.Bottom = 24;
 		ibufout.Right = 79;
+		ibufout.Bottom = 24;
+		hOut = CreateConsoleScreenBuffer(
+			GENERIC_READ | GENERIC_WRITE,
+			FILE_SHARE_READ | FILE_SHARE_WRITE,
+			NULL,
+			CONSOLE_TEXTMODE_BUFFER,
+			NULL);
+		SetConsoleActiveScreenBuffer(hOut);
 	}
 	version (Posix) {
 		fg = cast(ushort*)(fg_s + 7);
