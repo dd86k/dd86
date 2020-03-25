@@ -181,23 +181,23 @@ struct CPU_t {
 	//
 
 	/// Preferred Segment register, defaults to SEG_NONE
-	ubyte Segment;
+	ubyte segment;
 	/// Current operation mode, defaults to CPU_MODE_REAL
-	ubyte Mode;
+	ubyte mode;
 	/// Current execution level (ring)
-	byte Ring;
+	byte ring;
 	/// Elapsed cycles
 	uint Cycles;
 
 	/// Set if OPCODE PREFIX (66h) has been set
-	ubyte Prefix_Operand;
+	ubyte pf_operand;
 	/// Set if ADDRESS PREFIX (67h) has been set
-	ubyte Prefix_Address;
+	ubyte pf_address;
 	/// LOCK prefix
-	ubyte Lock;
+	ubyte lock;
 
 	/// CPU model: 8086, 80486, etc.
-	ubyte Model;
+	ubyte model;
 	/// Is sleeping available to use? If so, use it
 	bool sleep = 1;
 
@@ -320,7 +320,7 @@ void vcpu_init(ref CPU_t cpu = CPU) {
 	MEM = cast(ubyte*)realloc(MEM, INIT_MEM); // in case of re-init
 	cpu.CS = 0xFFFF;
 
-	push16 = cpu.Model == CPU_8086 ? &push16a : &push16b;
+	push16 = cpu.model == CPU_8086 ? &push16a : &push16b;
 
 	OPMAP1[0x00] = &exec00;
 	OPMAP1[0x01] = &exec01;
@@ -548,7 +548,7 @@ void vcpu_init(ref CPU_t cpu = CPU) {
 	OPMAP1[0xFE] = &execFE;
 	OPMAP1[0xFF] = &execFF;
 	OPMAP1[0xD6] = &execill;
-	switch (cpu.Model) {
+	switch (cpu.model) {
 	case CPU_8086:
 		OPMAP1[0xC8] =
 		OPMAP1[0xC9] =
@@ -601,6 +601,7 @@ void vcpu_run(ref CPU_t cpu = CPU) {
 	while (CPU.level > 0) {
 		cpu.EIP = get_ip;
 		const ubyte op = MEM[cpu.EIP];
+		++cpu.EIP;
 		OPMAP1[op]();
 	}
 }
@@ -612,8 +613,8 @@ void vcpu_run(ref CPU_t cpu = CPU) {
 /// Processor RESET function.
 /// Does not empty queue bus, since it does not have one.
 void reset(ref CPU_t cpu) {
-	cpu.Mode = CPU_MODE_REAL;
-	cpu.Segment = SEG_NONE;
+	cpu.mode = CPU_MODE_REAL;
+	cpu.segment = SEG_NONE;
 
 	cpu.OF = cpu.DF = cpu.IF = cpu.TF = cpu.SF =
 	cpu.ZF = cpu.AF = cpu.PF = cpu.CF =
@@ -637,17 +638,16 @@ void wait(ref CPU_t cpu) {
 
 /// Get segment register value from CPU.Segment.
 /// Returns: Segment register value
-ushort getseg(ref CPU_t cpu) {
+ushort getseg(ref CPU_t cpu, ushort d) {
 	ushort s = void;
-	switch (cpu.Segment) {
-	case SEG_NONE:	s = 0;  break;
+	switch (cpu.segment) {
+	default:	s = d;  break;
 	case SEG_CS:	s = cpu.CS; break;
 	case SEG_DS:	s = cpu.DS; break;
 	case SEG_ES:	s = cpu.ES; break;
 	case SEG_SS:	s = cpu.SS; break;
 	case SEG_GS:	s = cpu.GS; break;
 	case SEG_FS:	s = cpu.FS; break;
-	default: assert(0, "Unknown segment type");
 	}
 	return s;
 }

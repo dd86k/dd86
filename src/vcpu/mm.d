@@ -26,6 +26,8 @@ import logger;
 
 extern (C):
 
+//TODO: Get rid of vmerr, call INT directly (#GP?)
+
 //
 // INSERT
 //
@@ -33,30 +35,30 @@ extern (C):
 /**
  * Insert a BYTE in MEMORY
  * Params:
- *   op = BYTE value
  *   addr = Memory address
+ *   val = BYTE value
  */
-void mmiu8(int op, int addr) {
+void mmiu8(int addr, int val) {
 	if (addr >= MEMSIZE) {
 		vmerr = E_MM_OVRFLW;
 		return;
 	}
-	MEM[addr] = cast(ubyte)op;
+	MEM[addr] = cast(ubyte)val;
 	vmerr = E_MM_OK;
 }
 
 /**
  * Insert a WORD in MEMORY
  * Params:
- *   data = WORD value (will be casted)
+ *   val = WORD value
  *   addr = Memory address
  */
-void mmiu16(int data, int addr) {
+void mmiu16(int addr, int val) {
 	if (addr + 1 >= MEMSIZE) {
 		vmerr = E_MM_OVRFLW;
 		return;
 	}
-	*cast(ushort*)(MEM + addr) = cast(ushort)data;
+	*cast(ushort*)(MEM + addr) = cast(ushort)val;
 	vmerr = E_MM_OK;
 }
 
@@ -230,41 +232,40 @@ const(char) *mmfstr(uint addr, int *length = null) {
 //
 
 /**
- * Fetch an immediate BYTE at CPU.EIP+1+n
- * Params: n = Optional offset (+1)
+ * Fetch an immediate BYTE at CPU.EIP. Modifies EIP
  * Returns: BYTE
  */
-ubyte mmfu8_i(int n = 0) {
-	size_t addr = CPU.EIP + 1 + n;
+ubyte mmfu8_i() {
+	size_t addr = CPU.EIP;
 	if (addr >= MEMSIZE) {
 		vmerr = E_MM_OVRFLW;
 		return 0;
 	}
 	vmerr = E_MM_OK;
+	++CPU.EIP;
 	return MEM[addr];
 }
 
 /**
  * Fetch a signed byte (byte).
- * Params: n = Optional offset from EIP+1
  * Returns: Signed BYTE
  */
-//pragma(inline, true)
-byte mmfi8_i(int n = 0) {
-	return cast(byte)mmfu8_i(n);
+pragma(inline, true)
+byte mmfi8_i() {
+	return cast(byte)mmfu8_i;
 }
 
 /**
  * Fetch an immediate WORD at EIP+1+n
- * Params: n = Optional offset (+1)
  * Returns: WORD
  */
-ushort mmfu16_i(int n = 0) {
-	size_t addr = CPU.EIP + 1 + n;
-	if (addr + 1>= MEMSIZE) {
+ushort mmfu16_i() {
+	size_t addr = CPU.EIP;
+	if (addr + 1 >= MEMSIZE) {
 		vmerr = E_MM_OVRFLW;
 		return 0;
 	}
+	CPU.EIP += 2;
 	vmerr = E_MM_OK;
 	return *cast(ushort*)(MEM + addr);
 }
@@ -275,8 +276,8 @@ ushort mmfu16_i(int n = 0) {
  * Returns: signed WORD
  */
 pragma(inline, true)
-short mmfi16_i(int n = 0) {
-	return cast(short)mmfu16_i(n);
+short mmfi16_i() {
+	return cast(short)mmfu16_i;
 }
 
 /**
@@ -284,13 +285,14 @@ short mmfi16_i(int n = 0) {
  * Params: n = Optional offset (+1)
  * Returns: signed WORD
  */
-uint mmfu32_i(int n = 0) {
-	size_t addr = CPU.EIP + 1 + n;
+uint mmfu32_i() {
+	size_t addr = CPU.EIP;
 	if (addr + 3 >= MEMSIZE) {
 		vmerr = E_MM_OVRFLW;
 		return 0;
 	}
 	vmerr = E_MM_OK;
+	CPU.EIP += 4;
 	return *cast(uint*)(MEM + addr);
 }
 
@@ -300,6 +302,6 @@ uint mmfu32_i(int n = 0) {
  * Returns: signed WORD
  */
 pragma(inline, true)
-int mmfi32_i(int n = 0) {
-	return cast(int)mmfu32_i(n);
+int mmfi32_i() {
+	return cast(int)mmfu32_i;
 }
