@@ -1,5 +1,5 @@
 import test_utils;
-import vcpu.core, vcpu.exec, vcpu.mm, vcpu.utils;
+import vcpu.core, vcpu.exec, vcpu.mm, vcpu.utils, vcpu.modrm;
 import std.stdio;
 
 unittest {
@@ -126,70 +126,70 @@ unittest {
 	CPU.BX = 0x30; CPU.BP = 0x30;
 	test("16-bit ModR/M");
 	// MOD=00
-	assert(mmrm16(0b000) == 0x80);
-	assert(mmrm16(0b001) == 0x80);
-	assert(mmrm16(0b010) == 0x80);
-	assert(mmrm16(0b011) == 0x80);
-	assert(mmrm16(0b100) == 0x50);
-	assert(mmrm16(0b101) == 0x50);
-	assert(mmrm16(0b110) == 0x1020);
-	assert(mmrm16(0b111) == 0x30);
+	assert(modrm16(0b000) == 0x80);
+	assert(modrm16(0b001) == 0x80);
+	assert(modrm16(0b010) == 0x80);
+	assert(modrm16(0b011) == 0x80);
+	assert(modrm16(0b100) == 0x50);
+	assert(modrm16(0b101) == 0x50);
+	assert(modrm16(0b110) == 0x1020);
+	assert(modrm16(0b111) == 0x30);
 	// MOD=01
-	assert(mmrm16(0b01_000_000) == 0xA0);
+	assert(modrm16(0b01_000_000) == 0xA0);
 	--CPU.EIP;
-	assert(mmrm16(0b01_000_001) == 0xA0);
+	assert(modrm16(0b01_000_001) == 0xA0);
 	--CPU.EIP;
-	assert(mmrm16(0b01_000_010) == 0xA0);
+	assert(modrm16(0b01_000_010) == 0xA0);
 	--CPU.EIP;
-	assert(mmrm16(0b01_000_011) == 0xA0);
+	assert(modrm16(0b01_000_011) == 0xA0);
 	--CPU.EIP;
-	assert(mmrm16(0b01_000_100) == 0x70);
+	assert(modrm16(0b01_000_100) == 0x70);
 	--CPU.EIP;
-	assert(mmrm16(0b01_000_101) == 0x70);
+	assert(modrm16(0b01_000_101) == 0x70);
 	--CPU.EIP;
-	assert(mmrm16(0b01_000_110) == 0x50);
+	assert(modrm16(0b01_000_110) == 0x50);
 	--CPU.EIP;
-	assert(mmrm16(0b01_000_111) == 0x50);
+	assert(modrm16(0b01_000_111) == 0x50);
 	--CPU.EIP;
 	// MOD=10
-	assert(mmrm16(0b10_000_000) == 0x10A0);
+	assert(modrm16(0b10_000_000) == 0x10A0);
 	CPU.EIP -= 2;
-	assert(mmrm16(0b10_000_001) == 0x10A0);
+	assert(modrm16(0b10_000_001) == 0x10A0);
 	CPU.EIP -= 2;
-	assert(mmrm16(0b10_000_010) == 0x10A0);
+	assert(modrm16(0b10_000_010) == 0x10A0);
 	CPU.EIP -= 2;
-	assert(mmrm16(0b10_000_011) == 0x10A0);
+	assert(modrm16(0b10_000_011) == 0x10A0);
 	CPU.EIP -= 2;
-	assert(mmrm16(0b10_000_100) == 0x1070);
+	assert(modrm16(0b10_000_100) == 0x1070);
 	CPU.EIP -= 2;
-	assert(mmrm16(0b10_000_101) == 0x1070);
+	assert(modrm16(0b10_000_101) == 0x1070);
 	CPU.EIP -= 2;
-	assert(mmrm16(0b10_000_110) == 0x1050);
+	assert(modrm16(0b10_000_110) == 0x1050);
 	CPU.EIP -= 2;
-	assert(mmrm16(0b10_000_111) == 0x1050);
+	assert(modrm16(0b10_000_111) == 0x1050);
 	CPU.EIP -= 2;
 	// MOD=11
 	CPU.AX = 0x2040; CPU.CX = 0x2141;
 	CPU.DX = 0x2242; CPU.BX = 0x2343;
 	CPU.SP = 0x2030; CPU.BP = 0x2131;
 	CPU.SI = 0x2232; CPU.DI = 0x2333;
-	assert(mmrm16(0b11_000_000) == 0x40); // AL
-	assert(mmrm16(0b11_000_001) == 0x41); // CL
-	assert(mmrm16(0b11_000_010) == 0x42); // DL
-	assert(mmrm16(0b11_000_011) == 0x43); // BL
-	assert(mmrm16(0b11_000_100) == 0x20); // AH
-	assert(mmrm16(0b11_000_101) == 0x21); // CH
-	assert(mmrm16(0b11_000_110) == 0x22); // DH
-	assert(mmrm16(0b11_000_111) == 0x23); // BH
+	assert(modrm16(0b11_000_000) == 0x40); // AL
+	assert(modrm16(0b11_001_000) == 0x41); // CL
+	assert(modrm16(0b11_010_000) == 0x42); // DL
+	assert(modrm16(0b11_011_000) == 0x43); // BL
+	assert(modrm16(0b11_100_000) == 0x20); // AH
+	assert(modrm16(0b11_101_000) == 0x21); // CH
+	assert(modrm16(0b11_110_000) == 0x22); // DH
+	assert(modrm16(0b11_111_000) == 0x23); // BH
 	// MOD=11+W bit
-	assert(mmrm16(0b11_000_000, 1) == 0x2040); // AX
-	assert(mmrm16(0b11_000_001, 1) == 0x2141); // CX
-	assert(mmrm16(0b11_000_010, 1) == 0x2242); // DX
-	assert(mmrm16(0b11_000_011, 1) == 0x2343); // BX
-	assert(mmrm16(0b11_000_100, 1) == 0x2030); // SP
-	assert(mmrm16(0b11_000_101, 1) == 0x2131); // BP
-	assert(mmrm16(0b11_000_110, 1) == 0x2232); // SI
-	assert(mmrm16(0b11_000_111, 1) == 0x2333); // DI
+	assert(modrm16(0b11_000_000, 1) == 0x2040); // AX
+	assert(modrm16(0b11_001_000, 1) == 0x2141); // CX
+	assert(modrm16(0b11_010_000, 1) == 0x2242); // DX
+	assert(modrm16(0b11_011_000, 1) == 0x2343); // BX
+	assert(modrm16(0b11_100_000, 1) == 0x2030); // SP
+	assert(modrm16(0b11_101_000, 1) == 0x2131); // BP
+	assert(modrm16(0b11_110_000, 1) == 0x2232); // SI
+	assert(modrm16(0b11_111_000, 1) == 0x2333); // DI
 	OK;
 
 	test("16-bit ModR/M + SEG"); TODO;

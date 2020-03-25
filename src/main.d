@@ -20,14 +20,14 @@ private:
 extern (C):
 
 /// Copyright string, used in version and license screens
-enum COPYRIGHT = "Copyright (c) 2017-2019 dd86k\n\n";
+enum COPYRIGHT = "Copyright (c) 2017-2020 dd86k\n\n";
 
 /// Print version screen to stdout
 void _version() {
 	import d = std.compiler;
 	printf(
 	"dd86-"~PLATFORM~" v"~APP_VERSION~"-"~BUILD_TYPE~" ("~__TIMESTAMP__~")\n"~
-	"Homepage: <https://github,com/dd86k/dd86>\n"~
+	"Homepage: <https://github.com/dd86k/dd86>\n"~
 	"License: MIT <https://opensource.org/licenses/MIT>\n"~
 	"Compiler: "~__VENDOR__~" v%u.%03u, crt: "~C_RUNTIME~"\n",
 	d.version_major, d.version_minor
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
 	//
 
 	for (size_t argi = 1; argi < argc; ++argi) {
-		if (args == false) goto NO_ARGS;
+		if (args == false) goto L_DEFAULT_ARG;
 
 		if (argv[argi][1] == '-') { // long arguments
 			char* a = argv[argi] + 2;
@@ -119,8 +119,9 @@ int main(int argc, char **argv) {
 			}
 			continue;
 		}
-NO_ARGS:
-		if (cast(size_t)prog == 0)
+
+L_DEFAULT_ARG:
+		if (prog == null)
 			prog = argv[argi];
 		//TODO: Else, append program arguments (strcmp)
 		//      Don't forget to null it after while loop and keep arg_i updated
@@ -185,7 +186,7 @@ NO_ARGS:
 	if (cast(size_t)prog) {
 		vdos_load(prog);
 		vcpu_run;
-		video_update; // ensures last frame is drawn
+		video_update; //temp: ensures last frame is drawn
 	} else shell_start;
 
 	con_pos(0, 25);
